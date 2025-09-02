@@ -8,9 +8,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://103.172.44.99:8989",
+        target: "http://103.172.44.99:8989/api_bwal",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "'/api_bwal'"),
+        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },

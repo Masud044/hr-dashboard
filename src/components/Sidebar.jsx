@@ -113,9 +113,19 @@ export default function Sidebar() {
               >
                 <Plus className="w-4 h-4 mr-2" /> Journal Voucher
               </NavLink>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                <Plus className="w-4 h-4 mr-2" /> Cash Transfer
-              </div>
+              <NavLink
+                to="/dashboard/cash-voucher"
+                end // 👈 ensures only /dashboard (not nested) matches
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <Plus className="w-4 h-4 mr-2" /> Cash transfer
+              </NavLink>
                <NavLink
                 to="/dashboard/account-voucher"
                 end // 👈 ensures only /dashboard (not nested) matches

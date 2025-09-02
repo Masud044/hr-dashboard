@@ -11,6 +11,7 @@ import JournalVoucher from "./components/MainEntry/JournalVoucher";
 import PaymentVoucherForm from "./components/MainEntry/PaymentVoucherForm";
 import ReceiveVoucher from "./components/MainEntry/ReceiveVoucher";
 import ChartAccountForm from "./components/MainEntry/ChartAccountForm";
+import TransactionVoucher from "./components/MainEntry/TransactionVoucher";
 
 const App = () => {
 function PrivateRoute({ children }) {
@@ -32,6 +33,7 @@ function PrivateRoute({ children }) {
            <Route path="journal-voucher" element={<JournalVoucher />} />
            <Route path="receive-voucher" element={<ReceiveVoucher/>}/>
            <Route path="account-voucher" element={<ChartAccountForm />} />
+            <Route path="cash-voucher" element={<TransactionVoucher/>} />
         </Route>
         <Route path="/login" element={<Login></Login>}/>
         <Route path="/register" element={<Register></Register>} />
