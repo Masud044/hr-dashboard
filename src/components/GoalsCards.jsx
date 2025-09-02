@@ -1,10 +1,10 @@
 import { Users, Target, FileWarning, Clock } from "lucide-react";
 
 const stats = [
-  { label: "Team Members", value: 23, bg: "bg-purple-100", iconColor: "text-purple-600", icon: <Users size={18} /> },
-  { label: "Total Goals", value: 14, bg: "bg-green-100", iconColor: "text-green-600", icon: <Target size={18} /> },
-  { label: "Unaligned", value: 12, bg: "bg-orange-100", iconColor: "text-orange-600", icon: <FileWarning size={18} /> },
-  { label: "Pending", value: 9, bg: "bg-blue-100", iconColor: "text-blue-600", icon: <Clock size={18} /> },
+  { label: "Team Members", value: 23, bg: "bg-purple-200", iconColor: "text-purple-600", icon: <Users size={18} /> },
+  { label: "Total Goals", value: 14, bg: "bg-green-200", iconColor: "text-green-600", icon: <Target size={18} /> },
+  { label: "Unaligned", value: 12, bg: "bg-orange-200", iconColor: "text-orange-600", icon: <FileWarning size={18} /> },
+  { label: "Pending", value: 9, bg: "bg-blue-200", iconColor: "text-blue-600", icon: <Clock size={18} /> },
 ];
 
 export default function GoalsCards() {

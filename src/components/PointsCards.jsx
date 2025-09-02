@@ -1,35 +1,57 @@
-import DonutChart from "./DonutChart";
+import React from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-export default function PointsCards() {
-  const allotted = 24000;
-  const gained = 4923;
-  const given = 200;
-  const available = allotted - (gained + given);
+const data = [
+  { name: "Points Allotted", value: 24000, color: "#60A5FA" }, // blue
+  { name: "Points Gained", value: 4923, color: "#F97316" },   // orange
+  { name: "Points Given", value: 200, color: "#A78BFA" },     // purple
+  { name: "Points Available", value: 18877, color: "#34D399" }, // green
+];
 
-  const chartData = [
-    { label: "Points Allotted", value: allotted, color: "#f59e0b" },
-    { label: "Points Gained", value: gained, color: "#22c55e" },
-    { label: "Points Given", value: given, color: "#ef4444" },
-    { label: "Points Available", value: available, color: "#3b82f6" },
-  ];
-
+const PointsCards = () => {
   return (
-    <div className="bg-white rounded-2xl p-4 border">
-      <h3 className="font-semibold mb-4">Points Budgeted</h3>
-      <div className="flex items-center gap-4">
-        <DonutChart data={chartData} size={120} thickness={18} />
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm flex-1">
-          {chartData.map((d) => (
-            <div key={d.label} className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                {d.label}
-              </span>
-              <span className="font-semibold text-gray-900">{d.value}</span>
+    <div className="max-w-sm md:max-w-lg bg-white shadow-lg rounded-xl p-6">
+      <h2 className="text-lg font-semibold mb-4">Points Budgeted</h2>
+
+      {/* Responsive Layout */}
+      <div className="flex flex-col md:flex-row items-center md:items-start">
+        {/* Chart */}
+        <div className="w-40 h-40 md:w-48 md:h-48">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius="60%"
+                outerRadius="80%"
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Labels */}
+        <div className="mt-6 md:mt-0 md:ml-6 space-y-3 text-sm w-full">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              ></span>
+              <span>{item.name}:</span>
+              <span className="font-semibold ml-1">{item.value}</span>
             </div>
           ))}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default PointsCards;
