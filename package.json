@@ -17,7 +17,9 @@
     "react-helmet": "^6.1.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.8.2",
+    "react-select": "^5.10.2",
     "recharts": "^3.1.2",
+    "sweetalert2": "^11.23.0",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
