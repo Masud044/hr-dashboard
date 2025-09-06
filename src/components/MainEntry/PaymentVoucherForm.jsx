@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const PaymentVoucherForm = () => {
   const [rows, setRows] = useState([]);
@@ -29,7 +30,7 @@ const PaymentVoucherForm = () => {
   // Fetch suppliers
   const fetchSuppliers = async () => {
     try {
-      const res = await fetch("/api/supplier.php");
+      const res = await fetch(`${API_BASE}/supplier.php`);
       const data = await res.json();
       setSuppliers(data.data || []);
     } catch (error) {
@@ -39,7 +40,7 @@ const PaymentVoucherForm = () => {
   // Fetch payment codes
   const fetchPaymentCodes = async () => {
     try {
-      const res = await fetch("/api/receive_code.php"); // proxy or full URL if no proxy
+      const res = await fetch(`${API_BASE}/receive_code.php`); // proxy or full URL if no proxy
       const data = await res.json();
       console.log(data)
       if (data.success === 1) {
@@ -53,7 +54,7 @@ const PaymentVoucherForm = () => {
   // Fetch accounts
   const fetchAccounts = async () => {
     try {
-      const res = await fetch("/api/account_code.php");
+      const res = await fetch(`${API_BASE}/account_code.php`);
       const data = await res.json();
       if (data.success === 1) {
         const formatted = data.data.map((acc) => ({
@@ -154,7 +155,7 @@ const PaymentVoucherForm = () => {
         amount2: mergedRows.map((r) => String(r.amount || 0)),
       };
 
-      const res = await fetch("/api/pay_api.php", {
+      const res = await fetch(`${API_BASE}/pay_api.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
