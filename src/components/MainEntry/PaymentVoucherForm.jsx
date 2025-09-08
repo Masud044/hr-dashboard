@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 
-const PaymentVoucherForm = () => {
+const PaymentVoucherForm = ({ voucherId }) => {
+  const today = new Date().toISOString().split("T")[0];
+
   const [rows, setRows] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [paymentCodes, setPaymentCodes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showModal, setShowModal] = useState(false); // modal state
-  const today = new Date().toISOString().split("T")[0];
+  const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
     entryDate: today,
@@ -26,31 +27,27 @@ const PaymentVoucherForm = () => {
     totalAmount: 0,
   });
 
-  // Fetch suppliers
+  // ---------- FETCH HELPERS ----------
   const fetchSuppliers = async () => {
     try {
       const res = await fetch("/api/supplier.php");
       const data = await res.json();
       setSuppliers(data.data || []);
-    } catch (error) {
-      console.error("Error fetching suppliers:", error);
-    }
-  };
-  // Fetch payment codes
-  const fetchPaymentCodes = async () => {
-    try {
-      const res = await fetch("/api/receive_code.php"); // proxy or full URL if no proxy
-      const data = await res.json();
-      console.log(data)
-      if (data.success === 1) {
-        setPaymentCodes(data.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching payment codes:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // Fetch accounts
+  const fetchPaymentCodes = async () => {
+    try {
+      const res = await fetch("/api/receive_code.php");
+      const data = await res.json();
+      if (data.success === 1) setPaymentCodes(data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchAccounts = async () => {
     try {
       const res = await fetch("/api/account_code.php");
@@ -58,13 +55,53 @@ const PaymentVoucherForm = () => {
       if (data.success === 1) {
         const formatted = data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
-          label: `${acc.ACCOUNT_ID}- ${acc.ACCOUNT_NAME}`,
+          label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
           name: acc.ACCOUNT_NAME,
         }));
         setAccounts(formatted);
       }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ---------- FETCH VOUCHER IF EDIT ----------
+  const fetchVoucher = async (id) => {
+    try {
+      const res = await fetch(`/api/pay_view.php?id=${id}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        const master = data.master || {};
+        const details = data.details || [];
+
+        const mappedRows = details.map((d) => ({
+          accountCode: d.code,
+          particulars: accounts.find((acc) => acc.value === d.code)?.name || "",
+          amount: parseFloat(d.debit || d.credit || 0),
+          debitId: d.debit ? d.id : null,
+          creditId: d.credit ? d.id : null,
+        }));
+
+        const total = mappedRows.reduce((sum, r) => sum + Number(r.amount), 0);
+
+        setForm({
+          entryDate: master.TRANS_DATE || today,
+          invoiceNo: master.VOUCHERNO || "",
+          supporting: master.SUPPORTING || "",
+          description: master.DESCRIPTION || "",
+          supplier: master.CUSTOMER_ID || "",
+          glDate: master.GL_ENTRY_DATE || today,
+          paymentCode: master.CASHACCOUNT || "",
+          accountId: "",
+          particular: "",
+          amount: "",
+          totalAmount: total,
+        });
+
+        setRows(mappedRows);
+      }
+    } catch (err) {
+      console.error("Error fetching voucher:", err);
     }
   };
 
@@ -74,7 +111,11 @@ const PaymentVoucherForm = () => {
     fetchPaymentCodes();
   }, []);
 
-  // Add account row
+  useEffect(() => {
+    if (voucherId && accounts.length > 0) fetchVoucher(voucherId);
+  }, [voucherId, accounts]);
+
+  // ---------- ROW HANDLERS ----------
   const addRow = () => {
     if (!form.accountId || !form.amount) return;
 
@@ -82,109 +123,87 @@ const PaymentVoucherForm = () => {
       accountCode: form.accountId,
       particulars: form.particular,
       amount: parseFloat(form.amount),
+      debitId: null,
+      creditId: null,
     };
 
     const updatedRows = [...rows, newRow];
     const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
 
     setRows(updatedRows);
-    setForm({
-      ...form,
-      accountId: "",
-      particular: "",
-      amount: "",
-      totalAmount: total,
-    });
+    setForm({ ...form, accountId: "", particular: "", amount: "", totalAmount: total });
   };
 
-  // Remove row
   const removeRow = (index) => {
     const updatedRows = rows.filter((_, i) => i !== index);
-    const total = updatedRows.reduce(
-      (sum, r) => sum + Number(r.amount || 0),
-      0
-    );
+    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
     setRows(updatedRows);
     setForm({ ...form, totalAmount: total });
   };
 
-  // Submit API request
+  // ---------- SUBMIT ----------
   const handleSubmit = async () => {
     setMessage("");
     setLoading(true);
-    const mergedRows = rows.reduce((acc, row) => {
-      const existing = acc.find((r) => r.accountCode === row.accountCode);
-      if (existing) {
-        existing.amount += row.amount; // sum duplicates
-      } else {
-        acc.push({ ...row });
-      }
-      return acc;
-    }, []);
 
-    // Validation
-    if (
-      !form.entryDate ||
-      !form.glDate ||
-      !form.description ||
-      !form.supporting ||
-      !form.paymentCode ||
-      !form.supplier ||
-      rows.length === 0 ||
-      rows.some((r) => !r.accountCode || !r.amount)
-    ) {
-      setMessage(
-        "Please fill all required fields and add at least one account row."
-      );
+    if (!form.entryDate || !form.glDate || !form.description || !form.supporting || !form.paymentCode || !form.supplier || rows.length === 0) {
+      setMessage("Please fill all required fields and add at least one account row.");
       setLoading(false);
-
       return;
     }
 
     try {
       const payload = {
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
+        tempdata: voucherId || "", // master voucher ID
         receive_desc: form.description,
         supporting: String(form.supporting),
-        receive: form.paymentCode,
         supplierid: form.supplier,
-        totalAmount: String(form.totalAmount),
-        accountID: mergedRows.map((r) => r.accountCode),
-        amount2: mergedRows.map((r) => String(r.amount || 0)),
+        trans_date: form.entryDate,
+        gl_date: form.glDate,
+        user_id: "1",
+        accountID: rows.map((r) => r.accountCode),
+        DEBIT_ID: rows.map((r) => r.debitId || 0),
+        amount2: rows.map((r) => Number(r.amount || 0)),
+        credit_id: rows.find((r) => r.creditId)?.creditId || 0,
+        totalAmount: Number(form.totalAmount),
       };
 
-      const res = await fetch("/api/pay_api.php", {
+      const apiUrl = voucherId ? "/api/pay_update.php" : "/api/pay_api.php";
+
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-
       if (data.status === "success") {
-        setMessage("Payment voucher submitted successfully!");
-        // Reset form
-        setForm({
-          entryDate: "",
-          invoiceNo: "",
-          supporting: "",
-          description: "",
-          supplier: "",
-          glDate: "",
-          paymentCode: "",
-          totalAmount: 0,
-        });
-        setRows([]);
+        setMessage(voucherId ? "Voucher updated successfully!" : "Payment voucher submitted successfully!");
+        if (!voucherId) {
+          setForm({
+            entryDate: today,
+            invoiceNo: "",
+            supporting: "",
+            description: "",
+            supplier: "",
+            glDate: today,
+            paymentCode: "",
+            accountId: "",
+            particular: "",
+            amount: "",
+            totalAmount: 0,
+          });
+          setRows([]);
+        }
       } else {
         setMessage(data.message || "Failed to submit voucher");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       setMessage("Error submitting voucher. Please try again.");
     } finally {
       setLoading(false);
-      setShowModal(false); // close modal after submission
+      setShowModal(false);
     }
   };
 
@@ -204,7 +223,11 @@ const PaymentVoucherForm = () => {
           )}
 
           {/* Save button aligned right */}
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <button type="button" className=" text-gray-700 bg-orange-200   rounded-lg px-4 mb-2 py-2">
+        {voucherId ? "Edit" : "New"}
+        
+      </button>
             <button
               type="button"
               onClick={() => setShowModal(true)}
@@ -212,8 +235,10 @@ const PaymentVoucherForm = () => {
             >
               {loading ? "Submitting..." : "Save Voucher"}
             </button>
-          </div>
+             
 
+          </div>
+         
           <div className="grid grid-cols-1 md:grid-cols-3 bg-blue-200 rounded-lg">
             {/* Entry Date */}
             <div className="grid grid-cols-3  px-3 items-center py-3">
