@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 
 const PaymentVoucherForm = ({ voucherId }) => {
+  
   const today = new Date().toISOString().split("T")[0];
 
   const [rows, setRows] = useState([]);
@@ -67,6 +68,7 @@ const PaymentVoucherForm = ({ voucherId }) => {
 
   // ---------- FETCH VOUCHER IF EDIT ----------
   const fetchVoucher = async (id) => {
+    console.log(id)
     try {
       const res = await fetch(`/api/pay_view.php?id=${id}`);
       const data = await res.json();
@@ -113,8 +115,10 @@ const PaymentVoucherForm = ({ voucherId }) => {
 
   useEffect(() => {
     if (voucherId && accounts.length > 0) fetchVoucher(voucherId);
+   
   }, [voucherId, accounts]);
 
+ console.log(voucherId)
   // ---------- ROW HANDLERS ----------
   const addRow = () => {
     if (!form.accountId || !form.amount) return;
@@ -142,70 +146,113 @@ const PaymentVoucherForm = ({ voucherId }) => {
   };
 
   // ---------- SUBMIT ----------
-  const handleSubmit = async () => {
-    setMessage("");
-    setLoading(true);
+const handleSubmit = async () => {
+  setMessage("");
+  setLoading(true);
 
-    if (!form.entryDate || !form.glDate || !form.description || !form.supporting || !form.paymentCode || !form.supplier || rows.length === 0) {
-      setMessage("Please fill all required fields and add at least one account row.");
-      setLoading(false);
-      return;
-    }
+  if (
+    !form.entryDate ||
+    !form.glDate ||
+    !form.description ||
+    !form.supporting ||
+    !form.paymentCode ||
+    !form.supplier ||
+    rows.length === 0
+  ) {
+    setMessage("Please fill all required fields and add at least one account row.");
+    setLoading(false);
+    return;
+  }
+  
 
-    try {
-      const payload = {
-        tempdata: voucherId || "", // master voucher ID
+  try {
+     let payload = {};
+     let apiUrl = "";
+
+    if (!voucherId) {
+      // 🔹 INSERT MODE
+      payload = {
+        trans_date: form.entryDate,
+        gl_date: form.glDate,
         receive_desc: form.description,
         supporting: String(form.supporting),
         supplierid: form.supplier,
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
-        user_id: "1",
+         user_id: "1",
         accountID: rows.map((r) => r.accountCode),
-        DEBIT_ID: rows.map((r) => r.debitId || 0),
         amount2: rows.map((r) => Number(r.amount || 0)),
-        credit_id: rows.find((r) => r.creditId)?.creditId || 0,
         totalAmount: Number(form.totalAmount),
       };
-
-      const apiUrl = voucherId ? "/api/pay_update.php" : "/api/pay_api.php";
-
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (data.status === "success") {
-        setMessage(voucherId ? "Voucher updated successfully!" : "Payment voucher submitted successfully!");
-        if (!voucherId) {
-          setForm({
-            entryDate: today,
-            invoiceNo: "",
-            supporting: "",
-            description: "",
-            supplier: "",
-            glDate: today,
-            paymentCode: "",
-            accountId: "",
-            particular: "",
-            amount: "",
-            totalAmount: 0,
-          });
-          setRows([]);
-        }
-      } else {
-        setMessage(data.message || "Failed to submit voucher");
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("Error submitting voucher. Please try again.");
-    } finally {
-      setLoading(false);
-      setShowModal(false);
+      
+      apiUrl = "/api/pay_api.php";
+      console.log(payload)
+    } else {
+      // 🔹 UPDATE MODE
+      payload = {
+        master_id: voucherId,
+        voucherno: form.invoiceNo,
+        trans_date: form.entryDate,
+        voucher_type: 2,
+        entry_by: 1,
+        description: form.description,
+        reference_no: form.invoiceNo || "",
+        supporting: Number(form.supporting),
+        cashaccount: form.paymentCode,
+        posted: 1,
+        customer_id: form.supplier,
+        auto_invoice: "",
+        status_pay_recive: 0,
+        unit_id: 0,
+        details: rows.map((r) => ({
+          code: r.accountCode,
+          debit: r.debitId ? Number(r.amount) : 0,
+          credit: r.creditId ? Number(r.amount) : 0,
+          description: r.particulars,
+        })),
+      };
+      apiUrl = "/api/bwal_update_gl.php";
     }
-  };
+   
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log(data)
+
+    if (data.status === "success") {
+      setMessage("Voucher created successfully!");
+      if (!voucherId) {
+        // reset form only after new insert
+        setForm({
+          entryDate: today,
+          invoiceNo: "",
+          supporting: "",
+          description: "",
+          supplier: "",
+          glDate: today,
+          paymentCode: "",
+          accountId: "",
+          particular: "",
+          amount: "",
+          totalAmount: 0,
+        });
+        setRows([]);
+      }
+    } else {
+      setMessage(data.message || "Failed to submit voucher");
+    }
+  } catch (err) {
+    console.error("Submit error:", err);
+    setMessage("Error submitting voucher. Please try again.");
+  } finally {
+    setLoading(false);
+    setShowModal(false);
+  }
+};
+
+
 
   return (
     <div className="">
@@ -225,7 +272,7 @@ const PaymentVoucherForm = ({ voucherId }) => {
           {/* Save button aligned right */}
           <div className="flex justify-between">
             <button type="button" className=" text-gray-700 bg-orange-200   rounded-lg px-4 mb-2 py-2">
-        {voucherId ? "Edit" : "New"}
+        {voucherId ? "Edit" : "new"}
         
       </button>
             <button
@@ -316,7 +363,7 @@ const PaymentVoucherForm = ({ voucherId }) => {
               />
             </div>
             <div className="grid grid-cols-3  px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground"></label>
+              <label className="font-medium block text-sm  text-foreground">Payment Code</label>
               <select
                 value={form.paymentCode}
                 onChange={(e) =>
