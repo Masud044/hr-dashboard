@@ -30,6 +30,7 @@ function PrivateRoute({ children }) {
           
           {/* Payment Voucher route */}
           <Route path="payment-voucher" element={<PaymentVoucherForm />} />
+          
            <Route path="journal-voucher" element={<JournalVoucher />} />
            <Route path="receive-voucher" element={<ReceiveVoucher/>}/>
            <Route path="account-voucher" element={<ChartAccountForm />} />
