@@ -67,8 +67,10 @@ const PaymentVoucherForm = ({ voucherId }) => {
   };
 
   // ---------- FETCH VOUCHER IF EDIT ----------
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchVoucher = async (id) => {
-    console.log(id)
+    
     try {
       const res = await fetch(`/api/pay_view.php?id=${id}`);
       const data = await res.json();
@@ -116,9 +118,9 @@ const PaymentVoucherForm = ({ voucherId }) => {
   useEffect(() => {
     if (voucherId && accounts.length > 0) fetchVoucher(voucherId);
    
-  }, [voucherId, accounts]);
+  }, [voucherId, accounts, fetchVoucher]);
 
- console.log(voucherId)
+
   // ---------- ROW HANDLERS ----------
   const addRow = () => {
     if (!form.accountId || !form.amount) return;
@@ -184,7 +186,7 @@ const handleSubmit = async () => {
       };
       
       apiUrl = "/api/pay_api.php";
-      console.log(payload)
+      
     } else {
       // 🔹 UPDATE MODE
       payload = {
@@ -219,8 +221,7 @@ const handleSubmit = async () => {
     });
 
     const data = await res.json();
-    console.log(data)
-
+   
     if (data.status === "success") {
       setMessage("Voucher created successfully!");
       if (!voucherId) {
