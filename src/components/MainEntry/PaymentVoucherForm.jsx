@@ -3,20 +3,20 @@ import { Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import JournalVoucher from "./JournalVoucher";
 import { useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import api from "../../api/Api";
 
 const PaymentVoucherForm = () => {
   const { voucherId} = useParams();
+   const queryClient = useQueryClient();
   
 
   console.log(voucherId);
   const today = new Date().toISOString().split("T")[0];
 
   const [rows, setRows] = useState([]);
-  const [accounts, setAccounts] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [paymentCodes, setPaymentCodes] = useState([]);
-
-  const [loading, setLoading] = useState(false);
+  
   const [message, setMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -35,227 +35,89 @@ const PaymentVoucherForm = () => {
   });
 
   // ---------- FETCH HELPERS ----------
-  const fetchSuppliers = async () => {
-    try {
-      const res = await fetch("/api/supplier.php");
-      const data = await res.json();
-      setSuppliers(data.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: async () => {
+      const res = await api.get("/supplier.php");
+      return res.data.data || [];
+    },
+  });
 
-  const fetchPaymentCodes = async () => {
-    try {
-      const res = await fetch("/api/receive_code.php");
-      const data = await res.json();
-      if (data.success === 1) setPaymentCodes(data.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+ const { data: PaymentCodes = [] } = useQuery({
+    queryKey: ["paymentCodes"],
+    queryFn: async () => {
+      const res = await api.get("/receive_code.php");
+      return res.data.success === 1 ? res.data.data || [] : [];
+    },
+  });
 
-  const fetchAccounts = async () => {
-    try {
-      const res = await fetch("/api/account_code.php");
-      const data = await res.json();
-      if (data.success === 1) {
-        const formatted = data.data.map((acc) => ({
+ const { data: accounts = [] } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      const res = await api.get("/account_code.php");
+      if (res.data.success === 1) {
+        return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
           label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
           name: acc.ACCOUNT_NAME,
         }));
-        setAccounts(formatted);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+      return [];
+    },
+  });
   // ---------- FETCH VOUCHER IF EDIT ----------
-const fetchVoucher = async (id, accountsList = accounts) => {
-    try {
-      const res = await fetch(`/api/pay_view.php?id=${id}`);
-      const data = await res.json();
+  const { data: voucherData } = useQuery({
+    queryKey: ["voucher", voucherId],
+    queryFn: async () => {
+      const res = await api.get(`/pay_view.php?id=${voucherId}`);
+      return res.data;
+    },
+    enabled: !!voucherId && accounts.length > 0,
+  });
+useEffect(() => {
+    if (voucherData?.status === "success") {
+      const master = voucherData.master || {};
+      const details = voucherData.details || [];
 
-      if (data.status === "success") {
-        const master = data.master || {};
-        const details = data.details || [];
+      const mappedRows = details.map((d) => ({
+        accountCode: d.code,
+        particulars: accounts.find((acc) => acc.value === d.code)?.name || "",
+        amount: parseFloat(d.debit || d.credit || 0),
+        debitId: d.debit ? d.id : null,
+        creditId: d.credit ? d.id : null,
+      }));
 
-        const mappedRows = details.map((d) => ({
-          accountCode: d.code,
-          particulars:
-          accountsList.find((acc) => acc.value === d.code)?.name || "",
-          amount: parseFloat(d.debit || d.credit || 0),
-          debitId: d.debit ? d.id : null,
-          creditId: d.credit ? d.id : null,
-        }));
+      const total = mappedRows.reduce((sum, r) => sum + Number(r.amount), 0);
 
-         const total = mappedRows.reduce(
-         (sum, r) => sum + Number(r.amount),
-          0
-         );
-
-        setForm({
-          entryDate: master.TRANS_DATE || today,
-          invoiceNo: master.VOUCHERNO || "",
-          supporting: master.SUPPORTING || "",
-          description: master.DESCRIPTION || "",
-          supplier: master.CUSTOMER_ID || "",
-          glDate: master.GL_ENTRY_DATE || today,
-          paymentCode: master.CASHACCOUNT || "",
-          accountId: "",
-          particular: "",
-          amount: "",
-          totalAmount: total,
-        });
-
-        setRows(mappedRows);
-      }
-    } catch (err) {
-      console.error("Error fetching voucher:", err);
-    }
-  };
-
-  // ---------- INITIAL LOAD ----------
-  useEffect(() => {
-    fetchSuppliers();
-    fetchAccounts();
-    fetchPaymentCodes();
-    
-  }, []);
-
-  useEffect(() => {
-  if (voucherId && accounts.length > 0) {
-    fetchVoucher(voucherId);
-  }
-}, [voucherId, accounts]); // wait for accounts
-
-
-  // ---------- ROW HANDLERS ----------
-  const addRow = () => {
-    if (!form.accountId || !form.amount) return;
-
-  const newRow = {
-    accountCode: form.accountId,
-    particulars: form.particular,
-    amount: parseFloat(form.amount),
-    debitId: null,
-    creditId: null,
-  };
-
-  const updatedRows = [...rows, newRow];
-    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
-
-    setRows(updatedRows);
-    setForm({
-      ...form,
-      accountId: "",
-      particular: "",
-      amount: "",
-      totalAmount: total,
-    });
-  };
-
-  const removeRow = (index) => {
-    const updatedRows = rows.filter((_, i) => i !== index);
-    const total = updatedRows.reduce(
-      (sum, r) => sum + Number(r.amount || 0),
-      0
-    );
-    setRows(updatedRows);
-    setForm({ ...form, totalAmount: total });
-  };
-
-  // ---------- SUBMIT ----------
-  const handleSubmit = async () => {
-    setMessage("");
-    setLoading(true);
-
-    const isNew = !voucherId;
-
-    if (
-      isNew &&
-      (!form.entryDate ||
-        !form.glDate ||
-        !form.description ||
-        !form.supporting ||
-        !form.paymentCode ||
-        !form.supplier ||
-        rows.length === 0)
-    ) {
-      setMessage("Please fill all required fields and add at least one row.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      let payload = {};
-      let apiUrl = "";
-
-      if (isNew) {
-        // INSERT MODE
-        payload = {
-          trans_date: form.entryDate,
-          gl_date: form.glDate,
-          receive_desc: form.description,
-          supporting: String(form.supporting),
-          receive: form.paymentCode,
-          supplierid: form.supplier,
-          user_id: "1",
-          totalAmount: String(form.totalAmount),
-          accountID: rows.map((r) => r.accountCode),
-          amount2: rows.map((r) => String(r.amount || 0)),
-        };
-        apiUrl = "/api/pay_api.php";
-      } else {
-        // UPDATE MODE
-        payload = {
-          master_id: voucherId, 
-          voucherno: form.invoiceNo,
-          trans_date: form.entryDate,
-          voucher_type: 2,
-          entry_by: 1,
-          description: form.description,
-          reference_no: form.invoiceNo || "",
-          supporting: Number(form.supporting) || 0,
-          cashaccount: form.paymentCode || "",
-          posted: 1,
-          customer_id: form.supplier,
-          auto_invoice: "",
-          status_pay_recive: 0,
-          unit_id: 0,
-          details: rows.map((r) => ({
-             code: r.accountCode,
-            debit: r.debitId ? Number(r.amount) : 0,
-            credit: r.creditId ? Number(r.amount) : 0,
-             description: r.particulars,
-          })),
-        };
-
-        apiUrl = "/api/bwal_update_gl.php";
-      }
-
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      setForm({
+        entryDate: master.TRANS_DATE || today,
+        invoiceNo: master.VOUCHERNO || "",
+        supporting: master.SUPPORTING || "",
+        description: master.DESCRIPTION || "",
+        supplier: master.CUSTOMER_ID || "",
+        glDate: master.GL_ENTRY_DATE || today,
+        paymentCode: master.CASHACCOUNT || "",
+        accountId: "",
+        particular: "",
+        amount: "",
+        totalAmount: total,
       });
 
-      const data = await res.json();
-      console.log(payload);
-
+      setRows(mappedRows);
+    }
+  }, [voucherData, accounts]);
+   // ---------- MUTATION ----------
+  const mutation = useMutation({
+    mutationFn: async ({ isNew, payload }) => {
+      const apiUrl = isNew ? "/pay_api.php" : "/bwal_update_gl.php";
+      const res = await api.post(apiUrl, payload);
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
       if (data.status === "success") {
-        setMessage(
-          isNew
-            ? "Voucher created successfully!"
-            : "Voucher updated successfully!"
-        );
-      
-
-
-        if (isNew) {
-          // reset only after insert
+        setMessage(variables.isNew ? "Voucher created successfully!" : "Voucher updated successfully!");
+    
+       
           setForm({
             entryDate: today,
             invoiceNo: "",
@@ -270,19 +132,104 @@ const fetchVoucher = async (id, accountsList = accounts) => {
             totalAmount: 0,
           });
           setRows([]);
-        }
+           queryClient.invalidateQueries(["unpostedVouchers"]); 
+          
+        
       } else {
         setMessage(data.message || "Error processing voucher.");
       }
-    } catch (err) {
-      console.error("Submit error:", err);
+    },
+    onError: () => {
       setMessage("Error submitting voucher. Please try again.");
-    } finally {
-      setLoading(false);
+    },
+    onSettled: () => {
       setShowModal(false);
-    }
+    },
+  });
+
+ // ---------- HANDLERS ----------
+  const addRow = () => {
+    if (!form.accountId || !form.amount) return;
+    const newRow = {
+      accountCode: form.accountId,
+      particulars: form.particular,
+      amount: parseFloat(form.amount),
+      debitId: null,
+      creditId: null,
+    };
+    const updatedRows = [...rows, newRow];
+    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
+
+    setRows(updatedRows);
+    setForm({
+      ...form,
+      accountId: "",
+      particular: "",
+      amount: "",
+      totalAmount: total,
+    });
   };
 
+  const removeRow = (index) => {
+    const updatedRows = rows.filter((_, i) => i !== index);
+    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    setRows(updatedRows);
+    setForm({ ...form, totalAmount: total });
+  };
+
+  const handleSubmit = () => {
+    setMessage("");
+    const isNew = !voucherId;
+
+    if (
+      isNew &&
+      (!form.entryDate || !form.glDate || !form.description || !form.supporting || !form.paymentCode || !form.supplier || rows.length === 0)
+    ) {
+      setMessage("Please fill all required fields and add at least one row.");
+      return;
+    }
+
+    let payload = {};
+    if (isNew) {
+      payload = {
+        trans_date: form.entryDate,
+        gl_date: form.glDate,
+        receive_desc: form.description,
+        supporting: String(form.supporting),
+        receive: form.paymentCode,
+        supplierid: form.supplier,
+        user_id: "1",
+        totalAmount: String(form.totalAmount),
+        accountID: rows.map((r) => r.accountCode),
+        amount2: rows.map((r) => String(r.amount || 0)),
+      };
+    } else {
+      payload = {
+        master_id: voucherId,
+        voucherno: form.invoiceNo,
+        trans_date: form.entryDate,
+        voucher_type: 2,
+        entry_by: 1,
+        description: form.description,
+        reference_no: form.invoiceNo || "",
+        supporting: Number(form.supporting) || 0,
+        cashaccount: form.paymentCode || "",
+        posted: 0,
+        customer_id: form.supplier,
+        auto_invoice: "",
+        status_pay_recive: 0,
+        unit_id: 0,
+        details: rows.map((r) => ({
+          code: r.accountCode,
+          debit: r.debitId ? Number(r.amount) : 0,
+          credit: r.creditId ? Number(r.amount) : 0,
+          description: r.particulars,
+        })),
+      };
+    }
+
+    mutation.mutate({ isNew, payload });
+  };
   return (
     <div className="">
       <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
@@ -292,6 +239,8 @@ const fetchVoucher = async (id, accountsList = accounts) => {
       <form>
         {/* Top Form */}
         <div className=" p-6 space-y-6 bg-white rounded-lg">
+
+          
           {message && (
             <p className="text-center text-red-600 font-medium mt-4">
               {message}
@@ -303,7 +252,7 @@ const fetchVoucher = async (id, accountsList = accounts) => {
             {voucherId ? (
               <button
                 type="button"
-                onClick={() => fetchVoucher(voucherId, accounts)}
+                 onClick={() => queryClient.invalidateQueries(["voucher", voucherId])}
                 className="text-gray-700 bg-orange-200 rounded-lg px-4 mb-2 py-2"
               >
                 Edit Voucher
@@ -322,14 +271,12 @@ const fetchVoucher = async (id, accountsList = accounts) => {
               onClick={() => setShowModal(true)}
               className="bg-green-500 text-white px-4 py-2 rounded-lg"
             >
-              {loading
-                ? "Submitting..."
-                : voucherId
-                ? "Update Voucher"
-                : "Save Voucher"}
+               {mutation.isPending ? "Submitting..." : voucherId ? "Update Voucher" : "Save Voucher"}
+         
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 bg-blue-200 rounded-lg">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 bg-white  rounded-lg">
             {/* Entry Date */}
             <div className="grid grid-cols-3  px-3 items-center py-3">
               <label className="font-medium block text-sm  text-foreground">
@@ -341,7 +288,7 @@ const fetchVoucher = async (id, accountsList = accounts) => {
                 onChange={(e) =>
                   setForm({ ...form, entryDate: e.target.value })
                 }
-                className="col-span-2 w-full  rounded py-1   bg-white focus-visible:outline-blue-500"
+                className="col-span-2 w-full border  rounded py-1   bg-white focus-visible:outline-blue-500"
               />
             </div>
 
@@ -417,7 +364,7 @@ const fetchVoucher = async (id, accountsList = accounts) => {
                 className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
               >
                 <option value="">Select payment</option>
-                {paymentCodes.map((code) => (
+                {PaymentCodes.map((code) => (
                   <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
                     {code.ACCOUNT_NAME}
                   </option>
@@ -484,7 +431,7 @@ const fetchVoucher = async (id, accountsList = accounts) => {
             </div>
           </div>
 
-          <table className="w-full rounded-lg overflow-hidden">
+          <table className="w-full  rounded-lg overflow-hidden">
             <thead className="bg-green-200">
               <tr>
                 <th className="px-4 py-2 text-left">
@@ -613,12 +560,8 @@ const fetchVoucher = async (id, accountsList = accounts) => {
               >
                 Cancel
               </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white disabled:opacity-50"
-              >
-                {loading ? "Submitting..." : "Confirm"}
+              <button onClick={handleSubmit} disabled={mutation.isPending} className="px-4 py-2 rounded-lg bg-green-500 text-white">
+                {mutation.isPending ? "Submitting..." : "Confirm"}
               </button>
             </div>
           </div>

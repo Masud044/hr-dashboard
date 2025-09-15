@@ -1,34 +1,24 @@
-import { useEffect, useState } from "react";
+
 import { Pencil, Trash2 } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 export default function JournalVoucher() {
-  const [vouchers, setVouchers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+ const { data, isLoading, error } = useQuery({
+    queryKey: ["unpostedVouchers"],
+    queryFn: async () => {
+      const res = await axios.get("/api/pay_all_unposted.php");
+      return res.data;
+    },
+  });
 
-  useEffect(() => {
-    const fetchUnpostedVouchers = async () => {
-      try {
-        const res = await fetch("/api/pay_all_unposted.php");
-        const data = await res.json();
-        console.log("Fetched vouchers:", data);
+  if (isLoading) return <p>Loading vouchers...</p>;
+  if (error) return <p>Error loading vouchers</p>;
 
-        if (data.status === "success") {
-          setVouchers(data.data || []);
-        } else {
-          setError(data.message || "Failed to load vouchers");
-        }
-      } catch (err) {
-        setError("Error: " + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const vouchers = data?.status === "success" ? data.data : [];
 
-    fetchUnpostedVouchers();
-  }, []);
 
   return (
     <>
@@ -42,10 +32,10 @@ export default function JournalVoucher() {
             All Unposted Vouchers
           </h2>
 
-          {loading && <p>Loading vouchers...</p>}
+          {isLoading && <p>Loading vouchers...</p>}
           {error && <p className="text-red-600">{error}</p>}
 
-          {!loading && !error && (
+          {!isLoading && !error && (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
                 <thead>

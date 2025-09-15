@@ -13,6 +13,7 @@ import ReceiveVoucher from "./components/MainEntry/ReceiveVoucher";
 import ChartAccountForm from "./components/MainEntry/ChartAccountForm";
 import TransactionVoucher from "./components/MainEntry/TransactionVoucher";
 
+
 const App = () => {
 function PrivateRoute({ children }) {
   const { isAuthenticated } = useAuth();
