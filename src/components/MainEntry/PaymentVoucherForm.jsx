@@ -8,15 +8,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../api/Api";
 
 const PaymentVoucherForm = () => {
-  const { voucherId} = useParams();
-   const queryClient = useQueryClient();
-  
+  const { voucherId } = useParams();
+  const queryClient = useQueryClient();
 
   console.log(voucherId);
   const today = new Date().toISOString().split("T")[0];
 
   const [rows, setRows] = useState([]);
-  
+
   const [message, setMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -43,7 +42,7 @@ const PaymentVoucherForm = () => {
     },
   });
 
- const { data: PaymentCodes = [] } = useQuery({
+  const { data: PaymentCodes = [] } = useQuery({
     queryKey: ["paymentCodes"],
     queryFn: async () => {
       const res = await api.get("/receive_code.php");
@@ -51,7 +50,7 @@ const PaymentVoucherForm = () => {
     },
   });
 
- const { data: accounts = [] } = useQuery({
+  const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
       const res = await api.get("/account_code.php");
@@ -74,67 +73,83 @@ const PaymentVoucherForm = () => {
     },
     enabled: !!voucherId && accounts.length > 0,
   });
-useEffect(() => {
-    if (voucherData?.status === "success") {
-      const master = voucherData.master || {};
-      const details = voucherData.details || [];
+  console.log(voucherData)
+  useEffect(() => {
+  if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
+    const master = voucherData.master || {};
+    const details = voucherData.details || [];
 
-      const mappedRows = details.map((d) => ({
-        accountCode: d.code,
-        particulars: accounts.find((acc) => acc.value === d.code)?.name || "",
-        amount: parseFloat(d.debit || d.credit || 0),
-        debitId: d.debit ? d.id : null,
-        creditId: d.credit ? d.id : null,
-      }));
-
-      const total = mappedRows.reduce((sum, r) => sum + Number(r.amount), 0);
-
-      setForm({
-        entryDate: master.TRANS_DATE || today,
-        invoiceNo: master.VOUCHERNO || "",
-        supporting: master.SUPPORTING || "",
-        description: master.DESCRIPTION || "",
-        supplier: master.CUSTOMER_ID || "",
-        glDate: master.GL_ENTRY_DATE || today,
-        paymentCode: master.CASHACCOUNT || "",
-        accountId: "",
-        particular: "",
-        amount: "",
-        totalAmount: total,
+    // Filter out rows that should not appear in editable table
+    const mappedRows = details
+      .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
+      .map((d, i) => {
+        const account = accounts.find((acc) => acc.value === d.code);
+        return {
+          id: d.id || `${d.code}-${i}`,
+          accountCode: d.code,
+          particulars: account ? account.label : "",
+          amount: parseFloat(d.debit),
+          debitId: d.id,
+          creditId: null,
+        };
       });
 
-      setRows(mappedRows);
-    }
-  }, [voucherData, accounts]);
-   // ---------- MUTATION ----------
+    const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+    setForm((prev) => ({
+      ...prev,
+      entryDate: master.TRANS_DATE
+        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      glDate: master.GL_ENTRY_DATE
+        ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      invoiceNo: master.VOUCHERNO || "",
+      supporting: master.SUPPORTING || "",
+      description: master.DESCRIPTION || "",
+      supplier: master.CUSTOMER_ID || "",
+      paymentCode: master.CASHACCOUNT || "",
+      accountId: "",
+      particular: "",
+      amount: "",
+      totalAmount: total,
+    }));
+
+    setRows(mappedRows); // only rows with debit > 0
+  }
+}, [voucherData, accounts, voucherId]);
+
+  // ---------- MUTATION ----------
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
       const apiUrl = isNew ? "/pay_api.php" : "/bwal_update_gl.php";
       const res = await api.post(apiUrl, payload);
+      console.log(res.data);
       return res.data;
     },
     onSuccess: (data, variables) => {
       if (data.status === "success") {
-        setMessage(variables.isNew ? "Voucher created successfully!" : "Voucher updated successfully!");
-    
-       
-          setForm({
-            entryDate: today,
-            invoiceNo: "",
-            supporting: "",
-            description: "",
-            supplier: "",
-            glDate: today,
-            paymentCode: "",
-            accountId: "",
-            particular: "",
-            amount: "",
-            totalAmount: 0,
-          });
-          setRows([]);
-           queryClient.invalidateQueries(["unpostedVouchers"]); 
-          
-        
+        setMessage(
+          variables.isNew
+            ? "Voucher created successfully!"
+            : "Voucher updated successfully!"
+        );
+
+        setForm({
+          entryDate: today,
+          invoiceNo: "",
+          supporting: "",
+          description: "",
+          supplier: "",
+          glDate: today,
+          paymentCode: "",
+          accountId: "",
+          particular: "",
+          amount: "",
+          totalAmount: 0,
+        });
+        setRows([]);
+        queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
         setMessage(data.message || "Error processing voucher.");
       }
@@ -147,10 +162,11 @@ useEffect(() => {
     },
   });
 
- // ---------- HANDLERS ----------
+  // ---------- HANDLERS ----------
   const addRow = () => {
     if (!form.accountId || !form.amount) return;
     const newRow = {
+       id: Date.now(),
       accountCode: form.accountId,
       particulars: form.particular,
       amount: parseFloat(form.amount),
@@ -170,12 +186,12 @@ useEffect(() => {
     });
   };
 
-  const removeRow = (index) => {
-    const updatedRows = rows.filter((_, i) => i !== index);
-    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-    setRows(updatedRows);
-    setForm({ ...form, totalAmount: total });
-  };
+  const removeRow = (id) => {
+  const updatedRows = rows.filter((r) => r.id !== id);
+  const total = updatedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  setRows(updatedRows);
+  setForm({ ...form, totalAmount: total });
+};
 
   const handleSubmit = () => {
     setMessage("");
@@ -183,7 +199,13 @@ useEffect(() => {
 
     if (
       isNew &&
-      (!form.entryDate || !form.glDate || !form.description || !form.supporting || !form.paymentCode || !form.supplier || rows.length === 0)
+      (!form.entryDate ||
+        !form.glDate ||
+        !form.description ||
+        !form.supporting ||
+        !form.paymentCode ||
+        !form.supplier ||
+        rows.length === 0)
     ) {
       setMessage("Please fill all required fields and add at least one row.");
       return;
@@ -208,6 +230,7 @@ useEffect(() => {
         master_id: voucherId,
         voucherno: form.invoiceNo,
         trans_date: form.entryDate,
+        gl_date: form.glDate,
         voucher_type: 2,
         entry_by: 1,
         description: form.description,
@@ -227,111 +250,40 @@ useEffect(() => {
         })),
       };
     }
-
+    console.log(payload);
     mutation.mutate({ isNew, payload });
   };
   return (
     <div className="">
-      <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
+      {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
         Payment Voucher
-      </h2>
+      </h2> */}
 
-      <form>
-        {/* Top Form */}
-        <div className=" p-6 space-y-6 bg-white rounded-lg">
+      {/* Top Form */}
+      <div className=" p-6 space-y-6 bg-white rounded-lg">
+        {message && (
+          <p className="text-center text-red-600 font-medium mt-2 mb-2">
+            {message}
+          </p>
+        )}
 
-          
-          {message && (
-            <p className="text-center text-red-600 font-medium mt-4">
-              {message}
-            </p>
-          )}
+        {/* Save button aligned right */}
 
-          {/* Save button aligned right */}
-          <div className="flex justify-between mb-4">
-            {voucherId ? (
-              <button
-                type="button"
-                 onClick={() => queryClient.invalidateQueries(["voucher", voucherId])}
-                className="text-gray-700 bg-orange-200 rounded-lg px-4 mb-2 py-2"
-              >
-                Edit Voucher
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="text-gray-700 bg-orange-200 rounded-lg px-4 mb-2 py-2"
-              >
-                New Voucher
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg"
-            >
-               {mutation.isPending ? "Submitting..." : voucherId ? "Update Voucher" : "Save Voucher"}
-         
-            </button>
+        <div className="grid grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
+          {/* bill system */}
+          <div className=" bg-gray-200 border-black">
+            <h1 className=" text-center py-10">this is bill</h1>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 bg-white  rounded-lg">
-            {/* Entry Date */}
-            <div className="grid grid-cols-3  px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground">
-                Entry Date
-              </label>
-              <input
-                type="date"
-                value={form.entryDate}
-                onChange={(e) =>
-                  setForm({ ...form, entryDate: e.target.value })
-                }
-                className="col-span-2 w-full border  rounded py-1   bg-white focus-visible:outline-blue-500"
-              />
-            </div>
-
-            {/* Invoice No */}
-            <div className="grid grid-cols-3 px-3 items-center py-3 ">
-              <label className="font-medium block text-sm  text-foreground">
-                Invoice No
-              </label>
-              <input
-                type="text"
-                value={form.invoiceNo}
-                onChange={(e) =>
-                  setForm({ ...form, invoiceNo: e.target.value })
-                }
-                className="col-span-2 w-full  rounded py-1  bg-white focus-visible:outline-blue-500"
-              />
-            </div>
-
-            {/* Supporting */}
-            <div className="grid grid-cols-3 px-3 items-center py-3 ">
-              <label className="font-medium block text-sm  text-foreground">
-                No. of Supporting
-              </label>
-              <input
-                type="number"
-                value={form.supporting}
-                onChange={(e) =>
-                  setForm({ ...form, supporting: e.target.value })
-                }
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 bg-amber-200 rounded-lg">
-            <div className="grid grid-cols-3  px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground">
+          {/* suppliers */}
+          <div className="">
+            <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
+              <label className="font-medium block text-xs  text-foreground">
                 Supplier
               </label>
               <select
                 value={form.supplier}
                 onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
+                className="col-span-2 w-full border rounded py-1 h-8  bg-white "
               >
                 <option value="">Select Supplier</option>
                 {suppliers.map((sup) => (
@@ -341,7 +293,52 @@ useEffect(() => {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-3  px-3 items-center py-3">
+          </div>
+          {/* all input payment field */}
+          <div className="">
+            {/* Entry Date */}
+            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-2">
+              <label className="font-medium block text-sm  text-foreground">
+                Entry Date
+              </label>
+              <input
+                type="date"
+                value={form.entryDate}
+                onChange={(e) =>
+                  setForm({ ...form, entryDate: e.target.value })
+                }
+                className="col-span-2 w-full border  rounded py-1   bg-white "
+              />
+            </div>
+            {/* Invoice No */}
+            <div className="grid grid-cols-3 opacity-60  px-3 items-center ">
+              <label className="font-medium block text-sm  text-foreground">
+                Invoice No
+              </label>
+              <input
+                type="text"
+                value={form.invoiceNo}
+                onChange={(e) =>
+                  setForm({ ...form, invoiceNo: e.target.value })
+                }
+                className="col-span-2 w-full border   rounded py-1  bg-white "
+              />
+            </div>
+            {/* Supporting */}
+            <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center ">
+              <label className="font-medium block text-sm  text-foreground">
+                No. of Supporting
+              </label>
+              <input
+                type="number"
+                value={form.supporting}
+                onChange={(e) =>
+                  setForm({ ...form, supporting: e.target.value })
+                }
+                className="border-collapse w-40 border rounded py-1   bg-white "
+              />
+            </div>
+            <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center">
               <label className="font-medium block text-sm  text-foreground">
                 GL Date
               </label>
@@ -349,10 +346,10 @@ useEffect(() => {
                 type="date"
                 value={form.glDate}
                 onChange={(e) => setForm({ ...form, glDate: e.target.value })}
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
+                className="col-span-2 w-full border rounded py-1  bg-white "
               />
             </div>
-            <div className="grid grid-cols-3  px-3 items-center py-3">
+            <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
               <label className="font-medium block text-sm  text-foreground">
                 Payment Code
               </label>
@@ -361,7 +358,7 @@ useEffect(() => {
                 onChange={(e) =>
                   setForm({ ...form, paymentCode: e.target.value })
                 }
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
+                className="col-span-2 w-full rounded py-1 border  bg-white "
               >
                 <option value="">Select payment</option>
                 {PaymentCodes.map((code) => (
@@ -371,138 +368,159 @@ useEffect(() => {
                 ))}
               </select>
             </div>
-          </div>
-          <div className="mt-4 mb-4 bg-white">
-            <label className="block text-sm font-medium text-gray-600 mb-2 bg-blue-200 py-2 px-4 rounded-lg">
-              Description
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              className="w-full mt-1 border rounded-lg px-3 py-2"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg bg-purple-200">
-            <div className="grid grid-cols-3  px-3 items-center py-1">
+            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-3">
               <label className="font-medium block text-sm  text-foreground">
-                Account ID
-              </label>
-              <Select
-                options={accounts}
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
-                value={
-                  accounts.find((acc) => acc.value === form.accountId) || null
-                }
-                onChange={(selected) =>
-                  setForm({
-                    ...form,
-                    accountId: selected ? selected.value : "",
-                    particular: selected ? selected.name : "",
-                  })
-                }
-                placeholder="Enter account..."
-                isClearable
-                isSearchable
-              />
-            </div>
-            <div className="grid grid-cols-3  px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground">
-                Particular
-              </label>
-              <input
-                type="text"
-                value={form.particular}
-                readOnly
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
-              />
-            </div>
-            <div className="grid grid-cols-3  px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground">
-                Amount
+                Total Amount
               </label>
               <input
                 type="number"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                className="col-span-2 w-full rounded py-1  bg-white focus-visible:outline-blue-500"
+                value={form.totalAmount.toFixed(2)}
+              
+                className="col-span-2 w-full border rounded py-1  bg-white "
               />
             </div>
           </div>
+        </div>
 
-          <table className="w-full  rounded-lg overflow-hidden">
-            <thead className="bg-green-200">
-              <tr>
-                <th className="px-4 py-2 text-left">
-                  <button
-                    type="button"
-                    onClick={addRow}
-                    className="bg-purple-500 text-white px-3 py-1 rounded-lg flex items-center"
-                  >
-                    <Plus className="w-4 h-4 mr-1 font-extrabold" />
-                  </button>
-                </th>
-                <th className="px-4 py-2 font-medium  text-sm  text-foreground">
-                  Account Code
-                </th>
-                <th className="px-4 py-2 font-medium  text-sm  text-foreground">
-                  Particulars
-                </th>
-                <th className="px-4 py-2 font-medium  text-sm  text-foreground">
-                  Amount
-                </th>
-                <th className="px-4 py-2 font-medium  text-sm  text-foreground">
-                  Delete
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => (
-                <tr key={index} className="bg-orange-200">
-                  {/* empty cell under the +Add column */}
-                  <td className="px-4 py-2"></td>
-
-                  <td className="px-4 py-2">
-                    <input
-                      type="text"
-                      value={row.accountCode}
-                      readOnly
-                      className="w-full bg-white rounded-lg px-2 py-1"
-                    />
-                  </td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="text"
-                      value={row.particulars}
-                      readOnly
-                      className="w-full bg-white rounded-lg px-2 py-1"
-                    />
-                  </td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="number"
-                      value={row.amount}
-                      readOnly
-                      className="w-full bg-white px-2 py-1 rounded-lg"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <button type="button" onClick={() => removeRow(index)}>
-                      <Trash2 className="w-5 h-5 text-red-500" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="font-semibold flex justify-end mt-2">
-            Total: {form.totalAmount.toFixed(2)}
+        <div className="mt-4 mb-4 bg-white opacity-60">
+          <label className="block text-sm font-medium text-gray-600 mb-2  py-2 px-4 rounded-lg">
+            Description
+          </label>
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            className="w-full mt-1 border rounded-lg px-3 py-2"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_1fr] opacity-60 gap-4 rounded-lg justify-center items-center ">
+          <div className="grid grid-cols-3  px-3 items-center py-1">
+            <label className="font-medium block text-sm  text-foreground">
+              Account ID
+            </label>
+            <Select
+              options={accounts}
+              className="col-span-2 border w-full  rounded   bg-white "
+              value={
+                accounts.find((acc) => acc.value === form.accountId) || null
+              }
+              onChange={(selected) =>
+                setForm({
+                  ...form,
+                  accountId: selected ? selected.value : "",
+                  particular: selected ? selected.name : "",
+                })
+              }
+              placeholder="Enter account..."
+              isClearable
+              isSearchable
+            />
+          </div>
+          <div className="grid grid-cols-3   px-3 items-center py-3">
+            <label className="font-medium block text-sm  text-foreground">
+              Particular
+            </label>
+            <input
+              type="text"
+              value={form.particular}
+              readOnly
+              className="col-span-2 border w-full rounded py-1  bg-white"
+            />
+          </div>
+          <div className="grid grid-cols-3  px-3  items-center py-3">
+            <label className="font-medium block text-sm  text-foreground">
+              Amount
+            </label>
+            <input
+              type="number"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              className="col-span-1 border w-full rounded py-1  bg-white "
+            />
+          </div>
+          <div className="px-4 py-2">
+            <button
+              type="button"
+              onClick={addRow}
+              className=" text-black border px-3 py-1 rounded-lg flex items-center"
+            >
+              <span className="mr-1 font-extrabold">+</span>Add
+            </button>
           </div>
         </div>
-      </form>
-       <JournalVoucher></JournalVoucher> 
+
+        <table className="w-full table-fixed border-collapse opacity-80 rounded-lg overflow-x-auto">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 w-[25%] text-center font-medium text-sm text-foreground">
+                Account Code
+              </th>
+              <th className="px-4 py-2 w-[35%] text-center font-medium text-sm text-foreground">
+                Particulars
+              </th>
+              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
+                Amount
+              </th>
+              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
+                Delete
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className="border">
+                <td className="border px-4 py-2">{row.accountCode}</td>
+                <td className="border px-4 py-2">{row.particulars}</td>
+                <td className="border px-4 py-2 text-right">
+                  {Number(row.amount).toFixed(2)}
+                </td>
+                <td className="border px-4 py-2 text-center">
+                  <button type="button" onClick={() => removeRow(row.id)}>
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {/* --- Summary Rows --- */}
+            <tr>
+              <td colSpan="2" className="p-2"></td>
+              <td className="border p-2 text-right text-gray-600">Subtotal</td>
+              <td className="border p-2 text-right">
+                {form.totalAmount.toFixed(2)}
+              </td>
+              <td className="border p-2"></td>
+            </tr>
+
+            <tr className="font-semibold">
+              <td colSpan="2" className="p-2"></td>
+              <td className="border p-2 text-right text-gray-600">Total</td>
+              <td className="border p-2 text-right">
+                {form.totalAmount.toFixed(2)}
+              </td>
+              <td className="border p-2"></td>
+            </tr>
+          </tbody>
+        </table>
+
+       
+        <div className="flex justify-end gap-10 mb-4">
+         
+
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="bg-green-500 text-white px-12 py-2 rounded-lg"
+          >
+            {mutation.isPending
+              ? "Submitting..."
+              : voucherId
+              ? "Update"
+              : "Save"}
+          </button>
+        </div>
+      </div>
+    
+      <JournalVoucher></JournalVoucher>
 
       {/* Modal */}
       {showModal && (
@@ -560,7 +578,11 @@ useEffect(() => {
               >
                 Cancel
               </button>
-              <button onClick={handleSubmit} disabled={mutation.isPending} className="px-4 py-2 rounded-lg bg-green-500 text-white">
+              <button
+                onClick={handleSubmit}
+                disabled={mutation.isPending}
+                className="px-4 py-2 rounded-lg bg-green-500 text-white"
+              >
                 {mutation.isPending ? "Submitting..." : "Confirm"}
               </button>
             </div>
