@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "../../api/Api";
 
+import PageTitle from "../RouteTitle";
+
 const PaymentVoucherForm = () => {
   const { voucherId } = useParams();
   const queryClient = useQueryClient();
@@ -14,8 +16,16 @@ const PaymentVoucherForm = () => {
   console.log(voucherId);
   const today = new Date().toISOString().split("T")[0];
 
-  const [rows, setRows] = useState([]);
-
+  const [rows, setRows] = useState([
+    {
+      id: "dummy", // dummy row id
+      accountCode: "",
+      particulars: "",
+      amount: 0,
+      debitId: null,
+      creditId: null,
+    },
+  ]);
   const [message, setMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -73,51 +83,54 @@ const PaymentVoucherForm = () => {
     },
     enabled: !!voucherId && accounts.length > 0,
   });
-  console.log(voucherData)
+  console.log(voucherData);
   useEffect(() => {
-  if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
-    const master = voucherData.master || {};
-    const details = voucherData.details || [];
+    if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
+      const master = voucherData.master || {};
+      const details = voucherData.details || [];
 
-    // Filter out rows that should not appear in editable table
-    const mappedRows = details
-      .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
-      .map((d, i) => {
-        const account = accounts.find((acc) => acc.value === d.code);
-        return {
-          id: d.id || `${d.code}-${i}`,
-          accountCode: d.code,
-          particulars: account ? account.label : "",
-          amount: parseFloat(d.debit),
-          debitId: d.id,
-          creditId: null,
-        };
-      });
+      // Filter out rows that should not appear in editable table
+      const mappedRows = details
+        .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
+        .map((d, i) => {
+          const account = accounts.find((acc) => acc.value === d.code);
+          return {
+            id: d.id || `${d.code}-${i}`,
+            accountCode: d.code,
+            particulars: account ? account.label : "",
+            amount: parseFloat(d.debit),
+            debitId: d.id,
+            creditId: null,
+          };
+        });
 
-    const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+      const total = mappedRows.reduce(
+        (sum, r) => sum + Number(r.amount || 0),
+        0
+      );
 
-    setForm((prev) => ({
-      ...prev,
-      entryDate: master.TRANS_DATE
-        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      glDate: master.GL_ENTRY_DATE
-        ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      invoiceNo: master.VOUCHERNO || "",
-      supporting: master.SUPPORTING || "",
-      description: master.DESCRIPTION || "",
-      supplier: master.CUSTOMER_ID || "",
-      paymentCode: master.CASHACCOUNT || "",
-      accountId: "",
-      particular: "",
-      amount: "",
-      totalAmount: total,
-    }));
+      setForm((prev) => ({
+        ...prev,
+        entryDate: master.TRANS_DATE
+          ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        glDate: master.GL_ENTRY_DATE
+          ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        invoiceNo: master.VOUCHERNO || "",
+        supporting: master.SUPPORTING || "",
+        description: master.DESCRIPTION || "",
+        supplier: master.CUSTOMER_ID || "",
+        paymentCode: master.CASHACCOUNT || "",
+        accountId: "",
+        particular: "",
+        amount: "",
+        totalAmount: total,
+      }));
 
-    setRows(mappedRows); // only rows with debit > 0
-  }
-}, [voucherData, accounts, voucherId]);
+      setRows(mappedRows); // only rows with debit > 0
+    }
+  }, [voucherData, accounts, voucherId]);
 
   // ---------- MUTATION ----------
   const mutation = useMutation({
@@ -166,14 +179,22 @@ const PaymentVoucherForm = () => {
   const addRow = () => {
     if (!form.accountId || !form.amount) return;
     const newRow = {
-       id: Date.now(),
+      id: Date.now(),
       accountCode: form.accountId,
       particulars: form.particular,
       amount: parseFloat(form.amount),
       debitId: null,
       creditId: null,
     };
-    const updatedRows = [...rows, newRow];
+    let updatedRows;
+    if (rows.length === 1 && rows[0].id === "dummy") {
+      // replace dummy row with actual row
+      updatedRows = [newRow];
+    } else {
+      // append normally
+      updatedRows = [...rows, newRow];
+    }
+
     const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
 
     setRows(updatedRows);
@@ -187,11 +208,14 @@ const PaymentVoucherForm = () => {
   };
 
   const removeRow = (id) => {
-  const updatedRows = rows.filter((r) => r.id !== id);
-  const total = updatedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  setRows(updatedRows);
-  setForm({ ...form, totalAmount: total });
-};
+    const updatedRows = rows.filter((r) => r.id !== id);
+    const total = updatedRows.reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
+    setRows(updatedRows);
+    setForm({ ...form, totalAmount: total });
+  };
 
   const handleSubmit = () => {
     setMessage("");
@@ -201,7 +225,7 @@ const PaymentVoucherForm = () => {
       isNew &&
       (!form.entryDate ||
         !form.glDate ||
-        !form.description ||
+        // !form.description ||
         !form.supporting ||
         !form.paymentCode ||
         !form.supplier ||
@@ -258,9 +282,10 @@ const PaymentVoucherForm = () => {
       {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
         Payment Voucher
       </h2> */}
+      <PageTitle></PageTitle>
 
       {/* Top Form */}
-      <div className=" p-6 space-y-6 bg-white rounded-lg">
+      <div className=" p-6 space-y-6 bg-white rounded-lg shadow-md">
         {message && (
           <p className="text-center text-red-600 font-medium mt-2 mb-2">
             {message}
@@ -321,6 +346,7 @@ const PaymentVoucherForm = () => {
                 onChange={(e) =>
                   setForm({ ...form, invoiceNo: e.target.value })
                 }
+                disabled={!voucherId}
                 className="col-span-2 w-full border   rounded py-1  bg-white "
               />
             </div>
@@ -375,7 +401,6 @@ const PaymentVoucherForm = () => {
               <input
                 type="number"
                 value={form.totalAmount.toFixed(2)}
-              
                 className="col-span-2 w-full border rounded py-1  bg-white "
               />
             </div>
@@ -393,13 +418,13 @@ const PaymentVoucherForm = () => {
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_1fr] opacity-60 gap-4 rounded-lg justify-center items-center ">
-          <div className="grid grid-cols-3  px-3 items-center py-1">
+          <div className="grid grid-cols-3  px-3 items-center  py-1">
             <label className="font-medium block text-sm  text-foreground">
               Account ID
             </label>
             <Select
               options={accounts}
-              className="col-span-2 border w-full  rounded   bg-white "
+              className="col-span-2 border w-full rounded shadow-2xl"
               value={
                 accounts.find((acc) => acc.value === form.accountId) || null
               }
@@ -413,6 +438,16 @@ const PaymentVoucherForm = () => {
               placeholder="Enter account..."
               isClearable
               isSearchable
+              menuPortalTarget={document.body} 
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: "white", 
+                  border: "1px solid #e5e7eb", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }),
+              }}
             />
           </div>
           <div className="grid grid-cols-3   px-3 items-center py-3">
@@ -441,7 +476,7 @@ const PaymentVoucherForm = () => {
             <button
               type="button"
               onClick={addRow}
-              className=" text-black border px-3 py-1 rounded-lg flex items-center"
+              className=" text-black cursor-pointer border px-3 py-1 rounded-lg flex items-center"
             >
               <span className="mr-1 font-extrabold">+</span>Add
             </button>
@@ -451,18 +486,16 @@ const PaymentVoucherForm = () => {
         <table className="w-full table-fixed border-collapse opacity-80 rounded-lg overflow-x-auto">
           <thead>
             <tr>
-              <th className="px-4 py-2 w-[25%] text-center font-medium text-sm text-foreground">
+              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
                 Account Code
               </th>
               <th className="px-4 py-2 w-[35%] text-center font-medium text-sm text-foreground">
                 Particulars
               </th>
-              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
+              <th className="px-4 py-2 w-[10%] text-center font-medium text-sm text-foreground">
                 Amount
               </th>
-              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
-                Delete
-              </th>
+              <th className="px-4 py-2 w-[4%]  text-center font-medium text-sm text-foreground"></th>
             </tr>
           </thead>
           <tbody>
@@ -470,46 +503,43 @@ const PaymentVoucherForm = () => {
               <tr key={row.id} className="border">
                 <td className="border px-4 py-2">{row.accountCode}</td>
                 <td className="border px-4 py-2">{row.particulars}</td>
-                <td className="border px-4 py-2 text-right">
+                <td className="border px-4 py-2 text-center">
                   {Number(row.amount).toFixed(2)}
                 </td>
-                <td className="border px-4 py-2 text-center">
+                <td className="border px-4 py-2 text-center ">
                   <button type="button" onClick={() => removeRow(row.id)}>
-                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <Trash2 className="w-5 h-5 cursor-pointer text-red-500" />
                   </button>
                 </td>
               </tr>
             ))}
 
             {/* --- Summary Rows --- */}
-            <tr>
-              <td colSpan="2" className="p-2"></td>
-              <td className="border p-2 text-right text-gray-600">Subtotal</td>
-              <td className="border p-2 text-right">
-                {form.totalAmount.toFixed(2)}
-              </td>
-              <td className="border p-2"></td>
-            </tr>
 
-            <tr className="font-semibold">
-              <td colSpan="2" className="p-2"></td>
-              <td className="border p-2 text-right text-gray-600">Total</td>
-              <td className="border p-2 text-right">
-                {form.totalAmount.toFixed(2)}
-              </td>
-              <td className="border p-2"></td>
-            </tr>
+            {rows.length > 0 && (
+              <tr className="font-semibold">
+                <td colSpan="1" className="p-2"></td>
+                <td className="border p-2 text-right text-gray-600">Total</td>
+                <td className="border p-2 text-center">
+                  {form.totalAmount.toFixed(2)}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 
-       
-        <div className="flex justify-end gap-10 mb-4">
-         
-
+        <div className="flex justify-between items-center gap-10 mb-4">
+           <button
+            type="button"
+           
+            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+          >
+            print
+          </button>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="bg-green-500 text-white px-12 py-2 rounded-lg"
+            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
             {mutation.isPending
               ? "Submitting..."
@@ -517,10 +547,13 @@ const PaymentVoucherForm = () => {
               ? "Update"
               : "Save"}
           </button>
+           
         </div>
+      
       </div>
-    
-      <JournalVoucher></JournalVoucher>
+      
+
+      <JournalVoucher showTitle={false} />
 
       {/* Modal */}
       {showModal && (

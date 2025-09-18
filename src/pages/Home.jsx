@@ -7,9 +7,7 @@ const Home = () => {
       <header className="border-b bg-white/70 backdrop-blur-sm shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
-            {/* <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">HR</span>
-            </div> */}
+           
            <img src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png" alt="" srcset="" width={170} height={170} />
           </div>
           <div className="flex items-center gap-4">

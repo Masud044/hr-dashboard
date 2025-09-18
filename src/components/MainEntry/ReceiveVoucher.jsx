@@ -1,234 +1,619 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Helmet } from "react-helmet";
+import Select from "react-select";
+import JournalVoucher from "./JournalVoucher";
+import { useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import api from "../../api/Api";
+
+import PageTitle from "../RouteTitle";
+import ReceiveJournalList from "./receiveJournalList";
 
 const ReceiveVoucher = () => {
+  const { voucherId } = useParams();
+  const queryClient = useQueryClient();
+
+  console.log(voucherId);
+  const today = new Date().toISOString().split("T")[0];
+
   const [rows, setRows] = useState([
-    { accountCode: " ", particulars: " ", debit: " ", credit:" " },
+    {
+      id: "dummy", // dummy row id
+      accountCode: "",
+      particulars: "",
+      amount: 0,
+      debitId: null,
+      creditId: null,
+    },
   ]);
+  const [message, setMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
-    entryDate: " ",
-    invoiceNo: " ",
-    supporting: " ",
-    description: " ",
+    entryDate: today,
+    invoiceNo: "",
+    supporting: "",
+    description: "",
     supplier: "",
-    glDate: " ",
+    glDate: today,
     paymentCode: "",
+    accountId: "",
+    particular: "",
+    amount: "",
+    totalAmount: 0,
   });
 
-//   const addRow = () => {
-//     setRows([...rows, { accountCode: "", particulars: "", debit: "", credit:""}]);
-//   };
+  // ---------- FETCH HELPERS ----------
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      const res = await api.get("/customer.php");
+      return res.data.data || [];
+    },
+  });
 
-//   const removeRow = (index) => {
-//     const updated = [...rows];
-//     updated.splice(index, 1);
-//     setRows(updated);
-//   };
+  const { data: ReceiveCodes = [] } = useQuery({
+    queryKey: ["receiveCodes"],
+    queryFn: async () => {
+      const res = await api.get("/receive_code.php");
+      return res.data.success === 1 ? res.data.data || [] : [];
+    },
+  });
 
-  const handleRowChange = (index, field, value) => {
-    const updated = [...rows];
-    updated[index][field] = value;
-    setRows(updated);
+  const { data: accounts = [] } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      const res = await api.get("/rec_account_code.php");
+      if (res.data.success === 1) {
+        return res.data.data.map((acc) => ({
+          value: acc.ACCOUNT_ID,
+          label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
+          name: acc.ACCOUNT_NAME,
+        }));
+      }
+      return [];
+    },
+  });
+  // ---------- FETCH VOUCHER IF EDIT ----------
+  const { data: voucherData } = useQuery({
+    queryKey: ["voucher", voucherId],
+    queryFn: async () => {
+      const res = await api.get(`/pay_view.php?id=${voucherId}`);
+      return res.data;
+    },
+    enabled: !!voucherId && accounts.length > 0,
+  });
+  console.log(voucherData);
+  useEffect(() => {
+    if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
+      const master = voucherData.master || {};
+      const details = voucherData.details || [];
+
+      // Filter out rows that should not appear in editable table
+      const mappedRows = details
+        .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
+        .map((d, i) => {
+          const account = accounts.find((acc) => acc.value === d.code);
+          return {
+            id: d.id || `${d.code}-${i}`,
+            accountCode: d.code,
+            particulars: account ? account.label : "",
+            amount: parseFloat(d.credit),
+            debitId:null,
+            creditId: d.id,
+          };
+        });
+
+      const total = mappedRows.reduce(
+        (sum, r) => sum + Number(r.amount || 0),
+        0
+      );
+
+      setForm((prev) => ({
+        ...prev,
+        entryDate: master.TRANS_DATE
+          ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        glDate: master.GL_ENTRY_DATE
+          ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        invoiceNo: master.VOUCHERNO || "",
+        supporting: master.SUPPORTING || "",
+        description: master.DESCRIPTION || "",
+        supplier: master.CUSTOMER_ID || "",
+        paymentCode: master.CASHACCOUNT || "",
+        accountId: "",
+        particular: "",
+        amount: "",
+        totalAmount: total,
+      }));
+
+      setRows(mappedRows); // only rows with debit > 0
+    }
+  }, [voucherData, accounts, voucherId]);
+
+  // ---------- MUTATION ----------
+  const mutation = useMutation({
+    mutationFn: async ({ isNew, payload }) => {
+      const apiUrl = isNew ? "/addReceive.php" : "/bwal_update_gl.php";
+      const res = await api.post(apiUrl, payload);
+      console.log(res.data);
+      return res.data;
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === "success") {
+        setMessage(
+          variables.isNew
+            ? "Voucher created successfully!"
+            : "Voucher updated successfully!"
+        );
+
+        setForm({
+          entryDate: today,
+          invoiceNo: "",
+          supporting: "",
+          description: "",
+          customer: "",
+          glDate: today,
+          receiveCode: "",
+          accountId: "",
+          particular: "",
+          amount: "",
+          totalAmount: 0,
+        });
+        setRows([]);
+        queryClient.invalidateQueries(["unpostedVouchers"]);
+      } else {
+        setMessage(data.message || "Error processing voucher.");
+      }
+    },
+    onError: () => {
+      setMessage("Error submitting voucher. Please try again.");
+    },
+    onSettled: () => {
+      setShowModal(false);
+    },
+  });
+
+  // ---------- HANDLERS ----------
+  const addRow = () => {
+    if (!form.accountId || !form.amount) return;
+    const newRow = {
+      id: Date.now(),
+      accountCode: form.accountId,
+      particulars: form.particular,
+      amount: parseFloat(form.amount),
+      debitId: null,
+      creditId: null,
+    };
+    let updatedRows;
+    if (rows.length === 1 && rows[0].id === "dummy") {
+      // replace dummy row with actual row
+      updatedRows = [newRow];
+    } else {
+      // append normally
+      updatedRows = [...rows, newRow];
+    }
+
+    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
+
+    setRows(updatedRows);
+    setForm({
+      ...form,
+      accountId: "",
+      particular: "",
+      amount: "",
+      totalAmount: total,
+    });
   };
 
-//   const totalAmount = rows.reduce(
-//     (sum, row) => sum + Number(row.amount || 0),
-//     0
-//   );
+  const removeRow = (id) => {
+    const updatedRows = rows.filter((r) => r.id !== id);
+    const total = updatedRows.reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
+    setRows(updatedRows);
+    setForm({ ...form, totalAmount: total });
+  };
 
+  const handleSubmit = () => {
+    setMessage("");
+    const isNew = !voucherId;
+
+    if (
+      isNew &&
+      (!form.entryDate ||
+        !form.glDate ||
+        // !form.description ||
+        !form.supporting ||
+        !form.receiveCode ||
+        !form.customer ||
+        rows.length === 0)
+    ) {
+      setMessage("Please fill all required fields and add at least one row.");
+      return;
+    }
+
+    let payload = {};
+    if (isNew) {
+      payload = {
+        trans_date: form.entryDate,
+        gl_date: form.glDate,
+        receive_desc: form.description?.trim() || "N/A",  
+        supporting: String(form.supporting),
+        receive: form.receiveCode,
+        supplierid: form.customer,
+        user_id: "1",
+        totalAmount: String(form.totalAmount),
+        accountID: rows.map((r) => r.accountCode),
+        amount2: rows.map((r) => String(r.amount || 0)),
+      };
+    } else {
+      payload = {
+        master_id: voucherId,
+        voucherno: form.invoiceNo,
+        trans_date: form.entryDate,
+        gl_date: form.glDate,
+        voucher_type: 2,
+        entry_by: 1,
+        receive_desc: form.description || "", 
+        reference_no: form.invoiceNo || "",
+        supporting: Number(form.supporting) || 0,
+        cashaccount: form.paymentCode || "",
+        posted: 0,
+        customer_id: form.supplier,
+        auto_invoice: "",
+        status_pay_recive: 0,
+        unit_id: 0,
+        details: rows.map((r) => ({
+          code: r.accountCode,
+          debit: r.debitId ? Number(r.amount) : 0,
+          credit: r.creditId ? Number(r.amount) : 0,
+          description: r.particulars,
+        })),
+      };
+    }
+    console.log(payload);
+    mutation.mutate({ isNew, payload });
+  };
   return (
-    <>
+    <div className="">
+      {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
+        Payment Voucher
+      </h2> */}
+      <PageTitle></PageTitle>
 
-      <Helmet>
-         <title>Dashboard | Receive-voucher | HAMS</title>
-      </Helmet>
-    <div className="bg-white shadow-md rounded-2xl p-6 space-y-6">
-      <h2 className="text-xl font-semibold text-gray-700   bg-green-200 rounded-lg px-4 py-2 hover:bg-green-200">
-        Journal Voucher
-      </h2>
+      {/* Top Form */}
+      <div className=" p-6 space-y-6 bg-white rounded-lg shadow-md">
+        {message && (
+          <p className="text-center text-red-600 font-medium mt-2 mb-2">
+            {message}
+          </p>
+        )}
 
-      {/* Top form section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-600 bg-purple-200 py-2 px-4 rounded-lg">
-            Entry Date <span className="text-red-500">*</span>
+        {/* Save button aligned right */}
+
+        <div className="grid grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
+          {/* bill system */}
+          <div className=" bg-gray-200 border-black">
+            <h1 className=" text-center py-10">this is bill</h1>
+          </div>
+          {/* Customer */}
+          <div className="">
+            <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
+              <label className="font-medium block text-xs  text-foreground">
+                Customer
+              </label>
+              <select
+                value={form.customer}
+                onChange={(e) => setForm({ ...form, customer: e.target.value })}
+                className="col-span-2 w-full border rounded py-1 h-8  bg-white "
+              >
+                <option value="">Select Customer</option>
+                {customers.map((cus) => (
+                  <option key={cus.CUSTOMER_ID} value={cus.CUSTOMER_ID}>
+                    {cus.CUSTOMER_NAME}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {/* all input payment field */}
+          <div className="">
+            {/* Entry Date */}
+            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-2">
+              <label className="font-medium block text-sm  text-foreground">
+                Entry Date
+              </label>
+              <input
+                type="date"
+                value={form.entryDate}
+                onChange={(e) =>
+                  setForm({ ...form, entryDate: e.target.value })
+                }
+                className="col-span-2 w-full border  rounded py-1   bg-white "
+              />
+            </div>
+            {/* Invoice No */}
+            <div className="grid grid-cols-3 opacity-60  px-3 items-center ">
+              <label className="font-medium block text-sm  text-foreground">
+                Invoice No
+              </label>
+              <input
+                type="text"
+                value={form.invoiceNo}
+                onChange={(e) =>
+                  setForm({ ...form, invoiceNo: e.target.value })
+                }
+                disabled={!voucherId}
+                className="col-span-2 w-full border   rounded py-1  bg-white "
+              />
+            </div>
+            {/* Supporting */}
+            <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center ">
+              <label className="font-medium block text-sm  text-foreground">
+                No. of Supporting
+              </label>
+              <input
+                type="number"
+                value={form.supporting}
+                onChange={(e) =>
+                  setForm({ ...form, supporting: e.target.value })
+                }
+                className="border-collapse w-40 border rounded py-1   bg-white "
+              />
+            </div>
+            <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center">
+              <label className="font-medium block text-sm  text-foreground">
+                GL Date
+              </label>
+              <input
+                type="date"
+                value={form.glDate}
+                onChange={(e) => setForm({ ...form, glDate: e.target.value })}
+                className="col-span-2 w-full border rounded py-1  bg-white "
+              />
+            </div>
+            <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
+              <label className="font-medium block text-sm  text-foreground">
+                Receive Code
+              </label>
+              <select
+                value={form.receiveCode}
+                onChange={(e) =>
+                  setForm({ ...form, receiveCode: e.target.value })
+                }
+                className="col-span-2 w-full rounded py-1 border  bg-white "
+              >
+                <option value="">Select receive</option>
+                {ReceiveCodes.map((code) => (
+                  <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
+                    {code.ACCOUNT_NAME}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-3">
+              <label className="font-medium block text-sm  text-foreground">
+                Total Amount
+              </label>
+              <input
+                type="number"
+                value={form.totalAmount.toFixed(2)}
+                className="col-span-2 w-full border rounded py-1  bg-white "
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 mb-4 bg-white opacity-60">
+          <label className="block text-sm font-medium text-gray-600 mb-2  py-2 px-4 rounded-lg">
+            Description
           </label>
-          <input
-            type="date"
-            value={form.entryDate}
-            onChange={(e) => setForm({ ...form, entryDate: e.target.value })}
-            className="w-full mt-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400"
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            className="w-full mt-1 border rounded-lg px-3 py-2"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600  bg-purple-200 py-2 px-4 rounded-lg">
-            Invoice No
-          </label>
-          <input
-            type="text"
-            value={form.invoiceNo}
-            onChange={(e) => setForm({ ...form, invoiceNo: e.target.value })}
-            className="w-full mt-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_1fr] opacity-60 gap-4 rounded-lg justify-center items-center ">
+          <div className="grid grid-cols-3  px-3 items-center  py-1">
+            <label className="font-medium block text-sm  text-foreground">
+              Account ID
+            </label>
+            <Select
+              options={accounts}
+              className="col-span-2 border w-full rounded shadow-2xl"
+              value={
+                accounts.find((acc) => acc.value === form.accountId) || null
+              }
+              onChange={(selected) =>
+                setForm({
+                  ...form,
+                  accountId: selected ? selected.value : "",
+                  particular: selected ? selected.name : "",
+                })
+              }
+              placeholder="Enter account..."
+              isClearable
+              isSearchable
+              menuPortalTarget={document.body} 
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: "white", 
+                  border: "1px solid #e5e7eb", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                }),
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-3   px-3 items-center py-3">
+            <label className="font-medium block text-sm  text-foreground">
+              Particular
+            </label>
+            <input
+              type="text"
+              value={form.particular}
+              readOnly
+              className="col-span-2 border w-full rounded py-1  bg-white"
+            />
+          </div>
+          <div className="grid grid-cols-3  px-3  items-center py-3">
+            <label className="font-medium block text-sm  text-foreground">
+              Amount
+            </label>
+            <input
+              type="number"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              className="col-span-1 border w-full rounded py-1  bg-white "
+            />
+          </div>
+          <div className="px-4 py-2">
+            <button
+              type="button"
+              onClick={addRow}
+              className=" text-black cursor-pointer border px-3 py-1 rounded-lg flex items-center"
+            >
+              <span className="mr-1 font-extrabold">+</span>Add
+            </button>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600  bg-purple-200 py-2 px-4 rounded-lg">
-            No. of Supporting
-          </label>
-          <input
-            type="number"
-            value={form.supporting}
-            onChange={(e) => setForm({ ...form, supporting: e.target.value })}
-            className="w-full mt-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-600 bg-blue-200 py-2 px-4 rounded-lg">
-          Description
-        </label>
-        <textarea
-          type="text"
-          value={form.supporting}
-          onChange={(e) => setForm({ ...form, supporting: e.target.value })}
-          className="w-full mt-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400"
-        />
-      </div>
 
-      {/* Second row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-600  bg-orange-200 py-2 px-4 rounded-lg">
-            GL Date
-          </label>
-          <input
-            type="date"
-            value={form.glDate}
-            onChange={(e) => setForm({ ...form, glDate: e.target.value })}
-            className="w-full mt-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-         <div>
-          <label className="block text-sm font-medium text-foreground mb-2  bg-orange-200 py-2 px-4 rounded-lg">
-            Available Balance:
-          </label>
-          <input
-            type="number"
-            value={form.availableBalance}
-            className="w-full px-3 py-2 border border-input-border rounded bg-input text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2  bg-orange-200 py-2 px-4 rounded-lg">
-            Total Amount
-          </label>
-          <input
-            type="number"
-            value={form.totalAmount}
-            className="w-full px-3 py-2 border border-input-border rounded bg-input text-foreground focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-        </div>
-       
-      </div>
-
-      
-
-     
-      
-      <div>
-       
-
-        <h3 className="text-lg font-medium text-gray-700 mb-2  bg-green-200 py-2 px-4 rounded-lg">Accounts</h3>
-        <table className="w-full  rounded-lg overflow-hidden">
-          <thead className="bg-gray-100">
+        <table className="w-full table-fixed border-collapse opacity-80 rounded-lg overflow-x-auto">
+          <thead>
             <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 bg-green-100 ">
+              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
                 Account Code
               </th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 bg-purple-200">
+              <th className="px-4 py-2 w-[35%] text-center font-medium text-sm text-foreground">
                 Particulars
               </th>
-              <th className="px-4 py-2 text-right text-sm font-medium text-gray-600 bg-blue-200">
-                Debit
+              <th className="px-4 py-2 w-[10%] text-center font-medium text-sm text-foreground">
+                Amount
               </th>
-              <th className="px-4 py-2 text-right text-sm font-medium text-gray-600 bg-orange-200">Credit</th>
+              <th className="px-4 py-2 w-[4%]  text-center font-medium text-sm text-foreground"></th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
-              <tr key={index} className="">
-                <td className="px-4 py-2">
-                  <input
-                    type="text"
-                    value={row.accountCode}
-                    onChange={(e) =>
-                      handleRowChange(index, "accountCode", e.target.value)
-                    }
-                    className="w-full border rounded-lg px-2 py-1"
-                  />
+            {rows.map((row) => (
+              <tr key={row.id} className="border">
+                <td className="border px-4 py-2">{row.accountCode}</td>
+                <td className="border px-4 py-2">{row.particulars}</td>
+                <td className="border px-4 py-2 text-center">
+                  {Number(row.amount).toFixed(2)}
                 </td>
-                <td className="px-4 py-2">
-                  <input
-                    type="text"
-                    value={row.particulars}
-                    onChange={(e) =>
-                      handleRowChange(index, "particulars", e.target.value)
-                    }
-                    className="w-full border rounded-lg px-2 py-1"
-                  />
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <input
-                    type="number"
-                    value={row.debit}
-                    onChange={(e) =>
-                      handleRowChange(index, "debit", e.target.value)
-                    }
-                    className="w-24 border rounded-lg px-2 py-1 text-right"
-                  />
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <input
-                    type="number"
-                    value={row.credit}
-                    onChange={(e) =>
-                      handleRowChange(index, "credit", e.target.value)
-                    }
-                    className="w-24 border rounded-lg px-2 py-1 text-right"
-                  />
+                <td className="border px-4 py-2 text-center ">
+                  <button type="button" onClick={() => removeRow(row.id)}>
+                    <Trash2 className="w-5 h-5 cursor-pointer text-red-500" />
+                  </button>
                 </td>
               </tr>
             ))}
+
+            {/* --- Summary Rows --- */}
+
+            {rows.length > 0 && (
+              <tr className="font-semibold">
+                <td colSpan="1" className="p-2"></td>
+                <td className="border p-2 text-right text-gray-600">Total</td>
+                <td className="border p-2 text-center">
+                  {form.totalAmount.toFixed(2)}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 
-        {/* <div className="flex justify-between items-center mt-3">
+        <div className="flex justify-end gap-10 mb-4">
           <button
-            onClick={addRow}
-            className="flex items-center gap-1 px-3 py-1 rounded-lg bg-green-100 text-green-700 hover:bg-green-200"
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
-            <Plus className="w-4 h-4" /> Add Row
+            {mutation.isPending
+              ? "Submitting..."
+              : voucherId
+              ? "Update"
+              : "Save"}
           </button>
-          <div className="text-right font-semibold text-gray-700">
-            Total: {totalAmount.toFixed(2)}
-          </div>
-        </div> */}
+        </div>
       </div>
+      <ReceiveJournalList />
 
-      {/* Action buttons */}
-      {/* <div className="flex justify-end gap-3">
-        <button className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
-          Cancel
-        </button>
-        <button className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 shadow">
-          Save Voucher
-        </button>
-      </div> */}
-    </div></>
-    
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0  bg-black flex justify-center items-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-11/12 md:w-1/2 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">
+              Confirm Voucher Submission
+            </h2>
+
+            <div className="space-y-2">
+              <p>
+                <strong>Entry Date:</strong> {form.entryDate}
+              </p>
+              <p>
+                <strong>Invoice No:</strong> {form.invoiceNo}
+              </p>
+              <p>
+                <strong>No. of Supporting:</strong> {form.supporting}
+              </p>
+              <p>
+                <strong>Description:</strong> {form.description}
+              </p>
+              <p>
+                <strong>Customer:</strong>{" "}
+                {
+                  customers.find((s) => s.CUSTOMER_ID_ID === form.CUSTOMER_NAME)
+                    ?.CUSTOMER_NAME
+                }
+              </p>
+              <p>
+                <strong>GL Date:</strong> {form.glDate}
+              </p>
+              <p>
+                <strong>receive Code:</strong> {form.receiveCode}
+              </p>
+
+              <h3 className="font-semibold mt-2">Accounts:</h3>
+              <ul className="list-disc pl-5">
+                {rows.map((row, index) => (
+                  <li key={index}>
+                    {row.accountCode} - {row.particulars} - {row.amount}
+                  </li>
+                ))}
+              </ul>
+
+              <p className="font-semibold mt-2">
+                Total: {form.totalAmount.toFixed(2)}
+              </p>
+            </div>
+
+            <div className="flex justify-end mt-4 space-x-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={mutation.isPending}
+                className="px-4 py-2 rounded-lg bg-green-500 text-white"
+              >
+                {mutation.isPending ? "Submitting..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

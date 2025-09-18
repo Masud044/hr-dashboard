@@ -17,13 +17,7 @@ import {
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 
-// const menu = [
-//   { name: "Dashboard", icon: <Home size={18} /> },
-//   { name: "Finance", icon: <DollarSign size={18} /> },
-//   { name: "Org Structure", icon: <Layers size={18} /> },
-//   { name: "My Team", icon: <Users size={18} />, active: true },
-//   { name: "Water Cooler", icon: <Coffee size={18} /> },
-// ];
+
 
 export default function Sidebar() {
   const [openMenu, setOpenMenu] = useState(null);
@@ -33,7 +27,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-60 bg-white border-r flex flex-col justify-between sticky top-0 min-h-screen">
+    <aside className="w-60 bg-white border-r flex justify-between sticky top-0 min-h-screen">
       <div>
         <div className="px-4 py-6 flex items-center gap-2">
           <img
@@ -63,7 +57,7 @@ export default function Sidebar() {
             <div className="bg-white">
               <NavLink
                 to="/dashboard"
-                end // 👈 ensures only /dashboard (not nested) matches
+                end 
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -76,7 +70,7 @@ export default function Sidebar() {
               </NavLink>
               <NavLink
                 to="/dashboard/receive-voucher"
-                end // 👈 ensures only /dashboard (not nested) matches
+                end 
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -89,7 +83,7 @@ export default function Sidebar() {
               </NavLink>
               <NavLink
                 to="/dashboard/payment-voucher"
-                end // 👈 ensures only /dashboard (not nested) matches
+                end 
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -102,7 +96,7 @@ export default function Sidebar() {
               </NavLink>
               <NavLink
                 to="/dashboard/journal-voucher"
-                end // 👈 ensures only /dashboard (not nested) matches
+                end 
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -115,7 +109,7 @@ export default function Sidebar() {
               </NavLink>
               <NavLink
                 to="/dashboard/cash-voucher"
-                end // 👈 ensures only /dashboard (not nested) matches
+                end 
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -128,7 +122,7 @@ export default function Sidebar() {
               </NavLink>
                <NavLink
                 to="/dashboard/account-voucher"
-                end // 👈 ensures only /dashboard (not nested) matches
+                end 
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -232,7 +226,7 @@ export default function Sidebar() {
       </div>
 
       {/* Footer User Info */}
-      <div className="px-4 py-4 text-sm border-t">
+      {/* <div className="px-4 py-4 text-sm border-t">
         <div className="flex items-center gap-3 mb-4">
           <img
             src="https://avatars.githubusercontent.com/u/100532083?v=4"
@@ -250,7 +244,7 @@ export default function Sidebar() {
             Log Out <LogOutIcon className="w-4 h-4" />
           </button>
         </Link>
-      </div>
+      </div> */}
     </aside>
   );
 }

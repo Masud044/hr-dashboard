@@ -7,11 +7,11 @@ import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../RouteTitle";
 import api from "../../api/Api";
 
-export default function JournalVoucher({ showTitle = true }) {
+export default function ReceiveJournalList() {
  const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
-      const res = await api.get("/pay_all_unposted.php");
+      const res = await api.get("/receive_all_unposted.php");
       return res.data;
     },
   });
@@ -24,12 +24,12 @@ export default function JournalVoucher({ showTitle = true }) {
 
   return (
     <>
-      <Helmet>
+      {/* <Helmet>
         <title>Dashboard | Journal | HRMS</title>
-      </Helmet>
+      </Helmet> */}
 
       <div className="">
-        {showTitle && <PageTitle />}
+        {/* {showTitle && <PageTitle />} */}
         <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
           <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
             All Unposted Vouchers
@@ -48,7 +48,7 @@ export default function JournalVoucher({ showTitle = true }) {
                     <th className="px-4 py-2 border bg-green-200">Transaction Date</th>
                     <th className="px-4 py-2 border bg-orange-200">GL Date</th>
                     <th className="px-4 py-2 border bg-blue-200">Description</th>
-                    <th className="px-4 py-2 border bg-purple-200">Credit</th>
+                    <th className="px-4 py-2 border bg-purple-200">Debit</th>
                     <th className="px-4 py-2 border bg-orange-200">Modify</th>
                   </tr>
                 </thead>
@@ -67,9 +67,9 @@ export default function JournalVoucher({ showTitle = true }) {
                         <td className="px-4 py-2 border">{v.TRANS_DATE}</td>
                         <td className="px-4 py-2 border">{v.GL_ENTRY_DATE}</td>
                         <td className="px-4 py-2 border">{v.DESCRIPTION}</td>
-                        <td className="px-4 py-2 border">{v.CREDIT}</td>
+                        <td className="px-4 py-2 border">{v.DEBIT}</td>
                         <td className="px-4 py-2 border flex gap-2">
-                          <Link to={`/dashboard/payment-voucher/${v.ID}`}>
+                          <Link to={`/dashboard/receive-voucher/${v.ID}`}>
                             <button className="text-blue-600 cursor-pointer hover:text-blue-800">
                               <Pencil size={16} />
                             </button>
