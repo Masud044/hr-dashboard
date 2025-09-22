@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
-import JournalVoucher from "./JournalVoucher";
+
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "../../api/Api";
 
 import PageTitle from "../RouteTitle";
+import PaymentVoucherList from "./PaymentVoucherList";
 
 const PaymentVoucherForm = () => {
   const { voucherId } = useParams();
@@ -279,9 +280,6 @@ const PaymentVoucherForm = () => {
   };
   return (
     <div className="">
-      {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
-        Payment Voucher
-      </h2> */}
       <PageTitle></PageTitle>
 
       {/* Top Form */}
@@ -294,7 +292,7 @@ const PaymentVoucherForm = () => {
 
         {/* Save button aligned right */}
 
-        <div className="grid grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
           {/* bill system */}
           <div className=" bg-gray-200 border-black">
             <h1 className=" text-center py-10">this is bill</h1>
@@ -438,13 +436,13 @@ const PaymentVoucherForm = () => {
               placeholder="Enter account..."
               isClearable
               isSearchable
-              menuPortalTarget={document.body} 
+              menuPortalTarget={document.body}
               styles={{
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                 menu: (base) => ({
                   ...base,
-                  backgroundColor: "white", 
-                  border: "1px solid #e5e7eb", 
+                  backgroundColor: "white",
+                  border: "1px solid #e5e7eb",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }),
               }}
@@ -483,56 +481,61 @@ const PaymentVoucherForm = () => {
           </div>
         </div>
 
-        <table className="w-full table-fixed border-collapse opacity-80 rounded-lg overflow-x-auto">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
-                Account Code
-              </th>
-              <th className="px-4 py-2 w-[35%] text-center font-medium text-sm text-foreground">
-                Particulars
-              </th>
-              <th className="px-4 py-2 w-[10%] text-center font-medium text-sm text-foreground">
-                Amount
-              </th>
-              <th className="px-4 py-2 w-[4%]  text-center font-medium text-sm text-foreground"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border">
-                <td className="border px-4 py-2">{row.accountCode}</td>
-                <td className="border px-4 py-2">{row.particulars}</td>
-                <td className="border px-4 py-2 text-center">
-                  {Number(row.amount).toFixed(2)}
-                </td>
-                <td className="border px-4 py-2 text-center ">
-                  <button type="button" onClick={() => removeRow(row.id)}>
-                    <Trash2 className="w-5 h-5 cursor-pointer text-red-500" />
-                  </button>
-                </td>
+        <div className="overflow-x-auto scrollbar-hide">
+          <table className="w-full border-collapse opacity-80 rounded-lg text-xs md:text-sm">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-2 md:px-4 py-2 text-center font-medium">
+                  Account Code
+                </th>
+                <th className="px-2 md:px-4 py-2 text-center font-medium">
+                  Particulars
+                </th>
+                <th className="px-2 md:px-4 py-2 text-center font-medium">
+                  Amount
+                </th>
+                <th className="px-2 md:px-4 py-2 text-center font-medium w-10"></th>
               </tr>
-            ))}
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id} className="border">
+                  <td className="border px-2 md:px-4 py-2 break-words">
+                    {row.accountCode}
+                  </td>
+                  <td className="border px-2 md:px-4 py-2 break-words">
+                    {row.particulars}
+                  </td>
+                  <td className="border px-2 md:px-4 py-2 text-center">
+                    {Number(row.amount).toFixed(2)}
+                  </td>
+                  <td className="border px-2 md:px-4 py-2 text-center">
+                    <button type="button" onClick={() => removeRow(row.id)}>
+                      <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
 
-            {/* --- Summary Rows --- */}
+              {rows.length > 0 && (
+                <tr className="font-semibold">
+                  <td colSpan="2" className="p-2 text-right text-gray-600">
+                    Total
+                  </td>
+                  <td className="border p-2 text-center">
+                    {form.totalAmount.toFixed(2)}
+                  </td>
+                  <td></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-            {rows.length > 0 && (
-              <tr className="font-semibold">
-                <td colSpan="1" className="p-2"></td>
-                <td className="border p-2 text-right text-gray-600">Total</td>
-                <td className="border p-2 text-center">
-                  {form.totalAmount.toFixed(2)}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
-        <div className="flex justify-between items-center gap-10 mb-4">
-           <button
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <button
             type="button"
-           
-            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+            className="w-full md:w-auto bg-green-500 text-white px-6 py-2 rounded-lg"
           >
             print
           </button>
@@ -547,13 +550,10 @@ const PaymentVoucherForm = () => {
               ? "Update"
               : "Save"}
           </button>
-           
         </div>
-      
       </div>
-      
 
-      <JournalVoucher showTitle={false} />
+       <PaymentVoucherList showTitle={false} /> 
 
       {/* Modal */}
       {showModal && (

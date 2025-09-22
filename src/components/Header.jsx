@@ -162,6 +162,12 @@ export default function Header() {
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <FileText className="w-4 h-4 mr-2" /> Ledger
               </div>
+               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
+                <FileText className="w-4 h-4 mr-2" /> Cash Book
+              </div>
+              <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
+                <ClipboardList className="w-4 h-4 mr-2" /> Chart of account
+              </div>
             </div>
           )}
         </div>

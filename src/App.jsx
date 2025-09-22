@@ -12,11 +12,12 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./authentication/AuthProvider";
 
 import DashboardHome from "./pages/DashboardHome";
-import JournalVoucher from "./components/MainEntry/JournalVoucher";
+// import JournalVoucher from "./components/MainEntry/PaymentVoucherList";
 import PaymentVoucherForm from "./components/MainEntry/PaymentVoucherForm";
 import ReceiveVoucher from "./components/MainEntry/ReceiveVoucher";
 import ChartAccountForm from "./components/MainEntry/ChartAccountForm";
 import TransactionVoucher from "./components/MainEntry/TransactionVoucher";
+import JournalVoucher from "./components/MainEntry/JournalVoucher";
 
 const App = () => {
   function PrivateRoute({ children }) {
