@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../api/Api";
 
 import PageTitle from "../RouteTitle";
+import JournalVoucherList from "./JournalVoucherList";
 
 const JournalVoucher = () => {
   const { voucherId } = useParams();
@@ -44,26 +45,26 @@ const JournalVoucher = () => {
   });
 
   // ---------- FETCH HELPERS ----------
-  const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: async () => {
-      const res = await api.get("/supplier.php");
-      return res.data.data || [];
-    },
-  });
+  // const { data: suppliers = [] } = useQuery({
+  //   queryKey: ["suppliers"],
+  //   queryFn: async () => {
+  //     const res = await api.get("/supplier.php");
+  //     return res.data.data || [];
+  //   },
+  // });
 
-  const { data: PaymentCodes = [] } = useQuery({
-    queryKey: ["paymentCodes"],
-    queryFn: async () => {
-      const res = await api.get("/receive_code.php");
-      return res.data.success === 1 ? res.data.data || [] : [];
-    },
-  });
+  // const { data: PaymentCodes = [] } = useQuery({
+  //   queryKey: ["paymentCodes"],
+  //   queryFn: async () => {
+  //     const res = await api.get("/receive_code.php");
+  //     return res.data.success === 1 ? res.data.data || [] : [];
+  //   },
+  // });
 
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/account_code.php");
+      const res = await api.get("/gl_account_code.php");
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
@@ -74,38 +75,36 @@ const JournalVoucher = () => {
       return [];
     },
   });
+
   // ---------- FETCH VOUCHER IF EDIT ----------
   const { data: voucherData } = useQuery({
     queryKey: ["voucher", voucherId],
     queryFn: async () => {
-      const res = await api.get(`/pay_view.php?id=${voucherId}`);
+      const res = await api.get(`/GL_VIEW.php?insertID=${voucherId}`);
       return res.data;
     },
     enabled: !!voucherId && accounts.length > 0,
   });
-  console.log(voucherData);
+
   useEffect(() => {
     if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
       const master = voucherData.master || {};
       const details = voucherData.details || [];
 
-      // Filter out rows that should not appear in editable table
-      const mappedRows = details
-        .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
-        .map((d, i) => {
-          const account = accounts.find((acc) => acc.value === d.code);
-          return {
-            id: d.id || `${d.code}-${i}`,
-            accountCode: d.code,
-            particulars: account ? account.label : "",
-            amount: parseFloat(d.debit || d.credit),
-            debitId: d.id,
-            creditId: d.id,
-          };
-        });
+      const mappedRows = details.map((d, i) => {
+        const account = accounts.find((acc) => acc.value === d.code);
+        return {
+          id: d.id || `${d.code}-${i}`, // UI key
+          detail_id: d.id,              // DB id
+          accountCode: d.code,
+          particulars: account ? account.label : "",
+          debit: parseFloat(d.debit) || 0,
+          credit: parseFloat(d.credit) || 0,
+        };
+      });
 
       const total = mappedRows.reduce(
-        (sum, r) => sum + Number(r.amount || 0),
+        (sum, r) => sum + (parseFloat(r.debit || 0) + parseFloat(r.credit || 0)),
         0
       );
 
@@ -113,41 +112,36 @@ const JournalVoucher = () => {
         ...prev,
         entryDate: master.TRANS_DATE
           ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
+          : today,
         glDate: master.GL_ENTRY_DATE
           ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
+          : today,
         invoiceNo: master.VOUCHERNO || "",
         supporting: master.SUPPORTING || "",
         description: master.DESCRIPTION || "",
         supplier: master.CUSTOMER_ID || "",
         paymentCode: master.CASHACCOUNT || "",
-        accountId: "",
-        particular: "",
-        amount: "",
         totalAmount: total,
       }));
 
-      setRows(mappedRows); // only rows with debit > 0
+      setRows(mappedRows);
     }
   }, [voucherData, accounts, voucherId]);
 
   // ---------- MUTATION ----------
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
-      const apiUrl = isNew ? "/pay_api.php" : "/bwal_update_gl.php";
+      const apiUrl = isNew ? "/gl_add.php" : "/gl_edit.php";
       const res = await api.post(apiUrl, payload);
-      console.log(res.data);
       return res.data;
     },
     onSuccess: (data, variables) => {
       if (data.status === "success") {
         setMessage(
           variables.isNew
-            ? "Voucher created successfully!"
-            : "Voucher updated successfully!"
+            ? "Journal-Voucher created successfully!"
+            : "Journal-Voucher updated successfully!"
         );
-
         setForm({
           entryDate: today,
           invoiceNo: "",
@@ -158,7 +152,6 @@ const JournalVoucher = () => {
           paymentCode: "",
           accountId: "",
           particular: "",
-          amount: "",
           totalAmount: 0,
         });
         setRows([]);
@@ -166,24 +159,25 @@ const JournalVoucher = () => {
       } else {
         setMessage(data.message || "Error processing voucher.");
       }
+      setShowModal(false);
     },
     onError: () => {
       setMessage("Error submitting voucher. Please try again.");
-    },
-    onSettled: () => {
       setShowModal(false);
     },
   });
+
 
   // ---------- HANDLERS ----------
   const addRow = () => {
     if (!form.accountId) return;
     const newRow = {
       id: Date.now(),
+      detail_id: null,
       accountCode: form.accountId,
       particulars: form.particular,
-      debit: null,
-      credit: null,
+      debit: 0,
+      credit: 0,
     };
     let updatedRows;
     if (rows.length === 1 && rows[0].id === "dummy") {
@@ -194,22 +188,16 @@ const JournalVoucher = () => {
       updatedRows = [...rows, newRow];
     }
 
-    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
+    
 
     setRows(updatedRows);
-    setForm({
-      ...form,
-      accountId: "",
-      particular: "",
-      totalAmount: total,
-    });
+    // setRows([...rows, newRow]);
+    setForm({ ...form, accountId: "", particular: "" });
   };
-
-  // ---------- REMOVE ROW ----------
-  //   const removeRow = (id) => {
-  //     setRows((prev) => prev.filter((r) => r.id !== id));
-  //   };
-
+ 
+ 
+  
+  
   // ---------- HANDLE CHANGE ----------
   const handleRowChange = (id, field, value) => {
     setRows((prev) =>
@@ -243,62 +231,45 @@ const JournalVoucher = () => {
     setMessage("");
     const isNew = !voucherId;
 
-    if (
-      isNew &&
-      (!form.entryDate ||
-        !form.glDate ||
-        // !form.description ||
-        !form.supporting ||
-        !form.paymentCode ||
-        !form.supplier ||
-        rows.length === 0)
-    ) {
+    if (!form.entryDate || !form.glDate || !form.description || rows.length === 0) {
       setMessage("Please fill all required fields and add at least one row.");
       return;
     }
-
-    let payload = {};
-    if (isNew) {
-      payload = {
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
-        receive_desc: form.description,
-        supporting: String(form.supporting),
-        receive: form.paymentCode,
-        supplierid: form.supplier,
-        user_id: "1",
-        totalAmount: String(form.totalAmount),
-        accountID: rows.map((r) => r.accountCode),
-        amount2: rows.map((r) => String(r.amount || 0)),
-      };
-    } else {
-      payload = {
-        master_id: voucherId,
-        voucherno: form.invoiceNo,
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
-        voucher_type: 2,
-        entry_by: 1,
-        description: form.description,
-        reference_no: form.invoiceNo || "",
-        supporting: Number(form.supporting) || 0,
-        cashaccount: form.paymentCode || "",
-        posted: 0,
-        customer_id: form.supplier,
-        auto_invoice: "",
-        status_pay_recive: 0,
-        unit_id: 0,
-        details: rows.map((r) => ({
-          code: r.accountCode,
-          debit: r.debitId ? Number(r.amount) : 0,
-          credit: r.creditId ? Number(r.amount) : 0,
-          description: r.particulars,
-        })),
-      };
+    if (debitTotal !== creditTotal) {
+      setMessage("Debit and Credit totals must be equal before submission.");
+      return;
     }
-    console.log(payload);
+
+    const payload = isNew
+      ? {
+          trans_date: form.entryDate,
+          GL_ENTRY_DATE: form.glDate,
+          receive_desc: form.description,
+          details: rows.map((r) => ({
+            code: `${r.accountCode}##${r.particulars}`,
+            debit: parseFloat(r.debit) || 0,
+            credit: parseFloat(r.credit) || 0,
+            description: r.particulars,
+          })),
+        }
+      : {
+          master_id: voucherId,
+          trans_date: form.entryDate,
+          gl_entry_date: form.glDate,
+          receive_desc: form.description,
+          supporting: String(form.supporting || "0"),
+          details: rows.map((r) => ({
+            detail_id: r.detail_id,
+            debit: parseFloat(r.debit) || 0,
+            credit: parseFloat(r.credit) || 0,
+            code: r.accountCode,
+            CDDESCRIPTION: r.particulars,
+          })),
+        };
+
     mutation.mutate({ isNew, payload });
-  };
+};
+
   return (
     <div className="">
       {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
@@ -530,22 +501,18 @@ const JournalVoucher = () => {
                 <td className="border p-2">
                   <input
                     type="number"
-                    value={row.debitId}
-                    onChange={(e) =>
-                      handleRowChange(row.id, "debit", e.target.value)
-                    }
-                    disabled={row.credit} // disable if credit has value
+                    value={row.debit || ""}
+                    onChange={(e) => handleRowChange(row.id, "debit", e.target.value)}
+                    disabled={row.credit > 0}
                     className="w-full border-none outline-none bg-transparent text-center"
                   />
                 </td>
                 <td className="border p-2">
                   <input
                     type="number"
-                    value={row.creditId}
-                    onChange={(e) =>
-                      handleRowChange(row.id, "credit", e.target.value)
-                    }
-                    disabled={row.debit} // disable if debit has value
+                    value={row.credit || ""}
+                    onChange={(e) => handleRowChange(row.id, "credit", e.target.value)}
+                    disabled={row.debit > 0}
                     className="w-full border-none outline-none bg-transparent text-center"
                   />
                 </td>
@@ -587,7 +554,7 @@ const JournalVoucher = () => {
           </button>
         </div>
       </div>
-
+          <JournalVoucherList></JournalVoucherList>
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0  bg-black flex justify-center items-center z-50">
@@ -600,41 +567,31 @@ const JournalVoucher = () => {
               <p>
                 <strong>Entry Date:</strong> {form.entryDate}
               </p>
-              <p>
-                <strong>Invoice No:</strong> {form.invoiceNo}
-              </p>
+              
               <p>
                 <strong>No. of Supporting:</strong> {form.supporting}
               </p>
               <p>
                 <strong>Description:</strong> {form.description}
               </p>
-              <p>
-                <strong>Supplier:</strong>{" "}
-                {
-                  suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
-                    ?.SUPPLIER_NAME
-                }
-              </p>
+              
               <p>
                 <strong>GL Date:</strong> {form.glDate}
               </p>
-              <p>
-                <strong>Payment Code:</strong> {form.paymentCode}
-              </p>
+              
 
               <h3 className="font-semibold mt-2">Accounts:</h3>
               <ul className="list-disc pl-5">
-                {rows.map((row, index) => (
-                  <li key={index}>
-                    {row.accountCode} - {row.particulars} - {row.amount}
+                {rows.map((row, r) => (
+                  <li key={r}>
+                    {row.accountCode} - {row.particulars} - Debit: {row.debit}, Credit: {row.credit}
                   </li>
                 ))}
               </ul>
 
-              <p className="font-semibold mt-2">
+              {/* <p className="font-semibold mt-2">
                 Total: {form.totalAmount.toFixed(2)}
-              </p>
+              </p> */}
             </div>
 
             <div className="flex justify-end mt-4 space-x-3">

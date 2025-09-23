@@ -41,6 +41,7 @@ const App = () => {
               element={<PaymentVoucherForm />}
             />
             <Route path="journal-voucher" element={<JournalVoucher />} />
+            <Route path="journal-voucher/:voucherId" element={<JournalVoucher />} />
            
             <Route path="receive-voucher" element={<ReceiveVoucher />} />
             <Route path="account-voucher" element={<ChartAccountForm />} />
