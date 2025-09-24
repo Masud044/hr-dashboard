@@ -13,11 +13,12 @@ import { AuthProvider, useAuth } from "./authentication/AuthProvider";
 
 import DashboardHome from "./pages/DashboardHome";
 // import JournalVoucher from "./components/MainEntry/PaymentVoucherList";
-import PaymentVoucherForm from "./components/MainEntry/PaymentVoucherForm";
-import ReceiveVoucher from "./components/MainEntry/ReceiveVoucher";
+import PaymentVoucherForm from "./components/MainEntry/PaymentVoucher/PaymentVoucherForm";
+import ReceiveVoucher from "./components/MainEntry/ReceiveVoucher/ReceiveVoucher";
 import ChartAccountForm from "./components/MainEntry/ChartAccountForm";
-import TransactionVoucher from "./components/MainEntry/TransactionVoucher";
-import JournalVoucher from "./components/MainEntry/JournalVoucher";
+
+import JournalVoucher from "./components/MainEntry/JournalVoucher/JournalVoucher";
+import CashTransfer from "./components/MainEntry/CashTransfer/CashTransfer";
 
 const App = () => {
   function PrivateRoute({ children }) {
@@ -44,8 +45,10 @@ const App = () => {
             <Route path="journal-voucher/:voucherId" element={<JournalVoucher />} />
            
             <Route path="receive-voucher" element={<ReceiveVoucher />} />
+              <Route path="receive-voucher/:voucherId" element={<ReceiveVoucher />} />
+             <Route path="cash-voucher" element={<CashTransfer />} />
             <Route path="account-voucher" element={<ChartAccountForm />} />
-            <Route path="cash-voucher" element={<TransactionVoucher />} />
+           
           </Route>
           <Route path="/login" element={<Login></Login>} />
           <Route path="/register" element={<Register></Register>} />

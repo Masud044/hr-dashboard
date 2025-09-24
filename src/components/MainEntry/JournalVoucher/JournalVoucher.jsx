@@ -5,9 +5,9 @@ import Select from "react-select";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import api from "../../api/Api";
+import api from "../../../api/Api";
 
-import PageTitle from "../RouteTitle";
+import PageTitle from "../../RouteTitle";
 import JournalVoucherList from "./JournalVoucherList";
 
 const JournalVoucher = () => {
@@ -32,34 +32,19 @@ const JournalVoucher = () => {
 
   const [form, setForm] = useState({
     entryDate: today,
-    invoiceNo: "",
+   
     supporting: "",
     description: "",
-    supplier: "",
+   
     glDate: today,
-    paymentCode: "",
+    
     accountId: "",
     particular: "",
-    amount: "",
-    totalAmount: 0,
+   
+   
   });
 
-  // ---------- FETCH HELPERS ----------
-  // const { data: suppliers = [] } = useQuery({
-  //   queryKey: ["suppliers"],
-  //   queryFn: async () => {
-  //     const res = await api.get("/supplier.php");
-  //     return res.data.data || [];
-  //   },
-  // });
-
-  // const { data: PaymentCodes = [] } = useQuery({
-  //   queryKey: ["paymentCodes"],
-  //   queryFn: async () => {
-  //     const res = await api.get("/receive_code.php");
-  //     return res.data.success === 1 ? res.data.data || [] : [];
-  //   },
-  // });
+ 
 
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
@@ -85,48 +70,44 @@ const JournalVoucher = () => {
     },
     enabled: !!voucherId && accounts.length > 0,
   });
+  console.log(voucherData);
 
   useEffect(() => {
-    if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
-      const master = voucherData.master || {};
-      const details = voucherData.details || [];
+  if (!voucherId || !voucherData || accounts.length === 0) return;
+  if (voucherData.status !== "success") return;
 
-      const mappedRows = details.map((d, i) => {
-        const account = accounts.find((acc) => acc.value === d.code);
-        return {
-          id: d.id || `${d.code}-${i}`, // UI key
-          detail_id: d.id,              // DB id
-          accountCode: d.code,
-          particulars: account ? account.label : "",
-          debit: parseFloat(d.debit) || 0,
-          credit: parseFloat(d.credit) || 0,
-        };
-      });
+  const master = voucherData.master || {};
+  const details = voucherData.details || [];
 
-      const total = mappedRows.reduce(
-        (sum, r) => sum + (parseFloat(r.debit || 0) + parseFloat(r.credit || 0)),
-        0
-      );
-
-      setForm((prev) => ({
-        ...prev,
-        entryDate: master.TRANS_DATE
-          ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-          : today,
-        glDate: master.GL_ENTRY_DATE
-          ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-          : today,
-        invoiceNo: master.VOUCHERNO || "",
-        supporting: master.SUPPORTING || "",
-        description: master.DESCRIPTION || "",
-        supplier: master.CUSTOMER_ID || "",
-        paymentCode: master.CASHACCOUNT || "",
-        totalAmount: total,
-      }));
-
-      setRows(mappedRows);
+  // --- Map details with correct keys ---
+  const mappedRows = details.map((d, i) => {
+    const account = accounts.find(acc => acc.value === d.CODE);
+    return {
+      id: d.ID || `${d.CODE}-${i}`,
+      detail_id: d.ID,
+      accountCode: d.CODE,
+      particulars: account ? account.label : d.DESCRIPTION || "",
+      debit: parseFloat(d.DEBIT) || 0,
+      credit: parseFloat(d.CREDIT) || 0,
     }
-  }, [voucherData, accounts, voucherId]);
+  });
+
+  setRows(mappedRows);
+
+  setForm({
+    entryDate: master.TRANS_DATE
+      ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+      : today,
+    glDate: master.GL_ENTRY_DATE
+      ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+      : today,
+    supporting: master.SUPPORTING || "",
+    description: master.DESCRIPTION || "",
+    // accountId: mappedRows[0]?.accountCode || "",
+    // particular: mappedRows[0]?.particulars,
+  });
+}, [voucherData, accounts, voucherId]);
+
 
   // ---------- MUTATION ----------
   const mutation = useMutation({
@@ -144,15 +125,15 @@ const JournalVoucher = () => {
         );
         setForm({
           entryDate: today,
-          invoiceNo: "",
+         
           supporting: "",
           description: "",
-          supplier: "",
+        
           glDate: today,
-          paymentCode: "",
+         
           accountId: "",
           particular: "",
-          totalAmount: 0,
+          
         });
         setRows([]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
@@ -167,37 +148,31 @@ const JournalVoucher = () => {
     },
   });
 
-
   // ---------- HANDLERS ----------
-  const addRow = () => {
-    if (!form.accountId) return;
-    const newRow = {
-      id: Date.now(),
-      detail_id: null,
-      accountCode: form.accountId,
-      particulars: form.particular,
-      debit: 0,
-      credit: 0,
-    };
-    let updatedRows;
-    if (rows.length === 1 && rows[0].id === "dummy") {
-      // replace dummy row with actual row
-      updatedRows = [newRow];
-    } else {
-      // append normally
-      updatedRows = [...rows, newRow];
-    }
+ const addRow = () => {
+  if (!form.accountId) return;
 
-    
-
-    setRows(updatedRows);
-    // setRows([...rows, newRow]);
-    setForm({ ...form, accountId: "", particular: "" });
+  const newRow = {
+    id: Date.now() + Math.random(), // unique id
+    detail_id: null,                // null for new rows
+    accountCode: form.accountId,
+    particulars: form.particular,
+    debit: 0,
+    credit: 0,
   };
- 
- 
-  
-  
+
+  let updatedRows;
+  if (rows.length === 1 && rows[0].id === "dummy") {
+    updatedRows = [newRow];
+  } else {
+    updatedRows = [...rows, newRow];
+  }
+
+  setRows(updatedRows);
+  setForm({ ...form, accountId: "", particular: "" });
+};
+
+
   // ---------- HANDLE CHANGE ----------
   const handleRowChange = (id, field, value) => {
     setRows((prev) =>
@@ -228,47 +203,49 @@ const JournalVoucher = () => {
   );
 
   const handleSubmit = () => {
-    setMessage("");
-    const isNew = !voucherId;
+  setMessage("");
+  const isNew = !voucherId;
 
-    if (!form.entryDate || !form.glDate || !form.description || rows.length === 0) {
-      setMessage("Please fill all required fields and add at least one row.");
-      return;
+  if (!form.entryDate || !form.glDate || !form.description || rows.length === 0) {
+    setMessage("Please fill all required fields and add at least one row.");
+    return;
+  }
+
+  if (debitTotal !== creditTotal) {
+    setMessage("Debit and Credit totals must be equal before submission.");
+    return;
+  }
+
+  const payload = isNew
+  ? {
+      trans_date: form.entryDate,
+      GL_ENTRY_DATE: form.glDate,
+      receive_desc: form.description,
+      details: rows.map((r) => ({
+        code: `${r.accountCode}##${r.particulars}`,
+        debit: parseFloat(r.debit) || 0,
+        credit: parseFloat(r.credit) || 0,
+        description: r.particulars,
+      })),
     }
-    if (debitTotal !== creditTotal) {
-      setMessage("Debit and Credit totals must be equal before submission.");
-      return;
-    }
+  : {
+      master_id: voucherId,
+      trans_date: form.entryDate,
+      gl_entry_date: form.glDate,
+      receive_desc: form.description,
+      supporting: String(form.supporting || "0"),
+      details: rows.map((r) => ({
+        id: r.detail_id || r.id, // only for existing rows
+        debit: parseFloat(r.debit) || 0,
+        credit: parseFloat(r.credit) || 0,
+      })),
+    };
 
-    const payload = isNew
-      ? {
-          trans_date: form.entryDate,
-          GL_ENTRY_DATE: form.glDate,
-          receive_desc: form.description,
-          details: rows.map((r) => ({
-            code: `${r.accountCode}##${r.particulars}`,
-            debit: parseFloat(r.debit) || 0,
-            credit: parseFloat(r.credit) || 0,
-            description: r.particulars,
-          })),
-        }
-      : {
-          master_id: voucherId,
-          trans_date: form.entryDate,
-          gl_entry_date: form.glDate,
-          receive_desc: form.description,
-          supporting: String(form.supporting || "0"),
-          details: rows.map((r) => ({
-            detail_id: r.detail_id,
-            debit: parseFloat(r.debit) || 0,
-            credit: parseFloat(r.credit) || 0,
-            code: r.accountCode,
-            CDDESCRIPTION: r.particulars,
-          })),
-        };
 
-    mutation.mutate({ isNew, payload });
+  
+  mutation.mutate({ isNew, payload });
 };
+
 
   return (
     <div className="">
@@ -292,26 +269,7 @@ const JournalVoucher = () => {
           <div className=" bg-gray-200 border-black">
             <h1 className=" text-center py-10 px-12">this is bill</h1>
           </div>
-          {/* suppliers */}
-          {/* <div className=""> */}
-          {/* <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
-              <label className="font-medium block text-xs  text-foreground">
-                Supplier
-              </label>
-              <select
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                className="col-span-2 w-full border rounded py-1 h-8  bg-white "
-              >
-                <option value="">Select Supplier</option>
-                {suppliers.map((sup) => (
-                  <option key={sup.SUPPLIER_ID} value={sup.SUPPLIER_ID}>
-                    {sup.SUPPLIER_NAME}
-                  </option>
-                ))}
-              </select>
-            </div> */}
-          {/* </div> */}
+          
           {/* all input payment field */}
           <div className="">
             {/* Entry Date */}
@@ -328,21 +286,7 @@ const JournalVoucher = () => {
                 className="col-span-2 w-full border  rounded py-1   bg-white "
               />
             </div>
-            {/* Invoice No */}
-            {/* <div className="grid grid-cols-3 opacity-60  px-3 items-center ">
-              <label className="font-medium block text-sm  text-foreground">
-                Invoice No
-              </label>
-              <input
-                type="text"
-                value={form.invoiceNo}
-                onChange={(e) =>
-                  setForm({ ...form, invoiceNo: e.target.value })
-                }
-                disabled={!voucherId}
-                className="col-span-2 w-full border   rounded py-1  bg-white "
-              />
-            </div> */}
+           
             {/* Supporting */}
             <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center ">
               <label className="font-medium block text-sm  text-foreground">
@@ -368,35 +312,7 @@ const JournalVoucher = () => {
                 className="col-span-2 w-full border rounded py-1  bg-white "
               />
             </div>
-            {/* <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
-              <label className="font-medium block text-sm  text-foreground">
-                Payment Code
-              </label>
-              <select
-                value={form.paymentCode}
-                onChange={(e) =>
-                  setForm({ ...form, paymentCode: e.target.value })
-                }
-                className="col-span-2 w-full rounded py-1 border  bg-white "
-              >
-                <option value="">Select payment</option>
-                {PaymentCodes.map((code) => (
-                  <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
-                    {code.ACCOUNT_NAME}
-                  </option>
-                ))}
-              </select>
-            </div> */}
-            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground">
-                Total Amount
-              </label>
-              <input
-                type="number"
-                value={form.totalAmount.toFixed(2)}
-                className="col-span-2 w-full border rounded py-1  bg-white "
-              />
-            </div>
+          
           </div>
         </div>
 
@@ -454,17 +370,7 @@ const JournalVoucher = () => {
               className="col-span-2 border w-full rounded py-1  bg-white"
             />
           </div>
-          {/* <div className="grid grid-cols-3  px-3  items-center py-3">
-            <label className="font-medium block text-sm  text-foreground">
-              Amount
-            </label>
-            <input
-              type="number"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              className="col-span-1 border w-full rounded py-1  bg-white "
-            />
-          </div> */}
+         
           <div className="px-4 py-2">
             <button
               type="button"
@@ -476,7 +382,7 @@ const JournalVoucher = () => {
           </div>
         </div>
 
-        <table className="w-full table-fixed border-collapse opacity-80 rounded-lg overflow-x-auto">
+        <table className="w-full table-fixed border-collapse opacity-60 rounded-lg overflow-x-auto">
           <thead>
             <tr>
               <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
@@ -499,22 +405,39 @@ const JournalVoucher = () => {
                 <td className="border px-4 py-2">{row.accountCode}</td>
                 <td className="border px-4 py-2">{row.particulars}</td>
                 <td className="border p-2">
-                  <input
-                    type="number"
-                    value={row.debit || ""}
-                    onChange={(e) => handleRowChange(row.id, "debit", e.target.value)}
-                    disabled={row.credit > 0}
-                    className="w-full border-none outline-none bg-transparent text-center"
-                  />
+                  {row.credit > 0 ? (
+                    // 🔒 যদি disable হয় → শুধু value দেখাবে
+                    <span className="block w-full text-center text-gray-600">
+                      {row.debit || 0}
+                    </span>
+                  ) : (
+                    // ✏️ অন্যথায় input দেখাবে
+                    <input
+                      type="number"
+                      value={row.debit || ""}
+                      onChange={(e) =>
+                        handleRowChange(row.id, "debit", e.target.value)
+                      }
+                      className="w-full border-none outline-none bg-transparent text-center"
+                    />
+                  )}
                 </td>
+
                 <td className="border p-2">
-                  <input
-                    type="number"
-                    value={row.credit || ""}
-                    onChange={(e) => handleRowChange(row.id, "credit", e.target.value)}
-                    disabled={row.debit > 0}
-                    className="w-full border-none outline-none bg-transparent text-center"
-                  />
+                  {row.debit > 0 ? (
+                    <span className="block w-full text-center text-gray-600">
+                      {row.credit || 0}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      value={row.credit || ""}
+                      onChange={(e) =>
+                        handleRowChange(row.id, "credit", e.target.value)
+                      }
+                      className="w-full border-none outline-none bg-transparent text-center"
+                    />
+                  )}
                 </td>
               </tr>
             ))}
@@ -523,11 +446,15 @@ const JournalVoucher = () => {
 
             {rows.length > 0 && (
               <tr className="font-semibold">
-                <td colSpan="2" className="text-right p-2">
+                <td colSpan="2" className="text-right text-sm p-2">
                   Total
                 </td>
-                <td className="text-center p-2">{debitTotal.toFixed(2)}</td>
-                <td className="text-center p-2">{creditTotal.toFixed(2)}</td>
+                <td className="border text-sm text-center p-2">
+                  {debitTotal.toFixed(2)}
+                </td>
+                <td className="border text-sm text-center p-2">
+                  {creditTotal.toFixed(2)}
+                </td>
               </tr>
             )}
           </tbody>
@@ -554,7 +481,7 @@ const JournalVoucher = () => {
           </button>
         </div>
       </div>
-          <JournalVoucherList></JournalVoucherList>
+      <JournalVoucherList></JournalVoucherList>
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0  bg-black flex justify-center items-center z-50">
@@ -567,31 +494,29 @@ const JournalVoucher = () => {
               <p>
                 <strong>Entry Date:</strong> {form.entryDate}
               </p>
-              
+
               <p>
                 <strong>No. of Supporting:</strong> {form.supporting}
               </p>
               <p>
                 <strong>Description:</strong> {form.description}
               </p>
-              
+
               <p>
                 <strong>GL Date:</strong> {form.glDate}
               </p>
-              
 
               <h3 className="font-semibold mt-2">Accounts:</h3>
               <ul className="list-disc pl-5">
                 {rows.map((row, r) => (
                   <li key={r}>
-                    {row.accountCode} - {row.particulars} - Debit: {row.debit}, Credit: {row.credit}
+                    {row.accountCode} - {row.particulars} - Debit: {row.debit},
+                    Credit: {row.credit}
                   </li>
                 ))}
               </ul>
 
-              {/* <p className="font-semibold mt-2">
-                Total: {form.totalAmount.toFixed(2)}
-              </p> */}
+             
             </div>
 
             <div className="flex justify-end mt-4 space-x-3">

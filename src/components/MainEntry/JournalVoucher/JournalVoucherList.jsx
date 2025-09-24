@@ -3,15 +3,18 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
-import { useQuery } from "@tanstack/react-query";
-import PageTitle from "../RouteTitle";
-import api from "../../api/Api";
 
-export default function ReceiveJournalList() {
+import PageTitle from "../../RouteTitle";
+import api from "../../../api/Api";
+import { useQuery } from "@tanstack/react-query";
+
+export default function JournalVoucherList() {
+ 
+ 
  const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
-      const res = await api.get("/receive_all_unposted.php");
+      const res = await api.get("/GL_all_unposted.php");
       return res.data;
     },
   });
@@ -20,6 +23,9 @@ export default function ReceiveJournalList() {
   if (error) return <p>Error loading vouchers</p>;
 
   const vouchers = data?.status === "success" ? data.data : [];
+  console.log(vouchers)
+
+  
 
 
   return (
@@ -49,6 +55,7 @@ export default function ReceiveJournalList() {
                     <th className="px-4 py-2 border bg-orange-200">GL Date</th>
                     <th className="px-4 py-2 border bg-blue-200">Description</th>
                     <th className="px-4 py-2 border bg-purple-200">Debit</th>
+                    <th className="px-4 py-2 border bg-purple-200">Credit</th>
                     <th className="px-4 py-2 border bg-orange-200">Modify</th>
                   </tr>
                 </thead>
@@ -68,13 +75,14 @@ export default function ReceiveJournalList() {
                         <td className="px-4 py-2 border">{v.GL_ENTRY_DATE}</td>
                         <td className="px-4 py-2 border">{v.DESCRIPTION}</td>
                         <td className="px-4 py-2 border">{v.DEBIT}</td>
+                        <td className="px-4 py-2 border">{v.CREDIT}</td>
                         <td className="px-4 py-2 border flex gap-2">
-                          <Link to={`/dashboard/receive-voucher/${v.ID}`}>
+                          <Link to={`/dashboard/journal-voucher/${v.ID}`}>
                             <button className="text-blue-600 cursor-pointer hover:text-blue-800">
                               <Pencil size={16} />
                             </button>
                           </Link>
-                          <button className="text-red-600 hover:text-red-800">
+                          <button  className="text-red-600 hover:text-red-800">
                             <Trash2 size={16} />
                           </button>
                         </td>

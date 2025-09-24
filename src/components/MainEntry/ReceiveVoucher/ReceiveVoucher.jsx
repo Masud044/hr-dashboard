@@ -5,12 +5,13 @@ import Select from "react-select";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import api from "../../api/Api";
+import api from "../../../api/Api";
 
-import PageTitle from "../RouteTitle";
-import PaymentVoucherList from "./PaymentVoucherList";
+import PageTitle from "../../RouteTitle";
+import ReceiveJournalList from "./ReceiveJournalList";
 
-const PaymentVoucherForm = () => {
+
+const ReceiveVoucher = () => {
   const { voucherId } = useParams();
   const queryClient = useQueryClient();
 
@@ -45,16 +46,16 @@ const PaymentVoucherForm = () => {
   });
 
   // ---------- FETCH HELPERS ----------
-  const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers"],
     queryFn: async () => {
-      const res = await api.get("/supplier.php");
+      const res = await api.get("/customer.php");
       return res.data.data || [];
     },
   });
 
-  const { data: PaymentCodes = [] } = useQuery({
-    queryKey: ["paymentCodes"],
+  const { data: ReceiveCodes = [] } = useQuery({
+    queryKey: ["receiveCodes"],
     queryFn: async () => {
       const res = await api.get("/receive_code.php");
       return res.data.success === 1 ? res.data.data || [] : [];
@@ -64,7 +65,7 @@ const PaymentVoucherForm = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/account_code.php");
+      const res = await api.get("/rec_account_code.php");
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
@@ -99,9 +100,9 @@ const PaymentVoucherForm = () => {
             id: d.id || `${d.code}-${i}`,
             accountCode: d.code,
             particulars: account ? account.label : "",
-            amount: parseFloat(d.debit),
-            debitId: d.id,
-            creditId: null,
+            amount: parseFloat(d.credit),
+            debitId:null,
+            creditId: d.id,
           };
         });
 
@@ -136,7 +137,7 @@ const PaymentVoucherForm = () => {
   // ---------- MUTATION ----------
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
-      const apiUrl = isNew ? "/pay_api.php" : "/bwal_update_gl.php";
+      const apiUrl = isNew ? "/addReceive.php" : "/ediRecive.php";
       const res = await api.post(apiUrl, payload);
       console.log(res.data);
       return res.data;
@@ -154,9 +155,9 @@ const PaymentVoucherForm = () => {
           invoiceNo: "",
           supporting: "",
           description: "",
-          supplier: "",
+          customer: "",
           glDate: today,
-          paymentCode: "",
+          receiveCode: "",
           accountId: "",
           particular: "",
           amount: "",
@@ -228,8 +229,8 @@ const PaymentVoucherForm = () => {
         !form.glDate ||
         // !form.description ||
         !form.supporting ||
-        !form.paymentCode ||
-        !form.supplier ||
+        !form.receiveCode ||
+        !form.customer ||
         rows.length === 0)
     ) {
       setMessage("Please fill all required fields and add at least one row.");
@@ -241,10 +242,10 @@ const PaymentVoucherForm = () => {
       payload = {
         trans_date: form.entryDate,
         gl_date: form.glDate,
-        receive_desc: form.description,
+        receive_desc: form.description?.trim() || "N/A",  
         supporting: String(form.supporting),
-        receive: form.paymentCode,
-        supplierid: form.supplier,
+        receive: form.receiveCode,
+        supplierid: form.customer,
         user_id: "1",
         totalAmount: String(form.totalAmount),
         accountID: rows.map((r) => r.accountCode),
@@ -258,7 +259,7 @@ const PaymentVoucherForm = () => {
         gl_date: form.glDate,
         voucher_type: 2,
         entry_by: 1,
-        description: form.description,
+        receive_desc: form.description || "", 
         reference_no: form.invoiceNo || "",
         supporting: Number(form.supporting) || 0,
         cashaccount: form.paymentCode || "",
@@ -280,6 +281,9 @@ const PaymentVoucherForm = () => {
   };
   return (
     <div className="">
+      {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
+        Payment Voucher
+      </h2> */}
       <PageTitle></PageTitle>
 
       {/* Top Form */}
@@ -292,26 +296,26 @@ const PaymentVoucherForm = () => {
 
         {/* Save button aligned right */}
 
-        <div className="grid grid-cols-1 md:grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
+        <div className="grid grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
           {/* bill system */}
           <div className=" bg-gray-200 border-black">
             <h1 className=" text-center py-10">this is bill</h1>
           </div>
-          {/* suppliers */}
+          {/* Customer */}
           <div className="">
             <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
               <label className="font-medium block text-xs  text-foreground">
-                Supplier
+                Customer
               </label>
               <select
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+                value={form.customer}
+                onChange={(e) => setForm({ ...form, customer: e.target.value })}
                 className="col-span-2 w-full border rounded py-1 h-8  bg-white "
               >
-                <option value="">Select Supplier</option>
-                {suppliers.map((sup) => (
-                  <option key={sup.SUPPLIER_ID} value={sup.SUPPLIER_ID}>
-                    {sup.SUPPLIER_NAME}
+                <option value="">Select Customer</option>
+                {customers.map((cus) => (
+                  <option key={cus.CUSTOMER_ID} value={cus.CUSTOMER_ID}>
+                    {cus.CUSTOMER_NAME}
                   </option>
                 ))}
               </select>
@@ -375,17 +379,17 @@ const PaymentVoucherForm = () => {
             </div>
             <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
               <label className="font-medium block text-sm  text-foreground">
-                Payment Code
+                Receive Code
               </label>
               <select
-                value={form.paymentCode}
+                value={form.receiveCode}
                 onChange={(e) =>
-                  setForm({ ...form, paymentCode: e.target.value })
+                  setForm({ ...form, receiveCode: e.target.value })
                 }
                 className="col-span-2 w-full rounded py-1 border  bg-white "
               >
-                <option value="">Select payment</option>
-                {PaymentCodes.map((code) => (
+                <option value="">Select receive</option>
+                {ReceiveCodes.map((code) => (
                   <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
                     {code.ACCOUNT_NAME}
                   </option>
@@ -436,13 +440,13 @@ const PaymentVoucherForm = () => {
               placeholder="Enter account..."
               isClearable
               isSearchable
-              menuPortalTarget={document.body}
+              menuPortalTarget={document.body} 
               styles={{
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                 menu: (base) => ({
                   ...base,
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
+                  backgroundColor: "white", 
+                  border: "1px solid #e5e7eb", 
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }),
               }}
@@ -481,64 +485,52 @@ const PaymentVoucherForm = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full border-collapse opacity-80 rounded-lg text-xs md:text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-2 md:px-4 py-2 text-center font-medium">
-                  Account Code
-                </th>
-                <th className="px-2 md:px-4 py-2 text-center font-medium">
-                  Particulars
-                </th>
-                <th className="px-2 md:px-4 py-2 text-center font-medium">
-                  Amount
-                </th>
-                <th className="px-2 md:px-4 py-2 text-center font-medium w-10"></th>
+        <table className="w-full table-fixed border-collapse opacity-80 rounded-lg overflow-x-auto">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 w-[20%] text-center font-medium text-sm text-foreground">
+                Account Code
+              </th>
+              <th className="px-4 py-2 w-[35%] text-center font-medium text-sm text-foreground">
+                Particulars
+              </th>
+              <th className="px-4 py-2 w-[10%] text-center font-medium text-sm text-foreground">
+                Amount
+              </th>
+              <th className="px-4 py-2 w-[4%]  text-center font-medium text-sm text-foreground"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className="border">
+                <td className="border px-4 py-2">{row.accountCode}</td>
+                <td className="border px-4 py-2">{row.particulars}</td>
+                <td className="border px-4 py-2 text-center">
+                  {Number(row.amount).toFixed(2)}
+                </td>
+                <td className="border px-4 py-2 text-center ">
+                  <button type="button" onClick={() => removeRow(row.id)}>
+                    <Trash2 className="w-5 h-5 cursor-pointer text-red-500" />
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border">
-                  <td className="border px-2 md:px-4 py-2 break-words">
-                    {row.accountCode}
-                  </td>
-                  <td className="border px-2 md:px-4 py-2 break-words">
-                    {row.particulars}
-                  </td>
-                  <td className="border px-2 md:px-4 py-2 text-center">
-                    {Number(row.amount).toFixed(2)}
-                  </td>
-                  <td className="border px-2 md:px-4 py-2 text-center">
-                    <button type="button" onClick={() => removeRow(row.id)}>
-                      <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+            ))}
 
-              {rows.length > 0 && (
-                <tr className="font-semibold">
-                  <td colSpan="2" className="p-2 text-right text-gray-600">
-                    Total
-                  </td>
-                  <td className="border p-2 text-center">
-                    {form.totalAmount.toFixed(2)}
-                  </td>
-                  <td></td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            {/* --- Summary Rows --- */}
 
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-          <button
-            type="button"
-            className="w-full md:w-auto bg-green-500 text-white px-6 py-2 rounded-lg"
-          >
-            print
-          </button>
+            {rows.length > 0 && (
+              <tr className="font-semibold">
+                <td colSpan="1" className="p-2"></td>
+                <td className="border p-2 text-right text-gray-600">Total</td>
+                <td className="border p-2 text-center">
+                  {form.totalAmount.toFixed(2)}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <div className="flex justify-end gap-10 mb-4">
           <button
             type="button"
             onClick={() => setShowModal(true)}
@@ -552,8 +544,8 @@ const PaymentVoucherForm = () => {
           </button>
         </div>
       </div>
+      <ReceiveJournalList />
 
-       <PaymentVoucherList showTitle={false} /> 
 
       {/* Modal */}
       {showModal && (
@@ -577,17 +569,17 @@ const PaymentVoucherForm = () => {
                 <strong>Description:</strong> {form.description}
               </p>
               <p>
-                <strong>Supplier:</strong>{" "}
+                <strong>Customer:</strong>{" "}
                 {
-                  suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
-                    ?.SUPPLIER_NAME
+                  customers.find((s) => s.CUSTOMER_ID_ID === form.CUSTOMER_NAME)
+                    ?.CUSTOMER_NAME
                 }
               </p>
               <p>
                 <strong>GL Date:</strong> {form.glDate}
               </p>
               <p>
-                <strong>Payment Code:</strong> {form.paymentCode}
+                <strong>receive Code:</strong> {form.receiveCode}
               </p>
 
               <h3 className="font-semibold mt-2">Accounts:</h3>
@@ -626,4 +618,4 @@ const PaymentVoucherForm = () => {
   );
 };
 
-export default PaymentVoucherForm;
+export default ReceiveVoucher;

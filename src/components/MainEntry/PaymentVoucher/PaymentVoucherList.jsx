@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
-import PageTitle from "../RouteTitle";
-import api from "../../api/Api";
+import PageTitle from "../../RouteTitle";
+import api from "../../../api/Api";
 
 export default function PaymentVoucherList({ showTitle = true }) {
   const { data, isLoading, error } = useQuery({
