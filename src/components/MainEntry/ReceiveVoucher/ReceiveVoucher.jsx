@@ -86,53 +86,53 @@ const ReceiveVoucher = () => {
     enabled: !!voucherId && accounts.length > 0,
   });
   console.log(voucherData);
-  useEffect(() => {
-    if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
-      const master = voucherData.master || {};
-      const details = voucherData.details || [];
+ useEffect(() => {
+  if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
+    const master = voucherData.master || {};
+    const details = voucherData.details || [];
 
-      // Filter out rows that should not appear in editable table
-      const mappedRows = details
-        .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
-        .map((d, i) => {
-          const account = accounts.find((acc) => acc.value === d.code);
-          return {
-            id: d.id || `${d.code}-${i}`,
-            accountCode: d.code,
-            particulars: account ? account.label : "",
-            amount: parseFloat(d.credit),
-            debitId:null,
-            creditId: d.id,
-          };
-        });
+    // Filter out rows that should not appear in editable table
+    const mappedRows = details
+      .filter((d) => d.credit && Number(d.credit) > 0) // only credit > 0
+      .map((d, i) => {
+        const account = accounts.find((acc) => acc.value === d.code);
+        return {
+          id: d.id || `${d.code}-${i}`,
+          accountCode: d.code,
+          particulars: account ? account.label : "",
+          amount: parseFloat(d.credit),
+          debitId: null,
+          creditId: d.id,
+        };
+      });
 
-      const total = mappedRows.reduce(
-        (sum, r) => sum + Number(r.amount || 0),
-        0
-      );
+    const total = mappedRows.reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
 
-      setForm((prev) => ({
-        ...prev,
-        entryDate: master.TRANS_DATE
-          ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        glDate: master.GL_ENTRY_DATE
-          ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        invoiceNo: master.VOUCHERNO || "",
-        supporting: master.SUPPORTING || "",
-        description: master.DESCRIPTION || "",
-        supplier: master.CUSTOMER_ID || "",
-        paymentCode: master.CASHACCOUNT || "",
-        accountId: "",
-        particular: "",
-        amount: "",
-        totalAmount: total,
-      }));
+    setForm({
+      entryDate: master.TRANS_DATE
+        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+        : today,
+      glDate: master.GL_ENTRY_DATE
+        ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+        : today,
+      invoiceNo: master.VOUCHERNO || "",
+      supporting: master.SUPPORTING || "",
+      description: master.DESCRIPTION || "",
+      customer: master.CUSTOMER_ID || "",     // ✅ use correct key
+      receiveCode: master.CASHACCOUNT || "",  // ✅ use correct key
+      accountId: "",
+      particular: "",
+      amount: "",
+      totalAmount: total,
+    });
 
-      setRows(mappedRows); // only rows with debit > 0
-    }
-  }, [voucherData, accounts, voucherId]);
+    setRows(mappedRows);
+  }
+}, [voucherData, accounts, voucherId]);
+
 
   // ---------- MUTATION ----------
   const mutation = useMutation({
@@ -242,39 +242,30 @@ const ReceiveVoucher = () => {
       payload = {
         trans_date: form.entryDate,
         gl_date: form.glDate,
-        receive_desc: form.description?.trim() || "N/A",  
+        receive_desc: form.description|| "",  
         supporting: String(form.supporting),
         receive: form.receiveCode,
-        supplierid: form.customer,
+        customer_id: form.customer,
         user_id: "1",
         totalAmount: String(form.totalAmount),
         accountID: rows.map((r) => r.accountCode),
         amount2: rows.map((r) => String(r.amount || 0)),
       };
     } else {
-      payload = {
-        master_id: voucherId,
-        voucherno: form.invoiceNo,
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
-        voucher_type: 2,
-        entry_by: 1,
-        receive_desc: form.description || "", 
-        reference_no: form.invoiceNo || "",
-        supporting: Number(form.supporting) || 0,
-        cashaccount: form.paymentCode || "",
-        posted: 0,
-        customer_id: form.supplier,
-        auto_invoice: "",
-        status_pay_recive: 0,
-        unit_id: 0,
-        details: rows.map((r) => ({
-          code: r.accountCode,
-          debit: r.debitId ? Number(r.amount) : 0,
-          credit: r.creditId ? Number(r.amount) : 0,
-          description: r.particulars,
-        })),
-      };
+   payload = {
+  trans_date: form.entryDate,
+  gl_date: form.glDate,
+  receive_desc: form.description?.trim() || "N/A",
+  supporting: String(form.supporting),
+  tempdata: voucherId,                          
+  credit_id: rows.find((r) => r.creditId)?.creditId || "", 
+  totalAmount: Number(form.totalAmount),
+  accountID: rows.map((r) => r.accountCode),    
+  DEBIT_ID: rows.map((r) => r.debitId || ""),   
+  amount2: rows.map((r) => Number(r.amount)),   
+};
+
+
     }
     console.log(payload);
     mutation.mutate({ isNew, payload });
@@ -571,8 +562,8 @@ const ReceiveVoucher = () => {
               <p>
                 <strong>Customer:</strong>{" "}
                 {
-                  customers.find((s) => s.CUSTOMER_ID_ID === form.CUSTOMER_NAME)
-                    ?.CUSTOMER_NAME
+                  customers.find((s) => s.CUSTOMER_ID === form.customer)?.CUSTOMER_NAME
+
                 }
               </p>
               <p>
