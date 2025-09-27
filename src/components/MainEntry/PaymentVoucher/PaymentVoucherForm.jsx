@@ -251,30 +251,44 @@ const PaymentVoucherForm = () => {
         amount2: rows.map((r) => String(r.amount || 0)),
       };
     } else {
-      payload = {
-        master_id: voucherId,
-        voucherno: form.invoiceNo,
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
-        voucher_type: 2,
-        entry_by: 1,
-        description: form.description,
-        reference_no: form.invoiceNo || "",
-        supporting: Number(form.supporting) || 0,
-        cashaccount: form.paymentCode || "",
-        posted: 0,
-        customer_id: form.supplier,
-        auto_invoice: "",
-        status_pay_recive: 0,
-        unit_id: 0,
-        details: rows.map((r) => ({
-          code: r.accountCode,
-          debit: r.debitId ? Number(r.amount) : 0,
-          credit: r.creditId ? Number(r.amount) : 0,
-          description: r.particulars,
-        })),
-      };
-    }
+  // ✅ Build credit row for Payment Code
+  const creditRow = {
+    code: form.paymentCode,
+    debit: 0,
+    credit: Number(form.totalAmount),
+    id: form.creditId || "",
+    description: "Payment code credit",
+  };
+
+  // ✅ Build debit rows from table
+  const debitRows = rows.map((r) => ({
+    code: r.accountCode,
+    debit: Number(r.amount),
+    credit: 0,
+    id: r.debitId || "",
+    description: r.particulars,
+  }));
+
+  payload = {
+    master_id: voucherId,
+    voucherno: form.invoiceNo,
+    trans_date: form.entryDate,
+    gl_date: form.glDate,
+    voucher_type: 2,
+    entry_by: 1,
+    description: form.description,
+    reference_no: form.invoiceNo || "",
+    supporting: Number(form.supporting) || 0,
+    receive: form.paymentCode || "",
+    posted: 0,
+    supplierid: form.supplier,
+    auto_invoice: "",
+    status_pay_recive: 0,
+    unit_id: 0,
+    details: [creditRow, ...debitRows], // ✅ credit + debit lines
+  };
+}
+
     console.log(payload);
     mutation.mutate({ isNew, payload });
   };

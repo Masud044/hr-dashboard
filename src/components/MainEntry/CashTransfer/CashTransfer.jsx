@@ -193,35 +193,51 @@ const CashTransfer = () => {
             <label className="font-medium block text-sm  text-foreground">
              From Code
             </label>
-            <Select
-              options={accounts}
-              className="col-span-2 border w-full rounded shadow-2xl"
-              value={
-                accounts.find((acc) => acc.value === form.accountId) || null
-              }
-              
-              onChange={(selected) =>
-                setForm({
-                   ...form,
-                  accountId: selected ? selected.value: "",
-                   toCode: selected ? selected.name : "",
-                })
-              
-              }
-              placeholder="Enter account..."
-              isClearable
-              isSearchable
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                menu: (base) => ({
-                  ...base,
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }),
-              }}
-            />
+       <Select
+  options={accounts}
+  value={accounts.find((acc) => acc.value === form.accountId) || null}
+  onChange={(selected) =>
+    setForm({
+      ...form,
+      accountId: selected ? selected.value : "",
+      toCode: selected ? selected.name : "",
+    })
+  }
+  placeholder="Enter account..."
+  isClearable
+  isSearchable
+  menuPortalTarget={document.body}
+  styles={{
+    control: (base) => ({
+      ...base,
+      minHeight: '40px', // match other inputs
+      height: '40px',
+      fontSize: '0.875rem', // text-sm
+      borderRadius: '0.375rem', // same as input rounded
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      height: '40px', // fix value container height
+      padding: '0 8px', 
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: '40px', // arrow aligned
+    }),
+    singleValue: (base) => ({
+      ...base,
+      lineHeight: '40px', // center text vertically
+    }),
+  }}
+  className="col-span-2"
+/>
+
+
            
           </div>
             <div className="grid grid-cols-3 opacity-60   px-3 items-center py-3">

@@ -93,16 +93,16 @@ const ReceiveVoucher = () => {
 
     // Filter out rows that should not appear in editable table
     const mappedRows = details
-      .filter((d) => d.credit && Number(d.credit) > 0) // only credit > 0
+      .filter((d) => d.debit && Number(d.debit) > 0) // only credit > 0
       .map((d, i) => {
         const account = accounts.find((acc) => acc.value === d.code);
         return {
           id: d.id || `${d.code}-${i}`,
           accountCode: d.code,
           particulars: account ? account.label : "",
-          amount: parseFloat(d.credit),
-          debitId: null,
-          creditId: d.id,
+          amount: parseFloat(d.debit),
+          debitId: d.id,
+          creditId: null,
         };
       });
 
@@ -121,8 +121,8 @@ const ReceiveVoucher = () => {
       invoiceNo: master.VOUCHERNO || "",
       supporting: master.SUPPORTING || "",
       description: master.DESCRIPTION || "",
-      customer: master.CUSTOMER_ID || "",     // ✅ use correct key
-      receiveCode: master.CASHACCOUNT || "",  // ✅ use correct key
+      customer: master.CUSTOMER_ID || "",    
+      receiveCode: master.CASHACCOUNT || "", 
       accountId: "",
       particular: "",
       amount: "",

@@ -135,7 +135,9 @@ const JournalVoucher = () => {
           particular: "",
           
         });
-        setRows([]);
+        setRows([
+      
+    ]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
         setMessage(data.message || "Error processing voucher.");
@@ -159,6 +161,7 @@ const JournalVoucher = () => {
     particulars: form.particular,
     debit: 0,
     credit: 0,
+    
   };
 
   let updatedRows;

@@ -7,10 +7,13 @@ import { Link } from "react-router-dom";
 import PageTitle from "../../RouteTitle";
 import api from "../../../api/Api";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+
 
 export default function CashTransferList() {
  
- 
+  const [currentPage, setCurrentPage] = useState(1);
+  const vouchersPerPage = 15;
  const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
@@ -22,7 +25,14 @@ export default function CashTransferList() {
   if (isLoading) return <p>Loading vouchers...</p>;
   if (error) return <p>Error loading vouchers</p>;
 
-  const vouchers = data?.status === "success" ? data.data : [];
+    
+   
+     const vouchers = data?.status === "success" ? data.data : [];
+     vouchers.sort((a, b) => Number(b.ID) - Number(a.ID));
+     const totalPages = Math.ceil(vouchers.length / vouchersPerPage);
+   
+     const startIndex = (currentPage - 1) * vouchersPerPage;
+     const currentVouchers = vouchers.slice(startIndex, startIndex + vouchersPerPage);
   console.log(vouchers)
 
   
@@ -60,14 +70,14 @@ export default function CashTransferList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {vouchers.length === 0 ? (
+                  {currentVouchers.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="text-center py-4 text-gray-500">
                         Cash transfer List
                       </td>
                     </tr>
                   ) : (
-                    vouchers.map((v, index) => (
+                    currentVouchers.map((v, index) => (
                       <tr key={v.VOUCHERNO} className="hover:bg-gray-50">
                         <td className="px-4 py-2 border">{index + 1}</td>
                         <td className="px-4 py-2 border">{v.VOUCHERNO}</td>
@@ -82,6 +92,35 @@ export default function CashTransferList() {
                   )}
                 </tbody>
               </table>
+               {vouchers.length > vouchersPerPage && (
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded bg-green-500 text-white ${
+                currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+              }`}
+            >
+              Prev
+            </button>
+
+            <span className="text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded bg-green-500 text-white ${
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-green-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
             </div>
           )}
         </div>

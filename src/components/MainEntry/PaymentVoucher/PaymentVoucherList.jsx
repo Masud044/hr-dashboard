@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../../RouteTitle";
 import api from "../../../api/Api";
+import { useState } from "react";
 
 export default function PaymentVoucherList({ showTitle = true }) {
   const { data, isLoading, error } = useQuery({
@@ -14,11 +15,22 @@ export default function PaymentVoucherList({ showTitle = true }) {
       return res.data;
     },
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const vouchersPerPage = 15;
+ const vouchers = data?.status === "success" ? [...data.data] : [];
+
+// ✅ Sort vouchers by ID (or date, whichever is unique/newest)
+vouchers.sort((a, b) => Number(b.ID) - Number(a.ID));
+
+  const totalPages = Math.ceil(vouchers.length / vouchersPerPage);
+
+  const startIndex = (currentPage - 1) * vouchersPerPage;
+  const currentVouchers = vouchers.slice(startIndex, startIndex + vouchersPerPage);
 
   if (isLoading) return <p>Loading vouchers...</p>;
   if (error) return <p>Error loading vouchers</p>;
 
-  const vouchers = data?.status === "success" ? data.data : [];
+  
 
   return (
     <>
@@ -53,29 +65,66 @@ export default function PaymentVoucherList({ showTitle = true }) {
         </tr>
       </thead>
       <tbody>
-        {vouchers.map((v, index) => (
-          <tr key={v.VOUCHERNO} className="hover:bg-gray-50">
-            <td className="px-4 py-2 border">{index + 1}</td>
-            <td className="px-4 py-2 border">{v.VOUCHERNO}</td>
-            <td className="px-4 py-2 border">{v.TRANS_DATE}</td>
-            <td className="px-4 py-2 border">{v.GL_ENTRY_DATE}</td>
-            <td className="px-4 py-2 border">{v.DESCRIPTION}</td>
-            <td className="px-4 py-2 border">{v.CREDIT}</td>
-            <td className="px-4 py-2 border flex gap-2">
-              <Link to={`/dashboard/payment-voucher/${v.ID}`}>
-                <button className="text-blue-600 hover:text-blue-800">
-                  <Pencil size={16} />
-                </button>
-              </Link>
-              <button className="text-red-600 hover:text-red-800">
-                <Trash2 size={16} />
-              </button>
-            </td>
-          </tr>
-        ))}
+       {currentVouchers.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-4 text-gray-500">
+                    No unposted vouchers found
+                  </td>
+                </tr>
+              ) : (
+                currentVouchers.map((v, index) => (
+                  <tr key={v.VOUCHERNO} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 border">{startIndex + index + 1}</td>
+                    <td className="px-4 py-2 border">{v.VOUCHERNO}</td>
+                    <td className="px-4 py-2 border">{v.TRANS_DATE}</td>
+                    <td className="px-4 py-2 border">{v.GL_ENTRY_DATE}</td>
+                    <td className="px-4 py-2 border">{v.DESCRIPTION}</td>
+                    <td className="px-4 py-2 border">{v.CREDIT}</td>
+                    <td className="px-4 py-2 border flex gap-2">
+                      <Link to={`/dashboard/payment-voucher/${v.ID}`}>
+                        <button className="text-blue-600 cursor-pointer hover:text-blue-800">
+                          <Pencil size={16} />
+                        </button>
+                      </Link>
+                      <button className="text-red-600 hover:text-red-800">
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
       </tbody>
     </table>
   </div>
+   {vouchers.length > vouchersPerPage && (
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded bg-green-500 text-white ${
+                currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+              }`}
+            >
+              Prev
+            </button>
+
+            <span className="text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded bg-green-500 text-white ${
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-green-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
 
   {/* --- Mobile Card Layout --- */}
   <div className="md:hidden space-y-4">
