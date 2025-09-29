@@ -10,6 +10,7 @@ import api from "../../../api/Api";
 import PageTitle from "../../RouteTitle";
 import PaymentVoucherList from "./PaymentVoucherList";
 
+
 const PaymentVoucherForm = () => {
   const { voucherId } = useParams();
   const queryClient = useQueryClient();
@@ -64,7 +65,7 @@ const PaymentVoucherForm = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/account_code.php");
+      const res = await api.get("/rec_account_code.php");
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
@@ -89,10 +90,11 @@ const PaymentVoucherForm = () => {
     if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
       const master = voucherData.master || {};
       const details = voucherData.details || [];
+       console.log(master, details);
 
       // Filter out rows that should not appear in editable table
       const mappedRows = details
-        .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
+         .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
         .map((d, i) => {
           const account = accounts.find((acc) => acc.value === d.code);
           return {

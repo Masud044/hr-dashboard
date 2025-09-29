@@ -1,10 +1,11 @@
+
 import { Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import api from "../../../api/Api";
 
-export default function ReceiveJournalList() {
+export default function ReceiveList() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
