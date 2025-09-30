@@ -121,7 +121,7 @@ useEffect(() => {
       invoiceNo: master.VOUCHERNO || "",
       supporting: master.SUPPORTING || "",
       description: master.DESCRIPTION || "",
-     customer: master.CUSTOMER_ID ? Number(master.CUSTOMER_ID) : "",
+     customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
       ReceiveCode: master.CASHACCOUNT || "",
       accountId: "", // ✅ clear accountId
       particular: "", // ✅ clear particular
@@ -247,7 +247,7 @@ useEffect(() => {
       receive_desc: form.description,
       supporting: String(form.supporting),
       receive: form.ReceiveCode,
-      customer_id: form.customer, 
+      customer_id: String(form.customer), 
       totalAmount: String(form.totalAmount),
       accountID: rows.map((r) => r.accountCode),
       amount2: rows.map((r) => String(r.amount || 0)),
@@ -259,7 +259,7 @@ useEffect(() => {
       gl_date: form.glDate,
       receive_desc: form.description,
       supporting: String(form.supporting),
-      customer_id: Number(form.customer), 
+      customer_id: String(form.customer), 
       tempdata: voucherId, // master id
       credit_id: rows.find((r) => r.creditId)?.creditId || form.creditId || "",
 
@@ -306,7 +306,7 @@ useEffect(() => {
               >
                 <option value="">Select customer</option>
                 {customers.map((cus) => (
-                  <option key={cus.CUSTOMER_ID} value={cus.CUSTOMER_ID}>
+                  <option key={cus.CUSTOMER_ID} value={String(cus.CUSTOMER_ID)}>
                     {cus.CUSTOMER_NAME}
                   </option>
                 ))}

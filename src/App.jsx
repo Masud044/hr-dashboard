@@ -47,6 +47,7 @@ const App = () => {
             <Route path="receive-voucher" element={<ReceiveVoucher />} />
               <Route path="receive-voucher/:voucherId" element={<ReceiveVoucher />} />
              <Route path="cash-voucher" element={<CashTransfer />} />
+             <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
             <Route path="account-voucher" element={<ChartAccountForm />} />
            
           </Route>
