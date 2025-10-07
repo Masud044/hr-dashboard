@@ -20,6 +20,9 @@ import ChartAccountForm from "./components/MainEntry/ChartAccountForm";
 import JournalVoucher from "./components/MainEntry/JournalVoucher/JournalVoucher";
 import CashTransfer from "./components/MainEntry/CashTransfer/CashTransfer";
 
+import SupplierPage from "./components/Setting/SupplierSetting";
+import CustomerPage from "./components/Setting/CustomerSetting";
+
 const App = () => {
   function PrivateRoute({ children }) {
     const { isAuthenticated } = useAuth();
@@ -48,6 +51,10 @@ const App = () => {
               <Route path="receive-voucher/:voucherId" element={<ReceiveVoucher />} />
              <Route path="cash-voucher" element={<CashTransfer />} />
              <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
+             <Route path="supplier-setting-voucher" element={<SupplierPage />} />
+             <Route path="supplier-setting-voucher/:voucherID" element={<SupplierPage />} />
+              <Route path="customer-setting-voucher" element={<CustomerPage />} />
+             <Route path="customer-setting-voucher/:voucherID" element={<CustomerPage />} />
             <Route path="account-voucher" element={<ChartAccountForm />} />
            
           </Route>

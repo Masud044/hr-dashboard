@@ -46,7 +46,7 @@ export default function DashboardVoucher() {
     <div>
       <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
         <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
-          All Unposted Vouchers
+          All Vouchers
         </h2>
 
         {isLoading && <p>Loading vouchers...</p>}

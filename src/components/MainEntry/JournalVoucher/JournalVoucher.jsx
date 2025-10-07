@@ -9,6 +9,8 @@ import api from "../../../api/Api";
 
 import PageTitle from "../../RouteTitle";
 import JournalVoucherList from "./JournalVoucherList";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const JournalVoucher = () => {
   const { voucherId } = useParams();
@@ -213,6 +215,16 @@ const JournalVoucher = () => {
     setMessage("Please fill all required fields and add at least one row.");
     return;
   }
+  const invalidRow = rows.some(
+    (row) =>
+      !row.accountCode || !row.particulars
+  );
+
+  if (invalidRow) {
+    setMessage("Each row must have Account Code, Particular filled.");
+    return;
+  }
+
 
   if (debitTotal !== creditTotal) {
     setMessage("Debit and Credit totals must be equal before submission.");
@@ -248,6 +260,77 @@ const JournalVoucher = () => {
   
   mutation.mutate({ isNew, payload });
 };
+
+
+// ---------- PRINT HANDLER ----------
+
+const handlePrint = async () => {
+  const printArea = document.getElementById("print-area");
+
+  if (!printArea) {
+    setMessage("Print area not found!");
+    return;
+  }
+
+  try {
+    // Temporarily show hidden print area
+    printArea.style.display = "block";
+
+    // Capture HTML to canvas
+    const canvas = await html2canvas(printArea, {
+      scale: 2,
+      backgroundColor: "#fff", // fixes oklch color issues
+      useCORS: true,           // allow cross-origin images
+      logging: false,
+      onclone: (clonedDoc) => {
+        // Replace any oklch colors with safe hex
+        clonedDoc.querySelectorAll("*").forEach((el) => {
+          const style = window.getComputedStyle(el);
+          if (style.color.startsWith("oklch")) el.style.color = "#000";
+          if (style.backgroundColor.startsWith("oklch"))
+            el.style.backgroundColor = "#fff";
+        });
+      },
+    });
+
+    const imgData = canvas.toDataURL("image/png", 1.0);
+
+    // Create PDF
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    // Add extra pages if content exceeds one page
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // ✅ Automatically open PDF in a new tab
+    const pdfBlob = pdf.output("blob");
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    window.open(blobUrl, "_blank");
+
+    // ✅ Optionally trigger download
+    pdf.save(`Journal_Voucher_${form.invoiceNo || "new"}.pdf`);
+  } catch (err) {
+    console.error(err);
+    setMessage("Error generating PDF: " + err.message);
+  } finally {
+    // Hide print area again
+    printArea.style.display = "none";
+  }
+};
+
 
 
   return (
@@ -463,14 +546,58 @@ const JournalVoucher = () => {
           </tbody>
         </table>
 
-        <div className="flex justify-end items-center gap-10 mb-4">
-          {/* <button
+            {/* Printable PDF Section */}
+<div id="print-area"  className="hidden print:block p-8 bg-white text-black">
+  <h1 className="text-xl font-bold text-center mb-2">JOURNAL VOUCHER</h1>
+  <div className="border p-3 mb-4 text-sm space-y-1">
+    <p><strong>Supporting:</strong> {form.supporting}</p>
+    <p><strong>Date:</strong> {form.entryDate}</p>
+  
+    <p><strong>Description:</strong> {form.description}</p>
+    {/* <p><strong>Total Amount:</strong> {form.totalAmount.toFixed(2)}</p> */}
+  </div>
+
+  <table className="w-full border-collapse border text-sm">
+    <thead>
+      <tr className="bg-gray-100">
+        <th className="border px-2 py-1 text-left">Account Code</th>
+        <th className="border px-2 py-1 text-left">Particular</th>
+        <th className="border px-2 py-1 text-right">Debit</th>
+        <th className="border px-2 py-1 text-right">Credit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row, i) => (
+        <tr key={i}>
+          <td className="border px-2 py-1">{row.accountCode}</td>
+          <td className="border px-2 py-1">{row.particulars}</td>
+          <td className="border px-2 py-1">{row.debit}</td>
+          <td className="border px-2 py-1">{row.credit}</td>
+         
+        </tr>
+      ))}
+      {/* <tr className="font-semibold">
+        <td colSpan={2} className="text-right border px-2 py-1">Total</td>
+        <td className="border px-2 py-1 text-right">{form.totalAmount.toFixed(2)}</td>
+      </tr> */}
+    </tbody>
+  </table>
+
+  <p className="mt-6 text-xs text-center border-t pt-2">
+    Prepared By ____________________ &nbsp;&nbsp;&nbsp;
+    Authorized Signatory ____________________ &nbsp;&nbsp;&nbsp;
+    Recipient Signature ____________________
+  </p>
+</div>
+
+        <div className="flex justify-between items-center gap-10 mb-4">
+          <button
             type="button"
-           
+           onClick={handlePrint}
             className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
             print
-          </button> */}
+          </button>
           <button
             type="button"
             onClick={() => setShowModal(true)}
