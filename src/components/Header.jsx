@@ -191,6 +191,20 @@ export default function Header() {
               <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100">
                 <User className="w-4 h-4 mr-2" /> Add User
               </div>
+               <NavLink
+                to="/dashboard/admin-user"
+                end
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <User className="w-4 h-4  mr-2" /> Admin User
+              </NavLink>
             </div>
           )}
         </div>

@@ -2,93 +2,110 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, RefreshCw } from "lucide-react";
-import api from "../../api/Api";
+
+import CustomerList from "./CustomerList";
+import api from "../../../api/Api";
 
 
-const SupplierPage = () => {
+const CustomerPage = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
-  const isEditing = (id);
+  const isEditing = !!id;
+
+  console.log(isEditing)
 
   // 🔹 Local form state
   const [formData, setFormData] = useState({
-    SUPPLIER_NAME: "",
+    CUSTOMER_NAME: "",
     ENTRY_BY: "101",
     PASSWORD: "",
     ORG_ID: "",
     ADDRESS: "",
     CONTACT_PERSON: "",
-    PHONE: "",
+    // PHONE: "",
     EMAIL: "",
     MOBILE: "",
-    DUE: "",
-    REMARKS: "",
-    FAX: "",
-    STATUS: "0",
+    // DUE: "",
+    // REMARKS: "",
+    // FAX: "",
+    STATUS: "1",
   });
 
-  // 🔹 Message state
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // 🔹 Fetch supplier data (only when editing)
-  const { data, isLoading: isFetching } = useQuery({
-    queryKey: ["supplier", id],
+  // 🔹 Fetch customer by ID
+  const { data } = useQuery({
+    queryKey: ["customer", id],
     queryFn: async () => {
-      const res = await api.get(`/supplier_info.php?id=${id}`);
-      return res.data?.data || res.data;
+      const res = await api.get(`/customer_info.php?customer_id=${id}`);
+      const customerData = res.data?.data;
+      if (Array.isArray(customerData)) {
+        return customerData.find((c) => c.CUSTOMER_ID === id);
+      }
+      return customerData;
     },
     enabled: !!id,
   });
-console.log(data)
-  // 🔹 Update form when data loads
+
+  // 🔹 Load customer data into form when editing
   useEffect(() => {
     if (data) setFormData(data);
   }, [data]);
 
-  // 🔹 Mutation for insert or update
-  const mutation = useMutation({
-    mutationFn: async (formData) => {
-      if (isEditing) {
-        return await api.post("/supplier_info.php", formData);
-      } else {
-        return await api.post("/supplier_info.php", formData);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["supplier", id]);
-      setMessage({
-        type: "success",
-        text: isEditing
-          ? "✅ Supplier updated successfully!"
-          : "✅ Supplier added successfully!",
+  // 🔹 Save or Update mutation
+ const mutation = useMutation({
+  mutationFn: async (formData) => {
+    if (isEditing) {
+      // 🟢 UPDATE existing customer
+      return await api.put("/customer_info.php", {
+        ...formData,
+        CUSTOMER_ID: id,
+        UPDATE_BY: 202, // you can make this dynamic if needed
       });
-      if (!isEditing) resetForm();
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000); // auto hide
-    },
-    onError: (err) => {
-      console.error(err);
-      setMessage({
-        type: "error",
-        text: "❌ Failed to save supplier data. Please try again.",
-      });
-      setTimeout(() => setMessage({ type: "", text: "" }), 4000);
-    },
-  });
+    } else {
+      // 🟢 CREATE new customer
+      return await api.post("/customer_info.php", formData);
+    }
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(["customers"]);
+    queryClient.invalidateQueries(["customer", id]);
+    setMessage({
+      type: "success",
+      text: isEditing
+        ? "✅ Customer updated successfully!"
+        : "✅ Customer added successfully!",
+    });
+    if (!isEditing) resetForm();
+    setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+  },
+  onError: (err) => {
+    console.error(err);
+    setMessage({
+      type: "error",
+      text: "❌ Failed to save customer data. Please try again.",
+    });
+    setTimeout(() => setMessage({ type: "", text: "" }), 4000);
+  },
+});
 
-  // 🔹 Handle form input
+
+  // 🔹 Handle form change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // 🔹 Submit form
   const handleSubmit = (e) => {
     e.preventDefault();
     mutation.mutate(formData);
   };
 
+  // 🔹 Reset
   const resetForm = () => {
     setFormData({
-      SUPPLIER_NAME: "",
+      CUSTOMER_NAME: "",
       ENTRY_BY: "101",
       PASSWORD: "",
       ORG_ID: "",
@@ -100,24 +117,24 @@ console.log(data)
       DUE: "",
       REMARKS: "",
       FAX: "",
-      STATUS: "0",
+      STATUS: "1",
     });
   };
 
-  if (isFetching)
-    return (
-      <div className="text-center mt-10 text-gray-600 animate-pulse">
-        Loading supplier data...
-      </div>
-    );
+  // if (isLoading)
+  //   return (
+  //     <div className="text-center mt-10 text-gray-600 animate-pulse">
+  //       Loading customer data...
+  //     </div>
+  //   );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow rounded-lg mt-8">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">
-        {isEditing ? "Edit Supplier Information" : "Add New Supplier"}
+     <div className="max-w-5xl mx-auto">
+    <div className=" p-6 bg-white shadow rounded-lg mt-8">
+      <h2 className=" font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
+        {isEditing ? "Edit Customer" : "Add New Customer"}
       </h2>
 
-      {/* 🔹 Message UI */}
       {message.text && (
         <div
           className={`mb-4 p-3 rounded text-white ${
@@ -133,9 +150,9 @@ console.log(data)
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         <Input
-          label="Supplier Name"
-          name="SUPPLIER_NAME"
-          value={formData.SUPPLIER_NAME}
+          label="Customer Name"
+          name="CUSTOMER_NAME"
+          value={formData.CUSTOMER_NAME}
           onChange={handleChange}
         />
         <Input
@@ -156,12 +173,12 @@ console.log(data)
           value={formData.CONTACT_PERSON}
           onChange={handleChange}
         />
-        <Input
+        {/* <Input
           label="Phone"
           name="PHONE"
           value={formData.PHONE}
           onChange={handleChange}
-        />
+        /> */}
         <Input
           label="Mobile"
           name="MOBILE"
@@ -174,24 +191,24 @@ console.log(data)
           value={formData.EMAIL}
           onChange={handleChange}
         />
-        <Input
+        {/* <Input
           label="Due"
           name="DUE"
           value={formData.DUE}
           onChange={handleChange}
-        />
-        <Input
+        /> */}
+        {/* <Input
           label="Remarks"
           name="REMARKS"
           value={formData.REMARKS}
           onChange={handleChange}
-        />
-        <Input
+        /> */}
+        {/* <Input
           label="Fax"
           name="FAX"
           value={formData.FAX}
           onChange={handleChange}
-        />
+        /> */}
         {!isEditing && (
           <Input
             label="Password"
@@ -207,25 +224,27 @@ console.log(data)
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-700"
+            className="bg-green-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
           >
             <Save size={16} />
             {mutation.isPending
               ? "Saving..."
               : isEditing
-              ? "Update Supplier"
-              : "Save Supplier"}
+              ? "Update Customer"
+              : "Save Customer"}
           </button>
 
-          <button
+          {/* <button
             type="button"
             onClick={resetForm}
-            className="bg-gray-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-600"
+            className="bg-gray-500 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-600"
           >
             <RefreshCw size={16} /> Reset
-          </button>
+          </button> */}
         </div>
       </form>
+    </div>
+    <CustomerList></CustomerList>
     </div>
   );
 };
@@ -233,15 +252,15 @@ console.log(data)
 // 🔹 Reusable Input
 const Input = ({ label, name, value, onChange, type = "text" }) => (
   <div className="flex flex-col">
-    <label className="text-gray-700 font-medium mb-1">{label}</label>
+    <label className="text-gray-700 text-sm font-medium mb-1">{label}</label>
     <input
       type={type}
       name={name}
       value={value || ""}
       onChange={onChange}
-      className="border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      className="border border-gray-300 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
     />
   </div>
 );
 
-export default SupplierPage;
+export default CustomerPage;
