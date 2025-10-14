@@ -1,60 +1,68 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
-
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../../RouteTitle";
 import api from "../../../api/Api";
 import { useState } from "react";
-// import { useState } from "react";
 
 export default function CustomerList({ showTitle = true }) {
   const [currentPage, setCurrentPage] = useState(1);
   const vouchersPerPage = 15;
 
+  // ✅ Fetch safely
   const {
-    data = [],
+    data: customers = [],
     isLoading,
-    error, } = useQuery({
-    queryKey: ["unpostedVouchers"],
+    error,
+  } = useQuery({
+    queryKey: ["customers"],
     queryFn: async () => {
       const res = await api.get("/customer_info.php");
-      return res.data.data || [];
+
+      // Handle multiple possible response formats
+      const response = res.data;
+
+      if (Array.isArray(response)) return response;
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.records)) return response.data.records;
+
+      // If not an array, return empty array
+      return [];
     },
   });
 
-  const vouchers = data;
-  console.log(data);
+  // ✅ Always use a new array to avoid mutating React Query cache
+  const vouchers = Array.isArray(customers) ? [...customers] : [];
 
-  // ✅ Sort vouchers by ID (or date, whichever is unique/newest)
-  vouchers.sort((a, b) => Number(b.ID) - Number(a.ID));
+  // ✅ Sort safely (latest ID first)
+  vouchers.sort(
+    (a, b) => (Number(b.CUSTOMER_ID) || 0) - (Number(a.CUSTOMER_ID) || 0)
+  );
 
   const totalPages = Math.ceil(vouchers.length / vouchersPerPage);
-
   const startIndex = (currentPage - 1) * vouchersPerPage;
   const currentVouchers = vouchers.slice(
     startIndex,
     startIndex + vouchersPerPage
   );
 
-  if (isLoading) return <p>Loading vouchers...</p>;
-  if (error) return <p>Error loading vouchers</p>;
+  // ✅ UI states
+  if (isLoading) return <p>Loading customers...</p>;
+  if (error) return <p className="text-red-600">Error loading customers.</p>;
 
   return (
     <>
       <Helmet>
-        <title>Dashboard | Journal | HRMS</title>
+        <title>Dashboard | Customer | HRMS</title>
       </Helmet>
 
-      <div className="">
+      <div>
         {showTitle && <PageTitle />}
         <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
           <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
-            All customer
+            All Customers
           </h2>
-
-          {isLoading && <p>Loading customer...</p>}
-          {error && <p className="text-red-600">{error}</p>}
 
           {!isLoading && !error && (
             <div className="w-full">
@@ -71,9 +79,7 @@ export default function CustomerList({ showTitle = true }) {
                         Entry Date
                       </th>
                       <th className="px-4 py-2 border bg-orange-200">Email</th>
-                      <th className="px-4 py-2 border bg-blue-200">
-                       Address
-                      </th>
+                      <th className="px-4 py-2 border bg-blue-200">Address</th>
                       <th className="px-4 py-2 border bg-purple-200">Mobile</th>
                       <th className="px-4 py-2 border bg-orange-200">Modify</th>
                     </tr>
@@ -90,16 +96,14 @@ export default function CustomerList({ showTitle = true }) {
                       </tr>
                     ) : (
                       currentVouchers.map((v, index) => (
-                        <tr key={v.CUSTOMER_ID} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 border">{index + 1}</td>
+                        <tr key={v.CUSTOMER_ID || index} className="hover:bg-gray-50">
                           <td className="px-4 py-2 border">
-                            {v.CUSTOMER_NAME}
+                            {(currentPage - 1) * vouchersPerPage + index + 1}
                           </td>
+                          <td className="px-4 py-2 border">{v.CUSTOMER_NAME}</td>
                           <td className="px-4 py-2 border">{v.ENTRY_DATE}</td>
                           <td className="px-4 py-2 border">{v.EMAIL}</td>
-                          <td className="px-4 py-2 border">
-                            {v.ADDRESS}
-                          </td>
+                          <td className="px-4 py-2 border">{v.ADDRESS}</td>
                           <td className="px-4 py-2 border">{v.MOBILE}</td>
                           <td className="px-4 py-2 border flex gap-2">
                             <Link
@@ -119,6 +123,8 @@ export default function CustomerList({ showTitle = true }) {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
               {vouchers.length > vouchersPerPage && (
                 <div className="flex justify-between items-center mt-4">
                   <button

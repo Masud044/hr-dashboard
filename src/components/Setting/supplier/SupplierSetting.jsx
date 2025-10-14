@@ -139,7 +139,7 @@ console.log(data)
 
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
       >
         <Input
           label="Supplier Name"
@@ -212,7 +212,7 @@ console.log(data)
         )}
 
         {/* Buttons */}
-        <div className="col-span-2 flex justify-end gap-3 mt-4">
+        <div className="col-span-3 flex justify-end gap-3 mt-4">
           <button
             type="submit"
             disabled={mutation.isPending}

@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, RefreshCw } from "lucide-react";
+import { Save } from "lucide-react";
 import api from "../../../api/Api";
+import AdminUserList from "./AdminUserList";
 
 const AdminUserPage = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
-  const isEditing = Boolean(id);
+  const isEditing = !!id;
 
-  // 🔹 Local form state
+  // 🔹 Form State
   const [formData, setFormData] = useState({
     USERNAME: "",
     PASSWORD: "",
@@ -18,48 +19,68 @@ const AdminUserPage = () => {
     SUPERADMIN: "0",
     DEPT: "",
     POSITION: "",
+    ADDRESS: "", // ✅ Added field
   });
 
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // 🔹 Fetch admin user by ID
+  // 🔹 Fetch user by ID
   const { data, isLoading } = useQuery({
     queryKey: ["admin_user", id],
     queryFn: async () => {
-      const res = await api.get(`/admin_user.php?user_id=${id}`);
+      const res = await api.get(`/admin_user.php?id=${id}`);
       const userData = res.data?.data;
+
       if (Array.isArray(userData)) {
-        return userData.find((u) => u.ID === id);
+        return userData.find((u) => Number(u.ID) === Number(id));
       }
       return userData;
     },
     enabled: !!id,
   });
 
-  // 🔹 Preload form when editing
+  // 🔹 Preload data when editing
   useEffect(() => {
-    if (data) setFormData(data);
+    if (data) {
+      setFormData({
+        USERNAME: data.USERNAME || "",
+        PASSWORD: "", // keep empty for security
+        FIRSTNAME: data.FIRSTNAME || "",
+        LASTNAME: data.LASTNAME || "",
+        SUPERADMIN: String(data.SUPERADMIN ?? "0"),
+        DEPT: data.DEPT || "",
+        POSITION: data.POSITION || "",
+        ADDRESS: data.ADDRESS || "", // ✅ now maps correctly
+      });
+    }
   }, [data]);
 
-  // 🔹 Create or Update
+  // 🔹 Create or Update (POST / PUT)
   const mutation = useMutation({
     mutationFn: async (formData) => {
-      // same endpoint used for both insert/update
-      return await api.post("/admin_user.php", formData);
+      if (isEditing) {
+        // Update existing user
+        return await api.put("/admin_user.php",{ ...formData,
+        ID: id,
+         });
+      } else {
+        // Add new user
+        return await api.post("/admin_user.php", formData);
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["admin_user", id]);
+      queryClient.invalidateQueries(["admin_user"]);
       setMessage({
         type: "success",
         text: isEditing
           ? "✅ Admin user updated successfully!"
           : "✅ Admin user added successfully!",
       });
+
       if (!isEditing) resetForm();
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     },
-    onError: (err) => {
-      console.error(err);
+    onError: () => {
       setMessage({
         type: "error",
         text: "❌ Failed to save user data. Please try again.",
@@ -68,19 +89,17 @@ const AdminUserPage = () => {
     },
   });
 
-  // 🔹 Input change handler
+  // 🔹 Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 Form submit
   const handleSubmit = (e) => {
     e.preventDefault();
     mutation.mutate(formData);
   };
 
-  // 🔹 Reset
   const resetForm = () => {
     setFormData({
       USERNAME: "",
@@ -90,6 +109,7 @@ const AdminUserPage = () => {
       SUPERADMIN: "0",
       DEPT: "",
       POSITION: "",
+      ADDRESS: "",
     });
   };
 
@@ -101,102 +121,105 @@ const AdminUserPage = () => {
     );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow rounded-lg mt-8">
-      <h2 className="text-sm font-semibold mb-6 text-gray-800 border-b pb-2">
-        {isEditing ? "Edit Admin User" : "Add New Admin User"}
-      </h2>
+    <div className="max-w-5xl mx-auto">
+      <div className="p-6 bg-white shadow rounded-lg mt-8">
+        <h2 className="text-sm font-semibold mb-6 text-gray-800 border-b pb-2">
+          {isEditing ? "Edit Admin User" : "Add New Admin User"}
+        </h2>
 
-      {message.text && (
-        <div
-          className={`mb-4 p-3 rounded text-white ${
-            message.type === "success" ? "bg-green-600" : "bg-red-600"
-          }`}
+        {message.text && (
+          <div
+            className={`mb-4 p-3 rounded text-white ${
+              message.type === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {message.text}
-        </div>
-      )}
-
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
-        <Input
-          label="Username"
-          name="USERNAME"
-          value={formData.USERNAME}
-          onChange={handleChange}
-        />
-        {!isEditing && (
           <Input
-            label="Password"
-            name="PASSWORD"
-            type="password"
-            value={formData.PASSWORD}
+            label="Username"
+            name="USERNAME"
+            value={formData.USERNAME}
             onChange={handleChange}
           />
-        )}
-        <Input
-          label="First Name"
-          name="FIRSTNAME"
-          value={formData.FIRSTNAME}
-          onChange={handleChange}
-        />
-        <Input
-          label="Last Name"
-          name="LASTNAME"
-          value={formData.LASTNAME}
-          onChange={handleChange}
-        />
-        <Input
-          label="Department"
-          name="DEPT"
-          value={formData.DEPT}
-          onChange={handleChange}
-        />
-        <Input
-          label="Position"
-          name="POSITION"
-          value={formData.POSITION}
-          onChange={handleChange}
-        />
-
-        <div className="flex flex-col">
-          <label className="text-gray-700 font-medium mb-1">Super Admin</label>
-          <select
-            name="SUPERADMIN"
-            value={formData.SUPERADMIN}
+          {!isEditing && (
+            <Input
+              label="Password"
+              name="PASSWORD"
+              type="password"
+              value={formData.PASSWORD}
+              onChange={handleChange}
+            />
+          )}
+          <Input
+            label="First Name"
+            name="FIRSTNAME"
+            value={formData.FIRSTNAME}
             onChange={handleChange}
-            className="border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          >
-            <option value="0">No</option>
-            <option value="1">Yes</option>
-          </select>
-        </div>
+          />
+          <Input
+            label="Last Name"
+            name="LASTNAME"
+            value={formData.LASTNAME}
+            onChange={handleChange}
+          />
+          <Input
+            label="Department"
+            name="DEPT"
+            value={formData.DEPT}
+            onChange={handleChange}
+          />
+          <Input
+            label="Position"
+            name="POSITION"
+            value={formData.POSITION}
+            onChange={handleChange}
+          />
+          <Input
+            label="Address"
+            name="ADDRESS"
+            value={formData.ADDRESS}
+            onChange={handleChange}
+          />
 
-        {/* Buttons */}
-        <div className="col-span-2 flex justify-end gap-3 mt-4">
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="bg-green-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
-          >
-            <Save size={16} />
-            {mutation.isPending
-              ? "Saving..."
-              : isEditing
-              ? "Update User"
-              : "Save User"}
-          </button>
+          <div className="flex flex-col">
+            <label className="text-gray-700 font-medium mb-1">
+              Super Admin
+            </label>
+            <select
+              name="SUPERADMIN"
+              value={formData.SUPERADMIN}
+              onChange={handleChange}
+              className="border border-gray-300 rounded p-2 w-20 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            >
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
 
-          {/* <button
-            type="button"
-            onClick={resetForm}
-            className="bg-gray-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-600"
-          >
-            <RefreshCw size={16} /> Reset
-          </button> */}
-        </div>
-      </form>
+          <div className="col-span-3 flex justify-end  mt-4">
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="bg-green-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
+            >
+              <Save size={16} />
+              {mutation.isPending
+                ? "Saving..."
+                : isEditing
+                ? "Update User"
+                : "Save User"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <AdminUserList />
     </div>
   );
 };

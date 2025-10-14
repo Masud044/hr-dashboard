@@ -157,6 +157,20 @@ export default function Header() {
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <ClipboardList className="w-4 h-4 mr-2" /> Daily Expense Report
               </div>
+               <NavLink
+                to="/dashboard/contraction-process"
+                end
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <ClipboardList className="w-4 h-4  mr-2" /> Contraction Process
+              </NavLink>
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <ClipboardList className="w-4 h-4 mr-2" /> Daily Income Report
               </div>
@@ -185,9 +199,22 @@ export default function Header() {
           </button>
           {openMenu === "users" && (
             <div className="absolute left-0 mt-2 bg-white border shadow-lg rounded-md w-48">
-              <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100">
-                <User className="w-4 h-4 mr-2" /> User List
-              </div>
+              {/* <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100"> */}
+               <NavLink
+                to="/dashboard/user"
+                end
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <User className="w-4 h-4  mr-2" /> User
+              </NavLink>
+              {/* </div> */}
               <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100">
                 <User className="w-4 h-4 mr-2" /> Add User
               </div>
@@ -254,6 +281,34 @@ export default function Header() {
                 }
               >
                 <Plus className="w-4 h-4 mr-2" /> Customer Setting
+              </NavLink>
+               <NavLink
+                to="/dashboard/project-setting"
+                end 
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <Plus className="w-4 h-4 mr-2" /> Project Setting
+              </NavLink>
+               <NavLink
+                to="/dashboard/contrator-setting"
+                end 
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <Plus className="w-4 h-4 mr-2" /> Contrator Setting
               </NavLink>
             </div>
           )}

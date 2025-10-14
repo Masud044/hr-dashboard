@@ -22,6 +22,11 @@ import CashTransfer from "./components/MainEntry/CashTransfer/CashTransfer";
 import SupplierPage from "./components/Setting/supplier/SupplierSetting";
 import CustomerPage from "./components/Setting/customer/CustomerSetting";
 import AdminUserPage from "./components/User/Admin/AdminUser";
+import Project from "./components/Setting/project/Project";
+import Contrator from "./components/Setting/contrator/Contrator";
+import User from "./components/User/user/User";
+import ContractionProcess from "./components/report/contractionProcess/ContractionProcess";
+
 
 
 const App = () => {
@@ -56,9 +61,17 @@ const App = () => {
              <Route path="supplier-setting-voucher/:id" element={<SupplierPage />} />
               <Route path="customer-setting-voucher" element={<CustomerPage />} />
              <Route path="customer-setting-voucher/:id" element={<CustomerPage />} />
-             <Route path="admin-user" element={<AdminUserPage />} />
-              {/* <Route path="admin-user/:voucherID" element={<CustomerPage />} />  */}
+             <Route path="admin-user" element={<AdminUserPage/>} />
+              <Route path="admin-user/:id" element={<AdminUserPage/>} /> 
             <Route path="account-voucher" element={<ChartAccountForm />} />
+            <Route path="project-setting" element={<Project/>} />
+            <Route path="project-setting/:id" element={<Project/>} />
+            <Route path="contrator-setting" element={<Contrator/>} />
+            <Route path="contrator-setting/:id" element={<Contrator/>} />
+            <Route path="user" element={<User/>} />
+            <Route path="user/:id" element={<User/>} />
+            <Route path="contraction-process" element={<ContractionProcess/>} />
+            <Route path="contraction-process/:id" element={<ContractionProcess/>} />
            
           </Route>
           <Route path="/login" element={<Login></Login>} />
