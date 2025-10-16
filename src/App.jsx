@@ -26,6 +26,7 @@ import Project from "./components/Setting/project/Project";
 import Contrator from "./components/Setting/contrator/Contrator";
 import User from "./components/User/user/User";
 import ContractionProcess from "./components/report/contractionProcess/ContractionProcess";
+import Shedule from "./components/report/shedule/shedule";
 
 
 
@@ -72,6 +73,8 @@ const App = () => {
             <Route path="user/:id" element={<User/>} />
             <Route path="contraction-process" element={<ContractionProcess/>} />
             <Route path="contraction-process/:id" element={<ContractionProcess/>} />
+            <Route path="shedule" element={<Shedule/>} />
+            <Route path="shedule/:id" element={<Shedule/>} />
            
           </Route>
           <Route path="/login" element={<Login></Login>} />
