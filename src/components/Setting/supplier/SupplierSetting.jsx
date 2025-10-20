@@ -91,6 +91,29 @@ console.log(data)
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const required = [
+     "SUPPLIER_NAME",
+    "ENTRY_BY",
+    "PASSWORD",
+    "ORG_ID",
+    "ADDRESS",
+    "CONTACT_PERSON",
+    "PHONE",
+    "EMAIL",
+    "MOBILE",
+    "DUE",
+    "REMARKS",
+    "FAX",
+    "STATUS"
+    ];
+    const empty = required.find(
+      (f) => !formData[f] || formData[f].toString().trim() === ""
+    );
+    if (empty) {
+      setMessage({ text: "Please fill all required fields.", type: "error" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
     mutation.mutate(formData);
   };
 

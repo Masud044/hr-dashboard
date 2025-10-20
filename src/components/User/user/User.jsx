@@ -111,6 +111,32 @@ const User = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+     const required = [
+      "USER_NAME",
+        "USER_TYPE",
+        "EMP_NO",
+        "FACTORY_ID",
+        "ATT_STATUS",
+        "DOB",
+        "DRIVING_LIEC",
+        "ADRESS",
+        "SUBRUB",
+        "STATE",
+        "EMAIL",
+        "PHONE",
+        "ACCESS_CODE",
+        "ABN",
+        "LICENSE",
+        "STATUS"
+    ];
+    const empty = required.find(
+      (f) => !formData[f] || formData[f].toString().trim() === ""
+    );
+    if (empty) {
+      setMessage({ text: "Please fill all required fields.", type: "error" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
     mutation.mutate(formData);
   };
 

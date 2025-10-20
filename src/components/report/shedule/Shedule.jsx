@@ -185,6 +185,23 @@ const Schedule = () => {
   // 🔹 Submit form
   const handleSubmit = (e) => {
     e.preventDefault();
+     const required = [
+   
+    "P_ID",
+    "DESCRIPTION",
+    "LINES"
+   
+      
+     ]
+    
+    const empty = required.find(
+      (f) => !formData[f] || formData[f].toString().trim() === ""
+    );
+    if (empty) {
+      setMessage({ text: "Please fill all required fields.", type: "error" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
     mutation.mutate(formData);
   };
 

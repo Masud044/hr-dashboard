@@ -323,7 +323,7 @@ export default function Header() {
                   }`
                 }
               >
-                <Plus className="w-4 h-4 mr-2" /> Contrator Setting
+                <Plus className="w-4 h-4 mr-2" /> Contractor Setting
               </NavLink>
             </div>
           )}
@@ -340,7 +340,7 @@ export default function Header() {
           />
           <div className="hidden lg:block">
             <div className="font-medium">Md. Masud Mia</div>
-            <div className="text-gray-500 text-sm">Web Engineer</div>
+            <div className="text-gray-500 text-sm">Software Engineer</div>
           </div>
         </div>
         <Link to="/login">

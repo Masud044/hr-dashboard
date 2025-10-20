@@ -90,6 +90,28 @@ const { data } = useQuery({
   // 🔹 Submit form
   const handleSubmit = (e) => {
     e.preventDefault();
+     const required = [
+     "CONTRATOR_NAME",
+    "ENTRY_BY",
+    "ABN",
+    "LIEC_NO",
+    "SUBURB",
+    "POSTCODE",
+    "STATE",
+    "ADDRESS",
+    "CONTACT_PERSON",
+    "PHONE",
+    "EMAIL",
+    "MOBILE",
+    ];
+    const empty = required.find(
+      (f) => !formData[f] || formData[f].toString().trim() === ""
+    );
+    if (empty) {
+      setMessage({ text: "Please fill all required fields.", type: "error" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return;
+    }
     mutation.mutate(formData);
   };
 
