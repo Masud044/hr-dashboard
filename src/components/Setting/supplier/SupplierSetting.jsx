@@ -147,12 +147,16 @@ console.log(data)
           value={formData.SUPPLIER_NAME}
           onChange={handleChange}
         />
-        <Input
-          label="Organization ID"
-          name="ORG_ID"
-          value={formData.ORG_ID}
-          onChange={handleChange}
-        />
+        {!isEditing && (
+          <Input
+            label="Password"
+            type="password"
+            name="PASSWORD"
+            value={formData.PASSWORD}
+            onChange={handleChange}
+          />
+        )}
+       
         <Input
           label="Address"
           name="ADDRESS"
@@ -201,15 +205,16 @@ console.log(data)
           value={formData.FAX}
           onChange={handleChange}
         />
-        {!isEditing && (
-          <Input
-            label="Password"
-            type="password"
-            name="PASSWORD"
-            value={formData.PASSWORD}
-            onChange={handleChange}
-          />
-        )}
+         <Input
+          label="Organization ID"
+          name="ORG_ID"
+          value={formData.ORG_ID}
+          onChange={handleChange}
+          labelWidth = "w-32"  // Tailwind width for label (default 8rem)
+  inputWidth = "w-30"
+           
+        />
+        
 
         {/* Buttons */}
         <div className="col-span-3 flex justify-end gap-3 mt-4">
@@ -244,15 +249,27 @@ console.log(data)
 };
  
 // 🔹 Reusable Input
-const Input = ({ label, name, value, onChange, type = "text" }) => (
-  <div className="flex flex-col">
-    <label className="text-gray-700 text-sm font-medium mb-1">{label}</label>
+const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  labelWidth = "w-32",   // Tailwind width for label (default 8rem)
+  inputWidth = "flex-1", // Tailwind width for input (default full)
+}) => (
+  <div className="flex items-center gap-2">
+    <label
+      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
+    >
+      {label}
+    </label>
     <input
       type={type}
       name={name}
       value={value || ""}
       onChange={onChange}
-      className="border border-gray-300 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      className={`border border-gray-500 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${inputWidth}`}
     />
   </div>
 );
