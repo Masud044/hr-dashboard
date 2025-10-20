@@ -154,6 +154,7 @@ const CustomerPage = () => {
           name="CUSTOMER_NAME"
           value={formData.CUSTOMER_NAME}
           onChange={handleChange}
+          className=""
         />
         <Input
           label="Organization ID"
@@ -258,7 +259,7 @@ const Input = ({ label, name, value, onChange, type = "text" }) => (
       name={name}
       value={value || ""}
       onChange={onChange}
-      className="border border-gray-300 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      className="border border-gray-300 text-sm  rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
     />
   </div>
 );

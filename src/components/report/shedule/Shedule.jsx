@@ -5,7 +5,7 @@ import { Save, Plus, Trash2 } from "lucide-react";
 import api from "../../../api/Api";
 import SheduleList from "./SheduleList";
 
-const Shedule = () => {
+const Schedule = () => {
   const { id } = useParams(); // id = H_ID
   const queryClient = useQueryClient();
   const isEditing = !!id;
@@ -46,7 +46,7 @@ const Shedule = () => {
     const schedule = Array.isArray(data) ? data[0] : data; // normalize
 
     setFormData({
-       H_ID: schedule.H_ID || "",
+      H_ID: schedule.H_ID || "",
       P_ID: schedule.P_ID || "",
       DESCRIPTION: schedule.DESCRIPTION || "",
       CREATION_BY: schedule.CREATION_BY || "105",
@@ -113,77 +113,74 @@ const Shedule = () => {
   };
 
   // 🔹 Mutation (insert / update)
- 
-const mutation = useMutation({
-  mutationFn: async (formData) => {
-    // Normalize and clean up all fields before sending
-    const payload = {
-      H_ID: isEditing ? Number(id) : null,
-      P_ID: Number(formData.P_ID),
-      DESCRIPTION: formData.DESCRIPTION,
-      UPDATED_BY: Number(formData.UPDATED_BY),
-      CREATION_BY: Number(formData.CREATION_BY),
-      // ✅ Send all lines together (multiple allowed)
-      LINES: formData.LINES.map((line) => ({
-        L_ID: line.L_ID ? Number(line.L_ID) : undefined,
-        C_P_ID: line.C_P_ID ? Number(line.C_P_ID) : 0,
-        DESCRIPTION: line.DESCRIPTION,
-        SCHEDULE_START_DATE: line.SCHEDULE_START_DATE,
-        SCHEDULE_END_DATE: line.SCHEDULE_END_DATE,
-      })),
-    };
 
-    console.log("🔹 Sending Payload:", payload);
+  const mutation = useMutation({
+    mutationFn: async (formData) => {
+      // Normalize and clean up all fields before sending
+      const payload = {
+        H_ID: isEditing ? Number(id) : null,
+        P_ID: Number(formData.P_ID),
+        DESCRIPTION: formData.DESCRIPTION,
+        UPDATED_BY: Number(formData.UPDATED_BY),
+        CREATION_BY: Number(formData.CREATION_BY),
+        // ✅ Send all lines together (multiple allowed)
+        LINES: formData.LINES.map((line) => ({
+          L_ID: line.L_ID ? Number(line.L_ID) : undefined,
+          C_P_ID: line.C_P_ID ? Number(line.C_P_ID) : 0,
+          DESCRIPTION: line.DESCRIPTION,
+          SCHEDULE_START_DATE: line.SCHEDULE_START_DATE,
+          SCHEDULE_END_DATE: line.SCHEDULE_END_DATE,
+        })),
+      };
 
-    // ✅ Choose API method dynamically
-    const res = isEditing
-      ? await api.put("/shedule.php", payload)
-      : await api.post("/shedule.php", payload);
+      console.log("🔹 Sending Payload:", payload);
 
-    console.log("🔹 API Response:", res.data);
+      // ✅ Choose API method dynamically
+      const res = isEditing
+        ? await api.put("/shedule.php", payload)
+        : await api.post("/shedule.php", payload);
 
-    // ✅ Handle response flexibly (PHP APIs often return weird formats)
-    if (res?.data?.success === true || res?.data?.status === "success") {
-      return res.data;
-    }
+      console.log("🔹 API Response:", res.data);
 
-    // Even if success is string ("true"), treat as success
-    if (res?.data?.success === "true") {
-      return res.data;
-    }
+      // ✅ Handle response flexibly (PHP APIs often return weird formats)
+      if (res?.data?.success === true || res?.data?.status === "success") {
+        return res.data;
+      }
 
-    throw new Error(res?.data?.message || "Unknown API response");
-  },
+      // Even if success is string ("true"), treat as success
+      if (res?.data?.success === "true") {
+        return res.data;
+      }
 
-  onSuccess: (data) => {
-    console.log("✅ Update success:", data);
+      throw new Error(res?.data?.message || "Unknown API response");
+    },
 
-    queryClient.invalidateQueries(["schedules"]);
-    queryClient.invalidateQueries(["schedule", id]);
+    onSuccess: (data) => {
+      console.log("✅ Update success:", data);
 
-    setMessage({
-      type: "success",
-      text: isEditing
-        ? "✅ Schedule updated successfully!"
-        : "✅ Schedule created successfully!",
-    });
+      queryClient.invalidateQueries(["schedules"]);
+      queryClient.invalidateQueries(["schedule", id]);
 
-    if (!isEditing) resetForm();
+      setMessage({
+        type: "success",
+        text: isEditing
+          ? "✅ Schedule updated successfully!"
+          : "✅ Schedule created successfully!",
+      });
 
-    setTimeout(() => setMessage({ type: "", text: "" }), 3000);
-  },
+      if (!isEditing) resetForm();
 
-  onError: (err) => {
-    console.error("❌ API error:", err);
-    setMessage({
-      type: "error",
-      text: "❌ Failed to save schedule. Please try again.",
-    });
-  },
-});
+      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    },
 
-
-
+    onError: (err) => {
+      console.error("❌ API error:", err);
+      setMessage({
+        type: "error",
+        text: "❌ Failed to save schedule. Please try again.",
+      });
+    },
+  });
 
   // 🔹 Submit form
   const handleSubmit = (e) => {
@@ -228,98 +225,98 @@ const mutation = useMutation({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Header */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2">
             <Input
               label="Project ID"
               name="P_ID"
               value={formData.P_ID}
               onChange={handleChange}
+              labelWidth="w-28"
+              inputWidth="w-30"
             />
             <Input
               label="Description"
               name="DESCRIPTION"
               value={formData.DESCRIPTION}
               onChange={handleChange}
+              labelWidth="w-28"
+              inputWidth="flex-1"
             />
           </div>
 
           {/* Lines */}
           <div>
-            {/* <h3 className="font-medium text-gray-700 mb-3 flex justify-between items-center"> */}
-              {/* Schedule Lines */}
-              {/* <button
-                type="button"
-                onClick={addLine}
-                className="text-blue-600 text-sm flex justify-end  gap-1"
-              >
-                <Plus size={14} /> Add Line
-              </button> */}
-            {/* </h3> */}
-
             <div className="overflow-x-auto">
-  <table className="min-w-full  rounded-md">
-    <thead className="">
-      <tr>
-        <th className="px-3 py-2 text-sm text-foreground font-normal">Line Desc</th>
-        <th className="px-3 py-2 text-sm font-normal">Start Date</th>
-        <th className="px-3 py-2 text-sm font-normal">End Date</th>
-       
-        <th className="px-3 py-2 text-sm font-normal">Actions</th>
-        <th className="px-3 py-2 text-sm font-normal"><button
-                type="button"
-                onClick={addLine}
-                className="text-blue-600 text-sm "
-              >
-                <Plus size={14}  />
-              </button></th>
-      </tr>
-    </thead>
-    <tbody>
-      {(formData.LINES || []).map((line, index) => (
-        <tr key={index} className="">
-          <td className="px-3 py-2">
-            <Input
-              name="DESCRIPTION"
-              value={line.DESCRIPTION}
-              onChange={(e) => handleLineChange(index, e)}
-              className="w-full border-none outline-none bg-transparent"
-            />
-          </td>
-          <td className="px-3 py-2">
-            <Input
-              type="date"
-              name="SCHEDULE_START_DATE"
-              value={line.SCHEDULE_START_DATE}
-              onChange={(e) => handleLineChange(index, e)}
-              className="w-full border-none outline-none bg-transparent"
-            />
-          </td>
-          <td className="px-3 py-2">
-            <Input
-              type="date"
-              name="SCHEDULE_END_DATE"
-              value={line.SCHEDULE_END_DATE}
-              onChange={(e) => handleLineChange(index, e)}
-              className="w-full"
-            />
-          </td>
-          
-          <td className="px-3 py-2  text-center">
-            <button
-              type="button"
-              onClick={() => removeLine(index)}
-              className="text-red-500 p-1 rounded hover:bg-red-100"
-            >
-              <Trash2 size={16} />
-            </button>
-          </td>
-         
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+              <table className="min-w-full  rounded-md">
+                <thead className="">
+                  <tr>
+                    <th className="px-3 py-2 text-sm text-foreground font-normal">
+                      Line Desc
+                    </th>
+                    <th className="px-3 py-2 text-sm font-normal">
+                      Start Date
+                    </th>
+                    <th className="px-3 py-2 text-sm font-normal">End Date</th>
 
+                    <th className="px-3 py-2 text-sm font-normal">Actions</th>
+                    <th className="px-3 py-2 text-sm font-normal">
+                      <button
+                        type="button"
+                        onClick={addLine}
+                        className="text-blue-600 text-sm "
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(formData.LINES || []).map((line, index) => (
+                    <tr key={index} className="">
+                      <td className="px-3 py-2">
+                        <Input
+                          name="DESCRIPTION"
+                          value={line.DESCRIPTION}
+                          onChange={(e) => handleLineChange(index, e)}
+                          inputWidth="w-full"
+                          labelWidth="w-0"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          type="date"
+                          name="SCHEDULE_START_DATE"
+                          value={line.SCHEDULE_START_DATE}
+                          onChange={(e) => handleLineChange(index, e)}
+                          inputWidth="w-full"
+                          labelWidth="w-0"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          type="date"
+                          name="SCHEDULE_END_DATE"
+                          value={line.SCHEDULE_END_DATE}
+                          onChange={(e) => handleLineChange(index, e)}
+                          inputWidth="w-full"
+                          labelWidth="w-0"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2  text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeLine(index)}
+                          className="text-red-500 p-1 rounded hover:bg-red-100"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3">
@@ -344,17 +341,29 @@ const mutation = useMutation({
   );
 };
 
-const Input = ({ label, name, value, onChange, type = "text" }) => (
-  <div className="flex flex-col">
-    <label className="text-gray-700 text-sm font-medium mb-1">{label}</label>
+const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  labelWidth = "w-24 opacity-60", // Tailwind width for label (default 6rem)
+  inputWidth = "flex-1", // Tailwind width for input (default full width)
+}) => (
+  <div className="flex items-center gap-2">
+    <label
+      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
+    >
+      {label}
+    </label>
     <input
       type={type}
       name={name}
       value={value || ""}
       onChange={onChange}
-      className="border border-gray-300 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      className={`border border-gray-500 opacity-60 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${inputWidth}`}
     />
   </div>
 );
 
-export default Shedule;
+export default Schedule;

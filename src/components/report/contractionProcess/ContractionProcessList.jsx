@@ -1,14 +1,13 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
-import { useQuery} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import api from "../../../api/Api";
 import { useState } from "react";
 
 export default function ContractionProcessList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
- 
 
   // ✅ Fetch contraction process list
   const {
@@ -21,21 +20,22 @@ export default function ContractionProcessList() {
       const res = await api.get("/construction_process.php");
       const response = res.data;
 
-      if (Array.isArray(response)) return response;
-      if (Array.isArray(response.data)) return response.data;
-      if (Array.isArray(response.records)) return response.records;
-      return [];
+      let records = [];
+      if (Array.isArray(response)) records = response;
+      else if (Array.isArray(response.data)) records = response.data;
+      else if (Array.isArray(response.records)) records = response.records;
+
+      // ✅ Always show latest (highest ID) first
+      return records.sort((a, b) => b.ID - a.ID);
     },
   });
-
-  
 
   const totalPages = Math.ceil(processes.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = processes.slice(startIndex, startIndex + itemsPerPage);
 
-  if (isLoading) return <p>Loading data...</p>;
-  if (error) return <p className="text-red-600">Error loading data.</p>;
+  if (isLoading) return <p className="text-center py-6">Loading data...</p>;
+  if (error) return <p className="text-center text-red-600 py-6">Error loading data.</p>;
 
   return (
     <>
@@ -43,25 +43,27 @@ export default function ContractionProcessList() {
         <title>Dashboard | Contraction Process</title>
       </Helmet>
 
-      <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
-        <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
+      <div className="bg-white shadow-md rounded-2xl p-4 sm:p-6 border mt-4 border-gray-200">
+        <h2 className="text-base sm:text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-3 sm:px-4 rounded-lg text-center sm:text-left">
           All Contraction Processes
         </h2>
 
+        {/* ✅ Responsive Table Container */}
         <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
-          <table className="w-full border-collapse text-sm">
+          <table className="min-w-full text-xs sm:text-sm border-collapse">
             <thead>
               <tr className="bg-gray-100 text-gray-700 text-left">
-                <th className="px-4 py-2 border bg-blue-200">#</th>
-                <th className="px-4 py-2 border bg-purple-200">Process ID</th>
-                <th className="px-4 py-2 border bg-green-200">Sub Contract ID</th>
-                <th className="px-4 py-2 border bg-orange-200">Dependent ID</th>
-                <th className="px-4 py-2 border bg-blue-200">Sort ID</th>
-                <th className="px-4 py-2 border bg-purple-200">Cost</th>
-                <th className="px-4 py-2 border bg-orange-200">Created By</th>
-                <th className="px-4 py-2 border bg-red-200">Modify</th>
+                <th className="px-3 sm:px-4 py-2 border bg-blue-200">#</th>
+                <th className="px-3 sm:px-4 py-2 border bg-purple-200">Process ID</th>
+                <th className="px-3 sm:px-4 py-2 border bg-green-200">Sub Contract ID</th>
+                <th className="px-3 sm:px-4 py-2 border bg-orange-200">Dependent ID</th>
+                <th className="px-3 sm:px-4 py-2 border bg-blue-200">Sort ID</th>
+                <th className="px-3 sm:px-4 py-2 border bg-purple-200">Cost</th>
+                <th className="px-3 sm:px-4 py-2 border bg-orange-200">Created By</th>
+                <th className="px-3 sm:px-4 py-2 border bg-red-200 text-center">Modify</th>
               </tr>
             </thead>
+
             <tbody>
               {currentItems.length === 0 ? (
                 <tr>
@@ -71,28 +73,26 @@ export default function ContractionProcessList() {
                 </tr>
               ) : (
                 currentItems.map((item, index) => (
-                  <tr key={item.ID} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 border">
+                  <tr
+                    key={item.ID}
+                    className="hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <td className="px-3 sm:px-4 py-2 border text-center">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-4 py-2 border">{item.PROCESS_ID}</td>
-                    <td className="px-4 py-2 border">{item.SUB_CONTRACT_ID}</td>
-                    <td className="px-4 py-2 border">{item.DEPENDENT_ID}</td>
-                    <td className="px-4 py-2 border">{item.SORT_ID}</td>
-                    <td className="px-4 py-2 border">{item.COST}</td>
-                    <td className="px-4 py-2 border">{item.CREATION_BY}</td>
-                    <td className="px-4 py-2 border flex gap-2">
-                      <Link
-                        to={`/dashboard/contraction-process/${item.ID}`}
-                      >
-                        <button className="text-blue-600 hover:text-blue-800">
+                    <td className="px-3 sm:px-4 py-2 border">{item.PROCESS_ID}</td>
+                    <td className="px-3 sm:px-4 py-2 border">{item.SUB_CONTRACT_ID}</td>
+                    <td className="px-3 sm:px-4 py-2 border">{item.DEPENDENT_ID}</td>
+                    <td className="px-3 sm:px-4 py-2 border">{item.SORT_ID}</td>
+                    <td className="px-3 sm:px-4 py-2 border">{item.COST}</td>
+                    <td className="px-3 sm:px-4 py-2 border">{item.CREATION_BY}</td>
+                    <td className="px-3 sm:px-4 py-2 border text-center flex justify-center gap-2">
+                      <Link to={`/dashboard/contraction-process/${item.ID}`}>
+                        <button className="text-blue-600 hover:text-blue-800 transition">
                           <Pencil size={16} />
                         </button>
                       </Link>
-                      <button
-                        
-                        className="text-red-600 hover:text-red-800"
-                      >
+                      <button className="text-red-600 hover:text-red-800 transition">
                         <Trash2 size={16} />
                       </button>
                     </td>
@@ -103,13 +103,13 @@ export default function ContractionProcessList() {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* ✅ Responsive Pagination */}
         {processes.length > itemsPerPage && (
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded bg-green-500 text-white ${
+              className={`px-4 py-2 rounded bg-green-500 text-white text-sm ${
                 currentPage === 1
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-green-600"
@@ -125,7 +125,7 @@ export default function ContractionProcessList() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded bg-green-500 text-white ${
+              className={`px-4 py-2 rounded bg-green-500 text-white text-sm ${
                 currentPage === totalPages
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-green-600"

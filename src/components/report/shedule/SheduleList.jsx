@@ -6,7 +6,7 @@ import PageTitle from "../../RouteTitle";
 import api from "../../../api/Api";
 import { useState } from "react";
 
-export default function SheduleList({ showTitle = true }) {
+export default function ScheduleList({ showTitle = true }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 

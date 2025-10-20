@@ -157,18 +157,24 @@ const User = () => {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          <Input label="User Name" name="USER_NAME" value={formData.USER_NAME} onChange={handleChange} />
+          <Input label="User Name" name="USER_NAME" value={formData.USER_NAME} onChange={handleChange}  />
           <Input label="User Type" name="USER_TYPE" value={formData.USER_TYPE} onChange={handleChange} />
-          <Input label="Employee No" name="EMP_NO" value={formData.EMP_NO} onChange={handleChange} />
-          <Input label="Factory ID" name="FACTORY_ID" value={formData.FACTORY_ID} onChange={handleChange} />
+       
+          <Input label="Factory ID" name="FACTORY_ID" value={formData.FACTORY_ID} onChange={handleChange}  labelWidth="w-28"
+  inputWidth="w-30" />
           <Input label="Email" name="EMAIL" value={formData.EMAIL} onChange={handleChange} />
           <Input label="Phone" name="PHONE" value={formData.PHONE} onChange={handleChange} />
+           <Input label="Employee No" name="EMP_NO" value={formData.EMP_NO} onChange={handleChange}  inputWidth="w-30" labelWidth="w-28" />
           <Input label="Address" name="ADRESS" value={formData.ADRESS} onChange={handleChange} />
           <Input label="Suburb" name="SUBRUB" value={formData.SUBRUB} onChange={handleChange} />
-          <Input label="State" name="STATE" value={formData.STATE} onChange={handleChange} />
+           <Input label="State" name="STATE" value={formData.STATE} onChange={handleChange}  inputWidth="w-30" labelWidth="w-28" />
+         
           <Input label="ABN" name="ABN" value={formData.ABN} onChange={handleChange} />
           <Input label="License" name="LICENSE" value={formData.LICENSE} onChange={handleChange} />
-          <Input label="Attendance Status" name="ATT_STATUS" value={formData.ATT_STATUS} onChange={handleChange} />
+          <Input label="Attendance Status" name="ATT_STATUS" value={formData.ATT_STATUS} onChange={handleChange}  inputWidth="w-30" labelWidth="w-28" />
+          
+             
+              
 
           <div className="col-span-3 flex justify-end gap-3 mt-4">
             <button
@@ -192,15 +198,27 @@ const User = () => {
   );
 };
 
-const Input = ({ label, name, value, onChange, type = "text" }) => (
-  <div className="flex flex-col">
-    <label className="text-gray-700 text-sm font-medium mb-1">{label}</label>
+const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  labelWidth = "w-32",   // Tailwind width for label (default 8rem)
+  inputWidth = "flex-1", // Tailwind width for input (default full)
+}) => (
+  <div className="flex items-center gap-2">
+    <label
+      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
+    >
+      {label}
+    </label>
     <input
       type={type}
       name={name}
       value={value || ""}
       onChange={onChange}
-      className="border border-gray-300 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      className={`border border-gray-500 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${inputWidth}`}
     />
   </div>
 );
