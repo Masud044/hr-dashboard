@@ -24,6 +24,15 @@ const Project = () => {
 
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  // 🔹 Fetch Project Type LOV
+  const { data: projectTypes, isLoading: loadingTypes } = useQuery({
+    queryKey: ["projectTypes"],
+    queryFn: async () => {
+      const res = await api.get("/project_type_api.php");
+      return res.data?.data || [];
+    },
+  });
+
   // 🔹 Fetch project data if editing
   const { data } = useQuery({
     queryKey: ["project", id],
@@ -38,29 +47,20 @@ const Project = () => {
     enabled: !!id,
   });
 
-  // 🔹 Prefill form when editing
   useEffect(() => {
     if (data) setFormData(data);
   }, [data]);
-  console.log(data)
 
-  // 🔹 Create or Update project
   const mutation = useMutation({
     mutationFn: async (formData) => {
       if (isEditing) {
-        // Update project
-        return await api.put("/project.php", {
-          ...formData,
-          P_ID: id,
-        });
+        return await api.put("/project.php", { ...formData, P_ID: id });
       } else {
-        // Create new project
         return await api.post("/project.php", formData);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["projects"]);
-      queryClient.invalidateQueries(["project", id]);
       setMessage({
         type: "success",
         text: isEditing
@@ -70,8 +70,7 @@ const Project = () => {
       if (!isEditing) resetForm();
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     },
-    onError: (err) => {
-      console.error(err);
+    onError: () => {
       setMessage({
         type: "error",
         text: "❌ Failed to save project data. Please try again.",
@@ -80,22 +79,20 @@ const Project = () => {
     },
   });
 
-  // 🔹 Handle form input
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 Submit form
   const handleSubmit = (e) => {
     e.preventDefault();
-     const required = [
+    const required = [
       "P_NAME",
-    "P_TYPE",
-    "P_ADDRESS",
-    "SUBWRB",
-    "POSTCODE",
-    "STATE"
+      "P_TYPE",
+      "P_ADDRESS",
+      "SUBWRB",
+      "POSTCODE",
+      "STATE",
     ];
     const empty = required.find(
       (f) => !formData[f] || formData[f].toString().trim() === ""
@@ -108,7 +105,6 @@ const Project = () => {
     mutation.mutate(formData);
   };
 
-  // 🔹 Reset form
   const resetForm = () => {
     setFormData({
       P_NAME: "",
@@ -150,12 +146,28 @@ const Project = () => {
             value={formData.P_NAME}
             onChange={handleChange}
           />
-          <Input
-            label="Project Type"
-            name="P_TYPE"
-            value={formData.P_TYPE}
-            onChange={handleChange}
-          />
+
+          {/* 🔹 Project Type LOV Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-gray-700 text-sm font-medium text-right w-32">
+              Project Type
+            </label>
+            <select
+              name="P_TYPE"
+              value={formData.P_TYPE}
+              onChange={handleChange}
+              disabled={loadingTypes}
+              className="border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all flex-1"
+            >
+              <option value="">Select Project Type</option>
+              {projectTypes?.map((type) => (
+                <option key={type.ID} value={type.ID}>
+                  {type.NAME}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Input
             label="Address"
             name="P_ADDRESS"
@@ -181,7 +193,6 @@ const Project = () => {
             onChange={handleChange}
           />
 
-          {/* Buttons */}
           <div className="col-span-3 flex justify-end gap-3 mt-4">
             <button
               type="submit"
@@ -198,25 +209,16 @@ const Project = () => {
           </div>
         </form>
       </div>
-      <ProjectList></ProjectList>
+
+      <ProjectList />
     </div>
   );
 };
 
-// 🔹 Reusable Input component
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  labelWidth = "w-32",   // Tailwind width for label (default 8rem)
-  inputWidth = "flex-1", // Tailwind width for input (default full)
-}) => (
+// 🔹 Reusable Input
+const Input = ({ label, name, value, onChange, type = "text" }) => (
   <div className="flex items-center gap-2">
-    <label
-      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
-    >
+    <label className="text-gray-700 text-sm font-medium text-right w-32">
       {label}
     </label>
     <input
@@ -224,7 +226,7 @@ const Input = ({
       name={name}
       value={value || ""}
       onChange={onChange}
-      className={`border border-gray-500 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${inputWidth}`}
+      className="border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all flex-1"
     />
   </div>
 );

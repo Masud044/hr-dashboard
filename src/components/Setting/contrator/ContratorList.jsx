@@ -58,7 +58,7 @@ export default function ContratorList({ showTitle = true }) {
         {showTitle && <PageTitle />}
         <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
           <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
-            All Contrators
+            All Contractors
           </h2>
 
           {/* ✅ Table */}
@@ -68,7 +68,7 @@ export default function ContratorList({ showTitle = true }) {
                 <tr className="bg-gray-100 text-gray-700 text-left">
                   <th className="px-4 py-2 border bg-blue-200">#</th>
                   <th className="px-4 py-2 border bg-purple-200">
-                    Contrator Name
+                    Contractor Name
                   </th>
                   <th className="px-4 py-2 border bg-green-200">Entry Date</th>
                   <th className="px-4 py-2 border bg-orange-200">Email</th>
@@ -81,7 +81,7 @@ export default function ContratorList({ showTitle = true }) {
                 {currentItems.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="text-center py-4 text-gray-500">
-                      No contrators found
+                      No contractors found
                     </td>
                   </tr>
                 ) : (

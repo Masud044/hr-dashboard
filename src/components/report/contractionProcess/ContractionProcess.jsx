@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save } from "lucide-react";
+import { Save, Database } from "lucide-react";
 import api from "../../../api/Api";
 import ContractionProcessList from "./ContractionProcessList";
 
@@ -21,6 +21,16 @@ const ContractionProcess = () => {
 
   const [message, setMessage] = useState({ text: "", type: "" });
 
+  // ✅ Fetch Contractor LOV (used for both SUB_CONTRACT_ID & DEPENDENT_ID)
+  const { data: contractorList } = useQuery({
+    queryKey: ["contractors"],
+    queryFn: async () => {
+      const res = await api.get("/contractor_api.php");
+      return res.data?.data || [];
+    },
+  });
+
+  // ✅ Fetch process data for editing
   const { data } = useQuery({
     queryKey: ["process", id],
     queryFn: async () => {
@@ -45,6 +55,7 @@ const ContractionProcess = () => {
     }
   }, [data]);
 
+  // ✅ Save / Update mutation
   const mutation = useMutation({
     mutationFn: async (formData) => {
       if (isEditing) {
@@ -95,6 +106,21 @@ const ContractionProcess = () => {
     },
   });
 
+  // ✅ Contractor fetch POST call (optional)
+  const fetchContractorData = async () => {
+    try {
+      await api.post("/process_contractor.php", {
+        process_id: formData.PROCESS_ID,
+      });
+      setMessage({ text: "Contractor data fetched successfully!", type: "success" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+    } catch (err) {
+      console.error(err);
+      setMessage({ text: "Failed to load contractor data.", type: "error" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -102,13 +128,7 @@ const ContractionProcess = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const required = [
-      "PROCESS_ID",
-      "SUB_CONTRACT_ID",
-      "DEPENDENT_ID",
-      "SORT_ID",
-      "COST",
-    ];
+    const required = ["PROCESS_ID", "SUB_CONTRACT_ID", "DEPENDENT_ID", "SORT_ID", "COST"];
     const empty = required.find(
       (f) => !formData[f] || formData[f].toString().trim() === ""
     );
@@ -153,56 +173,40 @@ const ContractionProcess = () => {
           onSubmit={handleSubmit}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6"
         >
-          <Input
-            label="Process ID"
-            name="PROCESS_ID"
-            value={formData.PROCESS_ID}
-            onChange={handleChange}
-           labelWidth="w-24"
-           inputWidth="w-30"
-          />
-          <Input
-            label="Sub Contract ID"
+          <Input label="Process ID" name="PROCESS_ID" value={formData.PROCESS_ID} onChange={handleChange} />
+          
+          {/* ✅ Sub Contract LOV Dropdown */}
+          <Select
+            label="Sub Contract"
             name="SUB_CONTRACT_ID"
             value={formData.SUB_CONTRACT_ID}
             onChange={handleChange}
-             labelWidth="w-27"
-           inputWidth="w-30"
+            options={contractorList}
           />
-          <Input
-            label="Dependent ID"
+
+          {/* ✅ Dependent ID LOV Dropdown */}
+          <Select
+            label="Dependent"
             name="DEPENDENT_ID"
             value={formData.DEPENDENT_ID}
             onChange={handleChange}
-            labelWidth="w-24"
-           inputWidth="w-30"
-          />
-          <Input
-            label="Sort ID"
-            name="SORT_ID"
-            value={formData.SORT_ID}
-            onChange={handleChange}
-             labelWidth="w-24"
-           inputWidth="w-30"
-          />
-          <Input
-            label="Cost"
-            name="COST"
-            value={formData.COST}
-            onChange={handleChange}
-            labelWidth="w-24"
-           inputWidth="w-30"
-          />
-          <Input
-            label="Created By"
-            name="CREATION_BY"
-            value={formData.CREATION_BY}
-            onChange={handleChange}
-             labelWidth="w-24"
-           inputWidth="w-30"
+            options={contractorList}
           />
 
-          <div className="col-span-full flex justify-end mt-6">
+          <Input label="Sort ID" name="SORT_ID" value={formData.SORT_ID} onChange={handleChange} />
+          <Input label="Cost" name="COST" value={formData.COST} onChange={handleChange} />
+          <Input label="Created By" name="CREATION_BY" value={formData.CREATION_BY} onChange={handleChange} />
+
+          <div className="col-span-full flex justify-end mt-6 gap-4">
+            {/* <button
+              type="button"
+              onClick={fetchContractorData}
+              className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-md"
+            >
+              <Database size={16} />
+              Get Contractor Data
+            </button> */}
+
             <button
               type="submit"
               disabled={mutation.isPending}
@@ -227,17 +231,10 @@ const ContractionProcess = () => {
   );
 };
 
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  labelWidth = "w-32",  // default label width
-  inputWidth = "flex-1", // default input width
-}) => (
+// ✅ Reusable Input Field
+const Input = ({ label, name, value, onChange, type = "text" }) => (
   <div className="flex flex-row items-center gap-4">
-    <label className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}>
+    <label className="text-gray-700 text-sm font-medium text-right w-32">
       {label}
     </label>
     <input
@@ -245,11 +242,31 @@ const Input = ({
       name={name}
       value={value || ""}
       onChange={onChange}
-      className={`border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all ${inputWidth}`}
+      className="border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all flex-1"
     />
   </div>
 );
 
-
+// ✅ Reusable Select Field for LOV
+const Select = ({ label, name, value, onChange, options = [] }) => (
+  <div className="flex flex-row items-center gap-4">
+    <label className="text-gray-700 text-sm font-medium text-right w-32">
+      {label}
+    </label>
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all flex-1"
+    >
+      <option value="">Select</option>
+      {options.map((opt) => (
+        <option key={opt.ID} value={opt.ID}>
+          {opt.NAME}
+        </option>
+      ))}
+    </select>
+  </div>
+);
 
 export default ContractionProcess;

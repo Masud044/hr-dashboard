@@ -156,7 +156,7 @@ const { data } = useQuery({
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           <Input
-            label="Contrator Name"
+            label="Contractor Name"
             name="CONTRATOR_NAME"
             value={formData.CONTRATOR_NAME}
             onChange={handleChange}
