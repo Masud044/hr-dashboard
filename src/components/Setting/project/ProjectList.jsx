@@ -31,6 +31,7 @@ export default function ProjectList({ showTitle = true }) {
       return [];
     },
   });
+  console.log(customers)
 
   // ✅ Always use a new array to avoid mutating React Query cache
   const vouchers = Array.isArray(customers) ? [...customers] : [];

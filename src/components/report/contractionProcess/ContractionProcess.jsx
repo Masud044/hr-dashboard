@@ -107,19 +107,19 @@ const ContractionProcess = () => {
   });
 
   // ✅ Contractor fetch POST call (optional)
-  const fetchContractorData = async () => {
-    try {
-      await api.post("/process_contractor.php", {
-        process_id: formData.PROCESS_ID,
-      });
-      setMessage({ text: "Contractor data fetched successfully!", type: "success" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-    } catch (err) {
-      console.error(err);
-      setMessage({ text: "Failed to load contractor data.", type: "error" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-    }
-  };
+  // const fetchContractorData = async () => {
+  //   try {
+  //     await api.post("/process_contractor.php", {
+  //       process_id: formData.PROCESS_ID,
+  //     });
+  //     setMessage({ text: "Contractor data fetched successfully!", type: "success" });
+  //     setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessage({ text: "Failed to load contractor data.", type: "error" });
+  //     setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  //   }
+  // };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
