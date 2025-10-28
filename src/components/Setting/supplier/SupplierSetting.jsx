@@ -120,9 +120,9 @@ const SupplierPage = () => {
             </div>
           )}
 
-          <div className="flex flex-row items-center justify-center">
+          <div className="flex flex-row items-center justify-center text-right">
             <label className="text-gray-700 text-sm font-medium">Address</label>
-            <input type="text" {...register("ADDRESS")} className="border w-100 rounded px-2 py-1" />
+            <input type="text" {...register("ADDRESS")} className="border w-200 rounded px-2 py-1" />
             {errors.ADDRESS && <span className="text-red-600 text-xs">{errors.ADDRESS.message}</span>}
           </div>
  

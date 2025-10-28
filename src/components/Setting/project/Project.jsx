@@ -44,6 +44,26 @@ const Project = () => {
     },
   });
 
+
+//   const { data: supplierNames = [] } = useQuery({
+//   queryKey: ["supplierNames"],
+//   queryFn: async () => {
+//     const res = await api.get("/supplier.php");
+//     return res.data?.data || [];
+//   },
+// });
+
+//   console.log(supplierNames)
+
+  const { data: contractorNames = [] } = useQuery({
+    queryKey: ["contractorNames"],
+    queryFn: async () => {
+      const res = await api.get("/contrator.php");
+      return res.data?.data || [];
+    },
+  });
+  console.log(contractorNames);
+
   // 🔹 Fetch Project Data (for edit mode)
   const { data } = useQuery({
     queryKey: ["project", id],
@@ -99,24 +119,56 @@ const Project = () => {
       const processId = id || savedProjectId;
       if (!processId) return [];
       const res = await api.get(
-        `/construction_process.php?PROCESS_ID=${processId}`
+        `/construction_process.php?action=read&PROCESS_ID=${processId}`
       );
       return res.data?.data || [];
     },
     enabled: !!(id || savedProjectId),
   });
+  console.log(data);
 
   useEffect(() => {
-    if (processLines && processLines.length > 0) {
-      setEditableLines((prev) => {
-        const changed =
-          JSON.stringify(prev.map((p) => p.PROCESS_ID)) !==
-          JSON.stringify(processLines.map((p) => p.PROCESS_ID));
-        if (changed) return processLines;
-        return prev;
-      });
-    }
-  }, [processLines]);
+  if (
+    processLines.length > 0 &&
+    contractorNames.length > 0 
+   
+  ) {
+    const updatedLines = processLines.map((line) => {
+      const contractor = contractorNames.find(
+        (c) => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
+      );
+      // const supplier = supplierNames.find(
+      //   (s) => Number(s.SUPPLIER_ID) === Number(line.SUPPLIER_ID)
+
+      // );
+
+      return {
+        ...line,
+        CONTRACTOR_NAME: contractor ? contractor.CONTRATOR_NAME : "",
+        // SUPPLIER_NAME: supplier ? supplier.SUPPLIER_NAME : "",
+      };
+    });
+
+    setEditableLines((prev) => {
+      const changed =
+        JSON.stringify(prev.map((p) => p.ID)) !==
+        JSON.stringify(updatedLines.map((p) => p.ID));
+      return changed ? updatedLines : prev;
+    });
+  }
+}, [processLines, contractorNames]);
+
+  // useEffect(() => {
+  //   if (processLines && processLines.length > 0) {
+  //     setEditableLines((prev) => {
+  //       const changed =
+  //         JSON.stringify(prev.map((p) => p.PROCESS_ID)) !==
+  //         JSON.stringify(processLines.map((p) => p.PROCESS_ID));
+  //       if (changed) return processLines;
+  //       return prev;
+  //     });
+  //   }
+  // }, [processLines]);
 
   // 🔹 Create 21 Process Lines
   const processMutation = useMutation({
@@ -154,100 +206,142 @@ const Project = () => {
     processMutation.mutate(pid);
   };
 
-  // 🔹 Editable line change
+  // editableLines.forEach((line) => console.log(line));
+
+  const handleLineChange = (index, field, value) => {
+    setEditableLines((prev) => {
+      const updated = [...prev];
+      const current = updated[index];
+
+      let newValue = value;
+
+      // Convert numeric fields properly
+      if (
+        field === "SORT_ID" ||
+        field === "COST" ||
+        field === "SUB_CONTRACT_ID" ||
+        field === "DEPENDENT_ID" ||
+        field === "CONTRACTOR_ID"
+      ) {
+        if (value === "" || value === null) {
+          newValue =
+            field === "COST" || field === "CONTRACTOR_ID" || field === "SORT_ID"
+              ? 0
+              : null;
+        } else {
+          newValue = Number(value);
+        }
+      }
+
+      const newLine = {
+        ...current,
+        [field]: newValue,
+      };
+
+      // Update DEPENDENT_NAME if DEPENDENT_ID changes
+      if (field === "DEPENDENT_ID") {
+        const selected = contractorTypes.find((c) => c.ID === newValue);
+        newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
+      }
+
+      // Update CONTRATOR_NAME if CONTRATOR_ID changes
+      if (field === "CONTRACTOR_ID") {
+        const selected = contractorTypes.find((c) => c.ID === newValue);
+        newLine.CONTRACTOR_NAME = selected ? selected.NAME : "";
+      }
+//       if (field === "SUPPLIER_ID") {
+//   const selected = supplierNames.find((s) => Number(s.SUPPLIER_ID) === Number(value));
+//   newLine.SUPPLIER_NAME = selected ? selected.SUPPLIER_NAME : "";
+// }
+
+
+      updated[index] = newLine;
+      return updated;
+    });
+  };
+
+  // 🔹 Handle changes in editable lines
   // const handleLineChange = (index, field, value) => {
   //   setEditableLines((prev) => {
   //     const updated = [...prev];
-  //     updated[index] = { ...updated[index], [field]: value };
+  //     const current = updated[index];
+
+  //     let newValue = value;
+
+  //     // Convert numeric fields properly
+  //     if (
+  //       field === "SORT_ID" ||
+  //       field === "COST" ||
+  //       field === "SUB_CONTRACT_ID" ||
+  //       field === "DEPENDENT_ID"
+  //     ) {
+  //       if (value === "" || value === null) {
+  //         newValue = field === "COST" || field === "SORT_ID" ? 0 : null;
+  //       } else {
+  //         newValue = Number(value);
+  //       }
+  //     }
+
+  //     const newLine = {
+  //       ...current,
+  //       [field]: newValue,
+  //     };
+
+  //     // If changing DEPENDENT_ID, also update name for display
+  //     if (field === "DEPENDENT_ID") {
+  //       const selected = contractorTypes.find((c) => c.ID === newValue);
+  //       newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
+  //     }
+
+  //     updated[index] = newLine;
   //     return updated;
   //   });
   // };
-//   const handleLineChange = (index, field, value) => {
-//   setEditableLines((prev) => {
-//     const updated = [...prev];
-//     const newLine = { ...updated[index], [field]: value };
 
-//     // If changing DEPENDENT_ID, also store the name for display
-//     if (field === "DEPENDENT_ID") {
-//       const selected = contractorTypes.find((c) => c.ID === value);
-//       newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
-//     }
+  // 🔹 Update all process lines safely
+  const updateProcessMutation = useMutation({
+    mutationFn: async (lines) => {
+      return Promise.all(
+        lines.map((line) => {
+          const payload = {
+            ID: line.ID,
+            PROCESS_ID: line.PROCESS_ID,
+            SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
+            SUB_CONTRACT_ID: line.SUB_CONTRACT_ID
+              ? Number(line.SUB_CONTRACT_ID)
+              : null,
+            DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+            SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
+            COST:
+              line.COST !== undefined && line.COST !== ""
+                ? Number(line.COST)
+                : null,
+            CONTRACTOR_ID: line.CONTRACTOR_ID || "",
+            SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
 
-//     updated[index] = newLine;
-//     return updated;
-//   });
-// };
+          };
 
-
-
-
-
-  // 🔹 Save all updated process lines
- const updateProcessMutation = useMutation({
-  mutationFn: async (lines) => {
-    for (const line of lines) {
-      const payload = {
-        ID: line.ID,
-        PROCESS_ID: line.PROCESS_ID || "",
-        SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
-        SUB_CONTRACT_ID: line.SUB_CONTRACT_ID || "",
-        DEPENDENT_ID: line.DEPENDENT_ID ?? "",
-        SORT_ID: line.SORT_ID ?? "0",
-        COST: line.COST ?? "",
-        CONTRACTOR_NAME: line.CONTRACTOR_NAME || "",
-        UPDATED_BY: 105,
-      };
-
-      console.log("🔹 PUT Payload:", payload);
-
-      await api.put(
-        "/construction_process.php",
-        payload,
-        { headers: { "Content-Type": "application/json" } }
+          console.log("✅ Final PUT payload:", payload);
+          return api.put("/construction_process.php?action=update", payload);
+        })
       );
-    }
-  },
-
-  onSuccess: () => {
-    setMessage({ type: "success", text: "✅ Process lines updated successfully!" });
-    refetchProcess();
-  },
-
-  onError: (error) => {
-    console.error("❌ Update error:", error.response?.data || error.message);
-    setMessage({ type: "error", text: "❌ Update failed — check console." });
-  },
-});
-
-
-
-
-
-const handleLineChange = (index, field, value) => {
-  setEditableLines((prev) => {
-    const updated = [...prev];
-    const current = updated[index];
-
-    const newLine = {
-      ...current,
-      ID: current.ID, // ✅ keep ID for updates
-      [field]: value,
-    };
-
-    // ✅ If changing dependent, update name too
-    if (field === "DEPENDENT_ID") {
-      const selected = contractorTypes.find((c) => c.ID === value);
-      newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
-    }
-
-    updated[index] = newLine;
-    return updated;
+    },
+    onSuccess: () => {
+      refetchProcess();
+      setMessage({
+        type: "success",
+        text: "✅ Process lines updated successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error("❌ Update error:", error.response?.data || error.message);
+      setMessage({
+        type: "error",
+        text: "❌ Update failed. Check required fields and payload.",
+      });
+    },
   });
-};
 
-
-
-  // 🔹 Project Form Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -387,6 +481,12 @@ const handleLineChange = (index, field, value) => {
               <tr className="bg-gray-100 text-gray-700 text-left">
                 <th className="px-3 py-2 border text-center">Project ID</th>
                 <th className="px-3 py-2 border text-center">Contract type</th>
+                <th className="px-3 py-2 border text-center">
+                  Contractor Name
+                </th>
+                {/* <th className="px-3 py-2 border text-center">
+                  Supplier Name
+                </th> */}
                 <th className="px-3 py-2 border text-center">Dependent</th>
                 <th className="px-3 py-2 border text-center">Sort</th>
                 <th className="px-3 py-2 border text-center">Cost</th>
@@ -400,8 +500,17 @@ const handleLineChange = (index, field, value) => {
                       {line.PROCESS_ID}
                     </td>
                     <td className="px-3 py-2 border text-center">
-                      {line.SUB_CONTRACT_NAME}
+                      {contractorTypes.find(
+                        (c) => c.ID === line.SUB_CONTRACT_ID
+                      )?.NAME || ""}
                     </td>
+
+                    <td className="px-3 py-2 border text-center">
+                      {line.CONTRACTOR_NAME|| ""}
+                    </td>
+                    {/* <td className="px-3 py-2 border text-center">
+                      {line.SUPPLIER_NAME || ""}
+                    </td> */}
                     <td className="px-3 py-2 border text-center">
                       <select
                         value={line.DEPENDENT_ID || ""}
@@ -459,13 +568,12 @@ const handleLineChange = (index, field, value) => {
         {editableLines.length > 0 && (
           <div className="flex justify-end mt-3">
             <button
-  onClick={() => updateProcessMutation.mutate(editableLines)}
-  className="bg-purple-600 text-white text-sm px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-500"
->
-  <Upload size={16} />
-  {updateProcessMutation.isPending ? "Updating..." : "Save Changes"}
-</button>
-
+              onClick={() => updateProcessMutation.mutate(editableLines)}
+              className="bg-purple-600 text-white text-sm px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-500"
+            >
+              <Upload size={16} />
+              {updateProcessMutation.isPending ? "Updating..." : "Save Changes"}
+            </button>
           </div>
         )}
       </div>

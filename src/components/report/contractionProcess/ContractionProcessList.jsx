@@ -17,7 +17,7 @@ export default function ContractionProcessList() {
   } = useQuery({
     queryKey: ["contraction_process"],
     queryFn: async () => {
-      const res = await api.get("/construction_process.php");
+      const res = await api.get("/construction_process.php?action=read");
       const response = res.data;
 
       let records = [];
