@@ -4,7 +4,7 @@ import "frappe-gantt/dist/frappe-gantt.css";
 import Gantt from "frappe-gantt";
 import api from "../../../api/Api";
 
-const Schedule = () => {
+const GanttChart = () => {
   const ganttRef = useRef(null);
   const [tasks, setTasks] = useState([]);
   const [planStart, setPlanStart] = useState("—");
@@ -59,7 +59,7 @@ const Schedule = () => {
 
         return {
           id: String(r.L_ID),
-           name: r.DESCRIPTION || "",
+          name: r.DESCRIPTION || `Process ${r.L_ID}`,
           start: start.toISOString().slice(0, 10),
           end: end.toISOString().slice(0, 10),
           progress: 0,
@@ -148,19 +148,19 @@ const Schedule = () => {
     }
   };
 
-  // const handleDelete = async (id) => {
-  //   if (!window.confirm("Delete task " + id + "?")) return;
-  //   try {
-  //     const res = await api.delete("./gantt_api.php", { data: { L_ID: parseInt(id, 10) } });
-  //     if (res.data.success) {
-  //       toast.success("Task deleted");
-  //       loadTasks(form.H_ID || 46);
-  //     } else toast.error("Delete failed");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Network error deleting task");
-  //   }
-  // };
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete task " + id + "?")) return;
+    try {
+      const res = await api.delete("./gantt_api.php", { data: { L_ID: parseInt(id, 10) } });
+      if (res.data.success) {
+        toast.success("Task deleted");
+        loadTasks(form.H_ID || 46);
+      } else toast.error("Delete failed");
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error deleting task");
+    }
+  };
 
   useEffect(() => {
     loadTasks(46);
@@ -189,16 +189,16 @@ const Schedule = () => {
 
       <div ref={ganttRef} className="bg-white p-4 rounded-lg shadow-lg mb-4 overflow-x-auto" style={{ minHeight: "300px" }}></div>
 
-      {/* <div className="bg-white rounded-lg shadow p-3">
+      <div className="bg-white rounded-lg shadow p-3">
         {tasks.map((t) => (
           <div key={t.id} className="flex justify-between border-b border-gray-100 py-2 items-center">
             <div><strong>{t.name}</strong> &nbsp; [{t.id}]<br />{t.start} → {t.end}</div>
             <button onClick={() => handleDelete(t.id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
           </div>
         ))}
-      </div> */}
+      </div>
     </div>
   );
 };
 
-export default Schedule;
+export default GanttChart;

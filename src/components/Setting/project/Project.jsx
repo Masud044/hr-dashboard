@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Cog, Upload } from "lucide-react";
 import api from "../../../api/Api";
 import ProjectList from "./ProjectList";
+import { toast } from "react-toastify";
+
 
 const Project = () => {
   const { id } = useParams();
@@ -95,22 +97,17 @@ const Project = () => {
       queryClient.invalidateQueries(["projects"]);
       const newId = res.data?.P_ID || id;
       setSavedProjectId(newId);
-      setMessage({
-        type: "success",
-        text: isEditing
-          ? "✅ Project updated successfully!"
-          : "✅ Project added successfully!",
-      });
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
-    },
-    onError: () => {
-      setMessage({
-        type: "error",
-        text: "❌ Failed to save project data. Please try again.",
-      });
-      setTimeout(() => setMessage({ type: "", text: "" }), 4000);
-    },
-  });
+      toast.success(
+      isEditing
+        ? "Project updated successfully!"
+        : "Project added successfully!"
+    );
+  },
+   
+   onError: () => {
+    toast.error("❌ Failed to save project data. Please try again.");
+  },
+});
 
   // 🔹 Fetch Construction Process Lines (21 rows)
   const { data: processLines = [], refetch: refetchProcess } = useQuery({

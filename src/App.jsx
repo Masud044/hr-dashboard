@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Registration";
 import Home from "./pages/Home";
-import { Toaster } from "react-hot-toast";
+// import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./authentication/AuthProvider";
 
 import DashboardHome from "./pages/DashboardHome";
@@ -28,6 +28,7 @@ import User from "./components/User/user/User";
 import ContractionProcess from "./components/report/contractionProcess/ContractionProcess";
 
 import Schedule from "./components/report/shedule/Shedule";
+import { ToastContainer } from 'react-toastify';
 
 
 
@@ -39,6 +40,7 @@ const App = () => {
   }
   return (
     <AuthProvider>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Router>
         <Routes>
           <Route path="/" element={<Home></Home>} />
