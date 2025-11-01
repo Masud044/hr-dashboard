@@ -27,8 +27,10 @@ import Contrator from "./components/Setting/contrator/Contrator";
 import User from "./components/User/user/User";
 import ContractionProcess from "./components/report/contractionProcess/ContractionProcess";
 
-import Schedule from "./components/report/shedule/Shedule";
+
 import { ToastContainer } from 'react-toastify';
+import SheduleValue from "./components/report/shedule/shedulevalue";
+import Schedule from "./components/report/shedule/shedule";
 
 
 
@@ -79,6 +81,8 @@ const App = () => {
             <Route path="contraction-process/:id" element={<ContractionProcess/>} />
             <Route path="shedule" element={<Schedule/>} />
             <Route path="shedule/:id" element={<Schedule/>} />
+            <Route path="shedule-line" element={<SheduleValue/>} />
+            <Route path="shedule-line/:id" element={<SheduleValue/>} />
            
           </Route>
           <Route path="/login" element={<Login></Login>} />

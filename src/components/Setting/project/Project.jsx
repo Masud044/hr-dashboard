@@ -242,10 +242,14 @@ const Project = () => {
       }
 
       // Update CONTRATOR_NAME if CONTRATOR_ID changes
-      if (field === "CONTRACTOR_ID") {
-        const selected = contractorTypes.find((c) => c.ID === newValue);
-        newLine.CONTRACTOR_NAME = selected ? selected.NAME : "";
-      }
+     // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
+if (field === "CONTRACTOR_ID") {
+  const selected = contractorNames.find(
+    (c) => Number(c.CONTRATOR_ID) === Number(newValue)
+  );
+  newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
+}
+
 //       if (field === "SUPPLIER_ID") {
 //   const selected = supplierNames.find((s) => Number(s.SUPPLIER_ID) === Number(value));
 //   newLine.SUPPLIER_NAME = selected ? selected.SUPPLIER_NAME : "";
@@ -502,9 +506,23 @@ const Project = () => {
                       )?.NAME || ""}
                     </td>
 
-                    <td className="px-3 py-2 border text-center">
-                      {line.CONTRACTOR_NAME|| ""}
-                    </td>
+                   <td className="px-3 py-2 border text-center">
+  <select
+    value={line.CONTRACTOR_ID || ""}
+    onChange={(e) =>
+      handleLineChange(index, "CONTRACTOR_ID", e.target.value)
+    }
+    className="rounded text-sm px-2 py-1 w-full focus:outline-none"
+  >
+    <option value="">Select Contractor</option>
+    {contractorNames.map((c) => (
+      <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
+        {c.CONTRATOR_NAME}
+      </option>
+    ))}
+  </select>
+</td>
+
                     {/* <td className="px-3 py-2 border text-center">
                       {line.SUPPLIER_NAME || ""}
                     </td> */}

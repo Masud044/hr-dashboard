@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "frappe-gantt/dist/frappe-gantt.css";
 import Gantt from "frappe-gantt";
 import api from "../../../api/Api";
+import SheduleValue from "./shedulevalue";
 
 const Schedule = () => {
   const ganttRef = useRef(null);
@@ -403,9 +404,11 @@ const drawGantt = (data, workTypes = []) => {
        
       ></div>
      
-     
+    
       
     </div>
+    
+    
   );
 };
 
