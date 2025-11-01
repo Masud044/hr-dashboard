@@ -6,7 +6,7 @@ import api from "../../../api/Api";
 import SheduleList from "./SheduleList";
 // import GanttChart from "./GanttChart";
 
-const SheduleValue = () => {
+const SheduleLine = () => {
   const { id } = useParams(); // id = H_ID
   const queryClient = useQueryClient();
   const isEditing = !!id;
@@ -388,4 +388,4 @@ const Input = ({
   </div>
 );
 
-export default SheduleValue;
+export default SheduleLine;
