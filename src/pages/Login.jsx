@@ -5,8 +5,8 @@ import { useAuth } from "../authentication/AuthProvider";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: "admin@hrms.com",
+    password: "123456",
     rememberMe: false,
   });
   const navigate = useNavigate();
@@ -63,11 +63,12 @@ const Login = () => {
                 id="email"
                 name="email"
                 type="email"
+            
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full  px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
@@ -84,6 +85,7 @@ const Login = () => {
                 name="password"
                 type="password"
                 placeholder="Enter your password"
+              
                 value={formData.password}
                 onChange={handleInputChange}
                 required
