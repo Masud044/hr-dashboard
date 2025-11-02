@@ -20,10 +20,10 @@ const Shedule = () => {
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
-useEffect(() => {
-  const timer = setInterval(() => setCurrentTime(new Date()), 1000); // update every second
-  return () => clearInterval(timer);
-}, []);
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000); // update every second
+    return () => clearInterval(timer);
+  }, []);
 
   // ✅ Load Work Types from contractor_api.php
   const loadWorkTypes = async () => {
@@ -159,12 +159,27 @@ useEffect(() => {
         className="bg-white p-4 rounded-lg shadow-md flex flex-wrap gap-3 items-center mb-4"
       >
         {[
-          { name: "H_ID", type: "number", placeholder: "H_ID (e.g. 46)", w: "w-28" },
+          {
+            name: "H_ID",
+            type: "number",
+            placeholder: "H_ID (e.g. 46)",
+            w: "w-28",
+          },
           { name: "C_P_ID", type: "number", placeholder: "C_P_ID", w: "w-32" },
-          { name: "DESCRIPTION", type: "text", placeholder: "Process name", w: "w-56" },
+          {
+            name: "DESCRIPTION",
+            type: "text",
+            placeholder: "Process name",
+            w: "w-56",
+          },
           { name: "SCHEDULE_START_DATE", type: "date", w: "w-40" },
           { name: "SCHEDULE_END_DATE", type: "date", w: "w-40" },
-          { name: "CREATION_BY", type: "number", placeholder: "Your user id", w: "w-32" },
+          {
+            name: "CREATION_BY",
+            type: "number",
+            placeholder: "Your user id",
+            w: "w-32",
+          },
         ].map((f) => (
           <input
             key={f.name}
@@ -173,7 +188,9 @@ useEffect(() => {
             value={form[f.name]}
             onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
             placeholder={f.placeholder}
-            required={["SCHEDULE_START_DATE", "SCHEDULE_END_DATE"].includes(f.name)}
+            required={["SCHEDULE_START_DATE", "SCHEDULE_END_DATE"].includes(
+              f.name
+            )}
             className={`${f.w} border border-gray-300 rounded-md px-2 py-1`}
           />
         ))}
@@ -188,39 +205,52 @@ useEffect(() => {
       {/* ✅ Timeline */}
       <div className="bg-white p-4 rounded-lg shadow-lg">
         {groups.length && tasks.length ? (
-         <Timeline
-  groups={groups}
-  items={tasks}
-  defaultTimeStart={new Date(new Date().setDate(new Date().getDate() - 7))}
-  defaultTimeEnd={new Date(new Date().setDate(new Date().getDate() + 14))}
-  canMove
-  canResize="both"
-  lineHeight={45}
-  itemHeightRatio={0.9}
-  sidebarWidth={150}
-  stackItems
->
-  <TimelineHeaders className="sticky">
-    <DateHeader unit="primaryHeader" />
-    <DateHeader />
-  </TimelineHeaders>
+          <Timeline
+            groups={groups}
+            items={tasks}
+            defaultTimeStart={
+              new Date(new Date().setDate(new Date().getDate() - 7))
+            }
+            defaultTimeEnd={
+              new Date(new Date().setDate(new Date().getDate() + 14))
+            }
+            canMove
+            canResize="both"
+            lineHeight={45}
+            itemHeightRatio={0.9}
+            sidebarWidth={150}
+            stackItems
+          >
+            <TimelineHeaders className="sticky">
+              <DateHeader unit="primaryHeader" />
+              <DateHeader />
+            </TimelineHeaders>
 
-  {/* Add "Today" line */}
-  <div
-    style={{
-      position: "absolute",
-      top: 0,
-      bottom: 0,
-      left: `${((currentTime.getTime() - new Date(new Date().setDate(new Date().getDate() - 7)).getTime()) /
-             (new Date(new Date().setDate(new Date().getDate() + 14)).getTime() -
-              new Date(new Date().setDate(new Date().getDate() - 7)).getTime())) * 100}%`,
-      width: "2px",
-      backgroundColor: "red",
-      zIndex: 10,
-    }}
-  />
-</Timeline>
-
+            {/* Add "Today" line */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: `${
+                  ((currentTime.getTime() -
+                    new Date(
+                      new Date().setDate(new Date().getDate() - 7)
+                    ).getTime()) /
+                    (new Date(
+                      new Date().setDate(new Date().getDate() + 14)
+                    ).getTime() -
+                      new Date(
+                        new Date().setDate(new Date().getDate() - 7)
+                      ).getTime())) *
+                  100
+                }%`,
+                width: "2px",
+                backgroundColor: "red",
+                zIndex: 10,
+              }}
+            />
+          </Timeline>
         ) : (
           <p className="text-center text-gray-500 py-10">Loading timeline...</p>
         )}
