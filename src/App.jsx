@@ -32,6 +32,7 @@ import { ToastContainer } from 'react-toastify';
 
 import Shedule from "./components/report/shedule/shedule";
 import SheduleLine from "./components/report/sheduleLine/SheduleLine";
+import ReactTimelineDemo from "./pages/test-page";
 
 
 
@@ -86,6 +87,7 @@ const App = () => {
             <Route path="shedule/:id" element={<Shedule/>} />
             <Route path="shedule-line" element={<SheduleLine/>} />
             <Route path="shedule-line/:id" element={<SheduleLine/>} />
+            <Route path="test" element={<ReactTimelineDemo />} />
            
           </Route>
           <Route path="/login" element={<Login></Login>} />
