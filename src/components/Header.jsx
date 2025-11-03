@@ -186,6 +186,21 @@ export default function Header() {
                 <ClipboardList className="w-4 h-4  mr-2" /> Shedule
               </NavLink>
 
+               <NavLink
+                to="/dashboard/shedule-line"
+                end
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <ClipboardList className="w-4 h-4  mr-2" /> Shedule Line
+              </NavLink>
+
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <ClipboardList className="w-4 h-4 mr-2" /> Daily Income Report
               </div>

@@ -59,13 +59,13 @@ const GanttChart = () => {
 
         return {
           id: String(r.L_ID),
-          name: r.DESCRIPTION || `Process ${r.L_ID}`,
+          name: r.DESCRIPTION,
           start: start.toISOString().slice(0, 10),
           end: end.toISOString().slice(0, 10),
           progress: 0,
           custom: { H_ID: r.H_ID, C_P_ID: r.C_P_ID },
           // Assign a color class dynamically
-          custom_class: `process-${idx % colors.length}`,
+           custom_class: `process-${idx % colors.length}`,
         };
       });
 
@@ -148,19 +148,19 @@ const GanttChart = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete task " + id + "?")) return;
-    try {
-      const res = await api.delete("./gantt_api.php", { data: { L_ID: parseInt(id, 10) } });
-      if (res.data.success) {
-        toast.success("Task deleted");
-        loadTasks(form.H_ID || 46);
-      } else toast.error("Delete failed");
-    } catch (err) {
-      console.error(err);
-      toast.error("Network error deleting task");
-    }
-  };
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Delete task " + id + "?")) return;
+  //   try {
+  //     const res = await api.delete("./gantt_api.php", { data: { L_ID: parseInt(id, 10) } });
+  //     if (res.data.success) {
+  //       toast.success("Task deleted");
+  //       loadTasks(form.H_ID || 46);
+  //     } else toast.error("Delete failed");
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Network error deleting task");
+  //   }
+  // };
 
   useEffect(() => {
     loadTasks(46);
@@ -168,7 +168,7 @@ const GanttChart = () => {
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      {/* <h2 className="text-2xl font-semibold mb-2">Project Schedule — Interactive Gantt</h2> */}
+     
       <div className="flex flex-wrap gap-6 mb-4 text-gray-700">
         <p><span className="font-semibold">Project plan start:</span> {planStart}</p>
         <p><span className="font-semibold">Project plan end:</span> {planEnd}</p>
@@ -189,14 +189,7 @@ const GanttChart = () => {
 
       <div ref={ganttRef} className="bg-white p-4 rounded-lg shadow-lg mb-4 overflow-x-auto" style={{ minHeight: "300px" }}></div>
 
-      <div className="bg-white rounded-lg shadow p-3">
-        {tasks.map((t) => (
-          <div key={t.id} className="flex justify-between border-b border-gray-100 py-2 items-center">
-            <div><strong>{t.name}</strong> &nbsp; [{t.id}]<br />{t.start} → {t.end}</div>
-            <button onClick={() => handleDelete(t.id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
-          </div>
-        ))}
-      </div>
+      
     </div>
   );
 };
