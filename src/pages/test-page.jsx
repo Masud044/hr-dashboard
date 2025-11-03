@@ -1,322 +1,334 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from "react";
 import Timeline, {
   TimelineMarkers,
   TodayMarker,
-  CustomMarker,
   CursorMarker,
   TimelineHeaders,
   SidebarHeader,
   DateHeader
-} from 'react-calendar-timeline';
-// import 'react-calendar-timeline/lib/Timeline.css';
-import moment from 'moment';
+} from "react-calendar-timeline";
+import moment from "moment";
+import axios from "axios";
+import { FAKE_GANTT_DATA } from "../lib/constants/fake-data";
 
 const ReactTimelineDemo = () => {
-  // Define groups (rows in the timeline)
-  const groups = useMemo(() => [
-    { id: 1, title: 'Development Team' },
-    { id: 2, title: 'Design Team' },
-    { id: 3, title: 'Marketing Team' },
-    { id: 4, title: 'Sales Team' }
-  ], []);
-
-  // Define initial items (events/tasks on the timeline)
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      group: 1,
-      title: 'Sprint Planning',
-      start_time: moment().add(-2, 'days'),
-      end_time: moment().add(-1, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#3b82f6',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    },
-    {
-      id: 2,
-      group: 1,
-      title: 'Code Review',
-      start_time: moment().add(1, 'days'),
-      end_time: moment().add(3, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#8b5cf6',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    },
-    {
-      id: 3,
-      group: 2,
-      title: 'Design Mockups',
-      start_time: moment().add(-3, 'days'),
-      end_time: moment().add(2, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#ec4899',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    },
-    {
-      id: 4,
-      group: 2,
-      title: 'User Testing',
-      start_time: moment().add(4, 'days'),
-      end_time: moment().add(6, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#f59e0b',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    },
-    {
-      id: 5,
-      group: 3,
-      title: 'Campaign Launch',
-      start_time: moment().add(-1, 'days'),
-      end_time: moment().add(1, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#10b981',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    },
-    {
-      id: 6,
-      group: 4,
-      title: 'Client Meeting',
-      start_time: moment().add(2, 'days'),
-      end_time: moment().add(3, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#ef4444',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    },
-    {
-      id: 7,
-      group: 3,
-      title: 'Social Media Posts',
-      start_time: moment().add(5, 'days'),
-      end_time: moment().add(7, 'days'),
-      canMove: true,
-      canResize: 'both',
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: '#06b6d4',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
-        }
-      }
-    }
-  ]);
-
+  const [groups, setGroups] = useState([]);
+  const [allGroups, setAllGroups] = useState([]); // keep unfiltered copy
+  const [items, setItems] = useState([]);
+  const [allItems, setAllItems] = useState([]); // keep unfiltered copy
   const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD"));
+  const [selectedContractor, setSelectedContractor] = useState("all");
 
-  // Handle item move
+  // ✅ Controlled timeline visibility
+  const [visibleTimeStart, setVisibleTimeStart] = useState(
+    moment().add(-15, "days").valueOf()
+  );
+  const [visibleTimeEnd, setVisibleTimeEnd] = useState(
+    moment().add(15, "days").valueOf()
+  );
+
+  // ✅ Fetch contractors
+  useEffect(() => {
+    const fetchContractors = async () => {
+      try {
+        const res = await axios.get(
+          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+        );
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const formatted = res.data.data.map((c) => ({
+            id: Number(c.ID),
+            title: c.NAME
+          }));
+          setGroups(formatted);
+          setAllGroups(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load contractors:", err);
+      }
+    };
+
+    fetchContractors();
+  }, []);
+
+  // ✅ Fetch Gantt data
+  // useEffect(() => {
+  //   const fetchGanttData = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+  //       );
+  //       if (res.data.success && Array.isArray(res.data.data)) {
+  //         const formattedItems = res.data.data
+  //           .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+  //           .map((i) => ({
+  //             id: Number(i.L_ID),
+  //             group: Number(i.C_P_ID),
+  //             title: `Task ${i.L_ID}`,
+  //             start_time: moment(i.SCHEDULE_START_DATE),
+  //             end_time: moment(i.SCHEDULE_END_DATE),
+  //             canMove: true,
+  //             canResize: "both",
+  //             canChangeGroup: true,
+  //             itemProps: {
+  //               style: {
+  //                 background: "#3b82f6",
+  //                 color: "white",
+  //                 border: "none",
+  //                 borderRadius: "4px"
+  //               }
+  //             }
+  //           }));
+
+  //         setItems(formattedItems);
+  //         setAllItems(formattedItems);
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to load gantt data:", err);
+  //     }
+  //   };
+
+  //   fetchGanttData();
+  // }, []);
+
+
+  // fake data
+  useEffect(() => {
+
+    
+ 
+          const formattedItems = FAKE_GANTT_DATA
+            .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+            .map((i) => ({
+              id: Number(i.L_ID),
+              group: Number(i.C_P_ID),
+              title: `Task ${i.L_ID}`,
+              start_time: moment(i.SCHEDULE_START_DATE),
+              end_time: moment(i.SCHEDULE_END_DATE),
+              canMove: true,
+              canResize: "both",
+              canChangeGroup: true,
+              itemProps: {
+                style: {
+                  background: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px"
+                }
+              }
+            }));
+
+          setItems(formattedItems);
+          setAllItems(formattedItems);
+        
+  }, []);
+
+  // ✅ Update timeline when date changes
+  useEffect(() => {
+    const newStart = moment(selectedDate).add(-15, "days").valueOf();
+    const newEnd = moment(selectedDate).add(15, "days").valueOf();
+    setVisibleTimeStart(newStart);
+    setVisibleTimeEnd(newEnd);
+  }, [selectedDate]);
+
+  // ✅ Item interactions
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
-    setItems(prevItems => {
-      const itemIndex = prevItems.findIndex(item => item.id === itemId);
-      const item = prevItems[itemIndex];
+    setItems((prev) => {
+      const i = prev.findIndex((item) => item.id === itemId);
+      const item = prev[i];
       const duration = item.end_time - item.start_time;
-      
-      const newItems = [...prevItems];
-      newItems[itemIndex] = {
+      const updated = [...prev];
+      updated[i] = {
         ...item,
         start_time: dragTime,
         end_time: dragTime + duration,
-        group: groups[newGroupOrder].id
+        group: groups[newGroupOrder]?.id ?? item.group
       };
-      
-      return newItems;
+      return updated;
     });
   };
 
-  // Handle item resize
   const handleItemResize = (itemId, time, edge) => {
-    setItems(prevItems => {
-      const itemIndex = prevItems.findIndex(item => item.id === itemId);
-      const item = prevItems[itemIndex];
-      
-      const newItems = [...prevItems];
-      if (edge === 'left') {
-        newItems[itemIndex] = {
-          ...item,
-          start_time: time
-        };
-      } else {
-        newItems[itemIndex] = {
-          ...item,
-          end_time: time
-        };
-      }
-      
-      return newItems;
+    setItems((prev) => {
+      const i = prev.findIndex((item) => item.id === itemId);
+      const item = prev[i];
+      const updated = [...prev];
+      updated[i] = {
+        ...item,
+        [edge === "left" ? "start_time" : "end_time"]: time
+      };
+      return updated;
     });
   };
 
-  // Handle item selection
-  const handleItemSelect = (itemId) => {
-    setSelectedItems([itemId]);
-  };
+  const handleItemSelect = (id) => setSelectedItems([id]);
+  const handleItemDeselect = () => setSelectedItems([]);
 
-  // Handle item deselect
-  const handleItemDeselect = () => {
-    setSelectedItems([]);
-  };
-
-  // Handle canvas click (create new item)
   const handleCanvasClick = (groupId, time) => {
     const newItem = {
-      id: items.length + 1,
+      id: items.length + 1000,
       group: groupId,
       title: `New Task ${items.length + 1}`,
       start_time: time,
-      end_time: moment(time).add(1, 'day'),
+      end_time: moment(time).add(1, "day"),
       canMove: true,
-      canResize: 'both',
+      canResize: "both",
       canChangeGroup: true,
       itemProps: {
         style: {
-          background: '#6366f1',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px'
+          background: "#6366f1",
+          color: "white",
+          border: "none",
+          borderRadius: "4px"
         }
       }
     };
-    setItems([...items, newItem]);
+    setItems((prev) => [...prev, newItem]);
+    setAllItems((prev) => [...prev, newItem]);
   };
 
+  // ✅ Filter by contractor name
+  useEffect(() => {
+    if (selectedContractor === "all") {
+      setGroups(allGroups);
+      setItems(allItems);
+    } else {
+      const filteredGroups = allGroups.filter(
+        (g) => g.id === Number(selectedContractor)
+      );
+      const filteredItems = allItems.filter(
+        (i) => i.group === Number(selectedContractor)
+      );
+      setGroups(filteredGroups);
+      setItems(filteredItems);
+    }
+  }, [selectedContractor, allGroups, allItems]);
+
   return (
-    <div className="w-full h-screen flex flex-col bg-gray-50">
+    <div className="w-full  flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          React Calendar Timeline Demo
+          Contractor Timeline
         </h1>
         <p className="text-sm text-gray-600">
-          Drag to move tasks, resize from edges, click empty space to create new tasks
+          Loaded directly from contractor and Gantt APIs
         </p>
-        <div className="mt-3 flex gap-4 text-xs text-gray-500">
-          <span>📅 Scroll horizontally to navigate</span>
-          <span>🔍 Shift + Scroll to zoom</span>
-          <span>➕ Click empty space to add task</span>
-        </div>
       </div>
 
-      {/* Timeline Container */}
-      <div className="flex-1 p-4 overflow-hidden">
-        <div className="h-full bg-white rounded-lg shadow-lg">
-          <Timeline
-            groups={groups}
-            items={items}
-            defaultTimeStart={moment().add(-15, 'days')}
-            defaultTimeEnd={moment().add(15, 'days')}
-            onItemMove={handleItemMove}
-            onItemResize={handleItemResize}
-            onItemSelect={handleItemSelect}
-            onItemDeselect={handleItemDeselect}
-            onCanvasClick={handleCanvasClick}
-            selected={selectedItems}
-            canMove={true}
-            canResize="both"
-            canChangeGroup={true}
-            lineHeight={60}
-            itemHeightRatio={0.75}
-            sidebarWidth={180}
-            stackItems={true}
-            buffer={3}
+      {/* Filter Bar */}
+      <div className="bg-white border-b border-gray-200 p-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">Select Date:</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">Contractor:</label>
+          <select
+            value={selectedContractor}
+            onChange={(e) => setSelectedContractor(e.target.value)}
+            className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
           >
-            <TimelineHeaders className="sticky">
-              <SidebarHeader>
-                {({ getRootProps }) => {
-                  return (
-                    <div {...getRootProps()} className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
-                      Teams
-                    </div>
-                  );
-                }}
-              </SidebarHeader>
-              <DateHeader unit="primaryHeader" />
-              <DateHeader />
-            </TimelineHeaders>
-
-            <TimelineMarkers>
-              <TodayMarker>
-                {({ styles }) => {
-                  const customStyles = {
-                    ...styles,
-                    backgroundColor: '#ef4444',
-                    width: '3px',
-                    zIndex: 100
-                  };
-                  return <div style={customStyles} />;
-                }}
-              </TodayMarker>
-              <CursorMarker>
-                {({ styles }) => {
-                  const customStyles = {
-                    ...styles,
-                    backgroundColor: '#3b82f6',
-                    width: '2px',
-                    opacity: 0.5
-                  };
-                  return <div style={customStyles} />;
-                }}
-              </CursorMarker>
-            </TimelineMarkers>
-          </Timeline>
+            <option value="all">All Contractors</option>
+            {allGroups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.title}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Footer Info */}
+      {/* Timeline */}
+      <div className="flex-1  p-4 overflow-hidden">
+        <div className="h-full bg-red rounded-lg shadow-lg">
+          {groups.length > 0 && items.length > 0 ? (
+            <Timeline
+              groups={groups}
+              items={items}
+              visibleTimeStart={visibleTimeStart}
+              visibleTimeEnd={visibleTimeEnd}
+              onTimeChange={(start, end, updateScrollCanvas) => {
+                setVisibleTimeStart(start);
+                setVisibleTimeEnd(end);
+                updateScrollCanvas(start, end);
+              }}
+              onItemMove={handleItemMove}
+              onItemResize={handleItemResize}
+              onItemSelect={handleItemSelect}
+              onItemDeselect={handleItemDeselect}
+              onCanvasClick={handleCanvasClick}
+              selected={selectedItems}
+              canMove
+              canResize="both"
+              canChangeGroup
+              lineHeight={60}
+              itemHeightRatio={0.75}
+              sidebarWidth={220}
+              stackItems
+              buffer={3}
+            >
+              <TimelineHeaders>
+                <SidebarHeader>
+                  {({ getRootProps }) => (
+                    <div
+                      {...getRootProps()}
+                      className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold"
+                    >
+                      Contractors
+                    </div>
+                  )}
+                </SidebarHeader>
+                <DateHeader className="bg-yellow-500 " unit="primaryHeader" />
+                <DateHeader />
+              </TimelineHeaders>
+
+              <TimelineMarkers>
+                <TodayMarker>
+                  {({ styles }) => (
+                    <div
+                      style={{
+                        ...styles,
+                        backgroundColor: "#ef4444",
+                        width: "3px",
+                        zIndex: 100
+                      }}
+                    />
+                  )}
+                </TodayMarker>
+                <CursorMarker>
+                  {({ styles }) => (
+                    <div
+                      style={{
+                        ...styles,
+                        backgroundColor: "#3b82f6",
+                        width: "2px",
+                        opacity: 0.5
+                      }}
+                    />
+                  )}
+                </CursorMarker>
+              </TimelineMarkers>
+            </Timeline>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Loading contractors and schedule...
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
       <div className="bg-white border-t border-gray-200 p-3">
         <div className="flex items-center justify-between text-xs text-gray-600">
           <span>Total Tasks: {items.length}</span>
           <span>Selected: {selectedItems.length}</span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 bg-red-500 rounded"></span> Current Time Marker
-          </span>
         </div>
       </div>
     </div>
