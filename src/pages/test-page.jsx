@@ -8,8 +8,9 @@ import Timeline, {
   DateHeader
 } from "react-calendar-timeline";
 import moment from "moment";
-import axios from "axios";
+// import axios from "axios";
 import { FAKE_GANTT_DATA } from "../lib/constants/fake-data";
+import api from "../api/Api";
 
 const ReactTimelineDemo = () => {
   const [groups, setGroups] = useState([]);
@@ -32,9 +33,10 @@ const ReactTimelineDemo = () => {
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const res = await axios.get(
-          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+        const res = await api.get(
+          "./contractor_api.php"
         );
+        console.log("contractor data", res.data)
         if (res.data.success && Array.isArray(res.data.data)) {
           const formatted = res.data.data.map((c) => ({
             id: Number(c.ID),
