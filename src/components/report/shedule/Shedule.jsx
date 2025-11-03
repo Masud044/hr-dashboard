@@ -148,7 +148,7 @@ const drawGantt = (data, workTypes = []) => {
   el.appendChild(container);
 
   // Initialize Gantt with callbacks
-   new Gantt(ganttWrapper, data, {
+  const gantt = new Gantt(ganttWrapper, data, {
     view_mode: "Day",
     date_format: "YYYY-MM-DD",
     popup_trigger: "click",
@@ -212,79 +212,51 @@ const drawGantt = (data, workTypes = []) => {
     return;
   }
 
-  // Detect which row was dropped on
   const cursorY = e.clientY;
   const leftRows = Array.from(leftCol.querySelectorAll("div")).slice(1);
-  let targetRowIndex = -1;
+
+  let targetRow = 0;
   for (let i = 0; i < leftRows.length; i++) {
     const rect = leftRows[i].getBoundingClientRect();
-    if (cursorY >= rect.top && cursorY <= rect.bottom) {
-      targetRowIndex = i;
+    if (cursorY > rect.top && cursorY < rect.bottom) {
+      targetRow = i;
       break;
     }
   }
-  if (targetRowIndex === -1) {
-    dragging = null;
-    return;
+
+  const newWorkType = workTypes[targetRow];
+
+  if (draggedTask.workType !== newWorkType) {
+    // Swap: যদি target row-এ already কোনো task থাকে
+    const targetTask = data.find(t => t.workType === newWorkType);
+    if (targetTask) {
+      const temp = targetTask.workType;
+      targetTask.workType = draggedTask.workType;
+      draggedTask.workType = temp;
+
+      // API update for both
+      await api.put("./gantt_api.php", { L_ID: parseInt(draggedTask.id), WORK_TYPE: draggedTask.workType, UPDATED_BY: 1 });
+      await api.put("./gantt_api.php", { L_ID: parseInt(targetTask.id), WORK_TYPE: targetTask.workType, UPDATED_BY: 1 });
+    } else {
+      // শুধু workType update
+      draggedTask.workType = newWorkType;
+      await api.put("./gantt_api.php", { L_ID: parseInt(draggedTask.id), WORK_TYPE: draggedTask.workType, UPDATED_BY: 1 });
+    }
   }
 
-  const newWorkType = workTypes[targetRowIndex];
-  if (!newWorkType || draggedTask.workType === newWorkType) {
-    dragging = null;
-    return;
-  }
+  // 🔹 Update bar-wrapper position manually instead of full redraw
+  const allWrappers = Array.from(ganttWrapper.querySelectorAll(".bar-wrapper"));
+  allWrappers.forEach(wrapper => {
+    const tId = wrapper.querySelector(".bar")?.getAttribute("data-id");
+    const task = data.find(t => t.id === tId);
+    if (task) {
+      const rowIndex = workTypes.findIndex(w => w === task.workType);
+      wrapper.style.top = `${rowIndex * 40 + 40}px`; // 40px=row height, 40px=header
+    }
+  });
 
-  // Find task currently in the target row
-  const targetTask = data.find(t => t.workType === newWorkType);
-
-  if (targetTask) {
-    // 🔄 Swap both tasks' workTypes
-    const oldWorkType = draggedTask.workType;
-    draggedTask.workType = newWorkType;
-    targetTask.workType = oldWorkType;
-
-    await Promise.all([
-      api.put("./gantt_api.php", {
-        L_ID: parseInt(draggedTask.id, 10),
-        WORK_TYPE: draggedTask.workType,
-        UPDATED_BY: 1,
-      }),
-      api.put("./gantt_api.php", {
-        L_ID: parseInt(targetTask.id, 10),
-        WORK_TYPE: targetTask.workType,
-        UPDATED_BY: 1,
-      }),
-    ]);
-  } else {
-    // 🟢 No task in target row → just move
-    draggedTask.workType = newWorkType;
-    await api.put("./gantt_api.php", {
-      L_ID: parseInt(draggedTask.id, 10),
-      WORK_TYPE: draggedTask.workType,
-      UPDATED_BY: 1,
-    });
-  }
-
-  // 🔹 Update Gantt visually
-  // Move the dragged bar to new row, and swapped bar to old row
-  const updatePositions = () => {
-    const allWrappers = Array.from(ganttWrapper.querySelectorAll(".bar-wrapper"));
-    allWrappers.forEach(wrapper => {
-      const tId = wrapper.querySelector(".bar")?.getAttribute("data-id");
-      const task = data.find(t => t.id === tId);
-      if (task) {
-        const rowIndex = workTypes.findIndex(w => w === task.workType);
-        wrapper.style.top = `${rowIndex * 40 + 40}px`; // 40px row height
-      }
-    });
-  };
-
-  updatePositions();
-  setTasks([...data]); // 🟢 trigger React redraw
   dragging = null;
 });
-
-
 
 
 
@@ -293,24 +265,24 @@ const drawGantt = (data, workTypes = []) => {
 
 
 
-  // const updateTaskDates = async (L_ID, s, e) => {
-  //   try {
-  //     const payload = {
-  //       L_ID: parseInt(L_ID, 10),
-  //       SCHEDULE_START_DATE: s,
-  //       SCHEDULE_END_DATE: e,
-  //       UPDATED_BY: 1,
-  //     };
-  //     const res = await api.put("./gantt_api.php", payload);
-  //     if (res.data.success) {
-  //       toast.success("Task updated successfully");
-  //       loadTasks(form.H_ID || 46);
-  //     } else toast.error("Failed to update task");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Error updating task");
-  //   }
-  // };
+  const updateTaskDates = async (L_ID, s, e) => {
+    try {
+      const payload = {
+        L_ID: parseInt(L_ID, 10),
+        SCHEDULE_START_DATE: s,
+        SCHEDULE_END_DATE: e,
+        UPDATED_BY: 1,
+      };
+      const res = await api.put("./gantt_api.php", payload);
+      if (res.data.success) {
+        toast.success("Task updated successfully");
+        loadTasks(form.H_ID || 46);
+      } else toast.error("Failed to update task");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error updating task");
+    }
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
