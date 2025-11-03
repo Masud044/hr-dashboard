@@ -2401,3 +2401,5 @@ export const FAKE_GANTT_DATA = [
         "UPDATED_BY": "1"
     }
 ]
+
+export const FAKE_CONTRACTORS = [{ "ID": "1", "NAME": "Carpenter" }, { "ID": "2", "NAME": "Mason/Bricklayer" }, { "ID": "3", "NAME": "Concrete Finisher/Cement Mason" }, { "ID": "4", "NAME": "Electrician" }, { "ID": "5", "NAME": "Plumber" }, { "ID": "6", "NAME": "Pipefitter/Steamfitter" }, { "ID": "7", "NAME": "HVAC Technician" }, { "ID": "8", "NAME": "Roofer" }, { "ID": "9", "NAME": "Drywall Installer/Finisher" }, { "ID": "10", "NAME": "Painter/Decorator" }, { "ID": "11", "NAME": "Glazier" }, { "ID": "12", "NAME": "Ironworker" }, { "ID": "13", "NAME": "Welder" }, { "ID": "14", "NAME": "Heavy Equipment Operator" }, { "ID": "15", "NAME": "Concrete" }, { "ID": "16", "NAME": "Wood/Lumber" }, { "ID": "17", "NAME": "Steel/Iron" }, { "ID": "18", "NAME": "Brick/Stone/Block" }, { "ID": "19", "NAME": "Drywall (Gypsum Board)" }, { "ID": "20", "NAME": "Piping" }, { "ID": "21", "NAME": "Electrical Wiring/Conduit" }]
