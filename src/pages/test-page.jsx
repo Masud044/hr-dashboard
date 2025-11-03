@@ -1,3 +1,7 @@
+
+
+
+
 import React, { useState, useEffect } from "react";
 import Timeline, {
   TimelineMarkers,
@@ -8,9 +12,8 @@ import Timeline, {
   DateHeader
 } from "react-calendar-timeline";
 import moment from "moment";
-// import axios from "axios";
-import { FAKE_GANTT_DATA } from "../lib/constants/fake-data";
-import api from "../api/Api";
+import axios from "axios";
+import { FAKE_CONTRACTORS, FAKE_GANTT_DATA } from "../lib/constants/fake-data";
 
 const ReactTimelineDemo = () => {
   const [groups, setGroups] = useState([]);
@@ -21,7 +24,7 @@ const ReactTimelineDemo = () => {
   const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD"));
   const [selectedContractor, setSelectedContractor] = useState("all");
 
-  // ✅ Controlled timeline visibility
+  // ✅ FIXED: Controlled timeline visibility
   const [visibleTimeStart, setVisibleTimeStart] = useState(
     moment().add(-15, "days").valueOf()
   );
@@ -29,77 +32,48 @@ const ReactTimelineDemo = () => {
     moment().add(15, "days").valueOf()
   );
 
-  // ✅ Fetch contractors
-  useEffect(() => {
-    const fetchContractors = async () => {
-      try {
-        const res = await api.get(
-          "./contractor_api.php"
-        );
-        console.log("contractor data", res.data)
-        if (res.data.success && Array.isArray(res.data.data)) {
-          const formatted = res.data.data.map((c) => ({
-            id: Number(c.ID),
-            title: c.NAME
-          }));
-          setGroups(formatted);
-          setAllGroups(formatted);
-        }
-      } catch (err) {
-        console.error("Failed to load contractors:", err);
-      }
-    };
-
-    fetchContractors();
-  }, []);
-
-  // ✅ Fetch Gantt data
+  //! ✅ Fetch contractors, don't remove
   // useEffect(() => {
-  //   const fetchGanttData = async () => {
+  //   const fetchContractors = async () => {
   //     try {
   //       const res = await axios.get(
-  //         "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+  //         "http://103.172.44.99:8989/api_bwal/contractor_api.php"
   //       );
   //       if (res.data.success && Array.isArray(res.data.data)) {
-  //         const formattedItems = res.data.data
-  //           .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-  //           .map((i) => ({
-  //             id: Number(i.L_ID),
-  //             group: Number(i.C_P_ID),
-  //             title: `Task ${i.L_ID}`,
-  //             start_time: moment(i.SCHEDULE_START_DATE),
-  //             end_time: moment(i.SCHEDULE_END_DATE),
-  //             canMove: true,
-  //             canResize: "both",
-  //             canChangeGroup: true,
-  //             itemProps: {
-  //               style: {
-  //                 background: "#3b82f6",
-  //                 color: "white",
-  //                 border: "none",
-  //                 borderRadius: "4px"
-  //               }
-  //             }
-  //           }));
-
-  //         setItems(formattedItems);
-  //         setAllItems(formattedItems);
+  //         const formatted = res.data.data.map((c) => ({
+  //           id: Number(c.ID),
+  //           title: c.NAME
+  //         }));
+  //         setGroups(formatted);
+  //         setAllGroups(formatted);
   //       }
   //     } catch (err) {
-  //       console.error("Failed to load gantt data:", err);
+  //       console.error("Failed to load contractors:", err);
   //     }
   //   };
 
-  //   fetchGanttData();
+  //   fetchContractors();
   // }, []);
 
-
-  // fake data
+  //! fake contractors, remove after completion
   useEffect(() => {
+    const formatted = FAKE_CONTRACTORS.map((c) => ({
+      id: Number(c.ID),
+      title: c.NAME
+    }));
+    setGroups(formatted);
+    setAllGroups(formatted);
+  }, [])
 
-    
- 
-          const formattedItems = FAKE_GANTT_DATA
+  //! ✅ Fetch Gantt data, don't remove
+  useEffect(() => {
+    const fetchGanttData = async () => {
+      try {
+        const res = await axios.get(
+          "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+        );
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const formattedItems = res.data.data
             .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
             .map((i) => ({
               id: Number(i.L_ID),
@@ -122,10 +96,48 @@ const ReactTimelineDemo = () => {
 
           setItems(formattedItems);
           setAllItems(formattedItems);
-        
+        }
+      } catch (err) {
+        console.error("Failed to load gantt data:", err);
+      }
+    };
+
+    fetchGanttData();
+  }, []);
+  //! fake gantt data, remove after completion
+  useEffect(() => {
+
+    const formattedItems = FAKE_GANTT_DATA
+      .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+      .map((i) => ({
+        id: Number(i.L_ID),
+        group: Number(i.C_P_ID),
+        title: `Task ${i.L_ID}`,
+        start_time: moment(i.SCHEDULE_START_DATE),
+        end_time: moment(i.SCHEDULE_END_DATE),
+        canMove: true,
+        canResize: "both",
+        canChangeGroup: true,
+        itemProps: {
+          style: {
+            background: "#3b82f6",
+            color: "white",
+            border: "none",
+            borderRadius: "4px"
+          }
+        }
+      }));
+
+    setItems(formattedItems);
+    setAllItems(formattedItems);
+
+
+
+
+
   }, []);
 
-  // ✅ Update timeline when date changes
+  // ✅ FIXED: Update timeline when date changes
   useEffect(() => {
     const newStart = moment(selectedDate).add(-15, "days").valueOf();
     const newEnd = moment(selectedDate).add(15, "days").valueOf();
@@ -248,8 +260,8 @@ const ReactTimelineDemo = () => {
       </div>
 
       {/* Timeline */}
-      <div className="flex-1  p-4 overflow-hidden">
-        <div className="h-full bg-red rounded-lg shadow-lg">
+      <div className="flex-1 p-4 overflow-hidden">
+        <div className="h-full bg-white rounded-lg shadow-lg">
           {groups.length > 0 && items.length > 0 ? (
             <Timeline
               groups={groups}
@@ -287,7 +299,7 @@ const ReactTimelineDemo = () => {
                     </div>
                   )}
                 </SidebarHeader>
-                <DateHeader className="bg-yellow-500 " unit="primaryHeader" />
+                <DateHeader unit="primaryHeader" />
                 <DateHeader />
               </TimelineHeaders>
 
