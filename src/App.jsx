@@ -30,9 +30,10 @@ import ContractionProcess from "./components/report/contractionProcess/Contracti
 
 import { ToastContainer } from 'react-toastify';
 
-import Shedule from "./components/report/shedule/shedule";
+
 import SheduleLine from "./components/report/sheduleLine/SheduleLine";
 import ReactTimelineDemo from "./pages/test-page";
+import Schedule from "./components/report/shedule/Shedule";
 
 
 
@@ -83,8 +84,8 @@ const App = () => {
             <Route path="user/:id" element={<User/>} />
             <Route path="contraction-process" element={<ContractionProcess/>} />
             <Route path="contraction-process/:id" element={<ContractionProcess/>} />
-            <Route path="shedule" element={<Shedule/>} />
-            <Route path="shedule/:id" element={<Shedule/>} />
+            <Route path="shedule" element={<Schedule/>} />
+            <Route path="shedule/:id" element={<Schedule/>} />
             <Route path="shedule-line" element={<SheduleLine/>} />
             <Route path="shedule-line/:id" element={<SheduleLine/>} />
             <Route path="test" element={<ReactTimelineDemo />} />

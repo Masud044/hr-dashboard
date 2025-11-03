@@ -173,20 +173,18 @@ const Project = () => {
       return await api.post("/process_contractor.php", { process_id });
     },
     onSuccess: (res) => {
-      console.log("✅ Process lines created:", res.data);
-      setMessage({
-        type: "success",
-        text: "✅ 21 process lines created successfully!",
-      });
+      console.log(" Process lines created:", res.data);
+      toast.success("Process lines created successfully!");
       refetchProcess();
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      // setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     },
     onError: () => {
-      setMessage({
-        type: "error",
-        text: "❌ Failed to create process lines.",
-      });
-      setTimeout(() => setMessage({ type: "", text: "" }), 4000);
+      toast.error(" Failed to create process lines.");
+      // setMessage({
+      //   type: "error",
+      //   text: "❌ Failed to create process lines.",
+      // });
+      // setTimeout(() => setMessage({ type: "", text: "" }), 4000);
     },
   });
 
@@ -206,60 +204,107 @@ const Project = () => {
   // editableLines.forEach((line) => console.log(line));
 
   const handleLineChange = (index, field, value) => {
-    setEditableLines((prev) => {
-      const updated = [...prev];
-      const current = updated[index];
+  setEditableLines((prev) => {
+    const updated = [...prev];
+    const current = updated[index];
 
-      let newValue = value;
+    let newValue = value;
 
-      // Convert numeric fields properly
-      if (
-        field === "SORT_ID" ||
-        field === "COST" ||
-        field === "SUB_CONTRACT_ID" ||
-        field === "DEPENDENT_ID" ||
-        field === "CONTRACTOR_ID"
-      ) {
-        if (value === "" || value === null) {
-          newValue =
-            field === "COST" || field === "CONTRACTOR_ID" || field === "SORT_ID"
-              ? 0
-              : null;
-        } else {
-          newValue = Number(value);
-        }
+    // Only convert to number if value is non-empty
+    if (
+      field === "SORT_ID" ||
+      field === "COST" ||
+      field === "SUB_CONTRACT_ID" ||
+      field === "DEPENDENT_ID" ||
+      field === "CONTRACTOR_ID"
+    ) {
+     if (value === "" || value === null) {
+        newValue = ""; // Keep it empty, not 0
+      } else {
+        newValue = Number(value);
       }
+    }
 
-      const newLine = {
-        ...current,
-        [field]: newValue,
-      };
+    const newLine = {
+      ...current,
+      [field]: newValue,
+    };
 
-      // Update DEPENDENT_NAME if DEPENDENT_ID changes
-      if (field === "DEPENDENT_ID") {
-        const selected = contractorTypes.find((c) => c.ID === newValue);
-        newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
-      }
+    // Update DEPENDENT_NAME if DEPENDENT_ID changes
+    if (field === "DEPENDENT_ID") {
+      const selected = contractorTypes.find((c) => c.ID === newValue);
+      newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
+    }
 
-      // Update CONTRATOR_NAME if CONTRATOR_ID changes
-     // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
-if (field === "CONTRACTOR_ID") {
-  const selected = contractorNames.find(
-    (c) => Number(c.CONTRATOR_ID) === Number(newValue)
-  );
-  newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
-}
+    // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
+    if (field === "CONTRACTOR_ID") {
+      const selected = contractorNames.find(
+        (c) => Number(c.CONTRATOR_ID) === Number(newValue)
+      );
+      newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
+    }
 
-//       if (field === "SUPPLIER_ID") {
-//   const selected = supplierNames.find((s) => Number(s.SUPPLIER_ID) === Number(value));
-//   newLine.SUPPLIER_NAME = selected ? selected.SUPPLIER_NAME : "";
+    updated[index] = newLine;
+    return updated;
+  });
+};
+
+
+//   const handleLineChange = (index, field, value) => {
+//     setEditableLines((prev) => {
+//       const updated = [...prev];
+//       const current = updated[index];
+
+//       let newValue = value;
+
+//       // Convert numeric fields properly
+//       if (
+//         field === "SORT_ID" ||
+//         field === "COST" ||
+//         field === "SUB_CONTRACT_ID" ||
+//         field === "DEPENDENT_ID" ||
+//         field === "CONTRACTOR_ID"
+//       ) {
+//         if (value === "" || value === null) {
+//           newValue =
+//             field === "COST" || field === "CONTRACTOR_ID" || field === "SORT_ID"
+//               ? 0
+//               : null;
+//         } else {
+//           newValue = Number(value);
+//         }
+//       }
+
+//       const newLine = {
+//         ...current,
+//         [field]: newValue,
+//       };
+
+//       // Update DEPENDENT_NAME if DEPENDENT_ID changes
+//       if (field === "DEPENDENT_ID") {
+//         const selected = contractorTypes.find((c) => c.ID === newValue);
+//         newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
+//       }
+
+//       // Update CONTRATOR_NAME if CONTRATOR_ID changes
+//      // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
+// if (field === "CONTRACTOR_ID") {
+//   const selected = contractorNames.find(
+//     (c) => Number(c.CONTRATOR_ID) === Number(newValue)
+//   );
+//   newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
 // }
 
+// //       if (field === "SUPPLIER_ID") {
+// //   const selected = supplierNames.find((s) => Number(s.SUPPLIER_ID) === Number(value));
+// //   newLine.SUPPLIER_NAME = selected ? selected.SUPPLIER_NAME : "";
+// // }
 
-      updated[index] = newLine;
-      return updated;
-    });
-  };
+
+//       updated[index] = newLine;
+//       return updated;
+//     });
+//   };
 
   // 🔹 Handle changes in editable lines
   // const handleLineChange = (index, field, value) => {
@@ -300,48 +345,41 @@ if (field === "CONTRACTOR_ID") {
   // };
 
   // 🔹 Update all process lines safely
-  const updateProcessMutation = useMutation({
-    mutationFn: async (lines) => {
-      return Promise.all(
-        lines.map((line) => {
-          const payload = {
-            ID: line.ID,
-            PROCESS_ID: line.PROCESS_ID,
-            SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
-            SUB_CONTRACT_ID: line.SUB_CONTRACT_ID
-              ? Number(line.SUB_CONTRACT_ID)
-              : null,
-            DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-            SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
-            COST:
-              line.COST !== undefined && line.COST !== ""
-                ? Number(line.COST)
-                : null,
-            CONTRACTOR_ID: line.CONTRACTOR_ID || "",
-            SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
+ const updateProcessMutation = useMutation({
+  mutationFn: async (lines) => {
+    return Promise.all(
+      lines.map((line) => {
+        const payload = {
+          ID: line.ID,
+          PROCESS_ID: line.PROCESS_ID,
+          SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
+          SUB_CONTRACT_ID: line.SUB_CONTRACT_ID ? Number(line.SUB_CONTRACT_ID) : null,
+          DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+          SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
+          CONTRACTOR_ID: line.CONTRACTOR_ID || "",
+          SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
+        };
 
-          };
+        // Only include COST if it was edited (not undefined or empty)
+        if (line.COST !== undefined && line.COST !== "") {
+          payload.COST = Number(line.COST);
+        }
 
-          console.log("✅ Final PUT payload:", payload);
-          return api.put("/construction_process.php?action=update", payload);
-        })
-      );
-    },
-    onSuccess: () => {
-      refetchProcess();
-      setMessage({
-        type: "success",
-        text: "✅ Process lines updated successfully!",
-      });
-    },
-    onError: (error) => {
-      console.error("❌ Update error:", error.response?.data || error.message);
-      setMessage({
-        type: "error",
-        text: "❌ Update failed. Check required fields and payload.",
-      });
-    },
-  });
+        console.log("✅ Final PUT payload:", payload);
+        return api.put("/construction_process.php?action=update", payload);
+      })
+    );
+  },
+  onSuccess: () => {
+    refetchProcess();
+    toast.success("Process lines updated successfully!");
+  },
+  onError: (error) => {
+    console.error("❌ Update error:", error.response?.data || error.message);
+    toast.error("Update failed. Check required fields and payload.");
+  },
+});
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -423,7 +461,7 @@ if (field === "CONTRACTOR_ID") {
             name="P_ADDRESS"
             value={formData.P_ADDRESS}
             onChange={handleChange}
-            inputWidth="w-500"
+            inputWidth=""
           />
           <Input
             label="Subwrb"

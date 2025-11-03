@@ -99,7 +99,7 @@ export default function ScheduleList({ showTitle = true }) {
                       <td className="px-4 py-2 border">{item.CREATION_DATE}</td>
                       <td className="px-4 py-2 border">{item.UPDATED_DATE}</td>
                       <td className="px-4 py-2 border flex justify-center gap-2">
-                        <Link to={`/dashboard/shedule/${item.H_ID}`}>
+                        <Link to={`/dashboard/shedule-line/${item.H_ID}`}>
                           <button className="text-blue-600 hover:text-blue-800">
                             <Pencil size={16} />
                           </button>
