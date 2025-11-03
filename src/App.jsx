@@ -33,7 +33,6 @@ import { ToastContainer } from 'react-toastify';
 
 import SheduleLine from "./components/report/sheduleLine/SheduleLine";
 import ReactTimelineDemo from "./pages/test-page";
-import Schedule from "./components/report/shedule/Shedule";
 
 
 
@@ -64,17 +63,17 @@ const App = () => {
             />
             <Route path="journal-voucher" element={<JournalVoucher />} />
             <Route path="journal-voucher/:voucherId" element={<JournalVoucher />} />
-           
+
             <Route path="receive-voucher" element={<ReceiveVoucher />} />
-              <Route path="receive-voucher/:voucherId" element={<ReceiveVoucher />} />
-             <Route path="cash-voucher" element={<CashTransfer />} />
-             <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
-             <Route path="supplier-setting-voucher" element={<SupplierPage />} />
-             <Route path="supplier-setting-voucher/:id" element={<SupplierPage />} />
-              <Route path="customer-setting-voucher" element={<CustomerPage />} />
-             <Route path="customer-setting-voucher/:id" element={<CustomerPage />} />
-             <Route path="admin-user" element={<AdminUserPage/>} />
-              <Route path="admin-user/:id" element={<AdminUserPage/>} /> 
+            <Route path="receive-voucher/:voucherId" element={<ReceiveVoucher />} />
+            <Route path="cash-voucher" element={<CashTransfer />} />
+            <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
+            <Route path="supplier-setting-voucher" element={<SupplierPage />} />
+            <Route path="supplier-setting-voucher/:id" element={<SupplierPage />} />
+            <Route path="customer-setting-voucher" element={<CustomerPage />} />
+            <Route path="customer-setting-voucher/:id" element={<CustomerPage />} />
+            <Route path="admin-user" element={<AdminUserPage />} />
+            <Route path="admin-user/:id" element={<AdminUserPage />} />
             <Route path="account-voucher" element={<ChartAccountForm />} />
             <Route path="project-setting" element={<Project/>} />
             <Route path="project-setting/:id" element={<Project/>} />
@@ -84,12 +83,13 @@ const App = () => {
             <Route path="user/:id" element={<User/>} />
             <Route path="contraction-process" element={<ContractionProcess/>} />
             <Route path="contraction-process/:id" element={<ContractionProcess/>} />
-            <Route path="shedule" element={<Schedule/>} />
-            <Route path="shedule/:id" element={<Schedule/>} />
+            <Route path="shedule" element={<Shedule/>} />
+            <Route path="shedule/:id" element={<Shedule/>} />
             <Route path="shedule-line" element={<SheduleLine/>} />
             <Route path="shedule-line/:id" element={<SheduleLine/>} />
             <Route path="test" element={<ReactTimelineDemo />} />
-           
+            <Route path="test2" element={<FrappeGanttDemo />} />
+
           </Route>
           <Route path="/login" element={<Login></Login>} />
           <Route path="/register" element={<Register></Register>} />
