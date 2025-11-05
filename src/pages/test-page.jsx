@@ -1,8 +1,5 @@
-
-
-
-
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import Timeline, {
   TimelineMarkers,
   TodayMarker,
@@ -14,18 +11,18 @@ import Timeline, {
 import moment from "moment";
 import axios from "axios";
 import "react-calendar-timeline/style.css";
-import { FAKE_CONTRACTORS, FAKE_GANTT_DATA } from "../lib/constants/fake-data";
+import { useRef } from "react";
+
 
 const ReactTimelineDemo = () => {
   const [groups, setGroups] = useState([]);
-  const [allGroups, setAllGroups] = useState([]); // keep unfiltered copy
+  const [allGroups, setAllGroups] = useState([]);
   const [items, setItems] = useState([]);
-  const [allItems, setAllItems] = useState([]); // keep unfiltered copy
+  const [allItems, setAllItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD"));
   const [selectedContractor, setSelectedContractor] = useState("all");
 
-  // ✅ FIXED: Controlled timeline visibility
   const [visibleTimeStart, setVisibleTimeStart] = useState(
     moment().add(-15, "days").valueOf()
   );
@@ -33,15 +30,11 @@ const ReactTimelineDemo = () => {
     moment().add(15, "days").valueOf()
   );
 
-  //! ✅ Fetch contractors, don't remove
+  // ✅ Fetch contractors
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const res = await axios.get(
-          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
-        );
-
-        console.log("response from contractor data", res.data.data);
+        const res = await axios.get("http://103.172.44.99:8989/api_bwal/contractor_api.php");
         if (res.data.success && Array.isArray(res.data.data)) {
           const formatted = res.data.data.map((c) => ({
             id: Number(c.ID),
@@ -54,93 +47,88 @@ const ReactTimelineDemo = () => {
         console.error("Failed to load contractors:", err);
       }
     };
-
     fetchContractors();
   }, []);
 
-  //! fake contractors, remove after completion
+  // ✅ Fetch Gantt data
   // useEffect(() => {
-  //   const formatted = FAKE_CONTRACTORS.map((c) => ({
-  //     id: Number(c.ID),
-  //     title: c.NAME
-  //   }));
-  //   setGroups(formatted);
-  //   setAllGroups(formatted);
-  // }, [])
+  //   const fetchGanttData = async () => {
+  //     try {
+  //       const res = await axios.get("http://103.172.44.99:8989/api_bwal/gantt_api.php");
+  //       if (res.data.success && Array.isArray(res.data.data)) {
+  //         const formattedItems = res.data.data
+  //           .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+  //           .map((i) => ({
+  //             id: Number(i.L_ID),
+  //             group: Number(i.C_P_ID),
+  //             // title: i.DESCRIPTION || `Task ${i.L_ID}`,
+  //             start_time: moment(i.SCHEDULE_START_DATE),
+  //             end_time: moment(i.SCHEDULE_END_DATE),
+  //             canMove: true,
+  //             canResize: "both",
+  //             canChangeGroup: true,
+  //             itemProps: {
+  //               style: {
+  //                 background: "#3b82f6",
+  //                 color: "white",
+  //                 border: "none",
+  //                 borderRadius: "4px"
+  //               }
+  //             }
+  //           }));
 
-  //! ✅ Fetch Gantt data, don't remove
-  useEffect(() => {
-    const fetchGanttData = async () => {
-      try {
-        const res = await axios.get(
-          "http://103.172.44.99:8989/api_bwal/gantt_api.php"
-        );
-        if (res.data.success && Array.isArray(res.data.data)) {
-          const formattedItems = res.data.data
-            .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-            .map((i) => ({
-              id: Number(i.L_ID),
-              group: Number(i.C_P_ID),
-              // title: `Task ${i.L_ID}`,
-              start_time: moment(i.SCHEDULE_START_DATE),
-              end_time: moment(i.SCHEDULE_END_DATE),
-              canMove: true,
-              canResize: "both",
-              canChangeGroup: true,
-              itemProps: {
-                style: {
-                  background: "#3b82f6",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px"
-                }
-              }
-            }));
-
-          setItems(formattedItems);
-          setAllItems(formattedItems);
-        }
-      } catch (err) {
-        console.error("Failed to load gantt data:", err);
-      }
-    };
-
-    fetchGanttData();
-  }, []);
-  //! fake gantt data, remove after completion
-  // useEffect(() => {
-
-  //   const formattedItems = FAKE_GANTT_DATA
-  //     .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-  //     .map((i) => ({
-  //       id: Number(i.L_ID),
-  //       group: Number(i.C_P_ID),
-  //       title: `Task ${i.L_ID}`,
-  //       start_time: moment(i.SCHEDULE_START_DATE),
-  //       end_time: moment(i.SCHEDULE_END_DATE),
-  //       canMove: true,
-  //       canResize: "both",
-  //       canChangeGroup: true,
-  //       itemProps: {
-  //         style: {
-  //           background: "#3b82f6",
-  //           color: "white",
-  //           border: "none",
-  //           borderRadius: "4px"
-  //         }
+  //         setItems(formattedItems);
+  //         setAllItems(formattedItems);
   //       }
-  //     }));
+  //     } catch (err) {
+  //       console.error("Failed to load gantt data:", err);
+  //     }
+  //   };
 
-  //   setItems(formattedItems);
-  //   setAllItems(formattedItems);
-
-
-
-
-
+  //    fetchGanttData();
   // }, []);
 
-  // ✅ FIXED: Update timeline when date changes
+  // ✅ Fetch Gantt data (make it callable)
+const fetchGanttData = async () => {
+  try {
+    const res = await axios.get("http://103.172.44.99:8989/api_bwal/gantt_api.php");
+    if (res.data.success && Array.isArray(res.data.data)) {
+      const formattedItems = res.data.data
+        .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+        .map((i) => ({
+          id: Number(i.L_ID),
+          group: Number(i.C_P_ID),
+          //  title: "",
+          start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+          end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+          canMove: true,
+          canResize: "both",
+          canChangeGroup: true,
+          itemProps: {
+            style: {
+              background: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+            },
+          },
+        }));
+
+      setItems(formattedItems);
+      setAllItems(formattedItems);
+    }
+  } catch (err) {
+    console.error("Failed to load gantt data:", err);
+  }
+};
+
+// ✅ Load once at mount
+useEffect(() => {
+  fetchGanttData();
+}, []);
+
+
+  // ✅ Update visible window when date changes
   useEffect(() => {
     const newStart = moment(selectedDate).add(-15, "days").valueOf();
     const newEnd = moment(selectedDate).add(15, "days").valueOf();
@@ -148,63 +136,249 @@ const ReactTimelineDemo = () => {
     setVisibleTimeEnd(newEnd);
   }, [selectedDate]);
 
-  // ✅ Item interactions
+
+  // Create a ref to avoid double toasts
+ // add useRef at top
+
+// inside your component
+const lastUpdatedRef = useRef(null);
+
+const updateItemOnServer = async (item) => {
+  const key = `${item.id}-${item.start_time}-${item.end_time}`;
+  if (lastUpdatedRef.current === key) return; // 🧠 prevent duplicate
+  lastUpdatedRef.current = key;
+
+  try {
+    await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+      L_ID: item.id,
+      C_P_ID: item.group,
+      SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),
+      SCHEDULE_END_DATE: moment(item.end_time).format("YYYY-MM-DD"),
+      DESCRIPTION: item.title,
+    });
+
+    toast.success("Task updated successfully");
+  } catch (err) {
+    toast.error("Failed to update task");
+    console.error(" Failed to update item:", err);
+  } finally {
+    // Reset the protection key after a short delay
+    setTimeout(() => {
+      lastUpdatedRef.current = null;
+    }, 500);
+  }
+};
+
+
+  // ✅ API: Update item position or resize
+  // const updateItemOnServer = async (item) => {
+  //   try {
+  //     await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+  //       L_ID: item.id,
+  //       C_P_ID: item.group,
+  //       SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),
+  //       SCHEDULE_END_DATE: moment(item.end_time).format("YYYY-MM-DD"),
+  //       DESCRIPTION: item.title
+  //     });
+  //     // console.log("✅ Updated on server:", item);
+  //     // toast.success(" Updated on task",item);
+  //     // console.log("✅ Updated on server:", item);
+  //   } catch (err) {
+  //     // toast.error("Failed to update on server", err);
+  //     // console.error("❌ Failed to update item:", err);
+  //   }
+  // };
+
+  // ✅ API: Add new item
+  // const addItemToServer = async (newItem) => {
+  //   try {
+  //     const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+  //       C_P_ID: newItem.group,
+  //       SCHEDULE_START_DATE: moment(newItem.start_time).format("YYYY-MM-DD"),
+  //       SCHEDULE_END_DATE: moment(newItem.end_time).format("YYYY-MM-DD"),
+  //       DESCRIPTION: newItem.title,
+  //        CREATION_BY: 1, // optional if required by API
+  //         H_ID: 46, 
+  //     });
+  //     console.log("✅ Added new task:", res.data);
+  //   } catch (err) {
+  //     console.error("❌ Failed to add new task:", err);
+  //   }
+  // };
+
+  // ✅ Move item
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
       const i = prev.findIndex((item) => item.id === itemId);
       const item = prev[i];
       const duration = item.end_time - item.start_time;
       const updated = [...prev];
-      updated[i] = {
+      const newItem = {
         ...item,
         start_time: dragTime,
         end_time: dragTime + duration,
         group: groups[newGroupOrder]?.id ?? item.group
       };
-      return updated;
+      updated[i] = newItem;
+      updateItemOnServer(newItem);
+      // toast.success("✅ Task updated"); // 🔁 sync with backend
+       return updated;
     });
   };
 
+  // ✅ Resize item
   const handleItemResize = (itemId, time, edge) => {
     setItems((prev) => {
       const i = prev.findIndex((item) => item.id === itemId);
       const item = prev[i];
       const updated = [...prev];
-      updated[i] = {
+      const newItem = {
         ...item,
         [edge === "left" ? "start_time" : "end_time"]: time
       };
-      return updated;
+      updated[i] = newItem;
+      updateItemOnServer(newItem);
+     // toast.success("✅ Task updated"); // 🔁 sync with backend
+       return updated;
     });
   };
 
+  // ✅ Select / Deselect
   const handleItemSelect = (id) => setSelectedItems([id]);
   const handleItemDeselect = () => setSelectedItems([]);
 
-  const handleCanvasClick = (groupId, time) => {
-    const newItem = {
-      id: items.length + 1000,
-      group: groupId,
-      title: `New Task ${items.length + 1}`,
-      start_time: time,
-      end_time: moment(time).add(1, "day"),
-      canMove: true,
-      canResize: "both",
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: "#6366f1",
-          color: "white",
-          border: "none",
-          borderRadius: "4px"
-        }
-      }
-    };
-    setItems((prev) => [...prev, newItem]);
-    setAllItems((prev) => [...prev, newItem]);
+  // ✅ Add new item by clicking on empty canvas
+  // const handleCanvasClick = (groupId, time, e) => {
+  //   const newItem = {
+  //     id: Date.now(), // temporary ID
+  //     group: groupId,
+  //     title: `New Task`,
+  //     start_time: moment(time),
+  //     end_time: moment(time).add(1, "day"),
+  //     canMove: true,
+  //     canResize: "both",
+  //     canChangeGroup: true,
+  //     itemProps: {
+  //       style: {
+  //         background: "#6366f1",
+  //         color: "white",
+  //         border: "none",
+  //         borderRadius: "4px"
+  //       }
+  //     }
+  //   };
+  //   setItems((prev) => [...prev, newItem]);
+  //   setAllItems((prev) => [...prev, newItem]);
+  //   addItemToServer(newItem); // 🆕 send to backend
+  // };
+
+//  const handleCanvasClick = async (groupId, time, e) => {
+//   // If click is not on an actual group row, ignore
+//   if (!groupId) return;
+
+//   const newItem = {
+//     id: Date.now(), // temporary unique ID
+//     group: groupId,
+//     // title: "New Task",
+//     start_time: moment(time),
+//     end_time: moment(time).add(1, "day"),
+//     canMove: true,
+//     canResize: "both",
+//     canChangeGroup: true,
+//     itemProps: {
+//       style: {
+//         background: "#6366f1",
+//         color: "white",
+//         border: "none",
+//         borderRadius: "4px"
+//       }
+//     }
+//   };
+
+//   // ✅ Immediately show on UI
+//   setItems((prev) => [...prev, newItem]);
+//   setAllItems((prev) => [...prev, newItem]);
+
+//   // ✅ Then send to backend
+//   try {
+//     const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+//       C_P_ID: newItem.group,
+//       SCHEDULE_START_DATE: moment(newItem.start_time).format("YYYY-MM-DD"),
+//       SCHEDULE_END_DATE: moment(newItem.end_time).format("YYYY-MM-DD"),
+//       DESCRIPTION: newItem.title,
+//       CREATION_BY: 1, // optional if required by API
+//       H_ID: 46,       // optional if required by API
+//     });
+
+//     if (res.data.success) {
+//       toast.success(" Task created successfully");
+//     } else {
+//       toast.warn("Task added locally, but API didn’t confirm success");
+//     }
+//   } catch (err) {
+//     toast.error("Failed to create task on server");
+//     console.error(err);
+//   }
+// };
+
+
+
+
+const handleCanvasClick = async (groupId, time, e) => {
+  if (!groupId) return;
+
+  const newItem = {
+    id: Date.now(), // temporary ID
+    group: groupId,
+    // title: "New Task",
+    start_time: moment(time),
+    end_time: moment(time).add(1, "day"),
+    canMove: true,
+    canResize: "both",
+    canChangeGroup: true,
+    itemProps: {
+      style: {
+        background: "#6366f1",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+      },
+    },
   };
 
-  // ✅ Filter by contractor name
+  // ✅ Show immediately
+  setItems((prev) => [...prev, newItem]);
+  setAllItems((prev) => [...prev, newItem]);
+
+  // ✅ Save to backend
+  try {
+    const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+      C_P_ID: newItem.group,
+      SCHEDULE_START_DATE: moment(newItem.start_time).format("YYYY-MM-DD"),
+      SCHEDULE_END_DATE: moment(newItem.end_time).format("YYYY-MM-DD"),
+      DESCRIPTION: newItem.title,
+      CREATION_BY: 1,
+      H_ID: 46,
+    });
+
+    if (res.data.success) {
+      toast.success("Task created successfully");
+      // 🧠 Auto refresh after create
+      await fetchGanttData();
+    } else {
+      toast.warn("⚠️ Task added locally, but API didn’t confirm success");
+    }
+  } catch (err) {
+    toast.error("❌ Failed to create task on server");
+    console.error(err);
+  }
+};
+
+
+
+
+
+  // ✅ Filter by contractor
   useEffect(() => {
     if (selectedContractor === "all") {
       setGroups(allGroups);
@@ -222,14 +396,12 @@ const ReactTimelineDemo = () => {
   }, [selectedContractor, allGroups, allItems]);
 
   return (
-    <div className="w-full  flex flex-col bg-gray-50">
+    <div className="w-full flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Contractor Timeline
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Contractor Timeline</h1>
         <p className="text-sm text-gray-600">
-          Loaded directly from contractor and Gantt APIs
+          Live sync with API — move, resize, and add tasks.
         </p>
       </div>
 
@@ -265,10 +437,21 @@ const ReactTimelineDemo = () => {
       {/* Timeline */}
       <div className="flex-1 p-4 overflow-hidden">
         <div className="h-full bg-white rounded-lg shadow-lg">
-          {groups.length > 0 && items.length > 0 ? (
+          {groups.length > 0 ? (
             <Timeline
               groups={groups}
-              items={items}
+             items={items.map(item => ({
+                ...item,
+                itemProps: {
+                  ...item.itemProps,
+                  title: `Start: ${moment(item.start_time).format("YYYY-MM-DD")}\nEnd: ${moment(item.end_time).format("YYYY-MM-DD")}`,
+                  style: {
+                    ...item.itemProps.style,
+                    cursor: 'pointer'
+                    
+                  }
+                }
+              }))}
               visibleTimeStart={visibleTimeStart}
               visibleTimeEnd={visibleTimeEnd}
               onTimeChange={(start, end, updateScrollCanvas) => {
@@ -280,7 +463,7 @@ const ReactTimelineDemo = () => {
               onItemResize={handleItemResize}
               onItemSelect={handleItemSelect}
               onItemDeselect={handleItemDeselect}
-              onCanvasClick={handleCanvasClick}
+             onCanvasClick={(groupId, time, e) => handleCanvasClick(groupId, time, e)}
               selected={selectedItems}
               canMove
               canResize="both"
@@ -289,7 +472,6 @@ const ReactTimelineDemo = () => {
               itemHeightRatio={0.75}
               sidebarWidth={220}
               stackItems
-              buffer={3}
             >
               <TimelineHeaders>
                 <SidebarHeader>
