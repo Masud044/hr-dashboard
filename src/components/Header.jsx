@@ -28,7 +28,7 @@ export default function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md sticky top-0 z-20">
+    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md sticky top-0 z-[1009]">
       {/* Logo */}
       <div className="flex items-center gap-2">
         <img
@@ -171,6 +171,20 @@ export default function Header() {
               >
                 <ClipboardList className="w-4 h-4  mr-2" /> Contraction Process
               </NavLink>
+               <NavLink
+                to="/dashboard/test"
+                end
+                onClick={handleLinkClick}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
+                    isActive
+                      ? "text-green-700 font-medium"
+                      : "hover:text-green-800"
+                  }`
+                }
+              >
+                <ClipboardList className="w-4 h-4  mr-2" /> Schedule Test
+              </NavLink>
                 <NavLink
                 to="/dashboard/shedule"
                 end
@@ -183,7 +197,7 @@ export default function Header() {
                   }`
                 }
               >
-                <ClipboardList className="w-4 h-4  mr-2" /> Shedule
+                <ClipboardList className="w-4 h-4  mr-2" /> Schedule
               </NavLink>
 
                <NavLink
@@ -198,7 +212,7 @@ export default function Header() {
                   }`
                 }
               >
-                <ClipboardList className="w-4 h-4  mr-2" /> Shedule Line
+                <ClipboardList className="w-4 h-4  mr-2" /> Schedule Line
               </NavLink>
 
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">

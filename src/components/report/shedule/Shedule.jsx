@@ -314,6 +314,8 @@ const Schedule = () => {
       SCHEDULE_END_DATE: form.SCHEDULE_END_DATE,
       CREATION_BY: parseInt(form.CREATION_BY || 1, 10),
     };
+    console.log("payload", payload)
+    
     try {
       const res = await api.post("./gantt_api.php", payload);
       if (res.data.success) {
