@@ -13,6 +13,7 @@ import Timeline, {
 } from "react-calendar-timeline";
 import moment from "moment";
 import axios from "axios";
+import "react-calendar-timeline/style.css";
 import { FAKE_CONTRACTORS, FAKE_GANTT_DATA } from "../lib/constants/fake-data";
 
 const ReactTimelineDemo = () => {
@@ -33,37 +34,39 @@ const ReactTimelineDemo = () => {
   );
 
   //! ✅ Fetch contractors, don't remove
-  // useEffect(() => {
-  //   const fetchContractors = async () => {
-  //     try {
-  //       const res = await axios.get(
-  //         "http://103.172.44.99:8989/api_bwal/contractor_api.php"
-  //       );
-  //       if (res.data.success && Array.isArray(res.data.data)) {
-  //         const formatted = res.data.data.map((c) => ({
-  //           id: Number(c.ID),
-  //           title: c.NAME
-  //         }));
-  //         setGroups(formatted);
-  //         setAllGroups(formatted);
-  //       }
-  //     } catch (err) {
-  //       console.error("Failed to load contractors:", err);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchContractors = async () => {
+      try {
+        const res = await axios.get(
+          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+        );
 
-  //   fetchContractors();
-  // }, []);
+        console.log("response from contractor data", res.data.data);
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const formatted = res.data.data.map((c) => ({
+            id: Number(c.ID),
+            title: c.NAME
+          }));
+          setGroups(formatted);
+          setAllGroups(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load contractors:", err);
+      }
+    };
+
+    fetchContractors();
+  }, []);
 
   //! fake contractors, remove after completion
-  useEffect(() => {
-    const formatted = FAKE_CONTRACTORS.map((c) => ({
-      id: Number(c.ID),
-      title: c.NAME
-    }));
-    setGroups(formatted);
-    setAllGroups(formatted);
-  }, [])
+  // useEffect(() => {
+  //   const formatted = FAKE_CONTRACTORS.map((c) => ({
+  //     id: Number(c.ID),
+  //     title: c.NAME
+  //   }));
+  //   setGroups(formatted);
+  //   setAllGroups(formatted);
+  // }, [])
 
   //! ✅ Fetch Gantt data, don't remove
   useEffect(() => {
@@ -78,7 +81,7 @@ const ReactTimelineDemo = () => {
             .map((i) => ({
               id: Number(i.L_ID),
               group: Number(i.C_P_ID),
-              title: `Task ${i.L_ID}`,
+              // title: `Task ${i.L_ID}`,
               start_time: moment(i.SCHEDULE_START_DATE),
               end_time: moment(i.SCHEDULE_END_DATE),
               canMove: true,
@@ -105,37 +108,37 @@ const ReactTimelineDemo = () => {
     fetchGanttData();
   }, []);
   //! fake gantt data, remove after completion
-  useEffect(() => {
+  // useEffect(() => {
 
-    const formattedItems = FAKE_GANTT_DATA
-      .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-      .map((i) => ({
-        id: Number(i.L_ID),
-        group: Number(i.C_P_ID),
-        title: `Task ${i.L_ID}`,
-        start_time: moment(i.SCHEDULE_START_DATE),
-        end_time: moment(i.SCHEDULE_END_DATE),
-        canMove: true,
-        canResize: "both",
-        canChangeGroup: true,
-        itemProps: {
-          style: {
-            background: "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "4px"
-          }
-        }
-      }));
+  //   const formattedItems = FAKE_GANTT_DATA
+  //     .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+  //     .map((i) => ({
+  //       id: Number(i.L_ID),
+  //       group: Number(i.C_P_ID),
+  //       title: `Task ${i.L_ID}`,
+  //       start_time: moment(i.SCHEDULE_START_DATE),
+  //       end_time: moment(i.SCHEDULE_END_DATE),
+  //       canMove: true,
+  //       canResize: "both",
+  //       canChangeGroup: true,
+  //       itemProps: {
+  //         style: {
+  //           background: "#3b82f6",
+  //           color: "white",
+  //           border: "none",
+  //           borderRadius: "4px"
+  //         }
+  //       }
+  //     }));
 
-    setItems(formattedItems);
-    setAllItems(formattedItems);
-
-
+  //   setItems(formattedItems);
+  //   setAllItems(formattedItems);
 
 
 
-  }, []);
+
+
+  // }, []);
 
   // ✅ FIXED: Update timeline when date changes
   useEffect(() => {

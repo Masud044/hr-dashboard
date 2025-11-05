@@ -1,267 +1,319 @@
-import React, { useState, useEffect, useRef } from "react";
-import Gantt from "frappe-gantt";
-import "frappe-gantt/dist/frappe-gantt.css";
+import React, { useState,  useEffect } from 'react';
+import Timeline, {
+  TimelineMarkers,
+  TodayMarker,
+  CursorMarker,
+  TimelineHeaders,
+  SidebarHeader,
+  DateHeader
+} from 'react-calendar-timeline';
+import moment from 'moment';
+import "react-calendar-timeline/style.css";
+const ContractorTimelineDemo = () => {
+  const [contractors, setContractors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const FAKE_GANTT_DATA = [
-  { L_ID: "200", H_ID: "46", C_P_ID: "1", SCHEDULE_START_DATE: "2025-11-06", SCHEDULE_END_DATE: "2025-11-13" },
-  { L_ID: "201", H_ID: "46", C_P_ID: "2", SCHEDULE_START_DATE: "2025-12-27", SCHEDULE_END_DATE: "2025-12-31" },
-  { L_ID: "202", H_ID: "46", C_P_ID: "3", SCHEDULE_START_DATE: "2025-11-21", SCHEDULE_END_DATE: "2025-11-28" },
-  { L_ID: "203", H_ID: "46", C_P_ID: "4", SCHEDULE_START_DATE: null, SCHEDULE_END_DATE: null },
-  { L_ID: "204", H_ID: "46", C_P_ID: "5", SCHEDULE_START_DATE: "2025-12-07", SCHEDULE_END_DATE: "2025-12-18" },
-  { L_ID: "205", H_ID: "46", C_P_ID: "6", SCHEDULE_START_DATE: "2025-11-30", SCHEDULE_END_DATE: "2025-12-06" },
-  { L_ID: "206", H_ID: "46", C_P_ID: "7", SCHEDULE_START_DATE: "2025-11-07", SCHEDULE_END_DATE: "2025-11-13" },
-  { L_ID: "207", H_ID: "46", C_P_ID: "8", SCHEDULE_START_DATE: "2025-12-30", SCHEDULE_END_DATE: "2025-12-31" },
-  { L_ID: "208", H_ID: "46", C_P_ID: "9", SCHEDULE_START_DATE: "2025-11-13", SCHEDULE_END_DATE: "2025-11-26" },
-  { L_ID: "209", H_ID: "46", C_P_ID: "10", SCHEDULE_START_DATE: "2025-11-15", SCHEDULE_END_DATE: "2025-11-18" },
-  { L_ID: "210", H_ID: "46", C_P_ID: "11", SCHEDULE_START_DATE: "2025-11-26", SCHEDULE_END_DATE: "2025-12-08" },
-  { L_ID: "211", H_ID: "46", C_P_ID: "12", SCHEDULE_START_DATE: "2025-12-09", SCHEDULE_END_DATE: "2025-12-10" },
-  { L_ID: "212", H_ID: "46", C_P_ID: "13", SCHEDULE_START_DATE: "2025-12-22", SCHEDULE_END_DATE: "2025-12-25" },
-  { L_ID: "213", H_ID: "46", C_P_ID: "14", SCHEDULE_START_DATE: "2025-12-27", SCHEDULE_END_DATE: "2025-12-31" },
-  { L_ID: "214", H_ID: "46", C_P_ID: "15", SCHEDULE_START_DATE: "2025-12-10", SCHEDULE_END_DATE: "2025-12-21" },
-  { L_ID: "215", H_ID: "46", C_P_ID: "16", SCHEDULE_START_DATE: "2025-12-06", SCHEDULE_END_DATE: "2025-12-08" },
-  { L_ID: "216", H_ID: "46", C_P_ID: "17", SCHEDULE_START_DATE: "2025-11-30", SCHEDULE_END_DATE: "2025-12-03" },
-  { L_ID: "217", H_ID: "46", C_P_ID: "18", SCHEDULE_START_DATE: "2025-11-05", SCHEDULE_END_DATE: "2025-11-19" },
-  { L_ID: "218", H_ID: "46", C_P_ID: "19", SCHEDULE_START_DATE: "2025-11-01", SCHEDULE_END_DATE: "2025-11-05" },
-  { L_ID: "219", H_ID: "46", C_P_ID: "20", SCHEDULE_START_DATE: "2025-11-08", SCHEDULE_END_DATE: "2025-11-17" },
-  { L_ID: "220", H_ID: "46", C_P_ID: "21", SCHEDULE_START_DATE: "2025-11-15", SCHEDULE_END_DATE: "2025-11-30" },
-  { L_ID: "221", H_ID: "46", C_P_ID: "22", SCHEDULE_START_DATE: "2025-12-13", SCHEDULE_END_DATE: "2025-12-18" },
-  { L_ID: "222", H_ID: "46", C_P_ID: "23", SCHEDULE_START_DATE: "2025-11-25", SCHEDULE_END_DATE: "2025-12-05" },
-  { L_ID: "223", H_ID: "46", C_P_ID: "24", SCHEDULE_START_DATE: "2025-11-23", SCHEDULE_END_DATE: "2025-12-07" },
-  { L_ID: "224", H_ID: "46", C_P_ID: "25", SCHEDULE_START_DATE: "2025-11-10", SCHEDULE_END_DATE: "2025-11-19" },
-  { L_ID: "225", H_ID: "46", C_P_ID: "1", SCHEDULE_START_DATE: "2025-12-06", SCHEDULE_END_DATE: "2025-12-07" },
-  { L_ID: "226", H_ID: "46", C_P_ID: "2", SCHEDULE_START_DATE: "2025-12-27", SCHEDULE_END_DATE: "2025-12-29" },
-  { L_ID: "227", H_ID: "46", C_P_ID: "3", SCHEDULE_START_DATE: "2025-12-31", SCHEDULE_END_DATE: "2025-12-31" },
-  { L_ID: "228", H_ID: "46", C_P_ID: "4", SCHEDULE_START_DATE: "2025-11-18", SCHEDULE_END_DATE: "2025-12-02" },
-  { L_ID: "229", H_ID: "46", C_P_ID: "5", SCHEDULE_START_DATE: "2025-12-16", SCHEDULE_END_DATE: "2025-12-22" },
-  { L_ID: "230", H_ID: "46", C_P_ID: "6", SCHEDULE_START_DATE: "2025-11-12", SCHEDULE_END_DATE: "2025-11-21" },
-  { L_ID: "250", H_ID: "46", C_P_ID: "1", SCHEDULE_START_DATE: "2025-11-28", SCHEDULE_END_DATE: "2025-11-29" },
-  { L_ID: "275", H_ID: "46", C_P_ID: "1", SCHEDULE_START_DATE: "2025-12-25", SCHEDULE_END_DATE: "2025-12-31" },
-  { L_ID: "300", H_ID: "46", C_P_ID: "1", SCHEDULE_START_DATE: "2025-11-02", SCHEDULE_END_DATE: "2025-11-16" }
-];
-
-const FAKE_CONTRACTORS = [
-  { id: 1, name: "ABC Construction Ltd" },
-  { id: 2, name: "BuildTech Solutions" },
-  { id: 3, name: "Prime Contractors Inc" },
-  { id: 4, name: "Elite Building Co" },
-  { id: 5, name: "Metro Construction" },
-  { id: 6, name: "Skyline Builders" },
-  { id: 7, name: "Urban Development Corp" },
-  { id: 8, name: "Global Construction Group" },
-  { id: 9, name: "Apex Engineering" },
-  { id: 10, name: "Titan Construction" },
-  { id: 11, name: "Summit Builders" },
-  { id: 12, name: "Precision Construction" },
-  { id: 13, name: "Heritage Contractors" },
-  { id: 14, name: "Pioneer Building Services" },
-  { id: 15, name: "Modern Infrastructure Ltd" },
-  { id: 16, name: "Crown Construction" },
-  { id: 17, name: "Excellence Builders" },
-  { id: 18, name: "Venture Construction Group" },
-  { id: 19, name: "Paramount Contractors" },
-  { id: 20, name: "Unity Construction" },
-  { id: 21, name: "Landmark Builders" },
-  { id: 22, name: "Zenith Construction" },
-  { id: 23, name: "Foundation Engineering" },
-  { id: 24, name: "Prestige Building Co" },
-  { id: 25, name: "Everest Construction Ltd" }
-];
-
-const FrappeGanttDemo = () => {
-  const ganttRef = useRef(null);
-  const ganttInstance = useRef(null);
-  const [allContractors] = useState(FAKE_CONTRACTORS);
-  const [allTasks, setAllTasks] = useState([]);
-  const [viewMode, setViewMode] = useState("Day");
-  const [selectedContractor, setSelectedContractor] = useState("all");
-
-  // Load gantt data from FAKE_GANTT_DATA
+  // Fetch contractors from API
   useEffect(() => {
-    const formattedTasks = FAKE_GANTT_DATA
-      .filter((item) => item.SCHEDULE_START_DATE && item.SCHEDULE_END_DATE)
-      .map((item) => ({
-        id: `task-${item.L_ID}`,
-        name: `Task ${item.L_ID}`,
-        start: item.SCHEDULE_START_DATE,
-        end: item.SCHEDULE_END_DATE,
-        progress: Math.floor(Math.random() * 100),
-        contractorId: Number(item.C_P_ID)
-      }));
-    setAllTasks(formattedTasks);
+    const fetchContractors = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://103.172.44.99:8989/api_bwal/contractor_api.php');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          // Transform API data to timeline groups format
+          const groups = result.data.map(contractor => ({
+            id: parseInt(contractor.ID),
+            title: contractor.NAME
+          }));
+          setContractors(groups);
+          setError(null);
+        } else {
+          setError('Failed to load contractors');
+        }
+      } catch (err) {
+        setError('Error fetching contractors: ' + err.message);
+        // Fallback to sample data
+        setContractors([
+          { id: 1, title: 'Carpenter' },
+          { id: 2, title: 'Mason/Bricklayer' },
+          { id: 3, title: 'Concrete Finisher/Cement Mason' },
+          { id: 4, title: 'Electrician' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContractors();
   }, []);
 
-  // Initialize or update Frappe Gantt
-  useEffect(() => {
-    if (!ganttRef.current || allTasks.length === 0 || allContractors.length === 0) {
-      return;
-    }
-
-    // Filter tasks by contractor
-    let tasksToShow = allTasks;
-    if (selectedContractor !== "all") {
-      tasksToShow = allTasks.filter(
-        (task) => task.contractorId === Number(selectedContractor)
-      );
-    }
-
-    if (tasksToShow.length === 0) {
-      ganttRef.current.innerHTML = '<div class="text-gray-500 text-center py-8">No tasks for selected contractor</div>';
-      return;
-    }
-
-    // Add contractor name to task display
-    const tasksWithContractor = tasksToShow.map((task) => {
-      const contractor = allContractors.find((c) => c.id === task.contractorId);
-      return {
-        ...task,
-        name: contractor ? `${task.name} - ${contractor.name}` : task.name
-      };
-    });
-
-    // Clear existing gantt
-    if (ganttInstance.current) {
-      ganttRef.current.innerHTML = "";
-    }
-
-    // Create new gantt instance
-    try {
-      ganttInstance.current = new Gantt(ganttRef.current, tasksWithContractor, {
-        view_mode: viewMode,
-        bar_height: 40,
-        bar_corner_radius: 4,
-        arrow_curve: 5,
-        padding: 18,
-        date_format: "YYYY-MM-DD",
-        language: "en",
-        on_click: (task) => {
-          const contractor = allContractors.find((c) => c.id === task.contractorId);
-          console.log("Task clicked:", {
-            task: task.name,
-            contractor: contractor?.name,
-            start: task.start,
-            end: task.end,
-            progress: task.progress
-          });
-        },
-        on_date_change: (task, start, end) => {
-          console.log("Task dates changed:", task.name, start, end);
-          setAllTasks((prev) =>
-            prev.map((t) =>
-              t.id === task.id
-                ? {
-                    ...t,
-                    start: start.toISOString().split("T")[0],
-                    end: end.toISOString().split("T")[0]
-                  }
-                : t
-            )
-          );
-        },
-        on_progress_change: (task, progress) => {
-          console.log("Progress changed:", task.name, progress);
-          setAllTasks((prev) =>
-            prev.map((t) => (t.id === task.id ? { ...t, progress } : t))
-          );
+  // Define initial items (tasks assigned to contractors)
+  const [items, setItems] = useState([
+    {
+      id: 1,
+      group: 1,
+      title: 'Foundation Work',
+      start_time: moment().add(-2, 'days'),
+      end_time: moment().add(1, 'days'),
+      canMove: true,
+      canResize: 'both',
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: '#3b82f6',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px'
         }
-      });
-    } catch (error) {
-      console.error("Error creating Gantt chart:", error);
+      }
+    },
+    {
+      id: 2,
+      group: 4,
+      title: 'Electrical Installation',
+      start_time: moment().add(2, 'days'),
+      end_time: moment().add(5, 'days'),
+      canMove: true,
+      canResize: 'both',
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: '#8b5cf6',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px'
+        }
+      }
+    },
+    {
+      id: 3,
+      group: 2,
+      title: 'Brick Laying',
+      start_time: moment().add(-3, 'days'),
+      end_time: moment().add(3, 'days'),
+      canMove: true,
+      canResize: 'both',
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: '#ec4899',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px'
+        }
+      }
+    },
+    {
+      id: 4,
+      group: 5,
+      title: 'Plumbing Work',
+      start_time: moment().add(4, 'days'),
+      end_time: moment().add(7, 'days'),
+      canMove: true,
+      canResize: 'both',
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: '#10b981',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px'
+        }
+      }
     }
-  }, [allTasks, allContractors, viewMode, selectedContractor]);
+  ]);
 
-  const filteredTaskCount = selectedContractor === "all"
-    ? allTasks.length
-    : allTasks.filter((t) => t.contractorId === Number(selectedContractor)).length;
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  // Handle item move
+  const handleItemMove = (itemId, dragTime, newGroupOrder) => {
+    setItems(prevItems => {
+      const itemIndex = prevItems.findIndex(item => item.id === itemId);
+      const item = prevItems[itemIndex];
+      const duration = item.end_time - item.start_time;
+      
+      const newItems = [...prevItems];
+      newItems[itemIndex] = {
+        ...item,
+        start_time: dragTime,
+        end_time: dragTime + duration,
+        group: contractors[newGroupOrder].id
+      };
+      
+      return newItems;
+    });
+  };
+
+  // Handle item resize
+  const handleItemResize = (itemId, time, edge) => {
+    setItems(prevItems => {
+      const itemIndex = prevItems.findIndex(item => item.id === itemId);
+      const item = prevItems[itemIndex];
+      
+      const newItems = [...prevItems];
+      if (edge === 'left') {
+        newItems[itemIndex] = {
+          ...item,
+          start_time: time
+        };
+      } else {
+        newItems[itemIndex] = {
+          ...item,
+          end_time: time
+        };
+      }
+      
+      return newItems;
+    });
+  };
+
+  // Handle item selection
+  const handleItemSelect = (itemId) => {
+    setSelectedItems([itemId]);
+  };
+
+  // Handle item deselect
+  const handleItemDeselect = () => {
+    setSelectedItems([]);
+  };
+
+  // Handle canvas click (create new item)
+  const handleCanvasClick = (groupId, time) => {
+    const newItem = {
+      id: items.length + 1,
+      group: groupId,
+      title: `New Task ${items.length + 1}`,
+      start_time: time,
+      end_time: moment(time).add(1, 'day'),
+      canMove: true,
+      canResize: 'both',
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: '#6366f1',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px'
+        }
+      }
+    };
+    setItems([...items, newItem]);
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <p className="mt-4 text-gray-600">Loading contractors...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Contractor Gantt Chart
+          Contractor Schedule Timeline
         </h1>
         <p className="text-sm text-gray-600">
-          Project Timeline - 25 Contractors & Multiple Tasks
+          Drag to move tasks, resize from edges, click empty space to create new tasks
         </p>
-      </div>
-
-      {/* Controls */}
-      <div className="bg-white border-b border-gray-200 p-3 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600 font-medium">View Mode:</label>
-          <div className="flex gap-1">
-            {["Quarter Day", "Half Day", "Day", "Week", "Month"].map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                  viewMode === mode
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {mode}
-              </button>
-            ))}
+        {error && (
+          <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+            ⚠️ {error} - Using fallback data
           </div>
+        )}
+        <div className="mt-3 flex gap-4 text-xs text-gray-500">
+          <span>📅 Scroll horizontally to navigate</span>
+          <span>🔍 Shift + Scroll to zoom</span>
+          <span>➕ Click empty space to add task</span>
         </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600 font-medium">Contractor:</label>
-          <select
-            value={selectedContractor}
-            onChange={(e) => setSelectedContractor(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none max-w-xs"
+      {/* Timeline Container */}
+      <div className="flex-1 p-4 overflow-hidden">
+        <div className="h-full bg-white rounded-lg shadow-lg">
+          <Timeline
+            groups={contractors}
+            items={items}
+            defaultTimeStart={moment().add(-15, 'days')}
+            defaultTimeEnd={moment().add(15, 'days')}
+            onItemMove={handleItemMove}
+            onItemResize={handleItemResize}
+            onItemSelect={handleItemSelect}
+            onItemDeselect={handleItemDeselect}
+            onCanvasClick={handleCanvasClick}
+            selected={selectedItems}
+            canMove={true}
+            canResize="both"
+            canChangeGroup={true}
+            lineHeight={60}
+            itemHeightRatio={0.75}
+            sidebarWidth={220}
+            stackItems={true}
+            buffer={3}
           >
-            <option value="all">All Contractors ({allContractors.length})</option>
-            {allContractors.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            <TimelineHeaders className="sticky">
+              <SidebarHeader>
+                {({ getRootProps }) => {
+                  return (
+                    <div {...getRootProps()} className="flex items-center justify-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold">
+                      Contractors
+                    </div>
+                  );
+                }}
+              </SidebarHeader>
+              <DateHeader unit="primaryHeader" />
+              <DateHeader />
+            </TimelineHeaders>
+
+            <TimelineMarkers>
+              <TodayMarker>
+                {({ styles }) => {
+                  const customStyles = {
+                    ...styles,
+                    backgroundColor: '#ef4444',
+                    width: '3px',
+                    zIndex: 100
+                  };
+                  return <div style={customStyles} />;
+                }}
+              </TodayMarker>
+              <CursorMarker>
+                {({ styles }) => {
+                  const customStyles = {
+                    ...styles,
+                    backgroundColor: '#3b82f6',
+                    width: '2px',
+                    opacity: 0.5
+                  };
+                  return <div style={customStyles} />;
+                }}
+              </CursorMarker>
+            </TimelineMarkers>
+          </Timeline>
         </div>
       </div>
 
-      {/* Gantt Chart */}
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="bg-white rounded-lg shadow-lg p-4">
-          {allTasks.length > 0 && allContractors.length > 0 ? (
-            <div ref={ganttRef} className="gantt-container"></div>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              Loading contractors and schedule...
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Footer */}
+      {/* Footer Info */}
       <div className="bg-white border-t border-gray-200 p-3">
         <div className="flex items-center justify-between text-xs text-gray-600">
-          <span>Total Tasks: {allTasks.length}</span>
-          <span>Contractors: {allContractors.length}</span>
-          <span>Showing: {filteredTaskCount} tasks</span>
+          <span>Total Contractors: {contractors.length}</span>
+          <span>Total Tasks: {items.length}</span>
+          <span>Selected: {selectedItems.length}</span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-red-500 rounded"></span> Current Time Marker
+          </span>
         </div>
       </div>
-
-      <style jsx>{`
-        .gantt-container :global(.bar) {
-          fill: #3b82f6;
-        }
-        .gantt-container :global(.bar-progress) {
-          fill: #1d4ed8;
-        }
-        .gantt-container :global(.bar-label) {
-          fill: white;
-          font-size: 12px;
-        }
-        .gantt-container :global(.gantt .grid-row:hover) {
-          background-color: #f9fafb;
-        }
-      `}</style>
     </div>
   );
 };
 
-export default FrappeGanttDemo;
+export default ContractorTimelineDemo;
