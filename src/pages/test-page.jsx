@@ -238,6 +238,92 @@ const holidayStyle = `
   //   }
   // };
 
+
+
+ const handleItemDoubleClick = async (itemId, e, time) => {
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+
+  // ✅ Split point (যেদিন তুমি double-click করবা)
+  const splitDate = moment(time).startOf("day");
+
+  // যদি splitDate শুরু বা শেষের বাইরে হয়, cancel করো
+  if (splitDate.isSameOrBefore(moment(item.start_time)) || splitDate.isSameOrAfter(moment(item.end_time))) {
+    toast.warn("Split date must be between start and end date");
+    return;
+  }
+
+  // ✅ প্রথম অর্ধ: আগের item update হবে
+  const firstHalf = {
+    ...item,
+    end_time: splitDate.clone().endOf("day").valueOf(),
+    itemProps: {
+      style: {
+        ...item.itemProps.style,
+        background: randomColor({ luminosity: "dark" }),
+      },
+    },
+  };
+
+  // ✅ দ্বিতীয় অর্ধ: নতুন item create হবে
+  const secondHalf = {
+    ...item,
+    id: Date.now(), // temporary
+    start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+    end_time: item.end_time,
+    itemProps: {
+      style: {
+        ...item.itemProps.style,
+        background: randomColor({ luminosity: "dark" }),
+      },
+    },
+  };
+
+  // ✅ UI তে সাথে সাথে reflect করাও
+  setItems(prev => {
+    const updated = prev.filter(i => i.id !== itemId);
+    return [...updated, firstHalf, secondHalf];
+  });
+  setAllItems(prev => {
+    const updated = prev.filter(i => i.id !== itemId);
+    return [...updated, firstHalf, secondHalf];
+  });
+
+  toast.info("Splitting and saving...");
+
+  try {
+    // 1️⃣ আগের item update (first half)
+    await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+      L_ID: item.id,
+      C_P_ID: firstHalf.group,
+      SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
+      SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
+      DESCRIPTION: item.title || "Split Task (Part 1)",
+    });
+
+    // 2️⃣ নতুন item create (second half)
+    const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+      C_P_ID: secondHalf.group,
+      SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
+      SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
+      DESCRIPTION: item.title || "Split Task (Part 2)",
+      CREATION_BY: 1,
+      H_ID: 46,
+    });
+
+    if (res.data.success) {
+      toast.success("Task successfully split and saved");
+      await fetchGanttData();
+    } else {
+      toast.warn("Split updated locally, but backend didn’t confirm success");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to split task on server");
+  }
+};
+
+
   // ✅ Move item
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
@@ -499,6 +585,7 @@ const holidayStyle = `
                 onItemSelect={handleItemSelect}
                 onItemDeselect={handleItemDeselect}
                 //  onCanvasClick={(groupId, time, e) => handleCanvasClick(groupId, time, e)}
+                 onItemDoubleClick={handleItemDoubleClick}
                 selected={selectedItems}
                 canMove
                 canResize="both"
