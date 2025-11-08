@@ -10,29 +10,22 @@ import RewardsBar from "../components/RewardsBar";
 import { Helmet } from "react-helmet";
 
 
-
 const Dashboard = () => {
   return (
     <>
       <Helmet>
         <title>Dashboard|HRMS</title>
-        
       </Helmet>
-       <div className="flex  w-full min-h-screen bg-gray-50">
-       {/* <Sidebar /> */}
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="p-6 space-y-6 max-w-7xl w-full mx-auto">
-       
-               
-                
-                    <Outlet></Outlet>
-                 
-        </main>
+      <div className="flex  w-full min-h-screen bg-gray-50">
+        {/* <Sidebar /> */}
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="">
+            <Outlet></Outlet>
+          </main>
+        </div>
       </div>
-    </div>
     </>
-   
   );
 };
 

@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import api from "../../../api/Api";
 import SupplierList from "./supplierlist";
+import { SectionContainer } from "../../SectionContainer";
 
 // 🔹 Zod validation schema
 const supplierSchema = z.object({
@@ -102,7 +103,7 @@ const SupplierPage = () => {
   const onSubmit = (formData) => mutation.mutate(formData);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <SectionContainer> 
       <div className="bg-white p-6 shadow rounded-lg mt-8">
         <h2 className="text-sm font-semibold mb-6 text-gray-800 border-b pb-2">
           {isEditing ? "Edit Supplier Information" : "Add New Supplier"}
@@ -269,7 +270,8 @@ const SupplierPage = () => {
         </form>
       </div>
       <SupplierList />
-    </div>
+    </SectionContainer>
+   
   );
 };
 
