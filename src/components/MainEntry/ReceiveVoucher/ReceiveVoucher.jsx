@@ -11,6 +11,7 @@ import PageTitle from "../../RouteTitle";
 import ReceiveList from "./ReceiveList";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { SectionContainer } from "../../SectionContainer";
 
 
 
@@ -357,7 +358,8 @@ const handlePrint = async () => {
 };
 
   return (
-    <div className="">
+    <SectionContainer>
+      <div className="">
       <PageTitle></PageTitle>
 
       {/* Top Form */}
@@ -749,6 +751,7 @@ const handlePrint = async () => {
         </div>
       )}
     </div>
+    </SectionContainer>
   );
 };
 

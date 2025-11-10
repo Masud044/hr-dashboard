@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Database } from "lucide-react";
 import api from "../../../api/Api";
 import ContractionProcessList from "./ContractionProcessList";
+import { SectionContainer } from "../../SectionContainer";
 
 const ContractionProcess = () => {
   const { id } = useParams();
@@ -152,7 +153,8 @@ const ContractionProcess = () => {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+   <SectionContainer>
+     <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
       <div className="bg-white shadow rounded-2xl p-6 md:p-8 transition-all">
         <h2 className="font-semibold mb-6 text-lg text-gray-800 border-b pb-3">
           {isEditing ? "Edit Construction Process" : "Add New Construction Process"}
@@ -228,6 +230,7 @@ const ContractionProcess = () => {
         <ContractionProcessList />
       </div>
     </div>
+   </SectionContainer>
   );
 };
 

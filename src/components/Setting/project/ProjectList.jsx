@@ -61,7 +61,7 @@ export default function ProjectList({ showTitle = true }) {
       <div>
         {showTitle && <PageTitle />}
         <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800  py-2 px-4 rounded-lg">
             All Project
           </h2>
 
@@ -72,17 +72,17 @@ export default function ProjectList({ showTitle = true }) {
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-100 text-gray-700 text-left">
-                      <th className="px-4 py-2 border bg-blue-200">#</th>
-                      <th className="px-4 py-2 border bg-purple-200">
+                      <th className="px-4 py-2 border ">#</th>
+                      <th className="px-4 py-2 border ">
                         Project Name
                       </th>
-                      <th className="px-4 py-2 border bg-green-200">
+                      <th className="px-4 py-2 border ">
                        Project Type
                       </th>
-                      <th className="px-4 py-2 border bg-orange-200">Postcode</th>
-                      <th className="px-4 py-2 border bg-blue-200">Address</th>
-                      <th className="px-4 py-2 border bg-purple-200">Subwrb</th>
-                      <th className="px-4 py-2 border bg-orange-200">Modify</th>
+                      <th className="px-4 py-2 border ">Postcode</th>
+                      <th className="px-4 py-2 border ">Address</th>
+                      <th className="px-4 py-2 border ">Subwrb</th>
+                      <th className="px-4 py-2 border ">Modify</th>
                     </tr>
                   </thead>
                   <tbody>
