@@ -14,6 +14,8 @@ import "react-calendar-timeline/style.css";
 import randomColor from "randomcolor";
 import { SectionContainer } from "../components/SectionContainer";
 import api from "../api/Api";
+import { Button } from "../components/ui/button";
+import { DialogDemo } from "@/components/ModalTask";
 
 const ReactTimelineDemo = () => {
   const [groups, setGroups] = useState([]);
@@ -22,58 +24,57 @@ const ReactTimelineDemo = () => {
   const [allItems, setAllItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [holidayDates, setHolidayDates] = useState(new Set());
+  const [open, setOpen] = useState(false);
 
   const colorMap = useRef({});
 
-// const distinctColors = [
-//   "#e6194b", // red
-//   "#3cb44b", // green
-//   "#ffe119", // yellow
-//   "#4363d8", // blue
-//   "#f58231", // orange
-//   "#911eb4", // purple
-//   "#46f0f0", // cyan
-//   "#f032e6", // magenta
-//   "#bcf60c", // lime
-//   "#fabebe", // pink
-//   "#008080", // teal
-//   "#e6beff", // lavender
-//   "#9a6324", // brown
-//   "#fffac8", // cream
-//   "#800000", // maroon
-//   "#aaffc3", // mint
-//   "#808000", // olive
-//   "#ffd8b1", // peach
-//   "#000075", // navy
-//   "#808080", // gray
-//   "#ffffff", // white (optional)
-// ];
+  // const distinctColors = [
+  //   "#e6194b", // red
+  //   "#3cb44b", // green
+  //   "#ffe119", // yellow
+  //   "#4363d8", // blue
+  //   "#f58231", // orange
+  //   "#911eb4", // purple
+  //   "#46f0f0", // cyan
+  //   "#f032e6", // magenta
+  //   "#bcf60c", // lime
+  //   "#fabebe", // pink
+  //   "#008080", // teal
+  //   "#e6beff", // lavender
+  //   "#9a6324", // brown
+  //   "#fffac8", // cream
+  //   "#800000", // maroon
+  //   "#aaffc3", // mint
+  //   "#808000", // olive
+  //   "#ffd8b1", // peach
+  //   "#000075", // navy
+  //   "#808080", // gray
+  //   "#ffffff", // white (optional)
+  // ];
 
-const distinctColors = [
-
-      "#001BB7",
-      "#4FB7B3",
-      "#4DFFBE",
-      "#78C841",
-      "#A3B087",
-      "#FCB53B",
-      "#F5DEA3",
-      "#7B542F",
-      "#FF8040",
-      "#E49BA6",
-      "#DC0E0E",
-      "#850E35",
-      "#E83C91",
-      "#9112BC",
-      "#3C467B",
-      "#000000",
-      "#71C0BB",
-      "#7C4585",
-      "#174143",
-      "#FFC400",
-      "#FF0060"
-      
-]
+  const distinctColors = [
+    "#001BB7",
+    "#4FB7B3",
+    "#4DFFBE",
+    "#78C841",
+    "#A3B087",
+    "#FCB53B",
+    "#F5DEA3",
+    "#7B542F",
+    "#FF8040",
+    "#E49BA6",
+    "#DC0E0E",
+    "#850E35",
+    "#E83C91",
+    "#9112BC",
+    "#3C467B",
+    "#000000",
+    "#71C0BB",
+    "#7C4585",
+    "#174143",
+    "#FFC400",
+    "#FF0060",
+  ];
 
   const [selectedDate, setSelectedDate] = useState(
     moment().format("YYYY-MM-DD")
@@ -140,42 +141,40 @@ const distinctColors = [
   //   fetchContractors();
   // }, []);
 
- useEffect(() => {
-  const fetchContractors = async () => {
-    try {
-      const res = await axios.get(
-        "http://103.172.44.99:8989/api_bwal/contractor_api.php"
-      );
+  useEffect(() => {
+    const fetchContractors = async () => {
+      try {
+        const res = await axios.get(
+          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+        );
 
-      if (res.data.success && Array.isArray(res.data.data)) {
-        const formatted = res.data.data.map((c, index) => {
-          const id = Number(c.ID);
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const formatted = res.data.data.map((c, index) => {
+            const id = Number(c.ID);
 
-          // ✅ Assign a color from fixed palette by index
-          if (!colorMap.current[id]) {
-            const colorIndex = index % distinctColors.length;
-            colorMap.current[id] = distinctColors[colorIndex];
-          }
+            // ✅ Assign a color from fixed palette by index
+            if (!colorMap.current[id]) {
+              const colorIndex = index % distinctColors.length;
+              colorMap.current[id] = distinctColors[colorIndex];
+            }
 
-          return {
-            id,
-            title: c.NAME,
-          };
-        });
+            return {
+              id,
+              title: c.NAME,
+            };
+          });
 
-        setGroups(formatted);
-        setAllGroups(formatted);
+          setGroups(formatted);
+          setAllGroups(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load contractors:", err);
+        toast.error("Failed to load contractors");
       }
-    } catch (err) {
-      console.error("Failed to load contractors:", err);
-      toast.error("Failed to load contractors");
-    }
-  };
+    };
 
-  fetchContractors();
-}, []);
-
-
+    fetchContractors();
+  }, []);
 
   // ✅ Fetch Gantt data
   const fetchGanttData = async () => {
@@ -184,31 +183,30 @@ const distinctColors = [
         "http://103.172.44.99:8989/api_bwal/gantt_api.php"
       );
       if (res.data.success && Array.isArray(res.data.data)) {
+        const formattedItems = res.data.data
+          .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+          .map((i) => {
+            const groupId = Number(i.C_P_ID);
+            const contractorColor = colorMap.current[groupId] || "#999"; // fallback
 
-       const formattedItems = res.data.data
-  .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-  .map((i) => {
-    const groupId = Number(i.C_P_ID);
-    const contractorColor = colorMap.current[groupId] || "#999"; // fallback
-
-    return {
-      id: Number(i.L_ID),
-      group: groupId,
-      start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
-      end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
-      canMove: true,
-      canResize: "both",
-      canChangeGroup: true,
-      itemProps: {
-        style: {
-          background: contractorColor,
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-        },
-      },
-    };
-  });
+            return {
+              id: Number(i.L_ID),
+              group: groupId,
+              start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+              end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+              canMove: true,
+              canResize: "both",
+              canChangeGroup: true,
+              itemProps: {
+                style: {
+                  background: contractorColor,
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                },
+              },
+            };
+          });
 
         // const formattedItems = res.data.data
         //   .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
@@ -291,33 +289,31 @@ const distinctColors = [
       return;
     }
 
-   const contractorColor = colorMap.current[item.group];
+    const contractorColor = colorMap.current[item.group];
 
-const firstHalf = {
-  ...item,
-  end_time: splitDate.clone().endOf("day").valueOf(),
-  itemProps: {
-    style: {
-      ...item.itemProps.style,
-      background: contractorColor,
-    },
-  },
-};
+    const firstHalf = {
+      ...item,
+      end_time: splitDate.clone().endOf("day").valueOf(),
+      itemProps: {
+        style: {
+          ...item.itemProps.style,
+          background: contractorColor,
+        },
+      },
+    };
 
-const secondHalf = {
-  ...item,
-  id: Date.now(),
-  start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
-  end_time: item.end_time,
-  itemProps: {
-    style: {
-      ...item.itemProps.style,
-      background: contractorColor,
-    },
-  },
-};
-
-
+    const secondHalf = {
+      ...item,
+      id: Date.now(),
+      start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+      end_time: item.end_time,
+      itemProps: {
+        style: {
+          ...item.itemProps.style,
+          background: contractorColor,
+        },
+      },
+    };
 
     // const firstHalf = {
     //   ...item,
@@ -446,58 +442,14 @@ const secondHalf = {
   const verticalLineClassNamesForTime = (timeStart, timeEnd) => {
     const currentTimeStart = moment(timeStart);
     const currentTimeEnd = moment(timeEnd);
-    const dateStr = currentTimeStart.format('YYYY-MM-DD');
+    const dateStr = currentTimeStart.format("YYYY-MM-DD");
 
     // Check if this column is a holiday
     if (holidayDates.has(dateStr)) {
-      return ['holiday'];
+      return ["holiday"];
     }
     return [];
   };
-
-  
- 
-
-
-useEffect(() => {
-  if (!holidayDates.size) return;
-
-  const applyHolidayHeaderStyles = () => {
-    // সব দিন হেডার খুঁজে বের করো
-    const headers = document.querySelectorAll('.rct-dateHeader[data-time]');
-    headers.forEach((header) => {
-      const timestamp = parseInt(header.getAttribute('data-time'), 10);
-      if (!timestamp) return;
-      const dateStr = moment(timestamp).format('YYYY-MM-DD');
-      const isHoliday = holidayDates.has(dateStr);
-
-      // পুরনো style remove করো
-     if (isHoliday) {
-        header.classList.add("holiday-header");
-      } else {
-        header.classList.remove("holiday-header");
-      }
-    });
-  };
-
-  // প্রথমবার কল করো
-  applyHolidayHeaderStyles();
-
-  // observe করো যাতে scroll/zoom করলে update হয়
-  const root = document.querySelector('.rct-header-root');
-  if (!root) return;
-
-  const observer = new MutationObserver(() => {
-    applyHolidayHeaderStyles();
-  });
-  observer.observe(root, { childList: true, subtree: true });
-
-  return () => observer.disconnect();
-}, [holidayDates, visibleTimeStart, visibleTimeEnd]);
-
-
-
-
 
   return (
     <>
@@ -509,14 +461,6 @@ useEffect(() => {
           background: #fff;
         }
 
-        /* DateHeader holiday highlight */
-.rct-dateHeader.holiday-header {
-  background-color: rgba(239, 68, 68, 0.25) !important; /* light red */
-  color: #b91c1c !important;
-  font-weight: 700 !important;
-  border-left: 1px solid rgba(239, 68, 68, 0.3);
-  border-right: 1px solid rgba(239, 68, 68, 0.3);
-}
 
 
 
@@ -526,16 +470,18 @@ useEffect(() => {
         }
 
         /* Date header hover effect */
-        .react-calendar-timeline .rct-dateHeader:hover {
+        .react-calendar-timeline .rct-dateHeader {
           opacity: 0.9;
+          background-color: rgba(220, 38, 38, 0.15) !important;
+
           
-        }
+        // }
 
       
 
-   .rct-dateHeader {
-    background-color: unset !important;
-  }
+  //   .rct-dateHeader {
+  //    background-color: red !important;
+  //  }
 
 
     
@@ -545,8 +491,51 @@ useEffect(() => {
       <div className="bg-gray-50">
         <SectionContainer planningBoard={true}>
           {/* Filter Bar */}
-          <div className="bg-white flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+          <div className="bg-white flex items-center justify-between">
+           
+            <div className="bg-white p-4">
+              <h1 className="text-sm font-bold text-gray-800 mb-2">
+                Dashboard Timeline
+              </h1>
+            </div>
+             <div className="flex justify-end items-center gap-2">
+ <div className="">
+              <Button
+                className="bg-purple-800 px-2 py-2 text-white"
+                onClick={() => setOpen(true)} // ✅ open modal manually
+              >
+                Add Task
+              </Button>
+            </div>
+<DialogDemo
+  open={open}
+  setOpen={setOpen}
+  contractors={allGroups}
+  onSave={async (data) => {
+    try {
+      const res = await axios.post(
+        "http://103.172.44.99:8989/api_bwal/gantt_api.php",
+        data
+      );
+
+      if (res.data.success) {
+        toast.success("Task added successfully");
+        
+        // ✅ Refetch all data from server (most reliable)
+        await fetchGanttData();
+        
+        setOpen(false);
+      } else {
+        toast.error("Failed to add task");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error adding task");
+    }
+  }}
+/>
+
+             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">Select Date:</label>
               <input
                 type="date"
@@ -554,12 +543,6 @@ useEffect(() => {
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
               />
-            </div>
-            <div className="bg-white p-4">
-              <h1 className="text-sm font-bold text-gray-800 mb-2">
-                Dashboard Timeline
-              </h1>
-              
             </div>
 
             <div className="flex items-center gap-2">
@@ -577,6 +560,8 @@ useEffect(() => {
                 ))}
               </select>
             </div>
+             </div>
+           
           </div>
 
           {/* Timeline */}
@@ -630,38 +615,30 @@ useEffect(() => {
                       unit="primaryHeader"
                       labelFormat="MMMM YYYY"
                       style={{
-                        background: "#750811ff",
+                        background: "#541212",
                         color: "#ffffff",
                         fontWeight: 600,
                         textAlign: "center",
                         borderBottom: "1px solid #e5e7eb",
-                       
                       }}
                     />
 
                     {/* Daily header */}
                     <DateHeader
                       unit="day"
-                       labelFormat="DD ddd"
+                      labelFormat="DD dd"
                       style={{
-                         background: "#eef2f7ff",
-                         color: "#404752ff",
+                        background: "#750811ff",
+                        color: "#ffffff",
                         textAlign: "center",
                         fontSize: "11px",
                         borderLeft: "1px solid #e5e7eb",
                         borderRight: "1px solid #e5e7eb",
-                         marginTop: "2px",
-                        marginBottom: "1px",
+                        // marginTop: "2px",
+                        // marginBottom: "1px",
+                        opacity: 0.9,
                       }}
                     />
-
-                 
- 
-
-
-
-                   
-
                   </TimelineHeaders>
 
                   <TimelineMarkers>
@@ -672,7 +649,6 @@ useEffect(() => {
                             ...styles,
                             backgroundColor: "#ef4444",
                             width: "3px",
-                            
                           }}
                         />
                       )}
@@ -685,7 +661,6 @@ useEffect(() => {
                             backgroundColor: "#3b82f6",
                             width: "2px",
                             opacity: 0.5,
-                           
                           }}
                         />
                       )}

@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "frappe-gantt/dist/frappe-gantt.css";
 import Gantt from "frappe-gantt";
 import api from "../../../api/Api";
+import { Button } from "@/components/ui/button"
 
 const Schedule = () => {
   const ganttRef = useRef(null);
@@ -398,7 +399,9 @@ const Schedule = () => {
       ></div>
       
       
-      
+      <div className="flex min-h-svh flex-col items-center justify-center">
+      <Button>Click me</Button>
+    </div>
     </div>
   );
 };
