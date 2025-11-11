@@ -23,6 +23,58 @@ const ReactTimelineDemo = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [holidayDates, setHolidayDates] = useState(new Set());
 
+  const colorMap = useRef({});
+
+// const distinctColors = [
+//   "#e6194b", // red
+//   "#3cb44b", // green
+//   "#ffe119", // yellow
+//   "#4363d8", // blue
+//   "#f58231", // orange
+//   "#911eb4", // purple
+//   "#46f0f0", // cyan
+//   "#f032e6", // magenta
+//   "#bcf60c", // lime
+//   "#fabebe", // pink
+//   "#008080", // teal
+//   "#e6beff", // lavender
+//   "#9a6324", // brown
+//   "#fffac8", // cream
+//   "#800000", // maroon
+//   "#aaffc3", // mint
+//   "#808000", // olive
+//   "#ffd8b1", // peach
+//   "#000075", // navy
+//   "#808080", // gray
+//   "#ffffff", // white (optional)
+// ];
+
+const distinctColors = [
+
+      "#001BB7",
+      "#4FB7B3",
+      "#4DFFBE",
+      "#78C841",
+      "#A3B087",
+      "#FCB53B",
+      "#F5DEA3",
+      "#7B542F",
+      "#FF8040",
+      "#E49BA6",
+      "#DC0E0E",
+      "#850E35",
+      "#E83C91",
+      "#9112BC",
+      "#3C467B",
+      "#000000",
+      "#71C0BB",
+      "#7C4585",
+      "#174143",
+      "#FFC400",
+      "#FF0060"
+      
+]
+
   const [selectedDate, setSelectedDate] = useState(
     moment().format("YYYY-MM-DD")
   );
@@ -66,27 +118,64 @@ const ReactTimelineDemo = () => {
   }, []);
 
   // ✅ Fetch contractors
-  useEffect(() => {
-    const fetchContractors = async () => {
-      try {
-        const res = await axios.get(
-          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
-        );
-        if (res.data.success && Array.isArray(res.data.data)) {
-          const formatted = res.data.data.map((c) => ({
-            id: Number(c.ID),
+  // useEffect(() => {
+  //   const fetchContractors = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+  //       );
+  //       if (res.data.success && Array.isArray(res.data.data)) {
+  //         const formatted = res.data.data.map((c) => ({
+  //           id: Number(c.ID),
+  //           title: c.NAME,
+  //         }));
+  //         setGroups(formatted);
+  //         setAllGroups(formatted);
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to load contractors:", err);
+  //       toast.error("Failed to load contractors");
+  //     }
+  //   };
+  //   fetchContractors();
+  // }, []);
+
+ useEffect(() => {
+  const fetchContractors = async () => {
+    try {
+      const res = await axios.get(
+        "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+      );
+
+      if (res.data.success && Array.isArray(res.data.data)) {
+        const formatted = res.data.data.map((c, index) => {
+          const id = Number(c.ID);
+
+          // ✅ Assign a color from fixed palette by index
+          if (!colorMap.current[id]) {
+            const colorIndex = index % distinctColors.length;
+            colorMap.current[id] = distinctColors[colorIndex];
+          }
+
+          return {
+            id,
             title: c.NAME,
-          }));
-          setGroups(formatted);
-          setAllGroups(formatted);
-        }
-      } catch (err) {
-        console.error("Failed to load contractors:", err);
-        toast.error("Failed to load contractors");
+          };
+        });
+
+        setGroups(formatted);
+        setAllGroups(formatted);
       }
-    };
-    fetchContractors();
-  }, []);
+    } catch (err) {
+      console.error("Failed to load contractors:", err);
+      toast.error("Failed to load contractors");
+    }
+  };
+
+  fetchContractors();
+}, []);
+
+
 
   // ✅ Fetch Gantt data
   const fetchGanttData = async () => {
@@ -95,25 +184,51 @@ const ReactTimelineDemo = () => {
         "http://103.172.44.99:8989/api_bwal/gantt_api.php"
       );
       if (res.data.success && Array.isArray(res.data.data)) {
-        const formattedItems = res.data.data
-          .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-          .map((i) => ({
-            id: Number(i.L_ID),
-            group: Number(i.C_P_ID),
-            start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
-            end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
-            canMove: true,
-            canResize: "both",
-            canChangeGroup: true,
-            itemProps: {
-              style: {
-                background: randomColor({ luminosity: "dark" }),
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-              },
-            },
-          }));
+
+       const formattedItems = res.data.data
+  .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+  .map((i) => {
+    const groupId = Number(i.C_P_ID);
+    const contractorColor = colorMap.current[groupId] || "#999"; // fallback
+
+    return {
+      id: Number(i.L_ID),
+      group: groupId,
+      start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+      end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+      canMove: true,
+      canResize: "both",
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: contractorColor,
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+        },
+      },
+    };
+  });
+
+        // const formattedItems = res.data.data
+        //   .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+        //   .map((i) => ({
+        //     id: Number(i.L_ID),
+        //     group: Number(i.C_P_ID),
+        //     start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+        //     end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+        //     canMove: true,
+        //     canResize: "both",
+        //     canChangeGroup: true,
+        //     itemProps: {
+        //       style: {
+        //         background: randomColor({ luminosity: "dark" }),
+        //         color: "white",
+        //         border: "none",
+        //         borderRadius: "4px",
+        //       },
+        //     },
+        //   }));
 
         setItems(formattedItems);
         setAllItems(formattedItems);
@@ -176,29 +291,57 @@ const ReactTimelineDemo = () => {
       return;
     }
 
-    const firstHalf = {
-      ...item,
-      end_time: splitDate.clone().endOf("day").valueOf(),
-      itemProps: {
-        style: {
-          ...item.itemProps.style,
-          background: randomColor({ luminosity: "dark" }),
-        },
-      },
-    };
+   const contractorColor = colorMap.current[item.group];
 
-    const secondHalf = {
-      ...item,
-      id: Date.now(),
-      start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
-      end_time: item.end_time,
-      itemProps: {
-        style: {
-          ...item.itemProps.style,
-          background: randomColor({ luminosity: "dark" }),
-        },
-      },
-    };
+const firstHalf = {
+  ...item,
+  end_time: splitDate.clone().endOf("day").valueOf(),
+  itemProps: {
+    style: {
+      ...item.itemProps.style,
+      background: contractorColor,
+    },
+  },
+};
+
+const secondHalf = {
+  ...item,
+  id: Date.now(),
+  start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+  end_time: item.end_time,
+  itemProps: {
+    style: {
+      ...item.itemProps.style,
+      background: contractorColor,
+    },
+  },
+};
+
+
+
+    // const firstHalf = {
+    //   ...item,
+    //   end_time: splitDate.clone().endOf("day").valueOf(),
+    //   itemProps: {
+    //     style: {
+    //       ...item.itemProps.style,
+    //       background: randomColor({ luminosity: "dark" }),
+    //     },
+    //   },
+    // };
+
+    // const secondHalf = {
+    //   ...item,
+    //   id: Date.now(),
+    //   start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+    //   end_time: item.end_time,
+    //   itemProps: {
+    //     style: {
+    //       ...item.itemProps.style,
+    //       background: randomColor({ luminosity: "dark" }),
+    //     },
+    //   },
+    // };
 
     setItems((prev) => {
       const updated = prev.filter((i) => i.id !== itemId);
