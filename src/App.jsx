@@ -43,6 +43,8 @@ import ContractorTimelineDemo from "./pages/test-page-two";
 
 
 
+
+
 const App = () => {
   function PrivateRoute({ children }) {
     const { isAuthenticated } = useAuth();
@@ -93,6 +95,7 @@ const App = () => {
             <Route path="shedule-line/:id" element={<SheduleLine/>} />
             <Route path="test" element={<ReactTimelineDemo />} />
             <Route path="test2" element={<ContractorTimelineDemo />} />
+          
 
           </Route>
           <Route path="/login" element={<Login></Login>} />

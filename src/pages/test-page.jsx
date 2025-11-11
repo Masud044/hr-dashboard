@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import Timeline, {
   TimelineMarkers,
@@ -11,7 +11,6 @@ import Timeline, {
 import moment from "moment";
 import axios from "axios";
 import "react-calendar-timeline/style.css";
-import { useRef } from "react";
 import randomColor from "randomcolor";
 import { SectionContainer } from "../components/SectionContainer";
 import api from "../api/Api";
@@ -22,7 +21,59 @@ const ReactTimelineDemo = () => {
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [holidays, setHolidays] = useState([]);
+  const [holidayDates, setHolidayDates] = useState(new Set());
+
+  const colorMap = useRef({});
+
+// const distinctColors = [
+//   "#e6194b", // red
+//   "#3cb44b", // green
+//   "#ffe119", // yellow
+//   "#4363d8", // blue
+//   "#f58231", // orange
+//   "#911eb4", // purple
+//   "#46f0f0", // cyan
+//   "#f032e6", // magenta
+//   "#bcf60c", // lime
+//   "#fabebe", // pink
+//   "#008080", // teal
+//   "#e6beff", // lavender
+//   "#9a6324", // brown
+//   "#fffac8", // cream
+//   "#800000", // maroon
+//   "#aaffc3", // mint
+//   "#808000", // olive
+//   "#ffd8b1", // peach
+//   "#000075", // navy
+//   "#808080", // gray
+//   "#ffffff", // white (optional)
+// ];
+
+const distinctColors = [
+
+      "#001BB7",
+      "#4FB7B3",
+      "#4DFFBE",
+      "#78C841",
+      "#A3B087",
+      "#FCB53B",
+      "#F5DEA3",
+      "#7B542F",
+      "#FF8040",
+      "#E49BA6",
+      "#DC0E0E",
+      "#850E35",
+      "#E83C91",
+      "#9112BC",
+      "#3C467B",
+      "#000000",
+      "#71C0BB",
+      "#7C4585",
+      "#174143",
+      "#FFC400",
+      "#FF0060"
+      
+]
 
   const [selectedDate, setSelectedDate] = useState(
     moment().format("YYYY-MM-DD")
@@ -35,150 +86,156 @@ const ReactTimelineDemo = () => {
   const [visibleTimeEnd, setVisibleTimeEnd] = useState(
     moment().add(15, "days").valueOf()
   );
+
+  const lastUpdatedRef = useRef(null);
+
   // ✅ Fetch Calendar (Holiday/Working day info)
-
-  // ✅ Fetch Calendar - শুধু holidays state-এ রাখো, items-এ না
-
- useEffect(() => {
+  useEffect(() => {
     const fetchCalendar = async () => {
       try {
         const res = await api.get("/calender_api.php");
         if (res.data.success && Array.isArray(res.data.records)) {
-          const data = res.data.records
-          // console.log(data.working_status)
-            .filter((r) => r.working_status === "Holiday") // ✅ only holidays
-            .map((r, index) => ({
-                id: index + 1,
-                // id: `holiday-${index}`,
-              group: 1,
-              title: r.holiday_description || "Holiday",
-              start_time: moment(r.day).startOf("day"),
-              end_time: moment(r.day).endOf("day"),
-            //    canMove: false, // ✅ holiday move করা যাবে না
-            // canResize: false,
-            // canChangeGroup: false,
-              itemProps: {
-                style: {
-                  background: "#dc2626",
-                  color: "white",
-                  borderRadius: "4px",
-                  border: "none",
-                  textAlign: "center",
-                },
-              },
-            }));
-       console.log("holiday", res.data.records.working_status)
-       console.log(res)
-          setHolidays(data);
-           setItems(data);
+          const holidayRecords = res.data.records.filter(
+            (r) => r.working_status === "Holiday"
+          );
+
+          // Store holiday dates for column highlighting
+          const holidayDateSet = new Set(
+            holidayRecords.map((r) => moment(r.day).format("YYYY-MM-DD"))
+          );
+          setHolidayDates(holidayDateSet);
+
+          console.log("Holiday dates:", Array.from(holidayDateSet));
+          console.log("Total holidays:", holidayRecords.length);
         }
       } catch (err) {
         console.error("Failed to load calendar data:", err);
+        toast.error("Failed to load calendar data");
       }
     };
 
     fetchCalendar();
   }, []);
-  console.log(holidays)
-  
-  
-
 
   // ✅ Fetch contractors
-  useEffect(() => {
-    const fetchContractors = async () => {
-      try {
-        const res = await axios.get(
-          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
-        );
-        if (res.data.success && Array.isArray(res.data.data)) {
-          const formatted = res.data.data.map((c) => ({
-            id: Number(c.ID),
-            title: c.NAME,
-          }));
-          setGroups(formatted);
-          setAllGroups(formatted);
-        }
-      } catch (err) {
-        console.error("Failed to load contractors:", err);
-      }
-    };
-    fetchContractors();
-  }, []);
-
-  // ✅ Fetch Gantt data
   // useEffect(() => {
-  //   const fetchGanttData = async () => {
+  //   const fetchContractors = async () => {
   //     try {
-  //       const res = await axios.get("http://103.172.44.99:8989/api_bwal/gantt_api.php");
+  //       const res = await axios.get(
+  //         "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+  //       );
   //       if (res.data.success && Array.isArray(res.data.data)) {
-  //         const formattedItems = res.data.data
-  //           .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-  //           .map((i) => ({
-  //             id: Number(i.L_ID),
-  //             group: Number(i.C_P_ID),
-  //             // title: i.DESCRIPTION || `Task ${i.L_ID}`,
-  //             start_time: moment(i.SCHEDULE_START_DATE),
-  //             end_time: moment(i.SCHEDULE_END_DATE),
-  //             canMove: true,
-  //             canResize: "both",
-  //             canChangeGroup: true,
-  //             itemProps: {
-  //               style: {
-  //                 background: "#3b82f6",
-  //                 color: "white",
-  //                 border: "none",
-  //                 borderRadius: "4px"
-  //               }
-  //             }
-  //           }));
-
-  //         setItems(formattedItems);
-  //         setAllItems(formattedItems);
+  //         const formatted = res.data.data.map((c) => ({
+  //           id: Number(c.ID),
+  //           title: c.NAME,
+  //         }));
+  //         setGroups(formatted);
+  //         setAllGroups(formatted);
   //       }
   //     } catch (err) {
-  //       console.error("Failed to load gantt data:", err);
+  //       console.error("Failed to load contractors:", err);
+  //       toast.error("Failed to load contractors");
   //     }
   //   };
-
-  //    fetchGanttData();
+  //   fetchContractors();
   // }, []);
 
-  // ✅ Fetch Gantt data (make it callable)
+ useEffect(() => {
+  const fetchContractors = async () => {
+    try {
+      const res = await axios.get(
+        "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+      );
+
+      if (res.data.success && Array.isArray(res.data.data)) {
+        const formatted = res.data.data.map((c, index) => {
+          const id = Number(c.ID);
+
+          // ✅ Assign a color from fixed palette by index
+          if (!colorMap.current[id]) {
+            const colorIndex = index % distinctColors.length;
+            colorMap.current[id] = distinctColors[colorIndex];
+          }
+
+          return {
+            id,
+            title: c.NAME,
+          };
+        });
+
+        setGroups(formatted);
+        setAllGroups(formatted);
+      }
+    } catch (err) {
+      console.error("Failed to load contractors:", err);
+      toast.error("Failed to load contractors");
+    }
+  };
+
+  fetchContractors();
+}, []);
+
+
+
+  // ✅ Fetch Gantt data
   const fetchGanttData = async () => {
     try {
       const res = await axios.get(
         "http://103.172.44.99:8989/api_bwal/gantt_api.php"
       );
       if (res.data.success && Array.isArray(res.data.data)) {
-        const formattedItems = res.data.data
-          .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-          .map((i) => ({
-            id: Number(i.L_ID),
-            group: Number(i.C_P_ID),
-            start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
-            end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
-            canMove: true,
-            canResize: "both",
-            canChangeGroup: true,
-            itemProps: {
-              style: {
-                background: randomColor({ luminosity: "dark" }),
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-              },
-            },
-          }));
 
-          setItems([...holidays, ...formattedItems]);
-      setAllItems([...holidays, ...formattedItems]);
+       const formattedItems = res.data.data
+  .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+  .map((i) => {
+    const groupId = Number(i.C_P_ID);
+    const contractorColor = colorMap.current[groupId] || "#999"; // fallback
 
-        // setItems(formattedItems);
-        // setAllItems(formattedItems);
+    return {
+      id: Number(i.L_ID),
+      group: groupId,
+      start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+      end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+      canMove: true,
+      canResize: "both",
+      canChangeGroup: true,
+      itemProps: {
+        style: {
+          background: contractorColor,
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+        },
+      },
+    };
+  });
+
+        // const formattedItems = res.data.data
+        //   .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+        //   .map((i) => ({
+        //     id: Number(i.L_ID),
+        //     group: Number(i.C_P_ID),
+        //     start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+        //     end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+        //     canMove: true,
+        //     canResize: "both",
+        //     canChangeGroup: true,
+        //     itemProps: {
+        //       style: {
+        //         background: randomColor({ luminosity: "dark" }),
+        //         color: "white",
+        //         border: "none",
+        //         borderRadius: "4px",
+        //       },
+        //     },
+        //   }));
+
+        setItems(formattedItems);
+        setAllItems(formattedItems);
       }
     } catch (err) {
       console.error("Failed to load gantt data:", err);
+      toast.error("Failed to load gantt data");
     }
   };
 
@@ -195,15 +252,9 @@ const ReactTimelineDemo = () => {
     setVisibleTimeEnd(newEnd);
   }, [selectedDate]);
 
-  // Create a ref to avoid double toasts
-  // add useRef at top
-
-  // inside your component
-  const lastUpdatedRef = useRef(null);
-
   const updateItemOnServer = async (item) => {
     const key = `${item.id}-${item.start_time}-${item.end_time}`;
-    if (lastUpdatedRef.current === key) return; // 🧠 prevent duplicate
+    if (lastUpdatedRef.current === key) return;
     lastUpdatedRef.current = key;
 
     try {
@@ -218,59 +269,20 @@ const ReactTimelineDemo = () => {
       toast.success("Task updated successfully");
     } catch (err) {
       toast.error("Failed to update task");
-      console.error(" Failed to update item:", err);
+      console.error("Failed to update item:", err);
     } finally {
-      // Reset the protection key after a short delay
       setTimeout(() => {
         lastUpdatedRef.current = null;
       }, 500);
     }
   };
 
-  // ✅ API: Update item position or resize
-  // const updateItemOnServer = async (item) => {
-  //   try {
-  //     await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
-  //       L_ID: item.id,
-  //       C_P_ID: item.group,
-  //       SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),
-  //       SCHEDULE_END_DATE: moment(item.end_time).format("YYYY-MM-DD"),
-  //       DESCRIPTION: item.title
-  //     });
-  //     // console.log("✅ Updated on server:", item);
-  //     // toast.success(" Updated on task",item);
-  //     // console.log("✅ Updated on server:", item);
-  //   } catch (err) {
-  //     // toast.error("Failed to update on server", err);
-  //     // console.error("❌ Failed to update item:", err);
-  //   }
-  // };
-
-  // ✅ API: Add new item
-  // const addItemToServer = async (newItem) => {
-  //   try {
-  //     const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
-  //       C_P_ID: newItem.group,
-  //       SCHEDULE_START_DATE: moment(newItem.start_time).format("YYYY-MM-DD"),
-  //       SCHEDULE_END_DATE: moment(newItem.end_time).format("YYYY-MM-DD"),
-  //       DESCRIPTION: newItem.title,
-  //        CREATION_BY: 1, // optional if required by API
-  //         H_ID: 46,
-  //     });
-  //     console.log("✅ Added new task:", res.data);
-  //   } catch (err) {
-  //     console.error("❌ Failed to add new task:", err);
-  //   }
-  // };
-
   const handleItemDoubleClick = async (itemId, e, time) => {
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
 
-    // ✅ Split point (যেদিন তুমি double-click করবা)
     const splitDate = moment(time).startOf("day");
 
-    // যদি splitDate শুরু বা শেষের বাইরে হয়, cancel করো
     if (
       splitDate.isSameOrBefore(moment(item.start_time)) ||
       splitDate.isSameOrAfter(moment(item.end_time))
@@ -279,33 +291,58 @@ const ReactTimelineDemo = () => {
       return;
     }
 
-    // ✅ প্রথম অর্ধ: আগের item update হবে
-    const firstHalf = {
-      ...item,
-      end_time: splitDate.clone().endOf("day").valueOf(),
-      itemProps: {
-        style: {
-          ...item.itemProps.style,
-          background: randomColor({ luminosity: "dark" }),
-        },
-      },
-    };
+   const contractorColor = colorMap.current[item.group];
 
-    // ✅ দ্বিতীয় অর্ধ: নতুন item create হবে
-    const secondHalf = {
-      ...item,
-      id: Date.now(), // temporary
-      start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
-      end_time: item.end_time,
-      itemProps: {
-        style: {
-          ...item.itemProps.style,
-          background: randomColor({ luminosity: "dark" }),
-        },
-      },
-    };
+const firstHalf = {
+  ...item,
+  end_time: splitDate.clone().endOf("day").valueOf(),
+  itemProps: {
+    style: {
+      ...item.itemProps.style,
+      background: contractorColor,
+    },
+  },
+};
 
-    // ✅ UI তে সাথে সাথে reflect করাও
+const secondHalf = {
+  ...item,
+  id: Date.now(),
+  start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+  end_time: item.end_time,
+  itemProps: {
+    style: {
+      ...item.itemProps.style,
+      background: contractorColor,
+    },
+  },
+};
+
+
+
+    // const firstHalf = {
+    //   ...item,
+    //   end_time: splitDate.clone().endOf("day").valueOf(),
+    //   itemProps: {
+    //     style: {
+    //       ...item.itemProps.style,
+    //       background: randomColor({ luminosity: "dark" }),
+    //     },
+    //   },
+    // };
+
+    // const secondHalf = {
+    //   ...item,
+    //   id: Date.now(),
+    //   start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+    //   end_time: item.end_time,
+    //   itemProps: {
+    //     style: {
+    //       ...item.itemProps.style,
+    //       background: randomColor({ luminosity: "dark" }),
+    //     },
+    //   },
+    // };
+
     setItems((prev) => {
       const updated = prev.filter((i) => i.id !== itemId);
       return [...updated, firstHalf, secondHalf];
@@ -318,7 +355,6 @@ const ReactTimelineDemo = () => {
     toast.info("Splitting and saving...");
 
     try {
-      // 1️⃣ আগের item update (first half)
       await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
         L_ID: item.id,
         C_P_ID: firstHalf.group,
@@ -327,7 +363,6 @@ const ReactTimelineDemo = () => {
         DESCRIPTION: item.title || "Split Task (Part 1)",
       });
 
-      // 2️⃣ নতুন item create (second half)
       const res = await axios.post(
         "http://103.172.44.99:8989/api_bwal/gantt_api.php",
         {
@@ -346,7 +381,7 @@ const ReactTimelineDemo = () => {
         toast.success("Task successfully split and saved");
         await fetchGanttData();
       } else {
-        toast.warn("Split updated locally, but backend didn’t confirm success");
+        toast.warn("Split updated locally, but backend didn't confirm success");
       }
     } catch (err) {
       console.error(err);
@@ -354,7 +389,6 @@ const ReactTimelineDemo = () => {
     }
   };
 
-  // ✅ Move item
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
       const i = prev.findIndex((item) => item.id === itemId);
@@ -369,12 +403,10 @@ const ReactTimelineDemo = () => {
       };
       updated[i] = newItem;
       updateItemOnServer(newItem);
-      // toast.success("✅ Task updated"); // 🔁 sync with backend
       return updated;
     });
   };
 
-  // ✅ Resize item
   const handleItemResize = (itemId, time, edge) => {
     setItems((prev) => {
       const i = prev.findIndex((item) => item.id === itemId);
@@ -386,288 +418,134 @@ const ReactTimelineDemo = () => {
       };
       updated[i] = newItem;
       updateItemOnServer(newItem);
-      // toast.success("✅ Task updated"); // 🔁 sync with backend
       return updated;
     });
   };
 
-  // ✅ Select / Deselect
   const handleItemSelect = (id) => setSelectedItems([id]);
   const handleItemDeselect = () => setSelectedItems([]);
 
-  // ✅ Add new item by clicking on empty canvas
-  // const handleCanvasClick = (groupId, time, e) => {
-  //   const newItem = {
-  //     id: Date.now(), // temporary ID
-  //     group: groupId,
-  //     title: `New Task`,
-  //     start_time: moment(time),
-  //     end_time: moment(time).add(1, "day"),
-  //     canMove: true,
-  //     canResize: "both",
-  //     canChangeGroup: true,
-  //     itemProps: {
-  //       style: {
-  //         background: "#6366f1",
-  //         color: "white",
-  //         border: "none",
-  //         borderRadius: "4px"
-  //       }
-  //     }
-  //   };
-  //   setItems((prev) => [...prev, newItem]);
-  //   setAllItems((prev) => [...prev, newItem]);
-  //   addItemToServer(newItem); // 🆕 send to backend
-  // };
-
-  //  const handleCanvasClick = async (groupId, time, e) => {
-  //   // If click is not on an actual group row, ignore
-  //   if (!groupId) return;
-
-  //   const newItem = {
-  //     id: Date.now(), // temporary unique ID
-  //     group: groupId,
-  //     // title: "New Task",
-  //     start_time: moment(time),
-  //     end_time: moment(time).add(1, "day"),
-  //     canMove: true,
-  //     canResize: "both",
-  //     canChangeGroup: true,
-  //     itemProps: {
-  //       style: {
-  //         background: "#6366f1",
-  //         color: "white",
-  //         border: "none",
-  //         borderRadius: "4px"
-  //       }
-  //     }
-  //   };
-
-  //   // ✅ Immediately show on UI
-  //   setItems((prev) => [...prev, newItem]);
-  //   setAllItems((prev) => [...prev, newItem]);
-
-  //   // ✅ Then send to backend
-  //   try {
-  //     const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
-  //       C_P_ID: newItem.group,
-  //       SCHEDULE_START_DATE: moment(newItem.start_time).format("YYYY-MM-DD"),
-  //       SCHEDULE_END_DATE: moment(newItem.end_time).format("YYYY-MM-DD"),
-  //       DESCRIPTION: newItem.title,
-  //       CREATION_BY: 1, // optional if required by API
-  //       H_ID: 46,       // optional if required by API
-  //     });
-
-  //     if (res.data.success) {
-  //       toast.success(" Task created successfully");
-  //     } else {
-  //       toast.warn("Task added locally, but API didn’t confirm success");
-  //     }
-  //   } catch (err) {
-  //     toast.error("Failed to create task on server");
-  //     console.error(err);
-  //   }
-  // };
-
-  // const handleCanvasClick = async (groupId, time, e) => {
-  //   if (!groupId) return;
-
-  //   const newItem = {
-  //     id: Date.now(), // temporary ID
-  //     group: groupId,
-  //     // title: "New Task",
-  //     start_time: moment(time),
-  //     end_time: moment(time).add(1, "day"),
-  //     canMove: true,
-  //     canResize: "both",
-  //     canChangeGroup: true,
-  //    itemProps: {
-  //   style: {
-  //     background: randomColor({ luminosity: "dark", seed: groupId }),
-  //     color: "white",
-  //     border: "none",
-  //     borderRadius: "4px",
-  //   },
-  // },
-  //   };
-
-  //   // ✅ Show immediately
-  //   setItems((prev) => [...prev, newItem]);
-  //   setAllItems((prev) => [...prev, newItem]);
-
-  //   // ✅ Save to backend
-  //   try {
-  //     const res = await axios.post("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
-  //       C_P_ID: newItem.group,
-  //       SCHEDULE_START_DATE: moment(newItem.start_time).format("YYYY-MM-DD"),
-  //       SCHEDULE_END_DATE: moment(newItem.end_time).format("YYYY-MM-DD"),
-  //       DESCRIPTION: newItem.title,
-  //       CREATION_BY: 1,
-  //       H_ID: 46,
-  //     });
-
-  //     if (res.data.success) {
-  //       toast.success("Task created successfully");
-  //       // 🧠 Auto refresh after create
-  //       await fetchGanttData();
-  //     } else {
-  //       toast.warn("⚠️ Task added locally, but API didn’t confirm success");
-  //     }
-  //   } catch (err) {
-  //     toast.error("❌ Failed to create task on server");
-  //     console.error(err);
-  //   }
-  // };
-
   // ✅ Filter by contractor
-  // useEffect(() => {
-  //   if (selectedContractor === "all") {
-  //     setGroups(allGroups);
-  //     setItems(allItems);
-  //   } else {
-  //     const filteredGroups = allGroups.filter(
-  //       (g) => g.id === Number(selectedContractor)
-  //     );
-  //     const filteredItems = allItems.filter(
-  //       (i) => i.group === Number(selectedContractor)
-  //     );
-  //     setGroups(filteredGroups);
-  //     setItems(filteredItems);
-  //   }
-  // }, [selectedContractor, allGroups, allItems]);
+  useEffect(() => {
+    if (selectedContractor === "all") {
+      setGroups(allGroups);
+      setItems(allItems);
+    } else {
+      const filteredGroups = allGroups.filter(
+        (g) => g.id === Number(selectedContractor)
+      );
+      const filteredItems = allItems.filter(
+        (i) => i.group === Number(selectedContractor)
+      );
+      setGroups(filteredGroups);
+      setItems(filteredItems);
+    }
+  }, [selectedContractor, allGroups, allItems]);
 
-  // ✅ 3. Filter logic-এ holidays add করো
+  // ✅ Function to mark holiday columns - PROPER WAY
+  const verticalLineClassNamesForTime = (timeStart, timeEnd) => {
+    const currentTimeStart = moment(timeStart);
+    const currentTimeEnd = moment(timeEnd);
+    const dateStr = currentTimeStart.format('YYYY-MM-DD');
+
+    // Check if this column is a holiday
+    if (holidayDates.has(dateStr)) {
+      return ['holiday'];
+    }
+    return [];
+  };
+
+  
+ 
+
+
 useEffect(() => {
-  if (selectedContractor === "all") {
-    setGroups(allGroups);
-    setItems([...holidays, ...allItems.filter(i => !i.id.toString().startsWith('holiday'))]); // ✅
-  } else {
-    const filteredGroups = allGroups.filter(
-      (g) => g.id === Number(selectedContractor)
-    );
-    const filteredItems = allItems.filter(
-      (i) => i.group === Number(selectedContractor) && !i.id.toString().startsWith('holiday')
-    );
-    setGroups(filteredGroups);
-    setItems([...holidays, ...filteredItems]); // ✅
-  }
-}, [selectedContractor, allGroups, allItems, holidays]);
+  if (!holidayDates.size) return;
 
-// ✅ Highlight full vertical columns for holidays (from API)
-/* Hide "Week" text inside timeline headers */
+  const applyHolidayHeaderStyles = () => {
+    // সব দিন হেডার খুঁজে বের করো
+    const headers = document.querySelectorAll('.rct-dateHeader[data-time]');
+    headers.forEach((header) => {
+      const timestamp = parseInt(header.getAttribute('data-time'), 10);
+      if (!timestamp) return;
+      const dateStr = moment(timestamp).format('YYYY-MM-DD');
+      const isHoliday = holidayDates.has(dateStr);
+
+      // পুরনো style remove করো
+     if (isHoliday) {
+        header.classList.add("holiday-header");
+      } else {
+        header.classList.remove("holiday-header");
+      }
+    });
+  };
+
+  // প্রথমবার কল করো
+  applyHolidayHeaderStyles();
+
+  // observe করো যাতে scroll/zoom করলে update হয়
+  const root = document.querySelector('.rct-header-root');
+  if (!root) return;
+
+  const observer = new MutationObserver(() => {
+    applyHolidayHeaderStyles();
+  });
+  observer.observe(root, { childList: true, subtree: true });
+
+  return () => observer.disconnect();
+}, [holidayDates, visibleTimeStart, visibleTimeEnd]);
 
 
-// useEffect(() => {
-//   if (!holidays.length) return;
 
-//   const timeline = document.querySelector(".react-calendar-timeline");
-//   if (!timeline) return;
-
-//   // Remove any previous holiday overlays
-//   document.querySelectorAll(".holiday-column-overlay").forEach(el => el.remove());
-
-//   const visibleDuration = visibleTimeEnd - visibleTimeStart;
-
-//   holidays.forEach(holiday => {
-//     const dayStart = moment(holiday.start_time).startOf("day").valueOf();
-//     const dayEnd = moment(holiday.start_time).endOf("day").valueOf();
-
-//     if (dayEnd < visibleTimeStart || dayStart > visibleTimeEnd) {
-//       return; // not in visible window
-//     }
-
-//     const leftPercent = ((dayStart - visibleTimeStart) / visibleDuration) * 100;
-//     const widthPercent = ((dayEnd - dayStart) / visibleDuration) * 100;
-
-//     // Body overlay (all contractors rows)
-//     const bodyOverlay = document.createElement("div");
-//     bodyOverlay.className = "holiday-column-overlay";
-//     bodyOverlay.style.cssText = `
-//       position: absolute;
-//       left: ${leftPercent}%;
-//       width: ${widthPercent}%;
-//       top: 0;
-//       bottom: 0;
-//       background: rgba(220, 38, 38, 0.15);
-//       pointer-events: none;
-//       z-index: 1;
-//     `;
-//     const verticalLines = timeline.querySelector(".rct-vertical-lines");
-//     if (verticalLines) {
-//       verticalLines.appendChild(bodyOverlay);
-//     }
-
-//     // Header overlay (date header)
-//     const headerOverlay = document.createElement("div");
-//     headerOverlay.className = "holiday-column-overlay";
-//     headerOverlay.style.cssText = `
-//       position: absolute;
-//       left: ${leftPercent}%;
-//       width: ${widthPercent}%;
-//       top: 0;
-//       height: 100%;
-//       background: rgba(220, 38, 38, 0.25);
-//       pointer-events: none;
-//       z-index: 2;
-//     `;
-//     const headerRoot = timeline.querySelector(".rct-header-root");
-//     if (headerRoot) {
-//       headerRoot.appendChild(headerOverlay);
-//     }
-
-//     // Hide "Week" text inside that header cell if present
-//     const headerCells = headerRoot.querySelectorAll(".rct-dateHeader");
-//     headerCells.forEach(cell => {
-//       if (cell.textContent.trim().toLowerCase() === "Week") {
-//         cell.style.color = "transparent";
-//       }
-//     });
-//   });
-
-// }, [holidays, visibleTimeStart, visibleTimeEnd]);
 
 
   return (
     <>
-    {/* <style>{`
-    .holiday-column-overlay {
-  transition: opacity 0.3s ease;
+      <style>{`
+        .react-calendar-timeline .rct-header-root {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          background: #fff;
+        }
+
+        /* DateHeader holiday highlight */
+.rct-dateHeader.holiday-header {
+  background-color: rgba(239, 68, 68, 0.25) !important; /* light red */
+  color: #b91c1c !important;
+  font-weight: 700 !important;
+  border-left: 1px solid rgba(239, 68, 68, 0.3);
+  border-right: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+
+
+        /* Holiday column highlighting - Timeline Body */
+        .rct-vl.holiday {
+          background-color: rgba(220, 38, 38, 0.15) !important;
+        }
+
+        /* Date header hover effect */
+        .react-calendar-timeline .rct-dateHeader:hover {
+          opacity: 0.9;
+          
+        }
+
+      
+
+   .rct-dateHeader {
+    background-color: unset !important;
+  }
+
+
     
-    `}</style> */}
+        // }
+      `}</style>
 
-    <style>{`
-  .react-calendar-timeline .rct-header-root {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: #fff;
-  }
-
-  /* Light red tint for entire holiday day columns */
-  .react-calendar-timeline .rct-horizontal-lines .rct-hl-holiday {
-    background-color: #960018;
-  }
-
-  // /* Date cell hover effect */
-  // .react-calendar-timeline .rct-dateHeader:hover {
-  //   background-color: #e0f2fe !important;
-  // }
-`}</style>
-
-      {/* <style>{`
-      .react-calendar-timeline .rct-header-root {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: red-700;
-      }
-    `}</style> */}
-      <div className="  bg-gray-50">
+      <div className="bg-gray-50">
         <SectionContainer planningBoard={true}>
           {/* Filter Bar */}
-          <div className="bg-white  flex items-center justify-between gap-4">
+          <div className="bg-white flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">Select Date:</label>
               <input
@@ -681,6 +559,7 @@ useEffect(() => {
               <h1 className="text-sm font-bold text-gray-800 mb-2">
                 Dashboard Timeline
               </h1>
+              
             </div>
 
             <div className="flex items-center gap-2">
@@ -701,7 +580,7 @@ useEffect(() => {
           </div>
 
           {/* Timeline */}
-          <div className="flex-1  overflow-hidden">
+          <div className="flex-1 overflow-hidden">
             <div className="h-full bg-white rounded-lg shadow-lg">
               {groups.length > 0 ? (
                 <Timeline
@@ -714,7 +593,6 @@ useEffect(() => {
                     setVisibleTimeEnd(end);
                     updateScrollCanvas(start, end);
                   }}
-                  
                   onItemMove={handleItemMove}
                   onItemResize={handleItemResize}
                   onItemSelect={handleItemSelect}
@@ -728,6 +606,7 @@ useEffect(() => {
                   itemHeightRatio={0.75}
                   sidebarWidth={200}
                   stackItems
+                  verticalLineClassNamesForTime={verticalLineClassNamesForTime}
                   groupRenderer={({ group }) => (
                     <div style={{ fontSize: "10px", fontWeight: 600 }}>
                       {group.title}
@@ -735,12 +614,11 @@ useEffect(() => {
                   )}
                 >
                   <TimelineHeaders>
-                    
                     <SidebarHeader>
                       {({ getRootProps }) => (
                         <div
                           {...getRootProps()}
-                          className="flex items-center text-sm justify-center bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold"
+                          className="flex items-center text-sm justify-center bg-gradient-to-r from-red-900 to-purple-700 text-white font-semibold"
                         >
                           Contractors
                         </div>
@@ -752,31 +630,41 @@ useEffect(() => {
                       unit="primaryHeader"
                       labelFormat="MMMM YYYY"
                       style={{
-                        background: "#960018",
-                        color: "#111827",
+                        background: "#750811ff",
+                        color: "#ffffff",
                         fontWeight: 600,
                         textAlign: "center",
                         borderBottom: "1px solid #e5e7eb",
+                       
                       }}
                     />
 
-                    {/* Daily header with holiday marking */}
+                    {/* Daily header */}
                     <DateHeader
-                  unit="day"
-                  labelFormat="DD"
-                  style={{
-                    background: "#fef2f2",
-                    color: "#991b1b",
-                    textAlign: "center",
-                    fontSize: "11px",
-                    borderLeft: "1px solid #fecaca",
-                    borderRight: "1px solid #fecaca",
-                  }}
-                />
+                      unit="day"
+                       labelFormat="DD ddd"
+                      style={{
+                         background: "#eef2f7ff",
+                         color: "#404752ff",
+                        textAlign: "center",
+                        fontSize: "11px",
+                        borderLeft: "1px solid #e5e7eb",
+                        borderRight: "1px solid #e5e7eb",
+                         marginTop: "2px",
+                        marginBottom: "1px",
+                      }}
+                    />
+
+                 
+ 
+
+
+
+                   
+
                   </TimelineHeaders>
 
                   <TimelineMarkers>
-                    
                     <TodayMarker>
                       {({ styles }) => (
                         <div
@@ -784,7 +672,7 @@ useEffect(() => {
                             ...styles,
                             backgroundColor: "#ef4444",
                             width: "3px",
-                            zIndex: 100,
+                            
                           }}
                         />
                       )}
@@ -797,6 +685,7 @@ useEffect(() => {
                             backgroundColor: "#3b82f6",
                             width: "2px",
                             opacity: 0.5,
+                           
                           }}
                         />
                       )}

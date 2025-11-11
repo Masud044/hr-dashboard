@@ -10,6 +10,7 @@ import PageTitle from "../../RouteTitle";
 import CashTransferList from "./CashTransferList";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { SectionContainer } from "../../SectionContainer";
 
 const CashTransfer = () => {
   const queryClient = useQueryClient();
@@ -176,7 +177,8 @@ const CashTransfer = () => {
   };
 
   return (
-    <div className="">
+   <SectionContainer>
+     <div className="">
       {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
         Payment Voucher
       </h2> */}
@@ -493,6 +495,7 @@ const CashTransfer = () => {
         </div>
       )}
     </div>
+   </SectionContainer>
   );
 };
 

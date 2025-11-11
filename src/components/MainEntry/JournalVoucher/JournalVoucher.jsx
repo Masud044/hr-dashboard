@@ -11,6 +11,7 @@ import PageTitle from "../../RouteTitle";
 import JournalVoucherList from "./JournalVoucherList";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { SectionContainer } from "../../SectionContainer";
 
 const JournalVoucher = () => {
   const { voucherId } = useParams();
@@ -334,7 +335,8 @@ const handlePrint = async () => {
 
 
   return (
-    <div className="">
+    <SectionContainer>
+       <div className="">
       {/* <h2 className="text-xl font-semibold text-gray-700 bg-green-200 rounded-lg px-4 mb-2 py-2">
         Payment Voucher
       </h2> */}
@@ -668,6 +670,7 @@ const handlePrint = async () => {
         </div>
       )}
     </div>
+    </SectionContainer>
   );
 };
 

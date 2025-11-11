@@ -48,7 +48,7 @@ export default function SupplierList({ showTitle = true }) {
       <div>
         {showTitle && <PageTitle />}
         <div className="bg-white shadow-md rounded-2xl p-6 border mt-4 border-gray-200">
-          <h2 className="text-lg font-semibold mb-4 text-gray-800 bg-blue-200 py-2 px-4 rounded-lg">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800  py-2 px-4 rounded-lg">
             All Suppliers
           </h2>
 
@@ -59,19 +59,19 @@ export default function SupplierList({ showTitle = true }) {
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-100 text-gray-700 text-left">
-                      <th className="px-4 py-2 border bg-blue-200">#</th>
-                      <th className="px-4 py-2 border bg-purple-200">
+                      <th className="px-4 py-2 border ">#</th>
+                      <th className="px-4 py-2 border ">
                         Supplier Name
                       </th>
-                      <th className="px-4 py-2 border bg-green-200">
+                      <th className="px-4 py-2 border ">
                         Entry Date
                       </th>
-                      <th className="px-4 py-2 border bg-orange-200">Email</th>
-                      <th className="px-4 py-2 border bg-blue-200">
+                      <th className="px-4 py-2 border ">Email</th>
+                      <th className="px-4 py-2 border ">
                         Contact Person
                       </th>
-                      <th className="px-4 py-2 border bg-purple-200">Phone</th>
-                      <th className="px-4 py-2 border bg-orange-200">Modify</th>
+                      <th className="px-4 py-2 border ">Phone</th>
+                      <th className="px-4 py-2 border ">Modify</th>
                     </tr>
                   </thead>
                   <tbody>
