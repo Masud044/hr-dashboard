@@ -28,7 +28,7 @@ export default function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md sticky top-0 z-[1009]">
+    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md sticky top-0 z-[102]">
       {/* Logo */}
       <div className="flex items-center gap-2">
         <img

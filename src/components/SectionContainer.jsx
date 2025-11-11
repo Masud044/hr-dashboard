@@ -10,7 +10,7 @@ export const SectionContainer = ({
       className={cn(
         "mx-auto w-full",
         planningBoard
-          ? "max-w-[1400px] px-5"
+          ? "container px-2"
           : "max-w-7xl p-6",
         className
       )}
