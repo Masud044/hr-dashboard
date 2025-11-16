@@ -190,7 +190,7 @@ const SheduleLine = () => {
      const required = [
    
     "P_ID",
-    "DESCRIPTION",
+    // "DESCRIPTION",
     "LINES"
    
       
@@ -272,9 +272,9 @@ const SheduleLine = () => {
               <table className="min-w-full  rounded-md">
                 <thead className="">
                   <tr>
-                    <th className="px-3 py-2 text-sm text-foreground font-normal">
+                    {/* <th className="px-3 py-2 text-sm text-foreground font-normal">
                       Line Desc
-                    </th>
+                    </th> */}
                     <th className="px-3 py-2 text-sm font-normal">
                       Start Date
                     </th>
@@ -295,7 +295,7 @@ const SheduleLine = () => {
                 <tbody>
                   {(formData.LINES || []).map((line, index) => (
                     <tr key={index} className="">
-                      <td className="px-3 py-2">
+                      {/* <td className="px-3 py-2">
                         <Input
                           name="DESCRIPTION"
                           value={line.DESCRIPTION}
@@ -303,7 +303,7 @@ const SheduleLine = () => {
                           inputWidth="w-full"
                           labelWidth="w-0"
                         />
-                      </td>
+                      </td> */}
                       <td className="px-3 py-2">
                         <Input
                           type="date"

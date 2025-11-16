@@ -6,7 +6,6 @@ import api from "../../../api/Api";
 import ProjectList from "./ProjectList";
 import { toast } from "react-toastify";
 
-
 const Project = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
@@ -22,11 +21,13 @@ const Project = () => {
     USER_ID: 105,
     USER_BY: 105,
     UPDATED_BY: 105,
+   
   });
 
   const [message, setMessage] = useState({ type: "", text: "" });
   const [savedProjectId, setSavedProjectId] = useState(null);
   const [editableLines, setEditableLines] = useState([]);
+  
 
   // 🔹 Fetch Project Types
   const { data: projectTypes, isLoading: loadingTypes } = useQuery({
@@ -45,17 +46,6 @@ const Project = () => {
       return res.data?.data || [];
     },
   });
-
-
-//   const { data: supplierNames = [] } = useQuery({
-//   queryKey: ["supplierNames"],
-//   queryFn: async () => {
-//     const res = await api.get("/supplier.php");
-//     return res.data?.data || [];
-//   },
-// });
-
-//   console.log(supplierNames)
 
   const { data: contractorNames = [] } = useQuery({
     queryKey: ["contractorNames"],
@@ -98,16 +88,16 @@ const Project = () => {
       const newId = res.data?.P_ID || id;
       setSavedProjectId(newId);
       toast.success(
-      isEditing
-        ? "Project updated successfully!"
-        : "Project added successfully!"
-    );
-  },
-   
-   onError: () => {
-    toast.error("❌ Failed to save project data. Please try again.");
-  },
-});
+        isEditing
+          ? "Project updated successfully!"
+          : "Project added successfully!"
+      );
+    },
+
+    onError: () => {
+      toast.error("❌ Failed to save project data. Please try again.");
+    },
+  });
 
   // 🔹 Fetch Construction Process Lines (21 rows)
   const { data: processLines = [], refetch: refetchProcess } = useQuery({
@@ -125,47 +115,26 @@ const Project = () => {
   console.log(data);
 
   useEffect(() => {
-  if (
-    processLines.length > 0 &&
-    contractorNames.length > 0 
-   
-  ) {
-    const updatedLines = processLines.map((line) => {
-      const contractor = contractorNames.find(
-        (c) => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
-      );
-      // const supplier = supplierNames.find(
-      //   (s) => Number(s.SUPPLIER_ID) === Number(line.SUPPLIER_ID)
+    if (processLines.length > 0 && contractorNames.length > 0) {
+      const updatedLines = processLines.map((line) => {
+        const contractor = contractorNames.find(
+          (c) => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
+        );
 
-      // );
+        return {
+          ...line,
+          CONTRACTOR_NAME: contractor ? contractor.CONTRATOR_NAME : "",
+        };
+      });
 
-      return {
-        ...line,
-        CONTRACTOR_NAME: contractor ? contractor.CONTRATOR_NAME : "",
-        // SUPPLIER_NAME: supplier ? supplier.SUPPLIER_NAME : "",
-      };
-    });
-
-    setEditableLines((prev) => {
-      const changed =
-        JSON.stringify(prev.map((p) => p.ID)) !==
-        JSON.stringify(updatedLines.map((p) => p.ID));
-      return changed ? updatedLines : prev;
-    });
-  }
-}, [processLines, contractorNames]);
-
-  // useEffect(() => {
-  //   if (processLines && processLines.length > 0) {
-  //     setEditableLines((prev) => {
-  //       const changed =
-  //         JSON.stringify(prev.map((p) => p.PROCESS_ID)) !==
-  //         JSON.stringify(processLines.map((p) => p.PROCESS_ID));
-  //       if (changed) return processLines;
-  //       return prev;
-  //     });
-  //   }
-  // }, [processLines]);
+      setEditableLines((prev) => {
+        const changed =
+          JSON.stringify(prev.map((p) => p.ID)) !==
+          JSON.stringify(updatedLines.map((p) => p.ID));
+        return changed ? updatedLines : prev;
+      });
+    }
+  }, [processLines, contractorNames]);
 
   // 🔹 Create 21 Process Lines
   const processMutation = useMutation({
@@ -176,15 +145,9 @@ const Project = () => {
       console.log(" Process lines created:", res.data);
       toast.success("Process lines created successfully!");
       refetchProcess();
-      // setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     },
     onError: () => {
       toast.error(" Failed to create process lines.");
-      // setMessage({
-      //   type: "error",
-      //   text: "❌ Failed to create process lines.",
-      // });
-      // setTimeout(() => setMessage({ type: "", text: "" }), 4000);
     },
   });
 
@@ -204,182 +167,186 @@ const Project = () => {
   // editableLines.forEach((line) => console.log(line));
 
   const handleLineChange = (index, field, value) => {
-  setEditableLines((prev) => {
-    const updated = [...prev];
-    const current = updated[index];
+    setEditableLines((prev) => {
+      const updated = [...prev];
+      const current = updated[index];
 
-    let newValue = value;
+      let newValue = value;
 
-    // Only convert to number if value is non-empty
-    if (
-      field === "SORT_ID" ||
-      field === "COST" ||
-      field === "SUB_CONTRACT_ID" ||
-      field === "DEPENDENT_ID" ||
-      field === "CONTRACTOR_ID"
-    ) {
-     if (value === "" || value === null) {
-        newValue = ""; // Keep it empty, not 0
-      } else {
-        newValue = Number(value);
+      // Only convert to number if value is non-empty
+      if (
+        field === "SORT_ID" ||
+        field === "COST" ||
+        field === "SUB_CONTRACT_ID" ||
+        field === "DEPENDENT_ID" ||
+        field === "CONTRACTOR_ID"
+      ) {
+        if (value === "" || value === null) {
+          newValue = ""; // Keep it empty, not 0
+        } else {
+          newValue = Number(value);
+        }
       }
-    }
 
-    const newLine = {
-      ...current,
-      [field]: newValue,
-    };
+      const newLine = {
+        ...current,
+        [field]: newValue,
+      };
 
-    // Update DEPENDENT_NAME if DEPENDENT_ID changes
-    if (field === "DEPENDENT_ID") {
-      const selected = contractorTypes.find((c) => c.ID === newValue);
-      newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
-    }
+      // Update DEPENDENT_NAME if DEPENDENT_ID changes
+      if (field === "DEPENDENT_ID") {
+        const selected = contractorTypes.find((c) => c.ID === newValue);
+        newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
+      }
 
-    // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
-    if (field === "CONTRACTOR_ID") {
-      const selected = contractorNames.find(
-        (c) => Number(c.CONTRATOR_ID) === Number(newValue)
-      );
-      newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
-    }
+      // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
+      if (field === "CONTRACTOR_ID") {
+        const selected = contractorNames.find(
+          (c) => Number(c.CONTRATOR_ID) === Number(newValue)
+        );
+        newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
+      }
 
-    updated[index] = newLine;
-    return updated;
-  });
-};
-
-
-//   const handleLineChange = (index, field, value) => {
-//     setEditableLines((prev) => {
-//       const updated = [...prev];
-//       const current = updated[index];
-
-//       let newValue = value;
-
-//       // Convert numeric fields properly
-//       if (
-//         field === "SORT_ID" ||
-//         field === "COST" ||
-//         field === "SUB_CONTRACT_ID" ||
-//         field === "DEPENDENT_ID" ||
-//         field === "CONTRACTOR_ID"
-//       ) {
-//         if (value === "" || value === null) {
-//           newValue =
-//             field === "COST" || field === "CONTRACTOR_ID" || field === "SORT_ID"
-//               ? 0
-//               : null;
-//         } else {
-//           newValue = Number(value);
-//         }
-//       }
-
-//       const newLine = {
-//         ...current,
-//         [field]: newValue,
-//       };
-
-//       // Update DEPENDENT_NAME if DEPENDENT_ID changes
-//       if (field === "DEPENDENT_ID") {
-//         const selected = contractorTypes.find((c) => c.ID === newValue);
-//         newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
-//       }
-
-//       // Update CONTRATOR_NAME if CONTRATOR_ID changes
-//      // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
-// if (field === "CONTRACTOR_ID") {
-//   const selected = contractorNames.find(
-//     (c) => Number(c.CONTRATOR_ID) === Number(newValue)
-//   );
-//   newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
-// }
-
-// //       if (field === "SUPPLIER_ID") {
-// //   const selected = supplierNames.find((s) => Number(s.SUPPLIER_ID) === Number(value));
-// //   newLine.SUPPLIER_NAME = selected ? selected.SUPPLIER_NAME : "";
-// // }
-
-
-//       updated[index] = newLine;
-//       return updated;
-//     });
-//   };
-
-  // 🔹 Handle changes in editable lines
-  // const handleLineChange = (index, field, value) => {
-  //   setEditableLines((prev) => {
-  //     const updated = [...prev];
-  //     const current = updated[index];
-
-  //     let newValue = value;
-
-  //     // Convert numeric fields properly
-  //     if (
-  //       field === "SORT_ID" ||
-  //       field === "COST" ||
-  //       field === "SUB_CONTRACT_ID" ||
-  //       field === "DEPENDENT_ID"
-  //     ) {
-  //       if (value === "" || value === null) {
-  //         newValue = field === "COST" || field === "SORT_ID" ? 0 : null;
-  //       } else {
-  //         newValue = Number(value);
-  //       }
-  //     }
-
-  //     const newLine = {
-  //       ...current,
-  //       [field]: newValue,
-  //     };
-
-  //     // If changing DEPENDENT_ID, also update name for display
-  //     if (field === "DEPENDENT_ID") {
-  //       const selected = contractorTypes.find((c) => c.ID === newValue);
-  //       newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
-  //     }
-
-  //     updated[index] = newLine;
-  //     return updated;
-  //   });
-  // };
+      updated[index] = newLine;
+      return updated;
+    });
+  };
 
   // 🔹 Update all process lines safely
- const updateProcessMutation = useMutation({
-  mutationFn: async (lines) => {
-    return Promise.all(
-      lines.map((line) => {
-        const payload = {
-          ID: line.ID,
-          PROCESS_ID: line.PROCESS_ID,
-          SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
-          SUB_CONTRACT_ID: line.SUB_CONTRACT_ID ? Number(line.SUB_CONTRACT_ID) : null,
-          DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-          SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
-          CONTRACTOR_ID: line.CONTRACTOR_ID || "",
-          SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
-        };
+  const updateProcessMutation = useMutation({
+    mutationFn: async (lines) => {
+      return Promise.all(
+        lines.map((line) => {
+          const payload = {
+            ID: line.ID,
+            PROCESS_ID: line.PROCESS_ID,
+            SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
+            SUB_CONTRACT_ID: line.SUB_CONTRACT_ID
+              ? Number(line.SUB_CONTRACT_ID)
+              : null,
+            DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+            SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
+            CONTRACTOR_ID: line.CONTRACTOR_ID || "",
+            SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
+          };
 
-        // Only include COST if it was edited (not undefined or empty)
-        if (line.COST !== undefined && line.COST !== "") {
-          payload.COST = Number(line.COST);
-        }
+          // Only include COST if it was edited (not undefined or empty)
+          if (line.COST !== undefined && line.COST !== "") {
+            payload.COST = Number(line.COST);
+          }
 
-        console.log("✅ Final PUT payload:", payload);
-        return api.put("/construction_process.php?action=update", payload);
-      })
-    );
-  },
-  onSuccess: () => {
-    refetchProcess();
-    toast.success("Process lines updated successfully!");
-  },
-  onError: (error) => {
-    console.error("❌ Update error:", error.response?.data || error.message);
-    toast.error("Update failed. Check required fields and payload.");
-  },
-});
+          console.log("✅ Final PUT payload:", payload);
+          return api.put("/construction_process.php?action=update", payload);
+        })
+      );
+    },
+    onSuccess: () => {
+      refetchProcess();
+      toast.success("Process lines updated successfully!");
+    },
+    onError: (error) => {
+      console.error("❌ Update error:", error.response?.data || error.message);
+      toast.error("Update failed. Check required fields and payload.");
+    },
+  });
 
+  // const createDashboard = async () => {
+  //   try {
+  //     const pid = id || savedProjectId;
+
+  //     if (!pid) {
+  //       toast.error("Please save the project first!");
+  //       return;
+  //     }
+
+  //     if (!contractorTypes || contractorTypes.length === 0) {
+  //       toast.error("Contractor Types not loaded yet!");
+  //       return;
+  //     }
+
+  //     // 🔥 Auto create 21 lines
+  //     const autoLines = contractorTypes.map((c) => ({
+  //       C_P_ID: c.ID,
+  //       DESCRIPTION: "",
+  //       SCHEDULE_START_DATE: "",
+  //       SCHEDULE_END_DATE: "",
+  //     }));
+
+  //     const payload = {
+  //       P_ID: Number(pid),
+  //       CREATION_BY: 105,
+  //       LINES: autoLines, // 🔥 21 LINES SENT HERE
+  //     };
+
+  //     console.log("Sending payload:", payload);
+
+  //     const res = await api.post("/shedule.php", payload, {
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+
+  //     console.log("Dashboard created:", res.data);
+
+  //     if (res.data?.success) {
+  //       toast.success("Dashboard created!");
+
+  //       window.location.href = `/dashboard/test/${res.data.H_ID}`;
+  //     } else {
+  //       toast.error(res.data?.message || "Server error");
+  //     }
+  //   } catch (err) {
+  //     console.log("❌ Dashboard Error:", err.response?.data || err);
+  //     toast.error("Failed to create dashboard");
+  //   }
+  // };
+
+ const createDashboard = async () => {
+    try {
+      const pid = id || savedProjectId;
+
+      if (!pid) {
+        toast.error("Please save the project first!");
+        return;
+      }
+
+      if (!contractorTypes || contractorTypes.length === 0) {
+        toast.error("Contractor Types not loaded yet!");
+        return;
+      }
+
+      // 🔥 Auto create 21 lines
+      const autoLines = contractorTypes.map((c) => ({
+        C_P_ID: c.ID,
+        DESCRIPTION: "",
+        SCHEDULE_START_DATE: "",
+        SCHEDULE_END_DATE: "",
+      }));
+
+      const payload = {
+        P_ID: Number(pid),
+        CREATION_BY: 105,
+        LINES: autoLines, // 🔥 21 LINES SENT HERE
+      };
+
+      console.log("Sending payload:", payload);
+
+      const res = await api.post("/shedule.php", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log("Dashboard created:", res.data);
+
+      if (res.data?.success) {
+        toast.success("Dashboard created!");
+
+        window.location.href = `/dashboard/test/${res.data.H_ID}`;
+      } else {
+        toast.error(res.data?.message || "Server error");
+      }
+    } catch (err) {
+      console.log("❌ Dashboard Error:", err.response?.data || err);
+      toast.error("Failed to create dashboard");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -481,6 +448,7 @@ const Project = () => {
             value={formData.STATE}
             onChange={handleChange}
           />
+          
 
           <div className="col-span-3 flex justify-end gap-3 mt-4">
             <button
@@ -510,6 +478,21 @@ const Project = () => {
                 {processMutation.isPending ? "Processing..." : "Make Process"}
               </button>
             )}
+            <button
+  type="button"
+  onClick={() => createDashboard}
+  className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
+>
+  Create Dashboard
+</button>
+
+            {/* <button
+              type="button"
+              onClick={createDashboard}
+              className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
+            >
+              Create Dashboard
+            </button> */}
           </div>
         </form>
 
@@ -523,9 +506,7 @@ const Project = () => {
                 <th className="px-3 py-2 border text-center">
                   Contractor Name
                 </th>
-                {/* <th className="px-3 py-2 border text-center">
-                  Supplier Name
-                </th> */}
+
                 <th className="px-3 py-2 border text-center">Dependent</th>
                 <th className="px-3 py-2 border text-center">Sort</th>
                 <th className="px-3 py-2 border text-center">Cost</th>
@@ -544,26 +525,27 @@ const Project = () => {
                       )?.NAME || ""}
                     </td>
 
-                   <td className="px-3 py-2 border text-center">
-  <select
-    value={line.CONTRACTOR_ID || ""}
-    onChange={(e) =>
-      handleLineChange(index, "CONTRACTOR_ID", e.target.value)
-    }
-    className="rounded text-sm px-2 py-1 w-full focus:outline-none"
-  >
-    <option value="">Select Contractor</option>
-    {contractorNames.map((c) => (
-      <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
-        {c.CONTRATOR_NAME}
-      </option>
-    ))}
-  </select>
-</td>
+                    <td className="px-3 py-2 border text-center">
+                      <select
+                        value={line.CONTRACTOR_ID || ""}
+                        onChange={(e) =>
+                          handleLineChange(
+                            index,
+                            "CONTRACTOR_ID",
+                            e.target.value
+                          )
+                        }
+                        className="rounded text-sm px-2 py-1 w-full focus:outline-none"
+                      >
+                        <option value="">Select Contractor</option>
+                        {contractorNames.map((c) => (
+                          <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
+                            {c.CONTRATOR_NAME}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
 
-                    {/* <td className="px-3 py-2 border text-center">
-                      {line.SUPPLIER_NAME || ""}
-                    </td> */}
                     <td className="px-3 py-2 border text-center">
                       <select
                         value={line.DEPENDENT_ID || ""}
@@ -632,6 +614,8 @@ const Project = () => {
       </div>
 
       <ProjectList />
+
+     
     </div>
   );
 };

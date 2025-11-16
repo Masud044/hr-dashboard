@@ -11,47 +11,28 @@ import Timeline, {
 import moment from "moment";
 import axios from "axios";
 import "react-calendar-timeline/style.css";
-import randomColor from "randomcolor";
+
 import { SectionContainer } from "../components/SectionContainer";
 import api from "../api/Api";
 import { Button } from "../components/ui/button";
 import { DialogDemo } from "@/components/ModalTask";
+import { useParams } from "react-router-dom";
 
 const ReactTimelineDemo = () => {
+
+  const { H_ID } = useParams(); 
+  console.log("H_ID",H_ID)
   const [groups, setGroups] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [holidayDates, setHolidayDates] = useState(new Set());
-  const [open, setOpen] = useState(false);
+  // const [open, setOpen] = useState(false);
 
   const colorMap = useRef({});
 
-  // const distinctColors = [
-  //   "#e6194b", // red
-  //   "#3cb44b", // green
-  //   "#ffe119", // yellow
-  //   "#4363d8", // blue
-  //   "#f58231", // orange
-  //   "#911eb4", // purple
-  //   "#46f0f0", // cyan
-  //   "#f032e6", // magenta
-  //   "#bcf60c", // lime
-  //   "#fabebe", // pink
-  //   "#008080", // teal
-  //   "#e6beff", // lavender
-  //   "#9a6324", // brown
-  //   "#fffac8", // cream
-  //   "#800000", // maroon
-  //   "#aaffc3", // mint
-  //   "#808000", // olive
-  //   "#ffd8b1", // peach
-  //   "#000075", // navy
-  //   "#808080", // gray
-  //   "#ffffff", // white (optional)
-  // ];
-
+ 
   const distinctColors = [
     "#001BB7",
     "#4FB7B3",
@@ -76,9 +57,9 @@ const ReactTimelineDemo = () => {
     "#FF0060",
   ];
 
-  const [selectedDate, setSelectedDate] = useState(
-    moment().format("YYYY-MM-DD")
-  );
+  // const [selectedDate, setSelectedDate] = useState(
+  //   moment().format("YYYY-MM-DD")
+  // );
   const [selectedContractor, setSelectedContractor] = useState("all");
 
   const [visibleTimeStart, setVisibleTimeStart] = useState(
@@ -116,8 +97,11 @@ const ReactTimelineDemo = () => {
     };
 
     fetchCalendar();
+
   }, []);
 
+
+  
   // ✅ Fetch contractors
   // useEffect(() => {
   //   const fetchContractors = async () => {
@@ -176,79 +160,124 @@ const ReactTimelineDemo = () => {
     fetchContractors();
   }, []);
 
+  
+
+
   // ✅ Fetch Gantt data
-  const fetchGanttData = async () => {
-    try {
-      const res = await axios.get(
-        "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+  // const fetchGanttData = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+  //     );
+  //     if (res.data.success && Array.isArray(res.data.data)) {
+  //       const formattedItems = res.data.data
+  //         .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+  //         .map((i) => {
+  //           const groupId = Number(i.C_P_ID);
+  //           const contractorColor = colorMap.current[groupId] || "#999"; // fallback
+
+  //           return {
+  //             id: Number(i.L_ID),
+  //             group: groupId,
+  //             start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
+  //             end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
+  //             canMove: true,
+  //             canResize: "both",
+  //             canChangeGroup: true,
+  //             itemProps: {
+  //               style: {
+  //                 background: contractorColor,
+  //                 color: "white",
+  //                 border: "none",
+  //                 borderRadius: "4px",
+  //               },
+  //             },
+  //           };
+  //         });
+
+       
+
+  //       setItems(formattedItems);
+  //       setAllItems(formattedItems);
+  //     }
+  //   } catch (err) {
+  //     console.error("Failed to load gantt data:", err);
+  //     toast.error("Failed to load gantt data");
+  //   }
+  // };
+
+ const fetchGanttData = async () => {
+  try {
+    const res = await axios.get(
+      "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+    );
+
+    if (res.data.success && Array.isArray(res.data.data)) {
+      console.log("RAW GANTT DATA:", res.data.data);
+
+      // 🔥 H_ID অনুযায়ী filter
+      const filtered = res.data.data.filter(
+        (i) => Number(i.H_ID) === Number(H_ID)
       );
-      if (res.data.success && Array.isArray(res.data.data)) {
-        const formattedItems = res.data.data
-          .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-          .map((i) => {
-            const groupId = Number(i.C_P_ID);
-            const contractorColor = colorMap.current[groupId] || "#999"; // fallback
 
-            return {
-              id: Number(i.L_ID),
-              group: groupId,
-              start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
-              end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
-              canMove: true,
-              canResize: "both",
-              canChangeGroup: true,
-              itemProps: {
-                style: {
-                  background: contractorColor,
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                },
+      console.log("FILTERED by H_ID:", filtered);
+
+      // ❗ Ensure group exists (contractor C_P_ID must match groups)
+      const formattedItems = filtered
+        .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+        .map((i) => {
+          const contractorId = Number(i.C_P_ID);
+          const color = colorMap.current[contractorId] || "#999";
+
+          return {
+            id: Number(i.L_ID),
+            group: contractorId, // 👈 MUST MATCH groups.id
+            // title: i.DESCRIPTION || `Task ${i.L_ID}`,
+            start_time: moment(i.SCHEDULE_START_DATE).valueOf(),
+            end_time: moment(i.SCHEDULE_END_DATE).valueOf(),
+            canMove: true,
+            canResize: "both",
+            canChangeGroup: true,
+            itemProps: {
+              style: {
+                background: color,
+                color: "white",
+                borderRadius: "4px",
+                border: "none",
               },
-            };
-          });
+            },
+          };
+        });
 
-        // const formattedItems = res.data.data
-        //   .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-        //   .map((i) => ({
-        //     id: Number(i.L_ID),
-        //     group: Number(i.C_P_ID),
-        //     start_time: moment(i.SCHEDULE_START_DATE).startOf("day"),
-        //     end_time: moment(i.SCHEDULE_END_DATE).endOf("day"),
-        //     canMove: true,
-        //     canResize: "both",
-        //     canChangeGroup: true,
-        //     itemProps: {
-        //       style: {
-        //         background: randomColor({ luminosity: "dark" }),
-        //         color: "white",
-        //         border: "none",
-        //         borderRadius: "4px",
-        //       },
-        //     },
-        //   }));
+      console.log("FINAL ITEMS:", formattedItems);
 
-        setItems(formattedItems);
-        setAllItems(formattedItems);
-      }
-    } catch (err) {
-      console.error("Failed to load gantt data:", err);
-      toast.error("Failed to load gantt data");
+      setAllItems(formattedItems);
+      setItems(formattedItems);
     }
-  };
+  } catch (err) {
+    console.error("GANTT LOAD ERROR", err);
+    toast.error("Failed to load gantt data");
+  }
+};
+
+
+ 
 
   // ✅ Load once at mount
-  useEffect(() => {
+ useEffect(() => {
+  if (H_ID) {
     fetchGanttData();
-  }, []);
+  }
+}, [H_ID]);
+
 
   // ✅ Update visible window when date changes
-  useEffect(() => {
-    const newStart = moment(selectedDate).add(-15, "days").valueOf();
-    const newEnd = moment(selectedDate).add(15, "days").valueOf();
-    setVisibleTimeStart(newStart);
-    setVisibleTimeEnd(newEnd);
-  }, [selectedDate]);
+  // useEffect(() => {
+  //   const newStart = moment(selectedDate).add(-15, "days").valueOf();
+  //   const newEnd = moment(selectedDate).add(15, "days").valueOf();
+  //   setVisibleTimeStart(newStart);
+  //   setVisibleTimeEnd(newEnd);
+  // }, [selectedDate]);
 
   const updateItemOnServer = async (item) => {
     const key = `${item.id}-${item.start_time}-${item.end_time}`;
@@ -499,43 +528,10 @@ const ReactTimelineDemo = () => {
               </h1>
             </div>
              <div className="flex justify-end items-center gap-2">
- <div className="">
-              <Button
-                className="bg-purple-800 px-2 py-2 text-white"
-                onClick={() => setOpen(true)} // ✅ open modal manually
-              >
-                Add Task
-              </Button>
-            </div>
-<DialogDemo
-  open={open}
-  setOpen={setOpen}
-  contractors={allGroups}
-  onSave={async (data) => {
-    try {
-      const res = await axios.post(
-        "http://103.172.44.99:8989/api_bwal/gantt_api.php",
-        data
-      );
+ 
 
-      if (res.data.success) {
-        toast.success("Task added successfully");
-        
-        // ✅ Refetch all data from server (most reliable)
-        await fetchGanttData();
-        
-        setOpen(false);
-      } else {
-        toast.error("Failed to add task");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error adding task");
-    }
-  }}
-/>
 
-             <div className="flex items-center gap-2">
+             {/* <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">Select Date:</label>
               <input
                 type="date"
@@ -543,7 +539,7 @@ const ReactTimelineDemo = () => {
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
               />
-            </div>
+            </div> */}
 
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">Contractor:</label>
