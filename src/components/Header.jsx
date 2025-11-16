@@ -185,7 +185,7 @@ export default function Header() {
               >
                 <ClipboardList className="w-4 h-4  mr-2" /> Schedule Test
               </NavLink>
-                <NavLink
+                {/* <NavLink
                 to="/dashboard/shedule"
                 end
                 onClick={handleLinkClick}
@@ -198,7 +198,7 @@ export default function Header() {
                 }
               >
                 <ClipboardList className="w-4 h-4  mr-2" /> Schedule
-              </NavLink>
+              </NavLink> */}
 
                <NavLink
                 to="/dashboard/shedule-line"
