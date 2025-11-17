@@ -35,6 +35,7 @@ import SheduleLine from "./components/report/sheduleLine/SheduleLine";
 import ReactTimelineDemo from "./pages/test-page";
 // import Schedule from "./components/report/shedule/Shedule";
 import ContractorTimelineDemo from "./pages/test-page-two";
+import SheduleHeader from "./components/report/sheduleHeader/SheduleHeader";
 
 
 
@@ -93,6 +94,8 @@ const App = () => {
             <Route path="shedule/:id" element={<Schedule/>} /> */}
             <Route path="shedule-line" element={<SheduleLine/>} />
             <Route path="shedule-line/:id" element={<SheduleLine/>} />
+             <Route path="shedule-header" element={<SheduleHeader/>} />
+             <Route path="shedule-header/:id" element={<SheduleHeader/>} />
             <Route path="test" element={<ReactTimelineDemo />} />
              <Route path="test/:H_ID" element={<ReactTimelineDemo />} />
             <Route path="test2" element={<ContractorTimelineDemo />} />

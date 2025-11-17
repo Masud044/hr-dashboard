@@ -21,13 +21,14 @@ const Project = () => {
     USER_ID: 105,
     USER_BY: 105,
     UPDATED_BY: 105,
-   
   });
 
   const [message, setMessage] = useState({ type: "", text: "" });
   const [savedProjectId, setSavedProjectId] = useState(null);
   const [editableLines, setEditableLines] = useState([]);
-  
+const [showDashboardModal, setShowDashboardModal] = useState(false);
+const [dashboardDate, setDashboardDate] = useState(""); // YYYY-MM-DD
+const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
 
   // 🔹 Fetch Project Types
   const { data: projectTypes, isLoading: loadingTypes } = useQuery({
@@ -299,54 +300,217 @@ const Project = () => {
   //   }
   // };
 
- const createDashboard = async () => {
-    try {
-      const pid = id || savedProjectId;
+  //  const createDashboard = async () => {
+  //     try {
+  //       const pid = id || savedProjectId;
 
-      if (!pid) {
-        toast.error("Please save the project first!");
-        return;
-      }
+  //       if (!pid) {
+  //         toast.error("Please save the project first!");
+  //         return;
+  //       }
 
-      if (!contractorTypes || contractorTypes.length === 0) {
-        toast.error("Contractor Types not loaded yet!");
-        return;
-      }
+  //       if (!contractorTypes || contractorTypes.length === 0) {
+  //         toast.error("Contractor Types not loaded yet!");
+  //         return;
+  //       }
 
-      // 🔥 Auto create 21 lines
-      const autoLines = contractorTypes.map((c) => ({
-        C_P_ID: c.ID,
-        DESCRIPTION: "",
-        SCHEDULE_START_DATE: "",
-        SCHEDULE_END_DATE: "",
-      }));
+  //      // 🔥 Auto create 21 lines
+  //       const autoLines = contractorTypes.map((c) => ({
+  //         C_P_ID: c.ID,
+  //         DESCRIPTION: "",
+  //         SCHEDULE_START_DATE: "",
+  //         SCHEDULE_END_DATE: "",
+  //       }));
 
-      const payload = {
-        P_ID: Number(pid),
-        CREATION_BY: 105,
-        LINES: autoLines, // 🔥 21 LINES SENT HERE
-      };
+  //       const payload = {
+  //         P_ID: Number(pid),
+  //         CREATION_BY: 105,
+  //          LINES: autoLines, // 🔥 21 LINES SENT HERE
+  //       };
 
-      console.log("Sending payload:", payload);
+  //       console.log("Sending payload:", payload);
 
-      const res = await api.post("/shedule.php", payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+  //       const res = await api.post("/shedule.php", payload, {
+  //         headers: { "Content-Type": "application/json" },
+  //       });
 
-      console.log("Dashboard created:", res.data);
+  //       console.log("Dashboard created:", res.data);
 
-      if (res.data?.success) {
-        toast.success("Dashboard created!");
+  //       if (res.data?.success) {
+  //         toast.success("Dashboard created!");
 
-        window.location.href = `/dashboard/test/${res.data.H_ID}`;
-      } else {
-        toast.error(res.data?.message || "Server error");
-      }
-    } catch (err) {
-      console.log("❌ Dashboard Error:", err.response?.data || err);
-      toast.error("Failed to create dashboard");
+  //         window.location.href = `/dashboard/test/${pid}`;
+  //       } else {
+  //         toast.error(res.data?.message || "Server error");
+  //       }
+  //     } catch (err) {
+  //       console.log("❌ Dashboard Error:", err.response?.data || err);
+  //       toast.error("Failed to create dashboard");
+  //     }
+  //   };
+
+//  const handleCreateDashboard = async () => {
+//   if (!dashboardDate) {
+//     toast.error("Please select a start date!");
+//     return;
+//   }
+
+//   try {
+//     const pid = id || savedProjectId;
+
+//     if (!pid) {
+//       toast.error("Please save the project first!");
+//       return;
+//     }
+
+//     const payload = {
+//       p_pid: Number(pid),
+//       p_s_date: dashboardDate, // pass selected date
+//     };
+
+//     // 🔹 Call API
+//     const res = await api.post("/shedule_api.php", payload, {
+//       headers: { "Content-Type": "application/json" },
+//     });
+
+//     if (res.data?.success) {
+//       // 🔹 Get H_ID from response
+//       const H_ID = res.data?.data?.H_ID;
+//       console.log(H_ID);
+
+//       // if (!H_ID) {
+//       //   toast.error("H_ID not returned from server!");
+//       //   return;
+//     //  }
+
+//       toast.success("Dashboard created successfully!");
+//       setShowDashboardModal(false);
+
+//       // 🔹 Redirect using H_ID
+//       window.location.href = `/dashboard/test/${pid}`;
+//     } else {
+//       toast.error(res.data?.message || "Server error");
+//     }
+//   } catch (err) {
+//     console.error("Dashboard creation error:", err.response?.data || err);
+//     toast.error("Failed to create dashboard");
+//   }
+// };
+
+
+
+
+const handleCreateDashboard = async () => {
+  if (!dashboardDate) {
+    toast.error("Please select a start date!");
+    return;
+  }
+
+  setIsCreatingDashboard(true);
+
+  try {
+    const pid = id || savedProjectId;
+
+    if (!pid) {
+      toast.error("Please save the project first!");
+      setIsCreatingDashboard(false);
+      return;
     }
-  };
+
+    const payload = {
+      p_pid: Number(pid),
+      p_s_date: dashboardDate,
+    };
+
+    console.log("📤 Step 1: Creating dashboard with payload:", payload);
+
+    // Step 1: Create dashboard via shedule_api.php
+    const createRes = await api.post("/shedule_api.php", payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    console.log("📥 Step 1 Response:", createRes.data);
+
+    if (!createRes.data?.success) {
+      toast.error(createRes.data?.message || "Failed to create dashboard");
+      setIsCreatingDashboard(false);
+      return;
+    }
+
+    toast.success("Dashboard created! Fetching H_ID...");
+
+    // Step 2: Wait a bit for database to update
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    console.log("📤 Step 2: Fetching H_ID for P_ID:", pid);
+
+    // Step 3: Fetch all schedules
+    const fetchRes = await api.get("/shedule.php");
+    console.log("📥 Step 2 Full Response:", fetchRes.data);
+
+    // Extract data from response
+    let schedules = [];
+    if (fetchRes.data?.data && Array.isArray(fetchRes.data.data)) {
+      schedules = fetchRes.data.data;
+    } else if (Array.isArray(fetchRes.data)) {
+      schedules = fetchRes.data;
+    }
+
+    console.log("📊 Total schedules found:", schedules.length);
+    console.log("🔍 Looking for P_ID:", pid, "Type:", typeof pid);
+
+    // Filter schedules for this project
+    const projectSchedules = schedules.filter(s => {
+      const schedPid = String(s.P_ID);
+      const targetPid = String(pid);
+      console.log(`Comparing: ${schedPid} === ${targetPid}`, schedPid === targetPid);
+      return schedPid === targetPid;
+    });
+
+    console.log("🎯 Project schedules found:", projectSchedules.length);
+    console.log("📋 Project schedules:", projectSchedules);
+
+    if (projectSchedules.length === 0) {
+      toast.error("No schedule found for this project. Please try again.");
+      setIsCreatingDashboard(false);
+      return;
+    }
+
+    // Get the latest (highest H_ID)
+    const latestSchedule = projectSchedules.sort((a, b) => {
+      return Number(b.H_ID) - Number(a.H_ID);
+    })[0];
+
+    const H_ID = latestSchedule?.H_ID;
+    console.log("✅ Found H_ID:", H_ID);
+
+    if (!H_ID) {
+      toast.error("H_ID not found in response");
+      setIsCreatingDashboard(false);
+      return;
+    }
+
+    // Success!
+    toast.success(`Dashboard ready with H_ID: ${H_ID}`);
+    setShowDashboardModal(false);
+    setDashboardDate("");
+
+    // Redirect
+    setTimeout(() => {
+      console.log("🚀 Redirecting to:", `/dashboard/test/${H_ID}`);
+      window.location.href = `/dashboard/test/${H_ID}`;
+    }, 1000);
+
+  } catch (err) {
+    console.error("❌ Error:", err);
+    console.error("❌ Response data:", err.response?.data);
+    toast.error(
+      err.response?.data?.message || "Failed to create dashboard"
+    );
+    setIsCreatingDashboard(false);
+  }
+};
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -448,7 +612,6 @@ const Project = () => {
             value={formData.STATE}
             onChange={handleChange}
           />
-          
 
           <div className="col-span-3 flex justify-end gap-3 mt-4">
             <button
@@ -478,13 +641,14 @@ const Project = () => {
                 {processMutation.isPending ? "Processing..." : "Make Process"}
               </button>
             )}
-            <button
+          <button
   type="button"
-  onClick={() => createDashboard}
+  onClick={() => setShowDashboardModal(true)}
   className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
 >
   Create Dashboard
 </button>
+
 
             {/* <button
               type="button"
@@ -613,9 +777,39 @@ const Project = () => {
         )}
       </div>
 
-      <ProjectList />
+      {showDashboardModal && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div className="bg-white rounded-lg p-6 w-96">
+      <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
 
-     
+      <input
+        type="date"
+        value={dashboardDate}
+        onChange={(e) => setDashboardDate(e.target.value)}
+        className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+      />
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowDashboardModal(false)}
+          className="px-4 py-2 rounded border border-gray-400"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleCreateDashboard}
+          className="px-4 py-2 rounded bg-blue-600 text-white"
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      <ProjectList />
     </div>
   );
 };
