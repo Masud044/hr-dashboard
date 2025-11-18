@@ -8,6 +8,7 @@ import PointsCards from "../components/PointsCards";
 
 import RewardsBar from "../components/RewardsBar";
 import { Helmet } from "react-helmet";
+import Navbar from "@/components/Navbar";
 
 
 const Dashboard = () => {
@@ -20,6 +21,7 @@ const Dashboard = () => {
         {/* <Sidebar /> */}
         <div className="flex-1 flex flex-col">
           <Header />
+          <Navbar />
           <main className="">
             <Outlet></Outlet>
           </main>
