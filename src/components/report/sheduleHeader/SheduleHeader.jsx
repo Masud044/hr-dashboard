@@ -6,8 +6,9 @@ import api from "../../../api/Api";
 
 import moment from "moment";
 import ScheduleList from "../sheduleLine/SheduleList";
+import SheduleHeaderList from "./SheduleHeaderList";
 
-const SheduleLine = () => {
+const SheduleHeader = () => {
   const { id } = useParams(); // H_ID
   const queryClient = useQueryClient();
   const isEditing = !!id;
@@ -109,57 +110,87 @@ const SheduleLine = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Description"
-            name="DESCRIPTION"
-            value={formData.DESCRIPTION}
-            onChange={handleChange}
-          />
-          <Input
-            label="Project Start Plan "
-            type="date"
-            name="PROJECT_START_PLAN"
-            value={formData.PROJECT_START_PLAN}
-            onChange={handleChange}
-          />
-          <Input
-            label=" Project End Plan "
-            type="date"
-            name="PROJECT_END_PLAN"
-            value={formData.PROJECT_END_PLAN}
-            onChange={handleChange}
-          />
+       <form onSubmit={handleSubmit} className="space-y-4">
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={mutation.isPending}
-              className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
-            >
-              <Save size={16} />
-              {mutation.isPending ? "Saving..." : "Save Header"}
-            </button>
-          </div>
-        </form>
+  {/* DESCRIPTION */}
+  <div className="flex flex-col gap-1">
+    <label className="text-gray-700 text-sm font-medium">Description</label>
+    <input
+      type="text"
+      name="DESCRIPTION"
+      value={formData.DESCRIPTION}
+      onChange={handleChange}
+      className="border border-gray-500 rounded 
+                 px-4 py-3 
+                 text-[15px]
+                 w-full 
+                 focus:outline-none focus:ring-2 focus:ring-green-400"
+      style={{ height: "45px" }}   // 👈 your custom height
+    />
+  </div>
+
+
+  <div className="grid grid-cols-2 gap-4">
+ {/* PROJECT START PLAN */}
+  <div className="flex flex-col gap-1">
+    <label className="text-gray-700 text-sm font-medium">Project Start Plan</label>
+    <input
+      type="date"
+      name="PROJECT_START_PLAN"
+      value={formData.PROJECT_START_PLAN}
+      onChange={handleChange}
+      className="border border-gray-500 rounded 
+                 px-4 py-3 
+                 text-[15px]
+                 w-full
+                 focus:outline-none focus:ring-2 focus:ring-green-400"
+      style={{ height: "45px" }}
+    />
+  </div>
+
+  {/* PROJECT END PLAN */}
+  <div className="flex flex-col gap-1">
+    <label className="text-gray-700 text-sm font-medium">Project End Plan</label>
+    <input
+      type="date"
+      name="PROJECT_END_PLAN"
+      value={formData.PROJECT_END_PLAN}
+      onChange={handleChange}
+      className="border border-gray-500 rounded 
+                 px-4 py-3 
+                 text-[15px]
+                 w-full
+                 focus:outline-none focus:ring-2 focus:ring-green-400"
+      style={{ height: "45px" }}
+    />
+  </div>
+  </div>
+
+ 
+
+  {/* Save Button */}
+  <div className="flex justify-end mt-4">
+    <button
+      type="submit"
+      disabled={mutation.isPending}
+      className="bg-green-600 text-white px-5 py-3 rounded 
+                 flex items-center gap-2 
+                 hover:bg-green-500 text-sm"
+    >
+      <Save size={16} />
+      {mutation.isPending ? "Saving..." : "Save Header"}
+    </button>
+  </div>
+</form>
+
       </div>
 
-      <ScheduleList />
+      {/* <ScheduleList /> */}
+      <SheduleHeaderList></SheduleHeaderList>
     </div>
   );
 };
 
-const Input = ({ label, name, value, onChange, type = "text" }) => (
-  <div className="flex flex-col md:flex-row md:items-center gap-2">
-    <label className="text-gray-700 text-sm font-medium w-28">{label}</label>
-    <input
-      type={type}
-      name={name}
-      value={value || ""}
-      onChange={onChange}
-      className="border border-gray-400 rounded px-3 py-2 flex-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-    />
-  </div>
-);
 
-export default SheduleLine;
+
+export default SheduleHeader;

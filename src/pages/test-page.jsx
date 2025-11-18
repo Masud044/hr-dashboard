@@ -16,12 +16,13 @@ import { SectionContainer } from "../components/SectionContainer";
 import api from "../api/Api";
 import { Button } from "../components/ui/button";
 import { DialogDemo } from "@/components/ModalTask";
-import { useParams } from "react-router-dom";
-
+import { Link, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const ReactTimelineDemo = () => {
+  const navigate = useNavigate();
 
-  const { H_ID } = useParams(); 
-  console.log("H_ID",H_ID)
+  const { H_ID } = useParams();
+  console.log("H_ID", H_ID);
   const [groups, setGroups] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
   const [items, setItems] = useState([]);
@@ -32,7 +33,6 @@ const ReactTimelineDemo = () => {
 
   const colorMap = useRef({});
 
- 
   const distinctColors = [
     "#001BB7",
     "#4FB7B3",
@@ -97,11 +97,8 @@ const ReactTimelineDemo = () => {
     };
 
     fetchCalendar();
-
   }, []);
 
-
-  
   // ✅ Fetch contractors
   // useEffect(() => {
   //   const fetchContractors = async () => {
@@ -160,9 +157,6 @@ const ReactTimelineDemo = () => {
     fetchContractors();
   }, []);
 
-  
-
-
   // ✅ Fetch Gantt data
   // const fetchGanttData = async () => {
   //   try {
@@ -195,8 +189,6 @@ const ReactTimelineDemo = () => {
   //           };
   //         });
 
-       
-
   //       setItems(formattedItems);
   //       setAllItems(formattedItems);
   //     }
@@ -206,70 +198,66 @@ const ReactTimelineDemo = () => {
   //   }
   // };
 
- const fetchGanttData = async () => {
-  try {
-    const res = await axios.get(
-      "http://103.172.44.99:8989/api_bwal/gantt_api.php"
-    );
-
-    if (res.data.success && Array.isArray(res.data.data)) {
-      console.log("RAW GANTT DATA:", res.data.data);
-
-      // 🔥 H_ID অনুযায়ী filter
-      const filtered = res.data.data.filter(
-        (i) => Number(i.H_ID) === Number(H_ID)
+  const fetchGanttData = async () => {
+    try {
+      const res = await axios.get(
+        "http://103.172.44.99:8989/api_bwal/gantt_api.php"
       );
 
-      console.log("FILTERED by H_ID:", filtered);
+      if (res.data.success && Array.isArray(res.data.data)) {
+        console.log("RAW GANTT DATA:", res.data.data);
 
-      // ❗ Ensure group exists (contractor C_P_ID must match groups)
-      const formattedItems = filtered
-        .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
-        .map((i) => {
-          const contractorId = Number(i.C_P_ID);
-          const color = colorMap.current[contractorId] || "#999";
+        // 🔥 H_ID অনুযায়ী filter
+        const filtered = res.data.data.filter(
+          (i) => Number(i.H_ID) === Number(H_ID)
+        );
 
-          return {
-            id: Number(i.L_ID),
-            group: contractorId, // 👈 MUST MATCH groups.id
-            // title: i.DESCRIPTION || `Task ${i.L_ID}`,
-            start_time: moment(i.SCHEDULE_START_DATE).valueOf(),
-            end_time: moment(i.SCHEDULE_END_DATE).valueOf(),
-            canMove: true,
-            canResize: "both",
-            canChangeGroup: true,
-            itemProps: {
-              style: {
-                background: color,
-                color: "white",
-                borderRadius: "4px",
-                border: "none",
+        console.log("FILTERED by H_ID:", filtered);
+
+        // ❗ Ensure group exists (contractor C_P_ID must match groups)
+        const formattedItems = filtered
+          .filter((i) => i.SCHEDULE_START_DATE && i.SCHEDULE_END_DATE)
+          .map((i) => {
+            const contractorId = Number(i.C_P_ID);
+            const color = colorMap.current[contractorId] || "#999";
+
+            return {
+              id: Number(i.L_ID),
+              group: contractorId, // 👈 MUST MATCH groups.id
+              // title: i.DESCRIPTION || `Task ${i.L_ID}`,
+              start_time: moment(i.SCHEDULE_START_DATE).valueOf(),
+              end_time: moment(i.SCHEDULE_END_DATE).endOf("day").valueOf(),
+              canMove: true,
+              canResize: "both",
+              canChangeGroup: true,
+              itemProps: {
+                style: {
+                  background: color,
+                  color: "white",
+                  borderRadius: "4px",
+                  border: "none",
+                },
               },
-            },
-          };
-        });
+            };
+          });
 
-      console.log("FINAL ITEMS:", formattedItems);
+        console.log("FINAL ITEMS:", formattedItems);
 
-      setAllItems(formattedItems);
-      setItems(formattedItems);
+        setAllItems(formattedItems);
+        setItems(formattedItems);
+      }
+    } catch (err) {
+      console.error("GANTT LOAD ERROR", err);
+      toast.error("Failed to load gantt data");
     }
-  } catch (err) {
-    console.error("GANTT LOAD ERROR", err);
-    toast.error("Failed to load gantt data");
-  }
-};
-
-
- 
+  };
 
   // ✅ Load once at mount
- useEffect(() => {
-  if (H_ID) {
-    fetchGanttData();
-  }
-}, [H_ID]);
-
+  useEffect(() => {
+    if (H_ID) {
+      fetchGanttData();
+    }
+  }, [H_ID]);
 
   // ✅ Update visible window when date changes
   // useEffect(() => {
@@ -521,17 +509,13 @@ const ReactTimelineDemo = () => {
         <SectionContainer planningBoard={true}>
           {/* Filter Bar */}
           <div className="bg-white flex items-center justify-between">
-           
             <div className="bg-white p-4">
               <h1 className="text-sm font-bold text-gray-800 mb-2">
                 Dashboard Timeline
               </h1>
             </div>
-             <div className="flex justify-end items-center gap-2">
- 
-
-
-             {/* <div className="flex items-center gap-2">
+            <div className="flex justify-end items-center gap-2">
+              {/* <div className="flex items-center gap-2">
               <label className="text-sm text-gray-600">Select Date:</label>
               <input
                 type="date"
@@ -540,24 +524,34 @@ const ReactTimelineDemo = () => {
                 className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
               />
             </div> */}
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">Contractor:</label>
-              <select
-                value={selectedContractor}
-                onChange={(e) => setSelectedContractor(e.target.value)}
-                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
+              <button
+                className=" border-1 px-1 text-sm rounded-sm bg-purple-600  text-white"
+                onClick={() => navigate("/dashboard/shedule-header")}
               >
-                <option value="all">All Contractors</option>
-                {allGroups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.title}
-                  </option>
-                ))}
-              </select>
+                Back
+              </button>
+              {/* <Link to={"/dashboard/shedule-header"}>
+                          <button className=" border-1 px-1 text-sm rounded-sm bg-purple-600  text-white">
+                           back
+                          </button>
+                        </Link> */}
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">Contractor:</label>
+                <select
+                  value={selectedContractor}
+                  onChange={(e) => setSelectedContractor(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="all">All Contractors</option>
+                  {allGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-             </div>
-           
           </div>
 
           {/* Timeline */}
