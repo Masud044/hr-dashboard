@@ -45,7 +45,9 @@ export default function Header() {
           <button
             onClick={() => toggleMenu("main")}
             className={`px-3 py-2 text-sm font-sans rounded-md ${
-              activeParent === "main" ? "underline decoration-[#e66123] decoration-2 underline-offset-20 ": "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
+              activeParent === "main"
+                ? "underline decoration-[#e66123] decoration-2 underline-offset-20 "
+                : "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
             }`}
           >
             ▸ Main Entry
@@ -66,10 +68,10 @@ export default function Header() {
               >
                 <Home className="w-4  h-4 mr-2" /> Home
               </NavLink>
-               <NavLink
+              <NavLink
                 to="/dashboard/receive-voucher"
-                end 
-                 onClick={handleLinkClick}
+                end
+                onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `flex items-center px-4 text-sm font-sans py-2 rounded-lg cursor-pointer ${
                     isActive
@@ -110,7 +112,7 @@ export default function Header() {
               </NavLink>
               <NavLink
                 to="/dashboard/cash-voucher"
-                end 
+                end
                 onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
@@ -122,7 +124,7 @@ export default function Header() {
               >
                 <Plus className="w-4 h-4 mr-2" /> Cash transfer
               </NavLink>
-              
+
               <NavLink
                 to="/dashboard/account-voucher"
                 end
@@ -135,7 +137,7 @@ export default function Header() {
               >
                 <Wrench className="w-4 h-4  mr-2" /> Chart of Account
               </NavLink>
-               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100 cursor-pointer">
                 <ClipboardList className="w-4 h-4 mr-2" /> All Chart of account
               </div>
             </div>
@@ -147,7 +149,9 @@ export default function Header() {
           <button
             onClick={() => toggleMenu("report")}
             className={`px-3 py-2 text-sm font-sans  rounded-md ${
-              openMenu === "report" ?"underline decoration-[#e66123] decoration-2 underline-offset-20 ": "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
+              openMenu === "report"
+                ? "underline decoration-[#e66123] decoration-2 underline-offset-20 "
+                : "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
             }`}
           >
             ▸ Report
@@ -157,7 +161,7 @@ export default function Header() {
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <ClipboardList className="w-4 h-4 mr-2" /> Daily Expense Report
               </div>
-               <NavLink
+              <NavLink
                 to="/dashboard/contraction-process"
                 end
                 onClick={handleLinkClick}
@@ -171,7 +175,7 @@ export default function Header() {
               >
                 <ClipboardList className="w-4 h-4  mr-2" /> Contraction Process
               </NavLink>
-               <NavLink
+              <NavLink
                 to="/dashboard/test"
                 end
                 onClick={handleLinkClick}
@@ -186,7 +190,7 @@ export default function Header() {
                 <ClipboardList className="w-4 h-4  mr-2" /> Schedule Test
               </NavLink>
 
-               <NavLink
+              <NavLink
                 to="/dashboard/shedule-header"
                 end
                 onClick={handleLinkClick}
@@ -200,7 +204,7 @@ export default function Header() {
               >
                 <ClipboardList className="w-4 h-4  mr-2" /> Schedule Header
               </NavLink>
-                {/* <NavLink
+              {/* <NavLink
                 to="/dashboard/shedule"
                 end
                 onClick={handleLinkClick}
@@ -215,7 +219,7 @@ export default function Header() {
                 <ClipboardList className="w-4 h-4  mr-2" /> Schedule
               </NavLink> */}
 
-               <NavLink
+              <NavLink
                 to="/dashboard/shedule-line"
                 end
                 onClick={handleLinkClick}
@@ -236,7 +240,7 @@ export default function Header() {
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <FileText className="w-4 h-4 mr-2" /> Ledger
               </div>
-               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
+              <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
                 <FileText className="w-4 h-4 mr-2" /> Cash Book
               </div>
               <div className="flex items-center px-4 py-2 text-sm font-sans hover:bg-gray-100">
@@ -251,7 +255,9 @@ export default function Header() {
           <button
             onClick={() => toggleMenu("users")}
             className={`px-3 py-2 text-sm font-sans  rounded-md ${
-              openMenu === "users" ? "underline decoration-[#e66123] decoration-2 underline-offset-20 ": "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
+              openMenu === "users"
+                ? "underline decoration-[#e66123] decoration-2 underline-offset-20 "
+                : "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
             }`}
           >
             ▸ Users
@@ -259,7 +265,7 @@ export default function Header() {
           {openMenu === "users" && (
             <div className="absolute left-0 mt-2 bg-white border shadow-lg rounded-md w-48">
               {/* <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100"> */}
-               <NavLink
+              <NavLink
                 to="/dashboard/user"
                 end
                 onClick={handleLinkClick}
@@ -277,7 +283,7 @@ export default function Header() {
               <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100">
                 <User className="w-4 h-4 mr-2" /> Add User
               </div>
-               <NavLink
+              <NavLink
                 to="/dashboard/admin-user"
                 end
                 onClick={handleLinkClick}
@@ -300,7 +306,9 @@ export default function Header() {
           <button
             onClick={() => toggleMenu("settings")}
             className={`px-3 py-2 text-sm font-sans  rounded-md ${
-              openMenu === "settings" ?"underline decoration-[#e66123] decoration-2 underline-offset-20 ": "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
+              openMenu === "settings"
+                ? "underline decoration-[#e66123] decoration-2 underline-offset-20 "
+                : "hover:underline decoration-[#e66123] decoration-2 underline-offset-20"
             }`}
           >
             ▸ Settings
@@ -313,9 +321,9 @@ export default function Header() {
               <div className="flex items-center text-sm font-sans px-4 py-2 hover:bg-gray-100">
                 <Settings className="w-4 text-sm h-4 mr-2" /> Account Settings
               </div>
-               <NavLink
+              <NavLink
                 to="/dashboard/supplier-setting-voucher"
-                end 
+                end
                 onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
@@ -327,9 +335,9 @@ export default function Header() {
               >
                 <Plus className="w-4 h-4 mr-2" /> Supplier Setting
               </NavLink>
-               <NavLink
+              <NavLink
                 to="/dashboard/customer-setting-voucher"
-                end 
+                end
                 onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
@@ -341,9 +349,9 @@ export default function Header() {
               >
                 <Plus className="w-4 h-4 mr-2" /> Customer Setting
               </NavLink>
-               <NavLink
+              <NavLink
                 to="/dashboard/project-setting"
-                end 
+                end
                 onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
@@ -355,9 +363,9 @@ export default function Header() {
               >
                 <Plus className="w-4 h-4 mr-2" /> Project Setting
               </NavLink>
-               <NavLink
+              <NavLink
                 to="/dashboard/contrator-setting"
-                end 
+                end
                 onClick={handleLinkClick}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 text-sm font-sans rounded-lg cursor-pointer ${
@@ -414,7 +422,7 @@ export default function Header() {
             >
               Home
             </NavLink>
-            
+
             <NavLink
               to="/dashboard/payment-voucher"
               onClick={handleLinkClick}
