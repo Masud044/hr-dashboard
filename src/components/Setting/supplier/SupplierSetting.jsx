@@ -121,7 +121,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("SUPPLIER_NAME")}
-              className="border rounded px-2 py-1 w-[80%]"
+              className="border border-black rounded-lg px-2 py-1 w-[80%]"
             />
             {errors.SUPPLIER_NAME && (
               <span className="col-span-2 text-red-600 text-xs">
@@ -138,7 +138,7 @@ const SupplierPage = () => {
               <input
                 type="password"
                 {...register("PASSWORD")}
-                className="border rounded px-2 py-1 w-[80%]"
+                className="border rounded-lg  border-black px-2 py-1 w-[80%]"
               />
               {errors.PASSWORD && (
                 <span className="col-span-2 text-red-600 text-xs">
@@ -155,7 +155,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("ADDRESS")}
-              className="border rounded px-2 py-1 w-full"
+              className="border border-black rounded-lg px-2 py-1 w-full"
             />
             {errors.ADDRESS && (
               <span className="col-span-2 text-red-600 text-xs">
@@ -171,7 +171,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("CONTACT_PERSON")}
-              className="border rounded px-2 py-1 w-[80%]"
+              className="border rounded-lg border-black px-2 py-1 w-[80%]"
             />
           </div>
 
@@ -182,7 +182,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("PHONE")}
-              className="border rounded px-2 py-1 w-[70%]"
+              className="border border-black rounded-lg px-2 py-1 w-[70%]"
             />
           </div>
 
@@ -193,7 +193,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("MOBILE")}
-              className="border rounded px-2 py-1 w-[70%]"
+              className="border rounded-lg border-black px-2 py-1 w-[70%]"
             />
           </div>
 
@@ -204,7 +204,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("EMAIL")}
-              className="border rounded px-2 py-1 w-[100%]"
+              className="border rounded-lg border-black px-2 py-1 w-[100%]"
             />
           </div>
 
@@ -215,7 +215,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("DUE")}
-              className="border rounded px-2 py-1 w-[60%]"
+              className="border border-black rounded-lg px-2 py-1 w-[60%]"
             />
           </div>
 
@@ -226,7 +226,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("REMARKS")}
-              className="border rounded px-2 py-1 w-[60%]"
+              className="border border-black rounded-lg px-2 py-1 w-[60%]"
             />
           </div>
 
@@ -237,7 +237,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("FAX")}
-              className="border rounded px-2 py-1 w-[60%]"
+              className="border border-black rounded-lg px-2 py-1 w-[60%]"
             />
           </div>
 
@@ -248,7 +248,7 @@ const SupplierPage = () => {
             <input
               type="text"
               {...register("ORG_ID")}
-              className="border rounded px-2 py-1 w-[80%]"
+              className="border border-black rounded-lg px-2 py-1 w-[80%]"
             />
           </div>
 
