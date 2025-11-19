@@ -11,8 +11,11 @@ import {
   X,
 } from "lucide-react";
 
-export const NAV_ITEMS = {
-  mainEntry: {
+
+
+
+export const NAV_ITEMS = [
+  {
     label: "Main Entry",
     links: [
       { to: "/dashboard", label: "Home", Icon: Home },
@@ -25,7 +28,7 @@ export const NAV_ITEMS = {
     ],
   },
 
-  report: {
+  {
     label: "Report",
     links: [
       { to: "/dashboard/daily-expense", label: "Daily Expense Report", Icon: ClipboardList },
@@ -40,7 +43,7 @@ export const NAV_ITEMS = {
     ],
   },
 
-  users: {
+  {
     label: "Users",
     links: [
       { to: "/dashboard/user", label: "User", Icon: User },
@@ -49,7 +52,7 @@ export const NAV_ITEMS = {
     ],
   },
 
-  settings: {
+  {
     label: "Settings",
     links: [
       { to: "/dashboard/general-settings", label: "General Settings", Icon: Settings },
@@ -60,4 +63,4 @@ export const NAV_ITEMS = {
       { to: "/dashboard/contrator-setting", label: "Contractor Setting", Icon: Plus },
     ],
   },
-};
+];
