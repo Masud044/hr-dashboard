@@ -22,7 +22,7 @@ const Login = () => {
   } = useForm({
     defaultValues: {
       email: "admin@hrms.com",
-      password: "123456",
+      password: "123456#erqe*&^%$E",
       rememberMe: false,
     },
   });
