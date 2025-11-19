@@ -5,6 +5,11 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
+  const [formData, setFormData] = useState({
+    email: "admin@hrms.com",
+    password: "123456#erqe*&^%$E",
+    rememberMe: false,
+  });
   const navigate = useNavigate();
   const { login } = useAuth();
 
