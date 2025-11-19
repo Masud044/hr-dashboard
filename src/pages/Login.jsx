@@ -6,7 +6,7 @@ import { useAuth } from "../authentication/AuthProvider";
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "admin@hrms.com",
-    password: "123456",
+    password: "123456#erqe*&^%$E",
     rememberMe: false,
   });
   const navigate = useNavigate();
