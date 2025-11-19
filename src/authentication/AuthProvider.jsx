@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
 
   // login method
   const login = (email, password) => {
-    if (email === "admin@hrms.com" && password === "123456") {
+    if (email === "admin@hrms.com" && password === "123456#erqe*&^%$E") {
       setIsAuthenticated(true);
       return true;
     }
