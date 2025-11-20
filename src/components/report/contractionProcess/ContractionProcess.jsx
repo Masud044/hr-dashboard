@@ -5,6 +5,7 @@ import { Save, Database } from "lucide-react";
 import api from "../../../api/Api";
 import ContractionProcessList from "./ContractionProcessList";
 import { SectionContainer } from "../../SectionContainer";
+import ContractionProcessListTwo from "./ContractionProcessListTwo";
 
 const ContractionProcess = () => {
   const { id } = useParams();
@@ -228,6 +229,7 @@ const ContractionProcess = () => {
       {/* List Section */}
       <div className="mt-10">
         <ContractionProcessList />
+        <ContractionProcessListTwo />
       </div>
     </div>
    </SectionContainer>
