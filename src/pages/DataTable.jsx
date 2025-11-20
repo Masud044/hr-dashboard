@@ -1,245 +1,362 @@
-// "use client"
+"use client"
 
-// import * as React from "react"
-// import { useState } from "react"
-// import { Link } from "react-router-dom"
-// import { useQuery } from "@tanstack/react-query"
-// import { Pencil, Trash2, ArrowUpDown, ChevronDown } from "lucide-react"
+import * as React from "react"
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
 
-// import { Button } from "@/components/ui/button"
-// import { Checkbox } from "@/components/ui/checkbox"
-// import { Input } from "@/components/ui/input"
-// import {
-//   DropdownMenu,
-//   DropdownMenuCheckboxItem,
-//   DropdownMenuContent,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu"
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table"
-// import { Pagination } from "@/components/ui/pagination"
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQuery } from "@tanstack/react-query"
+import api from "@/api/Api"
 
-// import {
-//   flexRender,
-//   getCoreRowModel,
-//   getSortedRowModel,
-//   getPaginationRowModel,
-//   useReactTable,
-// } from "@tanstack/react-table"
-// import api from "@/api/Api"
-// import PageTitle from "@/components/RouteTitle"
+import { Link } from "react-router-dom"
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 
-// export default function DataTable({ showTitle = true }) {
-//   const [sorting, setSorting] = useState([])
-//   const [columnVisibility, setColumnVisibility] = useState({})
-//   const [rowSelection, setRowSelection] = useState({})
-//   const [filterValue, setFilterValue] = useState("")
-//   const [pageSize, setPageSize] = useState(10) // Show 10 rows initially
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
-//   // Fetch schedules
-//   const { data: schedules = [], isLoading, error } = useQuery({
-//     queryKey: ["schedules"],
-//     queryFn: async () => {
-//       const res = await api.get("/shedule.php")
-//       const response = res.data
-//       if (Array.isArray(response)) return response
-//       if (Array.isArray(response.data)) return response.data
-//       if (Array.isArray(response.data?.records)) return response.data.records
-//       return []
-//     },
-//   })
+// ⭐ All Table Columns with Enhanced Features
+const columns = [
+  // ✅ SELECT COLUMN (NEW)
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  
+  // ✅ SORTABLE COLUMNS
+  {
+    accessorKey: "P_ID",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Project ID
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "DESCRIPTION",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Description
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "CREATED_BY",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Created By
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "UPDATED_BY",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Updated By
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "CREATION_DATE",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Created Date
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "UPDATED_DATE",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Updated Date
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
 
-//   const columns = React.useMemo(
-//     () => [
-//       {
-//         id: "select",
-//         header: ({ table }) => (
-//           <Checkbox
-//             checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-//             onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-//           />
-//         ),
-//         cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(val) => row.toggleSelected(!!val)} />,
-//         enableSorting: false,
-//       },
-//       {
-//         accessorKey: "H_ID",
-//         header: ({ column }) => (
-//           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//             #
-//             <ArrowUpDown className="ml-1" size={16} />
-//           </Button>
-//         ),
-//         cell: ({ row }) => row.original.H_ID,
-//       },
-//       { accessorKey: "P_ID", header: "Project ID" },
-//       { accessorKey: "DESCRIPTION", header: "Description" },
-//       { accessorKey: "CREATION_BY", header: "Created By" },
-//       { accessorKey: "UPDATED_BY", header: "Updated By" },
-//       { accessorKey: "CREATION_DATE", header: "Created Date" },
-//       { accessorKey: "UPDATED_DATE", header: "Updated Date" },
-//       {
-//         id: "actions",
-//         cell: ({ row }) => (
-//           <div className="flex gap-2 justify-center">
-//             <Link to={`/dashboard/shedule-line/${row.original.H_ID}`}>
-//               <Button variant="ghost" size="icon">
-//                 <Pencil size={16} />
-//               </Button>
-//             </Link>
-//             <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-800">
-//               <Trash2 size={16} />
-//             </Button>
-//           </div>
-//         ),
-//       },
-//     ],
-//     []
-//   )
+  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
+  {
+    id: "actions",
+    enableHiding: false,
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }) => {
+      const item = row.original;
 
-//   const table = useReactTable({
-//     data: schedules.filter((item) =>
-//       Object.values(item).some((v) => String(v).toLowerCase().includes(filterValue.toLowerCase()))
-//     ),
-//     columns,
-//     state: {
-//       sorting,
-//       columnVisibility,
-//       rowSelection,
-//       pagination: { pageIndex: 0, pageSize },
-//     },
-//     onSortingChange: setSorting,
-//     onColumnVisibilityChange: setColumnVisibility,
-//     onRowSelectionChange: setRowSelection,
-//     getCoreRowModel: getCoreRowModel(),
-//     getSortedRowModel: getSortedRowModel(),
-//     getPaginationRowModel: getPaginationRowModel(),
-//   })
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(item.H_ID)}
+            >
+              Copy ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Link to={`/dashboard/shedule-line/${item.H_ID}`}>
+                <div className="flex items-center gap-2">
+                  <Pencil size={16} />
+                  Edit
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => console.log("Delete ID:", item.H_ID)}
+              className="text-red-600"
+            >
+              <Trash2 size={16} className="mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
 
-//   if (isLoading) return <p className="text-center mt-6 text-gray-500">Loading schedules...</p>
-//   if (error) return <p className="text-center mt-6 text-red-600">Failed to load schedules.</p>
+export function DataTableDemo() {
+  // ⭐ Fetch API Using React Query
+  const { data, isLoading } = useQuery({
+    queryKey: ["schedules"],
+    queryFn: async () => {
+      const res = await api.get("/shedule.php");
+      return res.data?.data || [];
+    }
+  });
 
-//   return (
-//     <div className="w-full mx-auto max-w-4xl">
-//       {showTitle && <PageTitle />}
+  const apiData = data || [];
 
-//       {/* Filter & Columns */}
-//       <div className="flex items-center py-4 gap-2">
-//         <Input
-//           placeholder="Search schedules..."
-//           value={filterValue}
-//           onChange={(e) => setFilterValue(e.target.value)}
-//           className="max-w-sm"
-//         />
+  // ✅ NEW STATE VARIABLES
+  const [sorting, setSorting] = React.useState([]);
+  const [columnFilters, setColumnFilters] = React.useState([]);
+  const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
-//         <DropdownMenu>
-//           <DropdownMenuTrigger asChild>
-//             <Button variant="outline" className="ml-auto">
-//               Columns <ChevronDown className="ml-1" />
-//             </Button>
-//           </DropdownMenuTrigger>
-//           <DropdownMenuContent align="end">
-//             {table.getAllColumns()
-//               .filter((col) => col.getCanHide())
-//               .map((column) => (
-//                 <DropdownMenuCheckboxItem
-//                   key={column.id}
-//                   checked={column.getIsVisible()}
-//                   onCheckedChange={(val) => column.toggleVisibility(!!val)}
-//                 >
-//                   {column.id}
-//                 </DropdownMenuCheckboxItem>
-//               ))}
-//           </DropdownMenuContent>
-//         </DropdownMenu>
+  // ⭐ Setup TanStack Table with Enhanced Features
+  const table = useReactTable({
+    data: apiData,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  });
 
-//         {/* Page size selector */}
-//         <Select
-//           value={pageSize.toString()}
-//           onValueChange={(val) => setPageSize(Number(val))}
-//           className="w-24 ml-2"
-//         >
-//           <SelectTrigger>
-//             <SelectValue placeholder="Rows" />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {[5, 10, 20, 50].map((size) => (
-//               <SelectItem key={size} value={size.toString()}>
-//                 {size} / page
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//       </div>
+  return (
+    <div className="w-full mx-auto px-4 bg-white max-w-7xl">
+      
+      {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter descriptions..."
+          value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+          onChange={(e) =>
+            table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+          }
+          className="max-w-sm"
+        />
+        
+        {/* ✅ COLUMN VISIBILITY DROPDOWN (NEW) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-auto">
+              Columns <ChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                )
+              })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-//       {/* Table */}
-//       <div className="overflow-x-auto border rounded-md">
-//         <Table>
-//           <TableHeader>
-//             {table.getHeaderGroups().map((hg) => (
-//               <TableRow key={hg.id}>
-//                 {hg.headers.map((header) => (
-//                   <TableHead key={header.id}>
-//                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-//                   </TableHead>
-//                 ))}
-//               </TableRow>
-//             ))}
-//           </TableHeader>
+      {/* Table Container */}
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map(group => (
+              <TableRow key={group.id}>
+                {group.headers.map(header => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
 
-//           <TableBody>
-//             {table.getRowModel().rows.length > 0 ? (
-//               table.getRowModel().rows.map((row) => (
-//                 <TableRow key={row.id}>
-//                   {row.getVisibleCells().map((cell) => (
-//                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-//                   ))}
-//                 </TableRow>
-//               ))
-//             ) : (
-//               <TableRow>
-//                 <TableCell colSpan={columns.length} className="text-center py-4">
-//                   No schedules found
-//                 </TableCell>
-//               </TableRow>
-//             )}
-//           </TableBody>
-//         </Table>
-//       </div>
+          <TableBody>
+            {/* Loading */}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center h-24">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : null}
 
-//       {/* Previous / Next Pagination */}
-//       <div className="flex justify-between items-center mt-4">
-//         <div className="text-sm text-gray-500">
-//           {table.getState().pagination.pageIndex * pageSize + 1} -{" "}
-//           {Math.min((table.getState().pagination.pageIndex + 1) * pageSize, table.getFilteredRowModel().rows.length)} of{" "}
-//           {table.getFilteredRowModel().rows.length} rows
-//         </div>
-//         <div className="space-x-2">
-//           <Button
-//             variant="outline"
-//             size="sm"
-//             onClick={() => table.previousPage()}
-//             disabled={!table.getCanPreviousPage()}
-//           >
-//             Previous
-//           </Button>
-//           <Button
-//             variant="outline"
-//             size="sm"
-//             onClick={() => table.nextPage()}
-//             disabled={!table.getCanNextPage()}
-//           >
-//             Next
-//           </Button>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
+            {/* Data Rows */}
+            {!isLoading && table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map(row => (
+                <TableRow 
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : null}
+
+            {/* No Data */}
+            {!isLoading && table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center h-24">
+                  No results.
+                </TableCell>
+              </TableRow>
+            ) : null}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* ✅ ENHANCED PAGINATION WITH ROW SELECTION COUNT */}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="text-muted-foreground flex-1 text-sm">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+
+    </div>
+  );
+}
