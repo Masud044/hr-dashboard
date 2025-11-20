@@ -8,7 +8,7 @@ const Home = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
            
-           <img src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png" alt="" srcset="" width={170} height={170} />
+           <img src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png" alt="img"  width={170} height={170} />
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login">

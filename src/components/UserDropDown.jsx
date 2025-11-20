@@ -21,9 +21,9 @@ import {
 import { Button } from "@/components/ui/button";
 
 const user = {
-  name: "ASM Saki",
-  email: "asmsaki@font.com",
-  avatar: "https://avatars.githubusercontent.com/u/121676920?v=4",
+  name: "Masud Mia",
+  email: "masud@font.com",
+  avatar: "https://avatars.githubusercontent.com/u/100532083?v=4",
 };
 
 export default function UserDropDown() {
@@ -38,7 +38,7 @@ export default function UserDropDown() {
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg z-[101]"
         sideOffset={4}
     
         align="end"
