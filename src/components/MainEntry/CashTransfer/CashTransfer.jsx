@@ -11,6 +11,7 @@ import CashTransferList from "./CashTransferList";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { SectionContainer } from "../../SectionContainer";
+import CashTransferListTwo from "./CashTransferListTwo";
 
 const CashTransfer = () => {
   const queryClient = useQueryClient();
@@ -430,7 +431,8 @@ const CashTransfer = () => {
           </button>
         </div>
       </div>
-      <CashTransferList></CashTransferList>
+      {/* <CashTransferList></CashTransferList> */}
+      <CashTransferListTwo />
 
       {/* Modal */}
       {showModal && (

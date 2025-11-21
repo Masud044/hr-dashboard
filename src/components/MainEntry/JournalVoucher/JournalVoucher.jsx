@@ -12,6 +12,7 @@ import JournalVoucherList from "./JournalVoucherList";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { SectionContainer } from "../../SectionContainer";
+import JournalVoucherListTwo from "./JournalVoucherListTwo";
 
 const JournalVoucher = () => {
   const { voucherId } = useParams();
@@ -613,7 +614,8 @@ const handlePrint = async () => {
           </button>
         </div>
       </div>
-      <JournalVoucherList></JournalVoucherList>
+      {/* <JournalVoucherList></JournalVoucherList> */}
+      <JournalVoucherListTwo />
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0  bg-black flex justify-center items-center z-50">

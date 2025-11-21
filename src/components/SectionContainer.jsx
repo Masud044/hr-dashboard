@@ -7,7 +7,7 @@ export const SectionContainer = ({
   return (
     <div
       className={cn(
-      " w-full"
+      " w-full px-2"
       )}
     >
       {children}

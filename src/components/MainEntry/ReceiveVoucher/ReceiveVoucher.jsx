@@ -12,6 +12,7 @@ import ReceiveList from "./ReceiveList";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { SectionContainer } from "../../SectionContainer";
+import ReceiveListTwo from "./ReceiveListTwo";
 
 
 
@@ -206,7 +207,7 @@ useEffect(() => {
 
   setForm({
     ...form,
-    accountId: "", // ✅ clear after adding
+    accountId: "", 
     particular: "",
     amount: "",
     totalAmount: total,
@@ -680,7 +681,8 @@ const handlePrint = async () => {
           </button>
         </div>
       </div>
-    <ReceiveList></ReceiveList>
+    {/* <ReceiveList></ReceiveList> */}
+    <ReceiveListTwo />
 
 
       {/* Modal */}
