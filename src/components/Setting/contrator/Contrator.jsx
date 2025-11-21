@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
 import api from "../../../api/Api";
 import ContratorList from "./ContratorList";
+import { ContratorListTwo } from "./ContratorListTwo";
 
 const Contrator = () => {
   const { id } = useParams();
@@ -239,7 +240,8 @@ const { data } = useQuery({
           </div>
         </form>
       </div>
-      <ContratorList></ContratorList>
+      {/* <ContratorList></ContratorList> */}
+      <ContratorListTwo></ContratorListTwo>
     </div>
   );
 };

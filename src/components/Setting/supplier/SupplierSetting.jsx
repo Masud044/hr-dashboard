@@ -8,6 +8,8 @@ import { z } from "zod";
 import api from "../../../api/Api";
 import SupplierList from "./supplierlist";
 import { SectionContainer } from "../../SectionContainer";
+import { SupplierListTwo } from "./SupplierListTwo";
+import { toast } from "react-toastify";
 
 // 🔹 Zod validation schema
 const supplierSchema = z.object({
@@ -93,7 +95,7 @@ const SupplierPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(["supplier", id]);
       reset();
-      alert(isEditing ? "Supplier updated!" : "Supplier added!");
+      toast.success(isEditing ? "Supplier updated!" : "Supplier added!");
     },
     onError: (err) => {
       alert(err.message || "Failed to save supplier data.");
@@ -269,7 +271,8 @@ const SupplierPage = () => {
           </div>
         </form>
       </div>
-      <SupplierList />
+      {/* <SupplierList /> */}
+      <SupplierListTwo></SupplierListTwo>
     </SectionContainer>
    
   );

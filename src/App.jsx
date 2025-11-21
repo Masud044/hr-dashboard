@@ -36,7 +36,7 @@ import ReactTimelineDemo from "./pages/test-page";
 // import Schedule from "./components/report/shedule/Shedule";
 // import ContractorTimelineDemo from "./pages/test-page-two";
 import SheduleHeader from "./components/report/sheduleHeader/SheduleHeader";
-import { DataTableDemo } from "./pages/DataTable";
+
  
 
 
@@ -103,7 +103,7 @@ const App = () => {
             <Route path="test" element={<ReactTimelineDemo />} />
              <Route path="test/:H_ID" element={<ReactTimelineDemo />} />
              {/* <Route path="test2" element={<ContractorTimelineDemo />} /> */}
-             <Route path="table" element={<DataTableDemo/>} /> 
+             {/* <Route path="table" element={<DataTableDemo/>} />  */}
           
 
           </Route>

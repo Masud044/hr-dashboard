@@ -5,6 +5,7 @@ import { Save, Cog, Upload } from "lucide-react";
 import api from "../../../api/Api";
 import ProjectList from "./ProjectList";
 import { toast } from "react-toastify";
+import { ProjectListTwo } from "./ProjectTwo";
 
 const Project = () => {
   const { id } = useParams();
@@ -809,7 +810,8 @@ const handleCreateDashboard = async () => {
 )}
 
 
-      <ProjectList />
+      {/* <ProjectList /> */}
+      <ProjectListTwo></ProjectListTwo>
     </div>
   );
 };

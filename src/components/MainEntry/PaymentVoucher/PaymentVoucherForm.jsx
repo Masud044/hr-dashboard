@@ -17,6 +17,13 @@ import { SectionContainer } from "../../SectionContainer";
 
 const PaymentVoucherForm = () => {
   const { voucherId } = useParams();
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [voucherId]);
+
   const queryClient = useQueryClient();
 
   console.log(voucherId);

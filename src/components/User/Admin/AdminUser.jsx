@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
 import api from "../../../api/Api";
 import AdminUserList from "./AdminUserList";
+import { AdminUserListTwo } from "./AdminUserListTwo";
 
 const AdminUserPage = () => {
   const { id } = useParams();
@@ -237,7 +238,8 @@ const AdminUserPage = () => {
         </form>
       </div>
 
-      <AdminUserList />
+      {/* <AdminUserList /> */}
+      <AdminUserListTwo></AdminUserListTwo>
     </div>
   );
 };
