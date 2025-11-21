@@ -13,6 +13,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { SectionContainer } from "../../SectionContainer";
 import PaymentVoucherListTwo from "./PaymentVoucherListTwo";
+import { toast } from "react-toastify";
 
 
 
@@ -157,7 +158,7 @@ const PaymentVoucherForm = () => {
     },
     onSuccess: (data, variables) => {
       if (data.status === "success") {
-        setMessage(
+        toast.success(
           variables.isNew
             ? "Voucher created successfully!"
             : "Voucher updated successfully!"
@@ -179,11 +180,11 @@ const PaymentVoucherForm = () => {
         setRows([]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
-        setMessage(data.message || "Error processing voucher.");
+        toast.error("Error processing voucher.");
       }
     },
     onError: () => {
-      setMessage("Error submitting voucher. Please try again.");
+      toast.error("Error submitting voucher. Please try again.");
     },
     onSettled: () => {
       setShowModal(false);
@@ -246,7 +247,7 @@ const PaymentVoucherForm = () => {
         !form.supplier ||
         rows.length === 0)
     ) {
-      setMessage("Please fill all required fields and add at least one row.");
+      toast.error("Please fill all required fields and add at least one row.");
       return;
     }
     const invalidRow = rows.some(
@@ -255,7 +256,7 @@ const PaymentVoucherForm = () => {
   );
 
   if (invalidRow) {
-    setMessage("Each row must have Account Code, Particular filled.");
+    toast.error("Each row must have Account Code, Particular filled.");
     return;
   }
 
@@ -322,7 +323,7 @@ const handlePrint = async () => {
   const printArea = document.getElementById("print-area");
 
   if (!printArea) {
-    setMessage("Print area not found!");
+    toast.error("Print area not found!");
     return;
   }
 

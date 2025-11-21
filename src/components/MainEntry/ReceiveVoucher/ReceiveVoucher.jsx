@@ -13,11 +13,20 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { SectionContainer } from "../../SectionContainer";
 import ReceiveListTwo from "./ReceiveListTwo";
+import { toast } from "react-toastify";
 
 
 
 const ReceiveVoucher= () => {
   const { voucherId } = useParams();
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [voucherId]);
+
   const queryClient = useQueryClient();
 
   console.log(voucherId);
@@ -145,12 +154,19 @@ useEffect(() => {
       return res.data;
     },
     onSuccess: (data, variables) => {
-      if (data.status === "success") {
-        setMessage(
-          variables.isNew
+      if(data.status === "success"){
+      toast.success(
+         variables.isNew
             ? "Voucher created successfully!"
             : "Voucher updated successfully!"
-        );
+      )
+    
+      // if (data.status === "success") {
+      //   setMessage(
+      //     variables.isNew
+      //       ? "Voucher created successfully!"
+      //       : "Voucher updated successfully!"
+      //   );
 
         setForm({
           entryDate: today,
@@ -168,11 +184,13 @@ useEffect(() => {
         setRows([]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
-        setMessage(data.message || "Error processing voucher.");
+        toast.error("Error processing voucher")
+        
       }
     },
     onError: () => {
-      setMessage("Error submitting voucher. Please try again.");
+        toast.error("Error submitting voucher. Please try again.")
+      
     },
     onSettled: () => {
       setShowModal(false);
@@ -239,7 +257,8 @@ useEffect(() => {
       !form.customer ||
       rows.length === 0)
   ) {
-    setMessage("Please fill all required fields and add at least one row.");
+    toast.error("Please fill all required fields and add at least one row.")
+    
     return;
   }
   const invalidRow = rows.some(
@@ -248,7 +267,8 @@ useEffect(() => {
   );
 
   if (invalidRow) {
-    setMessage("Each row must have Account Code, Particular filled.");
+     toast.error("Each row must have Account Code, Particular filled.")
+    
     return;
   }
 
@@ -295,7 +315,7 @@ const handlePrint = async () => {
   const printArea = document.getElementById("print-area");
 
   if (!printArea) {
-    setMessage("Print area not found!");
+    toast.error("Print area not found!");
     return;
   }
 

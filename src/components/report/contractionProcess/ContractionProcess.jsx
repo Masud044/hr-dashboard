@@ -6,9 +6,17 @@ import api from "../../../api/Api";
 import ContractionProcessList from "./ContractionProcessList";
 import { SectionContainer } from "../../SectionContainer";
 import ContractionProcessListTwo from "./ContractionProcessListTwo";
+import { toast } from "react-toastify";
 
 const ContractionProcess = () => {
   const { id } = useParams();
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -83,28 +91,23 @@ const ContractionProcess = () => {
           return [newRecord, ...filtered];
         });
 
-        setMessage({
-          text: isEditing
-            ? "Process updated successfully!"
+        toast.success(
+          isEditing
+           ? "Process updated successfully!"
             : "Process added successfully!",
-          type: "success",
-        });
+        )
+        
 
         if (!isEditing) resetForm();
       } else {
-        setMessage({
-          text: res.data?.message || "Something went wrong. Please try again.",
-          type: "error",
-        });
+        toast.error("Something went wrong. Please try again")
+       
       }
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      
     },
     onError: () => {
-      setMessage({
-        text: "Failed to save data. Please try again.",
-        type: "error",
-      });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      toast.error("Failed to save data. Please try again")
+      
     },
   });
 
@@ -135,8 +138,8 @@ const ContractionProcess = () => {
       (f) => !formData[f] || formData[f].toString().trim() === ""
     );
     if (empty) {
-      setMessage({ text: "Please fill all required fields.", type: "error" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      toast.error("Please fill all required fields")
+      
       return;
     }
     mutation.mutate(formData);
@@ -155,7 +158,7 @@ const ContractionProcess = () => {
 
   return (
    <SectionContainer>
-     <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+     <div className=" mt-10">
       <div className="bg-white shadow rounded-2xl p-6 md:p-8 transition-all">
         <h2 className="font-semibold mb-6 text-lg text-gray-800 border-b pb-3">
           {isEditing ? "Edit Construction Process" : "Add New Construction Process"}
@@ -228,7 +231,7 @@ const ContractionProcess = () => {
 
       {/* List Section */}
       <div className="mt-10">
-        <ContractionProcessList />
+        {/* <ContractionProcessList /> */}
         <ContractionProcessListTwo />
       </div>
     </div>

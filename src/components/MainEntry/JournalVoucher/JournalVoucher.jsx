@@ -13,9 +13,18 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { SectionContainer } from "../../SectionContainer";
 import JournalVoucherListTwo from "./JournalVoucherListTwo";
+import { toast } from "react-toastify";
 
 const JournalVoucher = () => {
   const { voucherId } = useParams();
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [voucherId]);
+
   const queryClient = useQueryClient();
 
   console.log(voucherId);
@@ -122,7 +131,7 @@ const JournalVoucher = () => {
     },
     onSuccess: (data, variables) => {
       if (data.status === "success") {
-        setMessage(
+        toast.success(
           variables.isNew
             ? "Journal-Voucher created successfully!"
             : "Journal-Voucher updated successfully!"
@@ -144,12 +153,12 @@ const JournalVoucher = () => {
     ]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
-        setMessage(data.message || "Error processing voucher.");
+        toast.error("Error processing voucher.");
       }
       setShowModal(false);
     },
     onError: () => {
-      setMessage("Error submitting voucher. Please try again.");
+      toast.error("Error submitting voucher. Please try again.");
       setShowModal(false);
     },
   });
@@ -214,7 +223,7 @@ const JournalVoucher = () => {
   const isNew = !voucherId;
 
   if (!form.entryDate || !form.glDate || !form.description || rows.length === 0) {
-    setMessage("Please fill all required fields and add at least one row.");
+    toast.error("Please fill all required fields and add at least one row.");
     return;
   }
   const invalidRow = rows.some(
@@ -223,13 +232,13 @@ const JournalVoucher = () => {
   );
 
   if (invalidRow) {
-    setMessage("Each row must have Account Code, Particular filled.");
+    toast.error("Each row must have Account Code, Particular filled.");
     return;
   }
 
 
   if (debitTotal !== creditTotal) {
-    setMessage("Debit and Credit totals must be equal before submission.");
+    toast.error("Debit and Credit totals must be equal before submission.");
     return;
   }
 
@@ -270,7 +279,7 @@ const handlePrint = async () => {
   const printArea = document.getElementById("print-area");
 
   if (!printArea) {
-    setMessage("Print area not found!");
+    toast.error("Print area not found!");
     return;
   }
 

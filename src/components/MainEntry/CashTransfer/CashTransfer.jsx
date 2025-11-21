@@ -12,6 +12,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { SectionContainer } from "../../SectionContainer";
 import CashTransferListTwo from "./CashTransferListTwo";
+import { toast } from "react-toastify";
 
 const CashTransfer = () => {
   const queryClient = useQueryClient();
@@ -56,7 +57,7 @@ const CashTransfer = () => {
     },
     onSuccess: (data) => {
       if (data.status === "success") {
-        setMessage("cash-transfer successfully!");
+        toast.success("cash-transfer successfully!");
         setForm({
           entryDate: new Date().toISOString().split("T")[0],
           description: "",
@@ -69,12 +70,12 @@ const CashTransfer = () => {
 
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
-        setMessage(data.message || "Error processing voucher.");
+        toast.error("Error processing voucher.");
       }
       setShowModal(false);
     },
     onError: () => {
-      setMessage("Error submitting voucher. Please try again.");
+      toast.error("Error submitting voucher. Please try again.");
       setShowModal(false);
     },
   });
@@ -91,7 +92,7 @@ const CashTransfer = () => {
       !form.glDate ||
       !form.description
     ) {
-      setMessage("Please fill all required fields.");
+      toast.error("Please fill all required fields.");
       return;
     }
 
@@ -114,7 +115,7 @@ const CashTransfer = () => {
     const printArea = document.getElementById("print-area");
 
     if (!printArea) {
-      setMessage("Print area not found!");
+      toast.error("Print area not found!");
       return;
     }
 

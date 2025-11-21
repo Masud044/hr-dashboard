@@ -4,12 +4,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Plus, Trash2 } from "lucide-react";
 import api from "../../../api/Api";
 import { SheduleListTwo } from "./SheduleListTwo";
+import { SectionContainer } from "@/components/SectionContainer";
 
 
 // import GanttChart from "./GanttChart";
 
 const SheduleLine = () => {
   const { id } = useParams(); // id = H_ID
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -228,7 +237,9 @@ const SheduleLine = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+
+    <SectionContainer>
+      <div className="">
       <div className="p-6 bg-white shadow rounded-lg mt-8">
         <h2 className="font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
           {isEditing ? "Edit Schedule" : "Add New Schedule"}
@@ -363,6 +374,7 @@ const SheduleLine = () => {
       {/* <SheduleList /> */}
      <SheduleListTwo></SheduleListTwo>
     </div>
+    </SectionContainer>
   );
 };
 

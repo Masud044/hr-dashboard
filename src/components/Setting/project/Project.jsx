@@ -6,9 +6,16 @@ import api from "../../../api/Api";
 import ProjectList from "./ProjectList";
 import { toast } from "react-toastify";
 import { ProjectListTwo } from "./ProjectTwo";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const Project = () => {
   const { id } = useParams();
+   useEffect(() => {
+    window.scrollTo({
+      top: 80,
+      behavior: "smooth",
+    });
+  }, [id]);
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -540,7 +547,8 @@ const handleCreateDashboard = async () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <SectionContainer>
+ <div className="">
       <div className="p-6 bg-white shadow rounded-lg mt-8">
         <h2 className="font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
           {isEditing ? "Edit Project" : "Add New Project"}
@@ -813,6 +821,8 @@ const handleCreateDashboard = async () => {
       {/* <ProjectList /> */}
       <ProjectListTwo></ProjectListTwo>
     </div>
+    </SectionContainer>
+   
   );
 };
 

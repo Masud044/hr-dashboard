@@ -30,6 +30,14 @@ const supplierSchema = z.object({
 
 const SupplierPage = () => {
   const { id } = useParams();
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -97,8 +105,9 @@ const SupplierPage = () => {
       reset();
       toast.success(isEditing ? "Supplier updated!" : "Supplier added!");
     },
-    onError: (err) => {
-      alert(err.message || "Failed to save supplier data.");
+    onError: () => {
+      
+      toast.error("Failed to save supplier data.")
     },
   });
 

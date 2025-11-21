@@ -6,10 +6,19 @@ import { Save, RefreshCw } from "lucide-react";
 import CustomerList from "./CustomerList";
 import api from "../../../api/Api";
 import { CustomerListTwo } from "./CustomerListTwo";
+import { SectionContainer } from "@/components/SectionContainer";
+import { toast } from "react-toastify";
 
 
 const CustomerPage = () => {
   const { id } = useParams();
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -71,22 +80,19 @@ const CustomerPage = () => {
   onSuccess: () => {
     queryClient.invalidateQueries(["customers"]);
     queryClient.invalidateQueries(["customer", id]);
-    setMessage({
-      type: "success",
-      text: isEditing
-        ? "✅ Customer updated successfully!"
-        : "✅ Customer added successfully!",
-    });
+   toast.success(
+           isEditing
+             ? "Customer updated successfully!"
+             : "Customer added successfully!"
+         );
     if (!isEditing) resetForm();
-    setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    
+   
   },
-  onError: (err) => {
-    console.error(err);
-    setMessage({
-      type: "error",
-      text: "❌ Failed to save customer data. Please try again.",
-    });
-    setTimeout(() => setMessage({ type: "", text: "" }), 4000);
+  onError: () => {
+    toast.error("Failed to save customer data. Please try again")
+    
+   
   },
 });
 
@@ -149,7 +155,8 @@ const CustomerPage = () => {
   //   );
 
   return (
-     <div className="max-w-5xl mx-auto">
+    <SectionContainer>
+       <div className="">
     <div className=" p-6 bg-white shadow rounded-lg mt-8">
       <h2 className=" font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
         {isEditing ? "Edit Customer" : "Add New Customer"}
@@ -270,6 +277,8 @@ const CustomerPage = () => {
     {/* <CustomerList></CustomerList> */}
     <CustomerListTwo></CustomerListTwo>
     </div>
+    </SectionContainer>
+    
   );
 };
 

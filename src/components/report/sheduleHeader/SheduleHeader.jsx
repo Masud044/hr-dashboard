@@ -6,11 +6,21 @@ import api from "../../../api/Api";
 
 import moment from "moment";
 import { ScheduleHeaderListTwo } from "./SheduleHeaderListTwo";
+import { toast } from "react-toastify";
+import { SectionContainer } from "@/components/SectionContainer";
 // import ScheduleList from "../sheduleLine/SheduleList";
 // import SheduleHeaderList from "./SheduleHeaderList";
 
 const SheduleHeader = () => {
   const { id } = useParams(); // H_ID
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -72,14 +82,14 @@ const SheduleHeader = () => {
       throw new Error(res.data?.message || "Update failed");
     },
     onSuccess: () => {
-      setMessage({ type: "success", text: "Header updated successfully!" });
+      toast.success("Header updated successfully!" );
       queryClient.invalidateQueries(["schedules"]);
       queryClient.invalidateQueries(["schedule-header", id]);
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      
     },
     onError: () => {
-      setMessage({ type: "error", text: "Failed to update header." });
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      toast.error("Failed to update header.")
+     
     },
   });
 
@@ -87,15 +97,18 @@ const SheduleHeader = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.DESCRIPTION || !formData.PROJECT_START_PLAN || !formData.PROJECT_END_PLAN) {
-      setMessage({ type: "error", text: "Please fill all fields." });
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      toast.error("Please fill all fields.")
+     
       return;
     }
     mutation.mutate(formData);
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+
+
+   <SectionContainer>
+     <div className="">
       <div className="p-6 bg-white shadow rounded-lg mt-8">
         <h2 className="font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
           {isEditing ? "Edit Schedule Header" : "Add New Schedule Header"}
@@ -124,14 +137,14 @@ const SheduleHeader = () => {
       className="border border-gray-500 rounded 
                  px-4 py-3 
                  text-[15px]
-                 w-full 
+                 w-2/3 
                  focus:outline-none focus:ring-2 focus:ring-green-400"
       style={{ height: "45px" }}   // 👈 your custom height
     />
   </div>
 
 
-  <div className="grid grid-cols-2 gap-4">
+  <div className="grid grid-cols-4 items-center  gap-4">
  {/* PROJECT START PLAN */}
   <div className="flex flex-col gap-1">
     <label className="text-gray-700 text-sm font-medium">Project Start Plan</label>
@@ -188,6 +201,7 @@ const SheduleHeader = () => {
 
     <ScheduleHeaderListTwo></ScheduleHeaderListTwo>
     </div>
+   </SectionContainer>
   );
 };
 

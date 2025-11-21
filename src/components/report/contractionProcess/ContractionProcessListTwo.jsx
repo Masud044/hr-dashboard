@@ -214,8 +214,8 @@ export default function ContractionProcessListTwo () {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-        <div className="container mx-auto">
+      <div className="min-h-screen shadow-2xl bg-background p-4 md:p-6 lg:p-8">
+        <div className="">
           <div className="flex items-center justify-center py-12">
             <p className="text-muted-foreground">Loading data...</p>
           </div>
@@ -227,7 +227,7 @@ export default function ContractionProcessListTwo () {
   if (error) {
     return (
       <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-        <div className="container mx-auto">
+        <div className="">
           <div className="flex items-center justify-center py-12">
             <p className="text-red-600">Error loading data.</p>
           </div>
@@ -237,10 +237,10 @@ export default function ContractionProcessListTwo () {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-      <div className="container mx-auto">
+    <div className="min-h-screen shadow-lg bg-background ">
+      <div className="">
         {/* Header */}
-        <div className="bg-card rounded-lg shadow-sm p-4 md:p-6 mb-6">
+        {/* <div className="bg-card rounded-lg shadow-sm p-4 md:p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">
@@ -257,7 +257,7 @@ export default function ContractionProcessListTwo () {
               </Link>
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Data Table */}
         <div className="bg-card rounded-lg shadow-sm p-4 md:p-6">

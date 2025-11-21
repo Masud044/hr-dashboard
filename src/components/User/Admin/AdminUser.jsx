@@ -5,9 +5,18 @@ import { Save } from "lucide-react";
 import api from "../../../api/Api";
 import AdminUserList from "./AdminUserList";
 import { AdminUserListTwo } from "./AdminUserListTwo";
+import { toast } from "react-toastify";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const AdminUserPage = () => {
   const { id } = useParams();
+
+  useEffect(() => {
+      window.scrollTo({
+        top: 80,
+        behavior: "smooth",
+      });
+    }, [id]);
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -71,22 +80,19 @@ const AdminUserPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin_user"]);
-      setMessage({
-        type: "success",
-        text: isEditing
-          ? "✅ Admin user updated successfully!"
-          : "✅ Admin user added successfully!",
-      });
 
+      toast.success(
+          isEditing
+           ? "✅ Admin user updated successfully!"
+          : "✅ Admin user added successfully!",
+      )
+     
       if (!isEditing) resetForm();
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      
     },
     onError: () => {
-      setMessage({
-        type: "error",
-        text: "❌ Failed to save user data. Please try again.",
-      });
-      setTimeout(() => setMessage({ type: "", text: "" }), 4000);
+      toast.error("Failed to save user data. Please try again")
+      
     },
   });
 
@@ -112,8 +118,8 @@ const AdminUserPage = () => {
       (f) => !formData[f] || formData[f].toString().trim() === ""
     );
     if (empty) {
-      setMessage({ text: "Please fill all required fields.", type: "error" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      toast.warning("Please fill all required fields")
+      
       return;
     }
     mutation.mutate(formData);
@@ -140,7 +146,9 @@ const AdminUserPage = () => {
     );
 
   return (
-    <div className="max-w-5xl mx-auto">
+
+   <SectionContainer>
+     <div className="">
       <div className="p-6 bg-white shadow rounded-lg mt-8">
         <h2 className="text-sm font-semibold mb-6 text-gray-800 border-b pb-2">
           {isEditing ? "Edit Admin User" : "Add New Admin User"}
@@ -241,6 +249,7 @@ const AdminUserPage = () => {
       {/* <AdminUserList /> */}
       <AdminUserListTwo></AdminUserListTwo>
     </div>
+   </SectionContainer>
   );
 };
 

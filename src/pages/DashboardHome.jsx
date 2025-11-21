@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../api/Api";
 import DashboardVoucher from "../components/DashboardVoucher";
 import { DashboardVoucherList } from "@/components/DashboardVoucherList";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const DashboardHome = () => {
   // Fetch Expenses
@@ -34,9 +35,10 @@ console.log(income)
   console.log(cash)
 
   return (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+   <SectionContainer>
+     <div className=" grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Money In */}
-      <div className="space-y-6">
+      <div className="space-y-6 mt-4">
         <h1>Money Income</h1>
         <div className="bg-white shadow rounded p-4">
           <h3 className="text-gray-700 font-semibold flex justify-between items-center">
@@ -60,7 +62,7 @@ console.log(income)
       </div>
 
       {/* Money Out */}
-      <div className="space-y-6">
+      <div className="space-y-6 mt-4">
         <h1>Money Expenses</h1>
         <div className="bg-white shadow rounded p-4">
           <h3 className="text-gray-700 font-semibold">Expenses</h3>
@@ -71,7 +73,7 @@ console.log(income)
       </div>
 
       {/* Banking */}
-      <div className="space-y-6">
+      <div className="space-y-6 mt-4">
         <h1>Banking</h1>
         <div className="bg-white shadow rounded p-4">
           <h3 className="text-gray-700 font-semibold">Bank accounts</h3>
@@ -96,6 +98,7 @@ console.log(income)
         <DashboardVoucherList></DashboardVoucherList>
       </div>
     </div>
+   </SectionContainer>
   );
 };
 
