@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/Api";
 import DashboardVoucher from "../components/DashboardVoucher";
+import { DashboardVoucherList } from "@/components/DashboardVoucherList";
 
 const DashboardHome = () => {
   // Fetch Expenses
@@ -91,7 +92,8 @@ console.log(income)
 
       {/* Dashboard Voucher Component */}
       <div className="col-span-full mt-6">
-        <DashboardVoucher />
+        {/* <DashboardVoucher /> */}
+        <DashboardVoucherList></DashboardVoucherList>
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query"
 import api from "@/api/Api"
 
 import { Link } from "react-router-dom"
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal, ExternalLink } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -66,89 +66,76 @@ const columns = [
   
   // ✅ SORTABLE COLUMNS
   {
-    accessorKey: "P_ID",
+    accessorKey: "CUSTOMER_NAME",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Project ID
+          CUSTOMER_NAME
           <ArrowUpDown />
         </Button>
       )
     },
   },
   {
-    accessorKey: "DESCRIPTION",
+    accessorKey: "ENTRY_DATE",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Description
+          ENTRY_DATE
           <ArrowUpDown />
         </Button>
       )
     },
   },
   {
-    accessorKey: "CREATED_BY",
+    accessorKey: "EMAIL",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Created By
+          EMAIL
           <ArrowUpDown />
         </Button>
       )
     },
   },
   {
-    accessorKey: "UPDATED_BY",
+    accessorKey: "ADDRESS",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Updated By
+          ADDRESS
           <ArrowUpDown />
         </Button>
       )
     },
   },
   {
-    accessorKey: "CREATION_DATE",
+    accessorKey: "MOBILE",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Created Date
+          MOBILE
           <ArrowUpDown />
         </Button>
       )
     },
   },
-  {
-    accessorKey: "UPDATED_DATE",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Updated Date
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-  },
+ 
 
   // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
   {
@@ -175,20 +162,23 @@ const columns = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link to={`/dashboard/shedule-line/${item.H_ID}`}>
-                <div className="flex items-center gap-2">
-                  <Pencil size={16} />
+              <Link to={`/dashboard/customer-setting-voucher/${item.CUSTOMER_ID}`}>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Pencil size={16} className="text-blue-600" />
                   Edit
                 </div>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => console.log("Delete ID:", item.H_ID)}
+            //   onClick={() => console.log("Delete ID:", item.CUSTOMER_ID)}
               className="text-red-600"
             >
-              <Trash2 size={16} className="mr-2" />
+              <Trash2 size={16}  className="text-red-600" />
               Delete
             </DropdownMenuItem>
+           
+            
+          
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -196,12 +186,12 @@ const columns = [
   },
 ];
 
-export function DataTableDemo() {
+export function CustomerListTwo() {
   // ⭐ Fetch API Using React Query
   const { data, isLoading } = useQuery({
-    queryKey: ["schedules"],
+    queryKey: ["customers"],
     queryFn: async () => {
-      const res = await api.get("/shedule.php");
+      const res = await api.get("/customer_info.php");
       return res.data?.data || [];
     }
   });

@@ -5,6 +5,7 @@ import { Save, RefreshCw } from "lucide-react";
 
 import CustomerList from "./CustomerList";
 import api from "../../../api/Api";
+import { CustomerListTwo } from "./CustomerListTwo";
 
 
 const CustomerPage = () => {
@@ -266,7 +267,8 @@ const CustomerPage = () => {
         </div>
       </form>
     </div>
-    <CustomerList></CustomerList>
+    {/* <CustomerList></CustomerList> */}
+    <CustomerListTwo></CustomerListTwo>
     </div>
   );
 };
