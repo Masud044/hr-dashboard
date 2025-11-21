@@ -5,8 +5,9 @@ import { Save } from "lucide-react";
 import api from "../../../api/Api";
 
 import moment from "moment";
-import ScheduleList from "../sheduleLine/SheduleList";
-import SheduleHeaderList from "./SheduleHeaderList";
+import { ScheduleHeaderListTwo } from "./SheduleHeaderListTwo";
+// import ScheduleList from "../sheduleLine/SheduleList";
+// import SheduleHeaderList from "./SheduleHeaderList";
 
 const SheduleHeader = () => {
   const { id } = useParams(); // H_ID
@@ -185,8 +186,7 @@ const SheduleHeader = () => {
 
       </div>
 
-      {/* <ScheduleList /> */}
-      <SheduleHeaderList></SheduleHeaderList>
+    <ScheduleHeaderListTwo></ScheduleHeaderListTwo>
     </div>
   );
 };

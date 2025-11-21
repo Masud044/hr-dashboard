@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Plus, Trash2 } from "lucide-react";
 import api from "../../../api/Api";
-import SheduleList from "./SheduleList";
+
 import { DataTableDemo } from "@/pages/DataTable";
 // import GanttChart from "./GanttChart";
 
@@ -359,7 +359,7 @@ const SheduleLine = () => {
         </form>
       </div>
 
-      <SheduleList />
+      {/* <SheduleList /> */}
       <DataTableDemo></DataTableDemo>
     </div>
   );
