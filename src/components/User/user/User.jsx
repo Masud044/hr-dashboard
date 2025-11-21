@@ -5,9 +5,19 @@ import { Save } from "lucide-react";
 import api from "../../../api/Api";
 import UserList from "./UserList";
 import { UserListTwo } from "./UserListTwo";
+import { toast } from "react-toastify";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const User = () => {
   const { id } = useParams();
+
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -85,23 +95,21 @@ const User = () => {
       // Refresh user list after success
       queryClient.invalidateQueries(["users", id]); 
 
-      setMessage({
-        type: "success",
-        text: isEditing
-          ? "✅ User updated successfully!"
+      toast.success(
+          isEditing
+           ? "✅ User updated successfully!"
           : "✅ User added successfully!",
-      });
+      )
+
+     
 
       if (!isEditing) resetForm();
-      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      
     },
     onError: (err) => {
       console.error("❌ Error saving user:", err);
-      setMessage({
-        type: "error",
-        text: "❌ Failed to save user data. Please try again.",
-      });
-      setTimeout(() => setMessage({ type: "", text: "" }), 4000);
+      toast.error("Failed to save user data. Please try again")
+    
     },
   });
 
@@ -134,8 +142,8 @@ const User = () => {
       (f) => !formData[f] || formData[f].toString().trim() === ""
     );
     if (empty) {
-      setMessage({ text: "Please fill all required fields.", type: "error" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      toast.error("Please fill all required fields")
+      
       return;
     }
     mutation.mutate(formData);
@@ -164,7 +172,9 @@ const User = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+
+   <SectionContainer>
+     <div className="">
       <div className="p-6 bg-white shadow rounded-lg mt-8">
         <h2 className="font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
           {isEditing ? "Edit User" : "Add New User"}
@@ -223,6 +233,7 @@ const User = () => {
       {/* <UserList /> */}
       <UserListTwo></UserListTwo>
     </div>
+   </SectionContainer>
   );
 };
 

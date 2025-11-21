@@ -191,7 +191,7 @@ const columns = [
             </DropdownMenuItem>
              <DropdownMenuItem>
              <DropdownMenuItem >
-               <Link to={`/dashboard/test/${item.H_ID}`}>
+               <Link to={`/dashboard/timeline/${item.H_ID}`}>
                           <div className="text-blue-600 hover:text-blue-800 flex items-center gap-2">
                            <ExternalLink size={16} className="text-blue-600" />
                            Dashboard
@@ -245,7 +245,7 @@ export function ScheduleHeaderListTwo() {
   });
 
   return (
-    <div className="w-full mx-auto px-4 mt-4 shadow-2xl rounded-lg bg-white max-w-7xl">
+    <div className=" mt-4 shadow-2xl rounded-lg bg-white ">
       
       {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4">

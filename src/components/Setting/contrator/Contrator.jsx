@@ -5,9 +5,17 @@ import { Save } from "lucide-react";
 import api from "../../../api/Api";
 import ContratorList from "./ContratorList";
 import { ContratorListTwo } from "./ContratorListTwo";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const Contrator = () => {
   const { id } = useParams();
+  useEffect(() => {
+  window.scrollTo({
+    top: 80,
+    behavior: "smooth",
+  });
+}, [id]);
+
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
@@ -135,7 +143,8 @@ const { data } = useQuery({
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <SectionContainer>
+       <div className="">
       <div className="bg-white p-6 shadow rounded-lg mt-8">
         <h2 className="text-sm font-semibold mb-6 text-gray-800 border-b pb-2">
           {isEditing ? "Edit Contractor Information" : "Add New Contractor"}
@@ -243,6 +252,8 @@ const { data } = useQuery({
       {/* <ContratorList></ContratorList> */}
       <ContratorListTwo></ContratorListTwo>
     </div>
+    </SectionContainer>
+   
   );
 };
 

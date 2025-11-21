@@ -238,29 +238,10 @@ export default function PaymentVoucherListTwo() {
 
       <div className="min-h-screen ">
         
-          {/* Header */}
-          <div className="bg-card rounded-md shadow-sm p-4 mt-4 mb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">
-                  Unposted Payment Vouchers
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Manage payment voucher records
-                </p>
-              </div>
-             {/* //! Button for add voucher dialog */}
-              {/* <Button asChild>
-                <Link to="/dashboard/payment-voucher/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Voucher
-                </Link>
-              </Button> */}
-            </div>
-          </div>
+          
 
           {/* Data Table */}
-          <div className="bg-card rounded-md shadow-sm p-4 ">
+          <div className="bg-card rounded-md mt-4 shadow-sm p-4 ">
             <div className="space-y-4">
               {/* Filters and Controls */}
               <div className="flex flex-col sm:flex-row gap-4">

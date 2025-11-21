@@ -73,7 +73,7 @@ const columns = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          PRoject NAME
+          Project NAME
           <ArrowUpDown />
         </Button>
       )
@@ -225,7 +225,7 @@ export function ProjectListTwo() {
   });
 
   return (
-    <div className="w-full mx-auto px-4 mt-4 shadow-2xl rounded-lg bg-white max-w-7xl">
+    <div className=" mt-4 shadow-2xl rounded-lg bg-white">
       
       {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4">
