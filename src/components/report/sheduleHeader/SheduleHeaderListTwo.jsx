@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query"
 import api from "@/api/Api"
 
 import { Link } from "react-router-dom"
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal, ExternalLink } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -175,9 +175,9 @@ const columns = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link to={`/dashboard/shedule-line/${item.H_ID}`}>
-                <div className="flex items-center gap-2">
-                  <Pencil size={16} />
+              <Link to={`/dashboard/shedule-header/${item.H_ID}`}>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Pencil size={16} className="text-blue-600" />
                   Edit
                 </div>
               </Link>
@@ -186,8 +186,18 @@ const columns = [
               onClick={() => console.log("Delete ID:", item.H_ID)}
               className="text-red-600"
             >
-              <Trash2 size={16} className="mr-2" />
+              <Trash2 size={16}  className="text-red-600" />
               Delete
+            </DropdownMenuItem>
+             <DropdownMenuItem>
+             <DropdownMenuItem >
+               <Link to={`/dashboard/test/${item.H_ID}`}>
+                          <div className="text-blue-600 hover:text-blue-800 flex items-center gap-2">
+                           <ExternalLink size={16} className="text-blue-600" />
+                           Dashboard
+                          </div>
+                        </Link>
+            </DropdownMenuItem>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -196,7 +206,7 @@ const columns = [
   },
 ];
 
-export function DataTableDemo() {
+export function ScheduleHeaderListTwo() {
   // ⭐ Fetch API Using React Query
   const { data, isLoading } = useQuery({
     queryKey: ["schedules"],

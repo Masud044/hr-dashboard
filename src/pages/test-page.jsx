@@ -469,7 +469,7 @@ const ReactTimelineDemo = () => {
   };
 
   return (
-    <>
+     < >
       <style>{`
         .react-calendar-timeline .rct-header-root {
           position: sticky;
@@ -505,37 +505,24 @@ const ReactTimelineDemo = () => {
         // }
       `}</style>
 
-      <div className="bg-gray-50">
-        <SectionContainer planningBoard={true}>
+      {/* <div className="bg-gray-50"> */}
+        <SectionContainer>
           {/* Filter Bar */}
-          <div className="bg-white flex items-center justify-between">
+          <div className="bg-white  flex items-center justify-between">
             <div className="bg-white p-4">
               <h1 className="text-sm font-bold text-gray-800 mb-2">
                 Dashboard Timeline
               </h1>
             </div>
             <div className="flex justify-end items-center gap-2">
-              {/* <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">Select Date:</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
-              />
-            </div> */}
+             
               <button
                 className=" border-1 px-1 text-sm rounded-sm bg-purple-600  text-white"
                 onClick={() => navigate("/dashboard/shedule-header")}
               >
                 Back
               </button>
-              {/* <Link to={"/dashboard/shedule-header"}>
-                          <button className=" border-1 px-1 text-sm rounded-sm bg-purple-600  text-white">
-                           back
-                          </button>
-                        </Link> */}
-
+             
               <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-600">Contractor:</label>
                 <select
@@ -665,7 +652,7 @@ const ReactTimelineDemo = () => {
             </div>
           </div>
         </SectionContainer>
-      </div>
+      {/* </div> */}
     </>
   );
 };
