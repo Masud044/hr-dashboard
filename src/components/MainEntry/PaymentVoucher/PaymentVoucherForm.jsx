@@ -12,6 +12,7 @@ import PaymentVoucherList from "./PaymentVoucherList";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { SectionContainer } from "../../SectionContainer";
+import PaymentVoucherListTwo from "./PaymentVoucherListTwo";
 
 
 
@@ -709,7 +710,8 @@ const handlePrint = async () => {
         </div>
       </div>
 
-       <PaymentVoucherList showTitle={false} /> 
+       {/* <PaymentVoucherList showTitle={false} />  */}
+       <PaymentVoucherListTwo />
 
       {/* Modal */}
       {showModal && (

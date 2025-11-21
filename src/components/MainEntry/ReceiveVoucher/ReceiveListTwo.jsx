@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -39,124 +39,118 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import api from "../../../api/Api";
+import { SectionContainer } from "@/components/SectionContainer";
 
-export default function ContractionProcessListTwo () {
+export default function ReceiveListTwo() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
 
-  // Fetch contraction process list
-  const {
-    data: processes = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["contraction_process"],
+  // Fetch unposted vouchers - simplified like working version
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["unpostedVouchers"],
     queryFn: async () => {
-      const res = await api.get("/construction_process.php?action=read");
-      const response = res.data;
-
-      let records = [];
-      if (Array.isArray(response)) records = response;
-      else if (Array.isArray(response.data)) records = response.data;
-      else if (Array.isArray(response.records)) records = response.records;
-
-      // Always show latest (highest ID) first
-      return records.sort((a, b) => b.ID - a.ID);
+      const res = await api.get("/receive_all_unposted.php");
+      return res.data;
     },
   });
+
+  // Extract and sort vouchers with useMemo to prevent infinite re-renders
+  const sortedVouchers = useMemo(() => {
+    const vouchers = data?.status === "success" ? data.data : [];
+    return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+  }, [data]);
 
   const columns = [
     {
       accessorKey: "ID",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            ID
-            <ArrowUpDown />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          #
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="font-medium ml-3">{row.getValue("ID")}</div>
       ),
     },
     {
-      accessorKey: "PROCESS_ID",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Process ID
-            <ArrowUpDown  />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="ml-2">{row.getValue("PROCESS_ID")}</div>,
+      accessorKey: "VOUCHERNO",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Voucher No
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div className="ml-2">{row.getValue("VOUCHERNO")}</div>,
     },
     {
-      accessorKey: "SUB_CONTRACT_ID",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Sub Contract ID
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue("SUB_CONTRACT_ID")}</div>,
+      accessorKey: "TRANS_DATE",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Transaction Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.getValue("TRANS_DATE")}</div>,
     },
     {
-      accessorKey: "DEPENDENT_ID",
-      header: "Dependent ID",
-      cell: ({ row }) => <div>{row.getValue("DEPENDENT_ID")}</div>,
+      accessorKey: "GL_ENTRY_DATE",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          GL Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.getValue("GL_ENTRY_DATE")}</div>,
     },
     {
-      accessorKey: "SORT_ID",
-      header: "Sort ID",
-      cell: ({ row }) => <div>{row.getValue("SORT_ID")}</div>,
+      accessorKey: "DESCRIPTION",
+      header: "Description",
+      cell: ({ row }) => (
+        <div className="max-w-[200px] truncate" title={row.getValue("DESCRIPTION")}>
+          {row.getValue("DESCRIPTION")}
+        </div>
+      ),
     },
     {
-      accessorKey: "COST",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Cost
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      accessorKey: "CREDIT",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Debit
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
-        const cost = parseFloat(row.getValue("COST") || 0);
+        const amount = parseFloat(row.getValue("CREDIT") || 0);
         const formatted = new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
-        }).format(cost);
+        }).format(amount);
         return <div className="font-medium">{formatted}</div>;
       },
-    },
-    {
-      accessorKey: "CREATION_BY",
-      header: "Created By",
-      cell: ({ row }) => <div>{row.getValue("CREATION_BY")}</div>,
     },
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const process = row.original;
+        const voucher = row.original;
 
         return (
           <DropdownMenu>
@@ -170,21 +164,21 @@ export default function ContractionProcessListTwo () {
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={() =>
-                  navigator.clipboard.writeText(process.ID.toString())
+                  navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
                 }
               >
-                Copy Process ID
+                Copy Voucher No
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to={`/dashboard/contraction-process/${process.ID}`}>
+                <Link to={`/dashboard/receive-voucher/${voucher.ID}`}>
                   <Pencil className="mr-2 h-4 w-4" />
-                  Edit Process
+                  Edit Voucher
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem className="text-red-600">
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Process
+                Delete Voucher
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -194,7 +188,7 @@ export default function ContractionProcessListTwo () {
   ];
 
   const table = useReactTable({
-    data: processes,
+    data: sortedVouchers,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -217,7 +211,7 @@ export default function ContractionProcessListTwo () {
       <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
         <div className="container mx-auto">
           <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading data...</p>
+            <p className="text-muted-foreground">Loading vouchers...</p>
           </div>
         </div>
       </div>
@@ -229,7 +223,7 @@ export default function ContractionProcessListTwo () {
       <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
         <div className="container mx-auto">
           <div className="flex items-center justify-center py-12">
-            <p className="text-red-600">Error loading data.</p>
+            <p className="text-red-600">Error loading vouchers.</p>
           </div>
         </div>
       </div>
@@ -237,37 +231,40 @@ export default function ContractionProcessListTwo () {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
-      <div className="container mx-auto">
+    <div className="min-h-screen">
+     
+      
+        
         {/* Header */}
-        <div className="bg-card rounded-lg shadow-sm p-4 md:p-6 mb-6">
+        <div className="bg-card rounded-md shadow-sm p-4  mt-4 mb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">
-                Contraction Processes
+                Unposted Vouchers
               </h1>
               <p className="text-muted-foreground mt-1">
-                Manage construction process records
+                Manage receive voucher records
               </p>
             </div>
-            <Button asChild>
-              <Link to="/dashboard/contraction-process/create">
+            {/* //! Button for add voucher dialog */}
+            {/* <Button asChild>
+              <Link to="/dashboard/receive-voucher/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Process
+                Add Voucher
               </Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
 
         {/* Data Table */}
-        <div className="bg-card rounded-lg shadow-sm p-4 md:p-6">
+        <div className="bg-card rounded-md shadow-sm p-4 ">
           <div className="space-y-4">
             {/* Filters and Controls */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Input
-                placeholder="Search processes..."
+                placeholder="Search vouchers..."
                 value={globalFilter ?? ""}
-                onChange={(event) => setGlobalFilter(event.target.value)}
+                onChange={(e) => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
               />
 
@@ -281,20 +278,18 @@ export default function ContractionProcessListTwo () {
                   {table
                     .getAllColumns()
                     .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) =>
-                            column.toggleVisibility(!!value)
-                          }
-                        >
-                          {column.id.replace(/_/g, " ")}
-                        </DropdownMenuCheckboxItem>
-                      );
-                    })}
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id.replace(/_/g, " ")}
+                      </DropdownMenuCheckboxItem>
+                    ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -344,7 +339,7 @@ export default function ContractionProcessListTwo () {
                       >
                         <div className="flex flex-col items-center justify-center py-8">
                           <p className="text-muted-foreground">
-                            No processes found
+                            No unposted vouchers found
                           </p>
                         </div>
                       </TableCell>
@@ -357,7 +352,7 @@ export default function ContractionProcessListTwo () {
             <DataTablePagination table={table} />
           </div>
         </div>
-      </div>
+     
     </div>
   );
 }

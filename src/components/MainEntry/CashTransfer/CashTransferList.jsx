@@ -25,7 +25,6 @@ export default function CashTransferList() {
   if (isLoading) return <p>Loading vouchers...</p>;
   if (error) return <p>Error loading vouchers</p>;
 
-    
    
      const vouchers = data?.status === "success" ? data.data : [];
      vouchers.sort((a, b) => Number(b.ID) - Number(a.ID));
