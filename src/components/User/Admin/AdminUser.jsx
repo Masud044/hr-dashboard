@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
 import api from "../../../api/Api";
-import AdminUserList from "./AdminUserList";
+
 import { AdminUserListTwo } from "./AdminUserListTwo";
 import { toast } from "react-toastify";
 import { SectionContainer } from "@/components/SectionContainer";

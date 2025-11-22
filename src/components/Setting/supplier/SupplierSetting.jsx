@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import api from "../../../api/Api";
-import SupplierList from "./supplierlist";
+
 import { SectionContainer } from "../../SectionContainer";
 import { SupplierListTwo } from "./SupplierListTwo";
 import { toast } from "react-toastify";

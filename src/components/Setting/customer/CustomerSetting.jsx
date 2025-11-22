@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, RefreshCw } from "lucide-react";
 
-import CustomerList from "./CustomerList";
+
 import api from "../../../api/Api";
 import { CustomerListTwo } from "./CustomerListTwo";
 import { SectionContainer } from "@/components/SectionContainer";
