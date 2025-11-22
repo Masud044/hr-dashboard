@@ -61,7 +61,7 @@ export default function CashTransferListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           #
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown  />
         </Button>
       ),
       cell: ({ row }) => (
@@ -76,7 +76,7 @@ export default function CashTransferListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Voucher No
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown  />
         </Button>
       ),
       cell: ({ row }) => (
@@ -91,10 +91,10 @@ export default function CashTransferListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Transaction Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown  />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("TRANS_DATE")}</div>,
+      cell: ({ row }) => <div  className="ml-3">{row.getValue("TRANS_DATE")}</div>,
     },
     {
       accessorKey: "GL_ENTRY_DATE",
@@ -104,10 +104,10 @@ export default function CashTransferListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           GL Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown  />
         </Button>
       ),
-      cell: ({ row }) => <div>{row.getValue("GL_ENTRY_DATE")}</div>,
+      cell: ({ row }) => <div className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
     },
     {
       accessorKey: "DESCRIPTION",
@@ -129,7 +129,7 @@ export default function CashTransferListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Debit
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown  />
         </Button>
       ),
       cell: ({ row }) => {
@@ -138,7 +138,7 @@ export default function CashTransferListTwo() {
           style: "currency",
           currency: "USD",
         }).format(amount);
-        return <div className="font-medium">{formatted}</div>;
+        return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
     {
@@ -149,7 +149,7 @@ export default function CashTransferListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Credit
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown  />
         </Button>
       ),
       cell: ({ row }) => {
@@ -158,7 +158,7 @@ export default function CashTransferListTwo() {
           style: "currency",
           currency: "USD",
         }).format(amount);
-        return <div className="font-medium">{formatted}</div>;
+        return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
   ];
