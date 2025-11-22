@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../api/Api";
-import DashboardVoucher from "../components/DashboardVoucher";
+
 import { DashboardVoucherList } from "@/components/DashboardVoucherList";
 import { SectionContainer } from "@/components/SectionContainer";
 
