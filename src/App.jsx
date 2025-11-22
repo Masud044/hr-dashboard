@@ -11,7 +11,7 @@ import Home from "./pages/Home";
 // import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./authentication/AuthProvider";
 
-import DashboardHome from "./pages/DashboardHome";
+// import DashboardHome from "./pages/DashboardHome";
 // import JournalVoucher from "./components/MainEntry/PaymentVoucherList";
 import PaymentVoucherForm from "./components/MainEntry/PaymentVoucher/PaymentVoucherForm";
 import ReceiveVoucher from "./components/MainEntry/ReceiveVoucher/ReceiveVoucher";
@@ -63,7 +63,7 @@ const App = () => {
           <Route path="/" element={<Home></Home>} />
           <Route path="/dashboard" element={<Dashboard />}>
             {/* Default dashboard view */}
-            <Route index element={<DashboardHome />} />
+            <Route index element={<DashboardTimeline />} />
 
             {/* Payment Voucher route */}
 
