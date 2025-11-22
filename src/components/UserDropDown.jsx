@@ -21,9 +21,9 @@ import {
 import { Button } from "@/components/ui/button";
 
 const user = {
-  name: "Masud Mia",
-  email: "masud@font.com",
-  avatar: "https://avatars.githubusercontent.com/u/100532083?v=4",
+  name: "ASM Saki",
+  email: "asm@font.com",
+  avatar: "https://avatars.githubusercontent.com/u/121676920?v=4",
 };
 
 export default function UserDropDown() {
