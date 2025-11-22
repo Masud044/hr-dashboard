@@ -18,30 +18,34 @@ export const NAV_ITEMS = [
   {
     label: "Main Entry",
     links: [
-      { to: "/dashboard", label: "Home", Icon: Home },
-      { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home },
-      { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },
-      { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus },
-      { to: "/dashboard/cash-voucher", label: "Cash Transfer", Icon: Plus },
+       { to: "/dashboard/contraction-process", label: "Contraction Process", Icon: ClipboardList },
+      { to: "/dashboard/timeline", label: "Dashboard Timeline", Icon: ClipboardList },
+      { to: "/dashboard/shedule-header", label: "Schedule Header", Icon: ClipboardList },
+      { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
+      // { to: "/dashboard", label: "Home", Icon: Home },
+      // { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home },
+      // { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },
+      // { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus },
+      // { to: "/dashboard/cash-voucher", label: "Cash Transfer", Icon: Plus },
       // { to: "/dashboard/account-voucher", label: "Chart of Account", Icon: Wrench },
       // { to: "/dashboard/all-chart", label: "All Chart of Account", Icon: ClipboardList },
     ],
   },
 
-  {
-    label: "Report",
-    links: [
-      // { to: "/dashboard/daily-expense", label: "Daily Expense Report", Icon: ClipboardList },
-      { to: "/dashboard/contraction-process", label: "Contraction Process", Icon: ClipboardList },
-      { to: "/dashboard/timeline", label: "Dashboard Timeline", Icon: ClipboardList },
-      { to: "/dashboard/shedule-header", label: "Schedule Header", Icon: ClipboardList },
-      { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
-      // { to: "/dashboard/daily-income", label: "Daily Income Report", Icon: ClipboardList },
-      // { to: "/dashboard/ledger", label: "Ledger", Icon: FileText },
-      // { to: "/dashboard/cash-book", label: "Cash Book", Icon: FileText },
-      // { to: "/dashboard/chart-of-account", label: "Chart of Account", Icon: ClipboardList },
-    ],
-  },
+  // {
+  //   label: "Report",
+  //   links: [
+  //     { to: "/dashboard/daily-expense", label: "Daily Expense Report", Icon: ClipboardList },
+  //     { to: "/dashboard/contraction-process", label: "Contraction Process", Icon: ClipboardList },
+  //     { to: "/dashboard/timeline", label: "Dashboard Timeline", Icon: ClipboardList },
+  //     { to: "/dashboard/shedule-header", label: "Schedule Header", Icon: ClipboardList },
+  //     { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
+  //     { to: "/dashboard/daily-income", label: "Daily Income Report", Icon: ClipboardList },
+  //     { to: "/dashboard/ledger", label: "Ledger", Icon: FileText },
+  //     { to: "/dashboard/cash-book", label: "Cash Book", Icon: FileText },
+  //     { to: "/dashboard/chart-of-account", label: "Chart of Account", Icon: ClipboardList },
+  //   ],
+  // },
 
   {
     label: "Users",

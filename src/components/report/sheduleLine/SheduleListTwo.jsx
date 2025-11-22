@@ -202,7 +202,14 @@ export function SheduleListTwo() {
     queryKey: ["schedules"],
     queryFn: async () => {
       const res = await api.get("/shedule.php");
-      return res.data?.data || [];
+      const fetchedData = res.data?.data || [];
+    
+    
+    fetchedData.sort(
+      (a, b) => (Number(b.H_ID) || 0) - (Number(a.H_ID) || 0)
+    );
+    
+    return fetchedData;
     }
   });
 

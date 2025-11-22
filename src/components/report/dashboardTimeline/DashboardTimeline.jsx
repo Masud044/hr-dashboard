@@ -459,6 +459,51 @@ const DashboardTimeline = () => {
                       
                     }}
                   />
+
+             {/* <DateHeader
+  unit="day"
+  intervalRenderer={({ getIntervalProps, intervalContext }) => {
+    const date = moment(intervalContext.interval.start);
+    const dayNumber = date.format("DD");
+    const dayName = date.format("ddd");
+
+    const intervalProps = getIntervalProps();
+
+    return (
+      <div
+        {...intervalProps}
+        style={{
+          ...intervalProps.style,
+          background: "#750811",
+          color: "#fff",
+          textAlign: "center",
+          borderLeft: "1px solid #e5e7eb",
+          borderRight: "1px solid #e5e7eb",
+          height: "38px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ fontSize: "14px", fontWeight: "bold" }}>
+          {dayNumber}
+        </div>
+
+        <div style={{ fontSize: "10px", opacity: 0.8 }}>
+          {dayName}
+        </div>
+      </div>
+    );
+  }}
+/> */}
+
+
+
+
+                 
+                
                 </TimelineHeaders>
 
                 <TimelineMarkers>
