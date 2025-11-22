@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Database } from "lucide-react";
 import api from "../../../api/Api";
-import ContractionProcessList from "./ContractionProcessList";
+
 import { SectionContainer } from "../../SectionContainer";
 import ContractionProcessListTwo from "./ContractionProcessListTwo";
 import { toast } from "react-toastify";

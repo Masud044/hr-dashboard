@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../api/Api";
 
 import PageTitle from "../../RouteTitle";
-import JournalVoucherList from "./JournalVoucherList";
+
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { SectionContainer } from "../../SectionContainer";
