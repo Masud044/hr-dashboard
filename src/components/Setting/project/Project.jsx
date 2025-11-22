@@ -505,8 +505,8 @@ const handleCreateDashboard = async () => {
 
     // Redirect
     setTimeout(() => {
-      console.log("🚀 Redirecting to:", `/dashboard/test/${H_ID}`);
-      window.location.href = `/dashboard/test/${H_ID}`;
+      console.log("🚀 Redirecting to:", `/dashboard/timeline/${H_ID}`);
+      window.location.href = `/dashboard/timeline/${H_ID}`;
     }, 1000);
 
   } catch (err) {

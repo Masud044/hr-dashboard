@@ -192,7 +192,14 @@ export function ProjectListTwo() {
     queryKey: ["customers"],
     queryFn: async () => {
       const res = await api.get("/project.php");
-      return res.data?.data || [];
+       const fetchedData = res.data?.data || [];
+    
+    
+    fetchedData.sort(
+      (a, b) => (Number(b.P_ID) || 0) - (Number(a.P_ID) || 0)
+    );
+    
+    return fetchedData;
     }
   });
 
