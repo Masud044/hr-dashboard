@@ -22,16 +22,16 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/authentication/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
-const user = {
-  name: "User 536",
-  email: "user@font.com",
-  avatar: "https://github.com/evilrabbit.png",
-};
-console.log(user)
+// const user = {
+//   name: "User 536",
+//   email: "user@font.com",
+//   avatar: "https://github.com/evilrabbit.png",
+// };
+// console.log(user)
 
 
 export default function UserDropDown() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   console.log(user)
   const navigate = useNavigate();
 
@@ -39,7 +39,12 @@ export default function UserDropDown() {
   const handleLogout = async () => {
   await logout();        // clears user & calls API
   navigate("/login");    // redirect to login page
+
+
 };
+
+if (!user) return null;
+
 
   return (
     <DropdownMenu>
@@ -61,9 +66,9 @@ export default function UserDropDown() {
               <AvatarFallback className="rounded-lg">TB</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{user.name}</span>
+              <span className="truncate font-semibold">{user.firstname}</span>
               <span className="text-muted-foreground truncate text-xs">
-                {user.email}
+                {user.username}
               </span>
             </div>
           </div>
