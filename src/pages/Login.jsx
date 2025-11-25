@@ -6,32 +6,32 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 
 const Login = () => {
-  
   const navigate = useNavigate();
   const { login, user } = useAuth();
-  console.log(user)
+  console.log(user);
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
-  defaultValues: {
-    emailOrUsername: "",   // changed name to general
-    password: "",
-  },
-});
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      emailOrUsername: "", // changed name to general
+      password: "",
+    },
+  });
 
-
-const onSubmit = async (data) => {
-  const success = await login(data.emailOrUsername, data.password);
-  if (success) {
-    toast.success("Logged in successfully!");
-    navigate("/dashboard");
-  } else {
-    toast.error("Invalid login credentials!");
-  }
-};
-
-
+  const onSubmit = async (data) => {
+    const success = await login(data.emailOrUsername, data.password);
+    if (success) {
+      toast.success("Logged in successfully!");
+      navigate("/dashboard");
+    } else {
+      toast.error("Invalid login credentials!");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
@@ -65,13 +65,15 @@ const onSubmit = async (data) => {
               >
                 Email Address
               </label>
-             <input
-  id="email"
-  type="text"             // <-- change from "email" to "text"
-  placeholder="Enter your email or username"
-  className="w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-  {...register("emailOrUsername", { required: "Email or username is required" })}
-/>
+              <input
+                id="email"
+                type="text" // <-- change from "email" to "text"
+                placeholder="Enter your email or username"
+                className="w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                {...register("emailOrUsername", {
+                  required: "Email or username is required",
+                })}
+              />
 
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">
