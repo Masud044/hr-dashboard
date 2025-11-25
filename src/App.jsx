@@ -9,7 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Registration";
 import Home from "./pages/Home";
 // import { Toaster } from "react-hot-toast";
-import { AuthProvider, useAuth } from "./authentication/AuthProvider";
+
 
 // import DashboardHome from "./pages/DashboardHome";
 // import JournalVoucher from "./components/MainEntry/PaymentVoucherList";
@@ -36,6 +36,7 @@ import SheduleLine from "./components/report/sheduleLine/SheduleLine";
 
 import SheduleHeader from "./components/report/sheduleHeader/SheduleHeader";
 import DashboardTimeline from "./components/report/dashboardTimeline/DashboardTimeline";
+import { AuthProvider } from "./authentication/AuthProvider";
 
  
 
@@ -51,10 +52,10 @@ import DashboardTimeline from "./components/report/dashboardTimeline/DashboardTi
 
 
 const App = () => {
-  function PrivateRoute({ children }) {
-    const { isAuthenticated } = useAuth();
-    return isAuthenticated ? children : <Navigate to="/login" />;
-  }
+  // function PrivateRoute({ children }) {
+  //   const { isAuthenticated } = useAuth();
+  //   return isAuthenticated ? children : <Navigate to="/login" />;
+  // }
   return (
     <AuthProvider>
       <ToastContainer position="top-right" autoClose={3000} />

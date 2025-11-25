@@ -65,6 +65,21 @@ const columns = [
   },
   
   // ✅ SORTABLE COLUMNS
+
+  {
+    accessorKey: "USERNAME",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          USERNAME
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+  },
  
   
   {
@@ -189,10 +204,10 @@ export function AdminUserListTwo() {
       {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter descriptions..."
-          value={table.getColumn("EMAIL")?.getFilterValue() ?? ""}
+          placeholder="Filter USERNAME..."
+          value={table.getColumn("USERNAME")?.getFilterValue() ?? ""}
           onChange={(e) =>
-            table.getColumn("EMAIL")?.setFilterValue(e.target.value)
+            table.getColumn("USERNAME")?.setFilterValue(e.target.value)
           }
           className="max-w-sm"
         />

@@ -19,28 +19,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/authentication/AuthProvider";
+import { useNavigate } from "react-router-dom";
 
 const user = {
   name: "ASM Saki",
   email: "asm@font.com",
   avatar: "https://avatars.githubusercontent.com/u/121676920?v=4",
 };
+console.log(user)
+
 
 export default function UserDropDown() {
- 
+  const { logout } = useAuth();
+  console.log(user)
+  const navigate = useNavigate();
+
+
+  const handleLogout = async () => {
+  await logout();        // clears user & calls API
+  navigate("/login");    // redirect to login page
+};
 
   return (
-    <DropdownMenu >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-8 w-8 rounded-lg ">
-          <AvatarImage src={user.avatar} alt={user.name}/>
+          <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback className="rounded-lg">AS</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg z-[101]"
         sideOffset={4}
-    
         align="end"
       >
         <DropdownMenuLabel className="p-0 font-normal">
@@ -80,8 +91,12 @@ export default function UserDropDown() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-red-600!">
-          <LogOutIcon className="text-red-600!" />
+
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="text-red-600 cursor-pointer focus:text-red-700"
+        >
+          <LogOutIcon className="text-red-600" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
