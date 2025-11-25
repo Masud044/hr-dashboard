@@ -3,36 +3,35 @@ import { useAuth } from "../authentication/AuthProvider";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "react-toastify";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "admin@hrms.com",
-    password: "123456#erqe*&^%$E",
-    rememberMe: false,
-  });
+  
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  console.log(user)
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      email: "admin@hrms.com",
-      password: "123456#erqe*&^%$E",
-      rememberMe: false,
-    },
-  });
+  const { register, handleSubmit, formState: { errors } } = useForm({
+  defaultValues: {
+    emailOrUsername: "",   // changed name to general
+    password: "",
+  },
+});
 
-  const onSubmit = (data) => {
-    // login function from AuthProvider
-    if (login(data.email, data.password)) {
-      navigate("/dashboard");
-    }
-  };
+
+const onSubmit = async (data) => {
+  const success = await login(data.emailOrUsername, data.password);
+  if (success) {
+    toast.success("Logged in successfully!");
+    navigate("/dashboard");
+  } else {
+    toast.error("Invalid login credentials!");
+  }
+};
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
@@ -66,15 +65,14 @@ const Login = () => {
               >
                 Email Address
               </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                {...register("email", {
-                  required: "Email is required",
-                })}
-              />
+             <input
+  id="email"
+  type="text"             // <-- change from "email" to "text"
+  placeholder="Enter your email or username"
+  className="w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+  {...register("emailOrUsername", { required: "Email or username is required" })}
+/>
+
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.email.message}
