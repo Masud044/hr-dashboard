@@ -237,10 +237,10 @@ export function ProjectListTwo() {
       {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter descriptions..."
-          value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+          placeholder="Filter P_NAME..."
+          value={table.getColumn("P_NAME")?.getFilterValue() ?? ""}
           onChange={(e) =>
-            table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+            table.getColumn("P_NAME")?.setFilterValue(e.target.value)
           }
           className="max-w-sm"
         />

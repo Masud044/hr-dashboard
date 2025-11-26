@@ -29,6 +29,7 @@ export default function ContractionProcessList() {
       return records.sort((a, b) => b.ID - a.ID);
     },
   });
+  console.log( "process", processes)
 
   const totalPages = Math.ceil(processes.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
