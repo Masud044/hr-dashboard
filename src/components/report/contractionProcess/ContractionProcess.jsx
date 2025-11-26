@@ -8,6 +8,7 @@ import { SectionContainer } from "../../SectionContainer";
 import ContractionProcessListTwo from "./ContractionProcessListTwo";
 import { toast } from "react-toastify";
 
+
 const ContractionProcess = () => {
   const { id } = useParams();
   useEffect(() => {
@@ -19,6 +20,7 @@ const ContractionProcess = () => {
 
   const queryClient = useQueryClient();
   const isEditing = !!id;
+  console.log(id)
 
   const [formData, setFormData] = useState({
     PROCESS_ID: "",
@@ -41,75 +43,69 @@ const ContractionProcess = () => {
   });
 
   // ✅ Fetch process data for editing
-  const { data } = useQuery({
-    queryKey: ["process", id],
-    queryFn: async () => {
-      const res = await api.get(`/construction_process.php?id=${id}`);
-      const record = res.data?.data;
-      if (Array.isArray(record)) return record.find((r) => r.ID == id);
-      return record;
-    },
-    enabled: !!id,
-  });
+ // ✅ Fetch process data for editing
+const { data } = useQuery({
+  queryKey: ["process", id],
+  queryFn: async () => {
+    const res = await api.get(`/construction_process.php?action=read`);
+    const records = res.data?.data || [];
 
-  useEffect(() => {
-    if (data) {
-      setFormData({
-        PROCESS_ID: data.PROCESS_ID || "",
-        SUB_CONTRACT_ID: data.SUB_CONTRACT_ID || "",
-        DEPENDENT_ID: data.DEPENDENT_ID || "",
-        SORT_ID: data.SORT_ID || "",
-        CREATION_BY: data.CREATION_BY || 700,
-        COST: data.COST || "",
+    // URL থেকে পাওয়া ID দিয়ে match করুন
+    const found = records.find((r) => r.ID === id);
+    
+    console.log("Found record for edit:", found);
+    return found || {};
+  },
+  enabled: !!id,
+});
+
+// ✅ Data populate করার সময় SUB_CONTRACT_ID correctly map করুন
+useEffect(() => {
+  if (data && data.ID) {
+    setFormData({
+      PROCESS_ID: data.PROCESS_ID || "",
+      SUB_CONTRACT_ID: data.SUB_CONTRACT_ID || "", // এটা GET API থেকে আসবে
+      DEPENDENT_ID: data.DEPENDENT_ID || "",
+      SORT_ID: data.SORT_ID || "",
+      CREATION_BY: data.CREATION_BY || 700,
+      COST: data.COST || "",
+    });
+  }
+}, [data]);
+
+// ✅ Mutation এ সঠিক payload পাঠান
+const mutation = useMutation({
+  mutationFn: async (formData) => {
+    if (isEditing) {
+      // PUT করার সময় backend যা expect করে তা পাঠান
+      return await api.put("/construction_process.php?action=update", {
+        ID: id,
+        PROCESS_ID: formData.PROCESS_ID,
+        SUB_CONTRACT_ID: formData.SUB_CONTRACT_ID, // এটা সরাসরি পাঠান
+        DEPENDENT_ID: formData.DEPENDENT_ID,
+        SORT_ID: formData.SORT_ID,
+        COST: formData.COST,
+        UPDATE_BY: 700,
       });
     }
-  }, [data]);
-
-  // ✅ Save / Update mutation
-  const mutation = useMutation({
-    mutationFn: async (formData) => {
-      if (isEditing) {
-        return await api.put("/construction_process.php", {
-          ...formData,
-          ID: id,
-          UPDATE_BY: 700,
-        });
-      } else {
-        return await api.post("/construction_process.php", formData);
-      }
-    },
-    onSuccess: (res) => {
-      queryClient.invalidateQueries(["processes"]);
-
-      if (res.data?.status === "success") {
-        const newRecord = res.data?.data;
-        queryClient.setQueryData(["processes"], (oldData) => {
-          if (!oldData) return [newRecord];
-          const filtered = oldData.filter(
-            (item) => item.ID !== (isEditing ? Number(id) : newRecord.ID)
-          );
-          return [newRecord, ...filtered];
-        });
-
-        toast.success(
-          isEditing
-           ? "Process updated successfully!"
-            : "Process added successfully!",
-        )
-        
-
-        if (!isEditing) resetForm();
-      } else {
-        toast.error("Something went wrong. Please try again")
-       
-      }
-      
-    },
-    onError: () => {
-      toast.error("Failed to save data. Please try again")
-      
-    },
-  });
+    // else {
+    //   return await api.post("/construction_process.php?action=create", {
+    //     ...formData,
+    //   });
+    // }
+  },
+  onSuccess: (res) => {
+    queryClient.invalidateQueries(["contraction_process"]);
+    
+    if (res.data?.success || res.data?.status === "success") {
+      toast.success(isEditing ? "Process updated successfully!" : "Process created successfully!");
+    }
+  },
+  onError: (error) => {
+    console.error("Mutation error:", error);
+    toast.error("Failed to save data. Please try again");
+  },
+});
 
   // ✅ Contractor fetch POST call (optional)
   // const fetchContractorData = async () => {
@@ -145,16 +141,7 @@ const ContractionProcess = () => {
     mutation.mutate(formData);
   };
 
-  const resetForm = () => {
-    setFormData({
-      PROCESS_ID: "",
-      SUB_CONTRACT_ID: "",
-      DEPENDENT_ID: "",
-      SORT_ID: "",
-      CREATION_BY: 700,
-      COST: "",
-    });
-  };
+  
 
   return (
    <SectionContainer>

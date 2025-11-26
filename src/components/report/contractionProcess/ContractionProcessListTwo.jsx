@@ -68,23 +68,7 @@ export default function ContractionProcessListTwo () {
   });
 
   const columns = [
-    {
-      accessorKey: "ID",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            ID
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="font-medium ml-3">{row.getValue("ID")}</div>
-      ),
-    },
+   
     {
       accessorKey: "PROCESS_ID",
       header: ({ column }) => {
@@ -140,11 +124,12 @@ export default function ContractionProcessListTwo () {
       },
       cell: ({ row }) => {
         const cost = parseFloat(row.getValue("COST") || 0);
-        const formatted = new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        }).format(cost);
-        return <div className="font-medium">{formatted}</div>;
+         const formatted = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(cost);
+    
+    return <div className="font-medium">{formatted}</div>;
       },
     },
     {
