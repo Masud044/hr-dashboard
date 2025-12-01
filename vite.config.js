@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     proxy: {
       "/api": {
       target: "http://103.172.44.99:8989/api_bwal",
