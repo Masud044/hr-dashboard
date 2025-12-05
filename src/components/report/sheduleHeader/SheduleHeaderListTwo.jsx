@@ -78,6 +78,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("P_ID")}</div>,
   },
   {
     accessorKey: "DESCRIPTION",
@@ -92,6 +93,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
   },
   {
     accessorKey: "CREATED_BY",
@@ -106,6 +108,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("CREATED_BY")}</div>,
   },
   {
     accessorKey: "UPDATED_BY",
@@ -120,6 +123,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("UPDATED_BY")}</div>,
   },
   {
     accessorKey: "CREATION_DATE",
@@ -134,6 +138,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("CREATION_DATE")}</div>,
   },
   {
     accessorKey: "UPDATED_DATE",
@@ -148,62 +153,47 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("UPDATED_DATE")}</div>,
   },
+ // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
+ {
+  id: "actions",
+  enableHiding: false,
+  header: () => <div className="text-center">Actions</div>,
+  cell: ({ row }) => {
+    const item = row.original;
 
-  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
-  {
-    id: "actions",
-    enableHiding: false,
-    header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }) => {
-      const item = row.original;
+    return (
+      <div className="flex items-center gap-3 justify-center">
+        
+        {/* Edit Button */}
+        <Link
+          to={`/dashboard/shedule-header/${item.H_ID}`}
+          className="text-blue-600 hover:text-blue-800"
+        >
+          <Pencil size={18} />
+        </Link>
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(item.H_ID)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link to={`/dashboard/shedule-header/${item.H_ID}`}>
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Pencil size={16} className="text-blue-600" />
-                  Edit
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => console.log("Delete ID:", item.H_ID)}
-              className="text-red-600"
-            >
-              <Trash2 size={16}  className="text-red-600" />
-              Delete
-            </DropdownMenuItem>
-             <DropdownMenuItem>
-             <DropdownMenuItem >
-               <Link to={`/dashboard/timeline/${item.H_ID}`}>
-                          <div className="text-blue-600 hover:text-blue-800 flex items-center gap-2">
-                           <ExternalLink size={16} className="text-blue-600" />
-                           Dashboard
-                          </div>
-                        </Link>
-            </DropdownMenuItem>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+         
+        <Link
+           to={`/dashboard/timeline/${item.H_ID}`}
+          className="text-purple-600 hover:text-purple"
+        >
+          <ExternalLink size={18} />
+        </Link> 
+
+        {/* Delete Button */}
+        <button
+          onClick={() => console.log("Delete:", item.P_ID)}
+          className="text-red-600 hover:text-red-800"
+        >
+          <Trash2 size={18} />
+        </button>
+
+      </div>
+    );
   },
+}
 ];
 
 export function ScheduleHeaderListTwo() {
@@ -225,6 +215,7 @@ export function ScheduleHeaderListTwo() {
   });
 
   const apiData = data || [];
+  console.log(apiData)
 
   // ✅ NEW STATE VARIABLES
   const [sorting, setSorting] = React.useState([]);

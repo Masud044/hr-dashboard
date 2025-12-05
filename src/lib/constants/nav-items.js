@@ -18,10 +18,10 @@ export const NAV_ITEMS = [
   {
     label: "Main Entry",
     links: [
-       { to: "/dashboard/contraction-process", label: "Contraction Process", Icon: ClipboardList },
+      //  { to: "/dashboard/contraction-process", label: "Contraction Process", Icon: ClipboardList },
       { to: "/dashboard/timeline", label: "Dashboard Timeline", Icon: ClipboardList },
-      { to: "/dashboard/shedule-header", label: "Schedule Header", Icon: ClipboardList },
-      { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
+      { to: "/dashboard/shedule-header", label: "Dashboard", Icon: ClipboardList },
+      // { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
       // { to: "/dashboard", label: "Home", Icon: Home },
       // { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home },
       // { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },

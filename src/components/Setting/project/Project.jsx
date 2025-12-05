@@ -7,6 +7,10 @@ import api from "../../../api/Api";
 import { toast } from "react-toastify";
 import { ProjectListTwo } from "./ProjectTwo";
 import { SectionContainer } from "@/components/SectionContainer";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Project = () => {
   const { id } = useParams();
@@ -567,62 +571,103 @@ const handleCreateDashboard = async () => {
         {/* 🔹 Project Form */}
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+         className="grid grid-cols-1 md:grid-cols-4 gap-6"
+          
         >
-          <Input
-            label="Project Name"
-            name="P_NAME"
-            value={formData.P_NAME}
-            onChange={handleChange}
-          />
 
-          <div className="flex items-center gap-2">
-            <label className="text-gray-700 text-sm font-medium text-right w-32">
-              Project Type
-            </label>
-            <select
-              name="P_TYPE"
-              value={formData.P_TYPE}
-              onChange={handleChange}
-              disabled={loadingTypes}
-              className="border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 flex-1"
-            >
-              <option value="">Select Project Type</option>
-              {projectTypes?.map((type) => (
-                <option key={type.ID} value={type.ID}>
-                  {type.NAME}
-                </option>
-              ))}
-            </select>
-          </div>
+     
+<div className="flex flex-col gap-1 w-[70%] flex-1 ">
+    <Label className="text-sm font-medium text-gray-900">
+      Project Name <span className="text-red-600">*</span>
+    </Label>
+    <Input
+      name="P_NAME"
+      value={formData.P_NAME}
+      onChange={handleChange}
+      placeholder="Enter project name"
+      className="h-10 bg-gray-50 border-gray-300 "
+    />
+  </div>
+ 
+  
+       
 
-          <Input
-            label="Address"
-            name="P_ADDRESS"
-            value={formData.P_ADDRESS}
-            onChange={handleChange}
-            inputWidth=""
-          />
-          <Input
-            label="Subwrb"
-            name="SUBWRB"
-            value={formData.SUBWRB}
-            onChange={handleChange}
-          />
-          <Input
-            label="Postcode"
-            name="POSTCODE"
-            value={formData.POSTCODE}
-            onChange={handleChange}
-          />
-          <Input
-            label="State"
-            name="STATE"
-            value={formData.STATE}
-            onChange={handleChange}
-          />
+  
+ {/* Project Type */}
+  <div className="flex flex-col gap-1 flex-1 w-[50%]">
+    <Label className="text-sm font-medium text-gray-900">Project Type</Label>
 
-          <div className="col-span-3 flex justify-end gap-3 mt-4">
+    <Select
+      value={formData.P_TYPE}
+      onValueChange={(val) =>
+        handleChange({ target: { name: "P_TYPE", value: val } })
+      }
+    >
+      <SelectTrigger className="h-10 bg-gray-50 border-gray-300 w-full ">
+        <SelectValue placeholder="Select Type" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {projectTypes?.map((type) => (
+          <SelectItem key={type.ID} value={type.ID}>
+            {type.NAME}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+
+  
+
+  {/* Suburb */}
+  <div className="flex flex-col gap-1 flex-1 w-[70%]">
+    <Label className="text-sm font-medium text-gray-900">Suburb</Label>
+    <Input
+      name="SUBWRB"
+      value={formData.SUBWRB}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border-gray-300 "
+    />
+  </div>
+   {/* State */}
+  <div className="flex flex-col gap-1 w-[70%]">
+    <Label className="text-sm font-medium text-gray-900">State</Label>
+    <Input
+      name="STATE"
+      value={formData.STATE}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border-gray-300 shadow-sm"
+    />
+  </div>
+
+  
+  {/* Address */}
+  <div className="flex flex-col md:col-span-2  gap-1 flex-1 ">
+    <Label className="text-sm font-medium text-gray-900">Address</Label>
+    <Textarea
+      name="P_ADDRESS"
+      value={formData.P_ADDRESS}
+      onChange={handleChange}
+      placeholder="Enter address"
+      className="min-h-[70px] bg-gray-50 border-gray-300"
+    />
+  </div>
+  {/* Postcode */}
+  <div className="flex flex-col gap-1 w-[40%]">
+    <Label className="text-sm font-medium text-gray-900">Postcode</Label>
+    <Input
+      name="POSTCODE"
+      value={formData.POSTCODE}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border-gray-300 "
+    />
+  </div>
+
+ 
+     
+ 
+
+          <div className="col-span-4 flex justify-end gap-3 mt-4">
             <button
               type="submit"
               disabled={mutation.isPending}
@@ -674,14 +719,14 @@ const handleCreateDashboard = async () => {
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-gray-100 text-gray-700 text-left">
-                <th className="px-3 py-2 border text-center">Project ID</th>
-                <th className="px-3 py-2 border text-center">Contract type</th>
-                <th className="px-3 py-2 border text-center">
-                  Contractor Name
+                <th className="px-3 py-2 border">Project ID</th>
+                <th className="px-3 py-2 border ">Contract type</th>
+                <th className="px-3 py-2 border ">
+                  Contractor
                 </th>
 
-                <th className="px-3 py-2 border text-center">Dependent</th>
-                <th className="px-3 py-2 border text-center">Sort</th>
+                <th className="px-3 py-2 border ">Dependent</th>
+                <th className="px-3 py-2 border text-center ">Sort</th>
                 <th className="px-3 py-2 border text-center">Cost</th>
               </tr>
             </thead>
@@ -689,16 +734,18 @@ const handleCreateDashboard = async () => {
               {editableLines.length > 0 ? (
                 editableLines.map((line, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 border text-center">
+                    <td className="px-3 py-2 w-[5%] border ">
                       {line.PROCESS_ID}
                     </td>
-                    <td className="px-3 py-2 border text-center">
-                      {contractorTypes.find(
-                        (c) => c.ID === line.SUB_CONTRACT_ID
-                      )?.NAME || ""}
+                    <td className="px-3 py-2 w-[30%] border ">
+                    <div className=" mx-auto ">
+      {contractorTypes.find(
+        (c) => c.ID === line.SUB_CONTRACT_ID
+      )?.NAME || ""}
+    </div>
                     </td>
 
-                    <td className="px-3 py-2 border text-center">
+                    <td className="py-2 border w-[20%] ">
                       <select
                         value={line.CONTRACTOR_ID || ""}
                         onChange={(e) =>
@@ -708,7 +755,7 @@ const handleCreateDashboard = async () => {
                             e.target.value
                           )
                         }
-                        className="rounded text-sm px-2 py-1 w-full focus:outline-none"
+                        className="rounded text-sm px-2 py-1 w-[90%]  focus:outline-none"
                       >
                         <option value="">Select Contractor</option>
                         {contractorNames.map((c) => (
@@ -719,7 +766,7 @@ const handleCreateDashboard = async () => {
                       </select>
                     </td>
 
-                    <td className="px-3 py-2 border text-center">
+                    <td className=" py-2 border w-[15%]">
                       <select
                         value={line.DEPENDENT_ID || ""}
                         onChange={(e) =>
@@ -729,7 +776,7 @@ const handleCreateDashboard = async () => {
                             e.target.value
                           )
                         }
-                        className="rounded text-sm px-2 py-1 w-full  focus:outline-none"
+                        className="rounded text-sm px-2 py-1 w-[90%]  focus:outline-none"
                       >
                         <option value="">Select Dependent</option>
                         {contractorTypes.map((c) => (
@@ -740,7 +787,7 @@ const handleCreateDashboard = async () => {
                       </select>
                     </td>
 
-                    <td className="px-3 py-2 border text-center">
+                    <td className="px-3 w-[5%] py-2 text-center border ">
                       <input
                         type="number"
                         value={line.SORT_ID || ""}
@@ -750,7 +797,7 @@ const handleCreateDashboard = async () => {
                         className="w-full border-none outline-none bg-transparent text-center"
                       />
                     </td>
-                    <td className="px-3 py-2 border text-center">
+                    <td className="px-3 py-2 w-[10%] border text-center">
                       <input
                         type="number"
                         value={line.COST || ""}
@@ -826,30 +873,6 @@ const handleCreateDashboard = async () => {
   );
 };
 
-// 🔹 Reusable Input Component
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  labelWidth = "w-32", // Tailwind width for label (default 8rem)
-  inputWidth = "flex-1", // Tailwind width for input (default full)
-}) => (
-  <div className="flex items-center gap-2">
-    <label
-      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
-    >
-      {label}
-    </label>
-    <input
-      type={type}
-      name={name}
-      value={value || ""}
-      onChange={onChange}
-      className={`border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all flex-1 ${inputWidth}`}
-    />
-  </div>
-);
+
 
 export default Project;

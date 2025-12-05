@@ -11,10 +11,23 @@ import { SectionContainer } from "../../SectionContainer";
 import { SupplierListTwo } from "./SupplierListTwo";
 import { toast } from "react-toastify";
 
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+
+
+
 // 🔹 Zod validation schema
 const supplierSchema = z.object({
   SUPPLIER_NAME: z.string().min(1, "Supplier Name is required"),
-  PASSWORD: z.string().optional(), // conditional handled later
+  
   ADDRESS: z.string().min(1, "Address is required"),
   CONTACT_PERSON: z.string().min(1, "Contact Person is required"),
   PHONE: z.string().min(1, "Phone is required"),
@@ -47,13 +60,13 @@ const SupplierPage = () => {
     handleSubmit,
     setValue,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm({
     resolver: zodResolver(supplierSchema),
     defaultValues: {
       SUPPLIER_NAME: "",
       ENTRY_BY: "101",
-      PASSWORD: "",
+     
       ORG_ID: "",
       ADDRESS: "",
       CONTACT_PERSON: "",
@@ -86,9 +99,7 @@ const SupplierPage = () => {
   // 🔹 Mutation for create/update
   const mutation = useMutation({
     mutationFn: async (formData) => {
-      if (!isEditing && !formData.PASSWORD) {
-        throw new Error("Password is required for new supplier");
-      }
+    
 
       if (isEditing) {
         return await api.put("/supplier_info.php", {
@@ -122,149 +133,121 @@ const SupplierPage = () => {
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-4 gap-6"
         >
-          {/* 🔹 Each field is its own mini grid: label col + input col */}
-          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Supplier Name
-            </label>
-            <input
-              type="text"
-              {...register("SUPPLIER_NAME")}
-              className="border border-black rounded-lg px-2 py-1 w-[80%]"
-            />
-            {errors.SUPPLIER_NAME && (
-              <span className="col-span-2 text-red-600 text-xs">
-                {errors.SUPPLIER_NAME.message}
-              </span>
-            )}
-          </div>
+        {/* Supplier Name */}
+<div className="flex flex-col w-[60%]">
+  <Label className="text-sm text-gray-900">
+    Supplier Name <span className="text-red-700">*</span>
+  </Label>
+  <Input
+    placeholder="Enter Supplier Name"
+    {...register("SUPPLIER_NAME")}
+    className="bg-gray-50"
+  />
+</div>
 
-          {!isEditing && (
-            <div className="grid grid-cols-[70px_1fr] items-center gap-3">
-              <label className="text-gray-700 text-sm font-medium text-right">
-                Password
-              </label>
-              <input
-                type="password"
-                {...register("PASSWORD")}
-                className="border rounded-lg  border-black px-2 py-1 w-[80%]"
-              />
-              {errors.PASSWORD && (
-                <span className="col-span-2 text-red-600 text-xs">
-                  {errors.PASSWORD.message}
-                </span>
-              )}
-            </div>
-          )}
+{/* Org ID */}
+<div className="flex w-[40%] flex-col">
+  <Label className="text-sm text-gray-900">Organization ID</Label>
+  <Input
+    type="number"
+    {...register("ORG_ID")}
+    className="bg-gray-50 "
+  />
+</div>
 
-          <div className="grid grid-cols-[45px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Address
-            </label>
-            <input
-              type="text"
-              {...register("ADDRESS")}
-              className="border border-black rounded-lg px-2 py-1 w-full"
-            />
-            {errors.ADDRESS && (
-              <span className="col-span-2 text-red-600 text-xs">
-                {errors.ADDRESS.message}
-              </span>
-            )}
-          </div>
+{/* Contact Person */}
+<div className="flex w-[60%] flex-col">
+  <Label className="text-sm text-gray-900">
+    Contact Person <span className="text-red-700">*</span>
+  </Label>
+  <Input
+    {...register("CONTACT_PERSON")}
+    className="bg-gray-50"
+  />
+</div>
 
-          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Contact Person
-            </label>
-            <input
-              type="text"
-              {...register("CONTACT_PERSON")}
-              className="border rounded-lg border-black px-2 py-1 w-[80%]"
-            />
-          </div>
+{/* Mobile */}
+<div className="flex w-[50%] flex-col">
+  <Label className="text-sm text-gray-900">Mobile</Label>
+  <Input
+    type="number"
+    {...register("MOBILE")}
+    className="bg-gray-50 "
+  />
+</div>
 
-          <div className="grid grid-cols-[70px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Phone
-            </label>
-            <input
-              type="text"
-              {...register("PHONE")}
-              className="border border-black rounded-lg px-2 py-1 w-[70%]"
-            />
-          </div>
+{/* Phone */}
+<div className="flex w-[50%] flex-col">
+  <Label className="text-sm text-gray-900">Phone</Label>
+  <Input
+    type="number"
+    {...register("PHONE")}
+    className="bg-gray-50 "
+  />
+</div>
 
-          <div className="grid grid-cols-[45px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Mobile
-            </label>
-            <input
-              type="text"
-              {...register("MOBILE")}
-              className="border rounded-lg border-black px-2 py-1 w-[70%]"
-            />
-          </div>
+{/* Email */}
+<div className="flex w-[70%] flex-col">
+  <Label className="text-sm text-gray-900">Email</Label>
+  <Input
+    type="email"
+    {...register("EMAIL")}
+    className="bg-gray-50 "
+  />
+</div>
 
-          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Email
-            </label>
-            <input
-              type="text"
-              {...register("EMAIL")}
-              className="border rounded-lg border-black px-2 py-1 w-[100%]"
-            />
-          </div>
+{/* Fax */}
+<div className="flex w-[60%] flex-col">
+  <Label className="text-sm text-gray-900">Fax</Label>
+  <Input
+    type="text"
+    {...register("FAX")}
+    className="bg-gray-50 "
+  />
+</div>
 
-          <div className="grid grid-cols-[70px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Due
-            </label>
-            <input
-              type="text"
-              {...register("DUE")}
-              className="border border-black rounded-lg px-2 py-1 w-[60%]"
-            />
-          </div>
+{/* Due (Select) */}
+<div className="flex w-[40%] flex-col">
+  <Label className="text-sm text-gray-900">Due</Label>
+ <Input
+    type="text"
+    {...register("DUE")}
+    className="bg-gray-50 "
+  />
+ 
+</div>
 
-          <div className="grid grid-cols-[45px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Remarks
-            </label>
-            <input
-              type="text"
-              {...register("REMARKS")}
-              className="border border-black rounded-lg px-2 py-1 w-[60%]"
-            />
-          </div>
+{/* Address */}
+<div className="flex flex-col md:col-span-2">
+  <Label className="text-sm text-gray-900">
+    Address <span className="text-red-700">*</span>
+  </Label>
+  <Textarea
+    rows={3}
+    {...register("ADDRESS")}
+    className="bg-gray-50"
+  />
+</div>
 
-          <div className="grid grid-cols-[100px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Fax
-            </label>
-            <input
-              type="text"
-              {...register("FAX")}
-              className="border border-black rounded-lg px-2 py-1 w-[60%]"
-            />
-          </div>
+{/* Remarks */}
+<div className="flex flex-col md:col-span-1">
+  <Label className="text-sm text-gray-900">Remarks</Label>
+  <Textarea
+    rows={2}
+    {...register("REMARKS")}
+    className="bg-gray-50"
+  />
+</div>
 
-          <div className="grid grid-cols-[75px_1fr] items-center gap-3">
-            <label className="text-gray-700 text-sm font-medium text-right">
-              Organization ID
-            </label>
-            <input
-              type="text"
-              {...register("ORG_ID")}
-              className="border border-black rounded-lg px-2 py-1 w-[80%]"
-            />
-          </div>
+
+
+
+
 
           {/* ✅ Button Section */}
-          <div className="col-span-3 flex justify-end gap-3 mt-4">
+          <div className="col-span-4 flex justify-end gap-3 mt-4">
             <button
               type="submit"
               disabled={isSubmitting || mutation.isPending}

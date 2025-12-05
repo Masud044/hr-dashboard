@@ -78,6 +78,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("CUSTOMER_NAME")}</div>,
   },
   {
     accessorKey: "ENTRY_DATE",
@@ -92,6 +93,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_DATE")}</div>,
   },
   {
     accessorKey: "EMAIL",
@@ -106,6 +108,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("EMAIL")}</div>,
   },
   {
     accessorKey: "ADDRESS",
@@ -120,6 +123,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("ADDRESS")}</div>,
   },
   {
     accessorKey: "MOBILE",
@@ -134,56 +138,49 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("MOBILE")}</div>,
   },
  
 
-  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
-  {
+   // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
+   {
     id: "actions",
     enableHiding: false,
     header: () => <div className="text-center">Actions</div>,
     cell: ({ row }) => {
       const item = row.original;
-
+  
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(item.H_ID)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link to={`/dashboard/customer-setting-voucher/${item.CUSTOMER_ID}`}>
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Pencil size={16} className="text-blue-600" />
-                  Edit
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-            //   onClick={() => console.log("Delete ID:", item.CUSTOMER_ID)}
-              className="text-red-600"
-            >
-              <Trash2 size={16}  className="text-red-600" />
-              Delete
-            </DropdownMenuItem>
-           
-            
+        <div className="flex items-center gap-3 justify-center">
           
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Edit Button */}
+          <Link
+            to={`/dashboard/customer-setting-voucher/${item.CUSTOMER_ID}`}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <Pencil size={18} />
+          </Link>
+  
+          {/* Copy Button
+          <button
+            onClick={() => navigator.clipboard.writeText(item.P_ID)}
+            className="text-gray-600 hover:text-black"
+          >
+            <ExternalLink size={18} />
+          </button> */}
+  
+          {/* Delete Button */}
+          <button
+            onClick={() => console.log("Delete:", item.CUSTOMER_ID)}
+            className="text-red-600 hover:text-red-800"
+          >
+            <Trash2 size={18} />
+          </button>
+  
+        </div>
       );
     },
-  },
+  }
 ];
 
 export function CustomerListTwo() {
