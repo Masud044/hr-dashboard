@@ -6,6 +6,9 @@ import api from "../../../api/Api";
 
 import { ContratorListTwo } from "./ContratorListTwo";
 import { SectionContainer } from "@/components/SectionContainer";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 const Contrator = () => {
   const { id } = useParams();
@@ -163,77 +166,136 @@ const { data } = useQuery({
 
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-4 gap-2"
         >
-          <Input
-            label="Contractor Name"
-            name="CONTRATOR_NAME"
-            value={formData.CONTRATOR_NAME}
-            onChange={handleChange}
-          />
-          <Input
-            label="ABN"
-            name="ABN"
-            value={formData.ABN}
-            onChange={handleChange}
-          />
-          <Input
-            label="License No"
-            name="LIEC_NO"
-            value={formData.LIEC_NO}
-            onChange={handleChange}
-          />
-          <Input
-            label="Suburb"
-            name="SUBURB"
-            value={formData.SUBURB}
-            onChange={handleChange}
-          />
-          <Input
-            label="Postcode"
-            name="POSTCODE"
-            value={formData.POSTCODE}
-            onChange={handleChange}
-          />
-          <Input
-            label="State"
-            name="STATE"
-            value={formData.STATE}
-            onChange={handleChange}
-          />
-          <Input
-            label="Address"
-            name="ADDRESS"
-            value={formData.ADDRESS}
-            onChange={handleChange}
-          />
-          <Input
-            label="Contact Person"
-            name="CONTACT_PERSON"
-            value={formData.CONTACT_PERSON}
-            onChange={handleChange}
-          />
-          <Input
-            label="Phone"
-            name="PHONE"
-            value={formData.PHONE}
-            onChange={handleChange}
-          />
-          <Input
-            label="Email"
-            name="EMAIL"
-            value={formData.EMAIL}
-            onChange={handleChange}
-          />
-          <Input
-            label="Mobile"
-            name="MOBILE"
-            value={formData.MOBILE}
-            onChange={handleChange}
-          />
+          
+         {/* Contractor Name */}
+  <div className="flex flex-col gap-1 w-[60%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Contractor Name</Label>
+    <Input
+      name="CONTRATOR_NAME"
+      value={formData.CONTRATOR_NAME}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* ABN */}
+  <div className="flex flex-col gap-1 w-[40%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">ABN</Label>
+    <Input
+      name="ABN"
+      value={formData.ABN}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* License No */}
+  <div className="flex flex-col gap-1 w-[40%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">License No</Label>
+    <Input
+      name="LIEC_NO"
+      value={formData.LIEC_NO}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* Suburb */}
+  <div className="flex flex-col gap-1 w-[60%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Suburb</Label>
+    <Input
+      name="SUBURB"
+      value={formData.SUBURB}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* Postcode */}
+  <div className="flex flex-col gap-1 w-[40%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Postcode</Label>
+    <Input
+      name="POSTCODE"
+      value={formData.POSTCODE}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* State */}
+  <div className="flex flex-col gap-1 w-[50%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">State</Label>
+    <Input
+      name="STATE"
+      value={formData.STATE}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+ 
+
+  {/* Contact Person */}
+  <div className="flex flex-col gap-1 w-[50%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Contact Person</Label>
+    <Input
+      name="CONTACT_PERSON"
+      value={formData.CONTACT_PERSON}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* Phone */}
+  <div className="flex flex-col gap-1 w-[50%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Phone</Label>
+    <Input
+      name="PHONE"
+      value={formData.PHONE}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* Email */}
+  <div className="flex flex-col gap-1 w-[70%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Email</Label>
+    <Input
+      name="EMAIL"
+      type="email"
+      value={formData.EMAIL}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+
+  {/* Mobile */}
+  <div className="flex flex-col gap-1 w-[50%] flex-1">
+    <Label className="text-sm font-medium text-gray-900">Mobile</Label>
+    <Input
+      name="MOBILE"
+      value={formData.MOBILE}
+      onChange={handleChange}
+      className="h-10 bg-gray-50 border border-gray-300"
+    />
+  </div>
+   {/* Address (textarea) */}
+  <div className="flex flex-col gap-1 flex-1 md:col-span-2">
+    <Label className="text-sm font-medium text-gray-900">Address</Label>
+    <Textarea
+      name="ADDRESS"
+      value={formData.ADDRESS}
+      onChange={handleChange}
+      rows={3}
+      className="bg-gray-50 border border-gray-300"
+    />
+  </div>
+
 
           {/* Buttons */}
-          <div className="col-span-3 flex justify-end gap-3 mt-4">
+          <div className="col-span-4 flex justify-end gap-3 mt-4">
             <button
               type="submit"
               disabled={mutation.isPending}
@@ -257,30 +319,6 @@ const { data } = useQuery({
   );
 };
 
-// 🔹 Reusable Input
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  labelWidth = "w-32",   // Tailwind width for label (default 8rem)
-  inputWidth = "flex-1", // Tailwind width for input (default full)
-}) => (
-  <div className="flex items-center gap-2">
-    <label
-      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
-    >
-      {label}
-    </label>
-    <input
-      type={type}
-      name={name}
-      value={value || ""}
-      onChange={onChange}
-      className={`border border-gray-500 text-sm rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-200 ${inputWidth}`}
-    />
-  </div>
-);
+
 
 export default Contrator;

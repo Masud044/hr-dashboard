@@ -11,6 +11,10 @@ import { SectionContainer } from "@/components/SectionContainer";
 // import ScheduleList from "../sheduleLine/SheduleList";
 // import SheduleHeaderList from "./SheduleHeaderList";
 
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+
 const SheduleHeader = () => {
   const { id } = useParams(); // H_ID
 
@@ -44,6 +48,7 @@ const SheduleHeader = () => {
     },
     enabled: !!id,
   });
+  console.log(data)
 
   // 🔹 Populate form when data arrives
   useEffect(() => {
@@ -128,13 +133,13 @@ const SheduleHeader = () => {
 
   {/* DESCRIPTION */}
   <div className="flex flex-col gap-1">
-    <label className="text-gray-700 text-sm font-medium">Description</label>
-    <input
+    <Label className="text-gray-900 text-sm font-medium">Description</Label>
+    <Textarea
       type="text"
       name="DESCRIPTION"
       value={formData.DESCRIPTION}
       onChange={handleChange}
-      className="border border-gray-500 rounded 
+      className="border border-gray-300 rounded bg-gray-50
                  px-4 py-3 
                  text-[15px]
                  w-2/3 
@@ -147,13 +152,13 @@ const SheduleHeader = () => {
   <div className="grid grid-cols-4 items-center  gap-4">
  {/* PROJECT START PLAN */}
   <div className="flex flex-col gap-1">
-    <label className="text-gray-700 text-sm font-medium">Project Start Plan</label>
-    <input
+    <Label className="text-gray-900 text-sm font-medium">Project Start Plan</Label>
+    <Input
       type="date"
       name="PROJECT_START_PLAN"
       value={formData.PROJECT_START_PLAN}
       onChange={handleChange}
-      className="border border-gray-500 rounded 
+      className="border border-gray-300 rounded  bg-gray-50
                  px-4 py-3 
                  text-[15px]
                  w-full
@@ -164,13 +169,13 @@ const SheduleHeader = () => {
 
   {/* PROJECT END PLAN */}
   <div className="flex flex-col gap-1">
-    <label className="text-gray-700 text-sm font-medium">Project End Plan</label>
-    <input
+    <Label className="text-gray-900 text-sm font-medium">Project End Plan</Label>
+    <Input
       type="date"
       name="PROJECT_END_PLAN"
       value={formData.PROJECT_END_PLAN}
       onChange={handleChange}
-      className="border border-gray-500 rounded 
+      className="border border-gray-300 rounded bg-gray-50
                  px-4 py-3 
                  text-[15px]
                  w-full

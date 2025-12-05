@@ -78,6 +78,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("SUPPLIER_NAME")}</div>,
   },
   {
     accessorKey: "ENTRY_DATE",
@@ -92,6 +93,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_DATE")}</div>,
   },
   {
     accessorKey: "EMAIL",
@@ -106,6 +108,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("EMAIL")}</div>,
   },
   {
     accessorKey: "CONTACT_PERSON",
@@ -120,6 +123,7 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("CONTACT_PERSON")}</div>,
   },
   {
     accessorKey: "PHONE",
@@ -134,53 +138,49 @@ const columns = [
         </Button>
       )
     },
+     cell: ({ row }) => <div className="ml-3">{row.getValue("PHONE")}</div>,
   },
 
 
-  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
-  {
+   // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
+   {
     id: "actions",
     enableHiding: false,
     header: () => <div className="text-center">Actions</div>,
     cell: ({ row }) => {
       const item = row.original;
-
+  
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(item.SUPPLIER_ID)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link to={`/dashboard/supplier-setting-voucher/${item.SUPPLIER_ID}`}>
-                <div className="flex items-center gap-2">
-                  <Pencil size={16} />
-                  Edit
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-            //   onClick={() => console.log("Delete ID:", item.H_ID)}
-              className="text-red-600"
-            >
-              <Trash2 size={16} className="mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-3 justify-center">
+          
+          {/* Edit Button */}
+          <Link
+            to={`/dashboard/supplier-setting-voucher/${item.SUPPLIER_ID}`}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <Pencil size={18} />
+          </Link>
+  
+          {/* Copy Button
+          <button
+            onClick={() => navigator.clipboard.writeText(item.P_ID)}
+            className="text-gray-600 hover:text-black"
+          >
+            <ExternalLink size={18} />
+          </button> */}
+  
+          {/* Delete Button */}
+          <button
+            onClick={() => console.log("Delete:", item.P_ID)}
+            className="text-red-600 hover:text-red-800"
+          >
+            <Trash2 size={18} />
+          </button>
+  
+        </div>
       );
     },
-  },
+  }
 ];
 
 export function SupplierListTwo() {
@@ -227,10 +227,10 @@ export function SupplierListTwo() {
       {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter descriptions..."
-          value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+          placeholder="Filter ENTRY_DATE..."
+          value={table.getColumn("ENTRY_DATE")?.getFilterValue() ?? ""}
           onChange={(e) =>
-            table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+            table.getColumn("ENTRY_DATE")?.setFilterValue(e.target.value)
           }
           className="max-w-sm"
         />

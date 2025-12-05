@@ -37,6 +37,7 @@ import SheduleLine from "./components/report/sheduleLine/SheduleLine";
 import SheduleHeader from "./components/report/sheduleHeader/SheduleHeader";
 import DashboardTimeline from "./components/report/dashboardTimeline/DashboardTimeline";
 import { AuthProvider } from "./authentication/AuthProvider";
+import WelcomePage from "./pages/welcomePage";
 
  
 
@@ -64,7 +65,7 @@ const App = () => {
           <Route path="/" element={<Home></Home>} />
           <Route path="/dashboard" element={<Dashboard />}>
             {/* Default dashboard view */}
-            <Route index element={<DashboardTimeline />} />
+            <Route index element={<WelcomePage />} />
 
             {/* Payment Voucher route */}
 

@@ -9,6 +9,10 @@ import { CustomerListTwo } from "./CustomerListTwo";
 import { SectionContainer } from "@/components/SectionContainer";
 import { toast } from "react-toastify";
 
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+
 
 const CustomerPage = () => {
   const { id } = useParams();
@@ -28,7 +32,7 @@ const CustomerPage = () => {
   const [formData, setFormData] = useState({
     CUSTOMER_NAME: "",
     ENTRY_BY: "101",
-    PASSWORD: "",
+    // PASSWORD: "",
     ORG_ID: "",
     ADDRESS: "",
     CONTACT_PERSON: "",
@@ -109,7 +113,7 @@ const CustomerPage = () => {
      const required = [
      "CUSTOMER_NAME",
     "ENTRY_BY",
-    "PASSWORD",
+    // "PASSWORD",
     "ORG_ID",
     "ADDRESS",
     "CONTACT_PERSON",
@@ -133,7 +137,7 @@ const CustomerPage = () => {
     setFormData({
       CUSTOMER_NAME: "",
       ENTRY_BY: "101",
-      PASSWORD: "",
+      // PASSWORD: "",
       ORG_ID: "",
       ADDRESS: "",
       CONTACT_PERSON: "",
@@ -174,83 +178,120 @@ const CustomerPage = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-4 gap-6"
       >
-        <Input
+
+        <div className="flex flex-col w-[70%]">
+          <Label className="text-sm text-gray-900">
+            Customer Name <span className="text-red-700">*</span>
+          </Label>
+         <Input
+              name="CUSTOMER_NAME"
+              value={formData.CUSTOMER_NAME}
+               onChange={handleChange}
+               className="h-10 bg-gray-50 border-gray-300 "
+             />
+        </div>
+        {/* <Input
           label="Customer Name"
           name="CUSTOMER_NAME"
           value={formData.CUSTOMER_NAME}
           onChange={handleChange}
           className=""
-        />
-        <Input
+        /> */}
+
+         <div className="flex flex-col w-[40%]">
+          <Label className="text-sm text-gray-900">
+            Organization ID 
+          </Label>
+         <Input
+              name="ORG_ID"
+              value={formData.ORG_ID}
+               onChange={handleChange}
+               className="h-10 bg-gray-50 border-gray-300 "
+             />
+        </div>
+        {/* <Input
           label="Organization ID"
           name="ORG_ID"
           value={formData.ORG_ID}
           onChange={handleChange}
           inputWidth="w-30"
           labelWidth="28"
-        />
-        <Input
+        /> */}
+
+        <div className="flex flex-col w-[70%]">
+          <Label className="text-sm text-gray-900">
+           Email
+          </Label>
+         <Input
+            name="EMAIL"
+            value={formData.EMAIL}
+               onChange={handleChange}
+               className="h-10 bg-gray-50 border-gray-300 "
+             />
+        </div>
+        
+        {/* <Input
           label="Address"
           name="ADDRESS"
           value={formData.ADDRESS}
           onChange={handleChange}
-        />
-        <Input
+        /> */}
+
+        <div className="flex flex-col w-[60%]">
+          <Label className="text-sm text-gray-900">
+           Contact Person
+          </Label>
+         <Input
+             name="CONTACT_PERSON"
+             value={formData.CONTACT_PERSON}
+               onChange={handleChange}
+               className="h-10 bg-gray-50 border-gray-300 "
+             />
+        </div>
+        {/* <Input
           label="Contact Person"
           name="CONTACT_PERSON"
           value={formData.CONTACT_PERSON}
           onChange={handleChange}
-        />
+        /> */}
         {/* <Input
           label="Phone"
           name="PHONE"
           value={formData.PHONE}
           onChange={handleChange}
         /> */}
-        <Input
-          label="Mobile"
-          name="MOBILE"
-          value={formData.MOBILE}
-          onChange={handleChange}
-        />
-        <Input
-          label="Email"
-          name="EMAIL"
-          value={formData.EMAIL}
-          onChange={handleChange}
-        />
-        {/* <Input
-          label="Due"
-          name="DUE"
-          value={formData.DUE}
-          onChange={handleChange}
-        /> */}
-        {/* <Input
-          label="Remarks"
-          name="REMARKS"
-          value={formData.REMARKS}
-          onChange={handleChange}
-        /> */}
-        {/* <Input
-          label="Fax"
-          name="FAX"
-          value={formData.FAX}
-          onChange={handleChange}
-        /> */}
-        {!isEditing && (
-          <Input
-            label="Password"
-            type="password"
-            name="PASSWORD"
-            value={formData.PASSWORD}
-            onChange={handleChange}
-          />
-        )}
+
+        
+
+         <div className="flex flex-col md:col-span-2   gap-1 flex-1 ">
+             <Label className="text-sm font-medium text-gray-900">Address</Label>
+             <Textarea
+               name="ADDRESS"
+                value={formData.ADDRESS}
+               onChange={handleChange}
+               placeholder="Enter address"
+               className="min-h-[70px] bg-gray-50 border-gray-300"
+             />
+           </div>
+            <div className="flex flex-col w-[45%]">
+          <Label className="text-sm text-gray-900">
+           Mobile
+          </Label>
+         <Input
+            name="MOBILE"
+            value={formData.MOBILE}
+               onChange={handleChange}
+               className="h-10 bg-gray-50 border-gray-300 "
+             />
+        </div>
+       
+      
+         
 
         {/* Buttons */}
-        <div className="col-span-3 flex justify-end gap-3 mt-4">
+        <div className="col-span-4 flex justify-end gap-3 mt-4">
           <button
             type="submit"
             disabled={mutation.isPending}
@@ -282,30 +323,5 @@ const CustomerPage = () => {
   );
 };
 
-// 🔹 Reusable Input
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  labelWidth = "w-32",   // Tailwind width for label (default 8rem)
-  inputWidth = "flex-1", // Tailwind width for input (default full)
-}) => (
-  <div className="flex items-center gap-2">
-    <label
-      className={`text-gray-700 text-sm font-medium text-right ${labelWidth}`}
-    >
-      {label}
-    </label>
-    <input
-      type={type}
-      name={name}
-      value={value || ""}
-      onChange={onChange}
-      className={`border border-gray-600 opacity-60 rounded-lg text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all flex-1 ${inputWidth}`}
-    />
-  </div>
-);
 
 export default CustomerPage;
