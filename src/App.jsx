@@ -15,13 +15,14 @@ import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from "./authentication/AuthProvider";
 import WelcomePage from "./pages/welcomePage";
 import DashboardLayout from "./Layout/DashboardLayout";
-import Dashboard from "./features/main-entry/pages/Dashboard";
+import Dashboard from "./features/main-entry/pages/Dashboard"
 import Project from "./features/setting/pages/Project";
 import Contractor from "./features/setting/pages/Contractor";
-import User from "./features/user/pages/user";
+
 import Supplier from "./features/setting/pages/Supplier";
 import Admin from "./features/user/pages/Admin";
 import DashboardTimeline from "./features/main-entry/pages/DashboardTimeline";
+import User from "./features/user/pages/User";
 
 
 
