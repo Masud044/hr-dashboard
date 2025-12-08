@@ -27,6 +27,7 @@ import User from "./features/user/pages/User";
 
 
 
+
 const App = () => {
   // function PrivateRoute({ children }) {
   //   const { isAuthenticated } = useAuth();
@@ -63,7 +64,7 @@ const App = () => {
              
             <Route path="timeline" element={<DashboardTimeline />} />
              <Route path="timeline/:H_ID" element={<DashboardTimeline />} />
-            
+           
           
 
           </Route>
