@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,16 +8,23 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
-import { useQuery } from "@tanstack/react-query"
-import api from "@/api/Api"
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api/Api";
 
-import { Link } from "react-router-dom"
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal, ExternalLink } from "lucide-react"
+import { Link } from "react-router-dom";
+import {
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  ExternalLink,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -26,8 +33,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -35,8 +42,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { DataTablePagination } from "@/components/DataTablePagination"
+} from "@/components/ui/table";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 // ⭐ All Table Columns with Enhanced Features
 const columns = [
@@ -63,7 +70,7 @@ const columns = [
     enableSorting: false,
     enableHiding: false,
   },
-  
+
   // ✅ SORTABLE COLUMNS
   {
     accessorKey: "P_ID",
@@ -76,9 +83,9 @@ const columns = [
           Project ID
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("P_ID")}</div>,
+    cell: ({ row }) => <div className="ml-3">{row.getValue("P_ID")}</div>,
   },
   {
     accessorKey: "DESCRIPTION",
@@ -91,9 +98,11 @@ const columns = [
           Description
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
+    cell: ({ row }) => (
+      <div className="ml-3">{row.getValue("DESCRIPTION")}</div>
+    ),
   },
   {
     accessorKey: "CREATED_BY",
@@ -106,9 +115,9 @@ const columns = [
           Created By
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("CREATED_BY")}</div>,
+    cell: ({ row }) => <div className="ml-3">{row.getValue("CREATED_BY")}</div>,
   },
   {
     accessorKey: "UPDATED_BY",
@@ -121,9 +130,9 @@ const columns = [
           Updated By
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("UPDATED_BY")}</div>,
+    cell: ({ row }) => <div className="ml-3">{row.getValue("UPDATED_BY")}</div>,
   },
   {
     accessorKey: "CREATION_DATE",
@@ -136,9 +145,11 @@ const columns = [
           Created Date
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("CREATION_DATE")}</div>,
+    cell: ({ row }) => (
+      <div className="ml-3">{row.getValue("CREATION_DATE")}</div>
+    ),
   },
   {
     accessorKey: "UPDATED_DATE",
@@ -151,49 +162,52 @@ const columns = [
           Updated Date
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("UPDATED_DATE")}</div>,
+    cell: ({ row }) => (
+      <div className="ml-3">{row.getValue("UPDATED_DATE")}</div>
+    ),
   },
- // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
- {
-  id: "actions",
-  enableHiding: false,
-  header: () => <div className="text-center">Actions</div>,
-  cell: ({ row }) => {
-    const item = row.original;
+  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
+  {
+    id: "actions",
+    enableHiding: false,
+    header: () => <div className="text-center">Actions</div>,
+    cell: ({ row }) => {
+      const item = row.original;
 
-    return (
-      <div className="flex items-center gap-3 justify-center">
-        
-        {/* Edit Button */}
-        <Link
-          to={`/dashboard/dashboard-schedule/${item.H_ID}`}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          <Pencil size={18} />
-        </Link>
+      return (
+        <div className="flex items-center gap-1.5 justify-center">
+          {/* Edit Button */}
+          <Link
+            to={`/dashboard/dashboard-schedule/${item.H_ID}`}
+           
+          >
+            <Button variant="ghost" size="icon-sm">
+              <Pencil size={18} />
+            </Button>
+          </Link>
 
+          <Link
+            to={`/dashboard/timeline/${item.H_ID}`}
+            
+          >
+            <Button variant="ghost" size="icon-sm">
+              <ExternalLink size={18} />
+            </Button>
+          </Link>
+
+          {/* Delete Button */}
          
-        <Link
-           to={`/dashboard/timeline/${item.H_ID}`}
-          className="text-purple-600 hover:text-purple"
-        >
-          <ExternalLink size={18} />
-        </Link> 
-
-        {/* Delete Button */}
-        <button
-          onClick={() => console.log("Delete:", item.P_ID)}
-          className="text-red-600 hover:text-red-800"
-        >
-          <Trash2 size={18} />
-        </button>
-
-      </div>
-    );
+            <Button onClick={() => console.log("Delete:", item.P_ID)} variant="ghost" size="icon-sm" >
+              {" "}
+              <Trash2 size={18} />
+            </Button>
+          
+        </div>
+      );
+    },
   },
-}
 ];
 
 export function DashboardTable() {
@@ -202,20 +216,17 @@ export function DashboardTable() {
     queryKey: ["schedules"],
     queryFn: async () => {
       const res = await api.get("/shedule.php");
-       const fetchedData = res.data?.data || [];
-    
-    
-    fetchedData.sort(
-      (a, b) => (Number(b.H_ID) || 0) - (Number(a.H_ID) || 0)
-    );
-    
-    return fetchedData;
+      const fetchedData = res.data?.data || [];
+
+      fetchedData.sort((a, b) => (Number(b.H_ID) || 0) - (Number(a.H_ID) || 0));
+
+      return fetchedData;
       // return res.data?.data || [];
-    }
+    },
   });
 
   const apiData = data || [];
-  console.log(apiData)
+  console.log(apiData);
 
   // ✅ NEW STATE VARIABLES
   const [sorting, setSorting] = React.useState([]);
@@ -245,7 +256,6 @@ export function DashboardTable() {
 
   return (
     <div className=" mt-4 shadow-2xl rounded-lg bg-white ">
-      
       {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4">
         <Input
@@ -256,7 +266,7 @@ export function DashboardTable() {
           }
           className="max-w-sm"
         />
-        
+
         {/* ✅ COLUMN VISIBILITY DROPDOWN (NEW) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -280,7 +290,7 @@ export function DashboardTable() {
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
-                )
+                );
               })}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -290,13 +300,16 @@ export function DashboardTable() {
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map(group => (
+            {table.getHeaderGroups().map((group) => (
               <TableRow key={group.id}>
-                {group.headers.map(header => (
+                {group.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -307,32 +320,41 @@ export function DashboardTable() {
             {/* Loading */}
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center h-24"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             ) : null}
 
             {/* Data Rows */}
-            {!isLoading && table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map(row => (
-                <TableRow 
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : null}
+            {!isLoading && table.getRowModel().rows.length
+              ? table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              : null}
 
             {/* No Data */}
             {!isLoading && table.getRowModel().rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center h-24"
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -367,7 +389,6 @@ export function DashboardTable() {
         </div>
       </div> */}
       <DataTablePagination table={table}></DataTablePagination>
-
     </div>
   );
 }
