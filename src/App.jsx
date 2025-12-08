@@ -23,6 +23,8 @@ import Supplier from "./features/setting/pages/Supplier";
 import Admin from "./features/user/pages/Admin";
 import DashboardTimeline from "./features/main-entry/pages/DashboardTimeline";
 import User from "./features/user/pages/User";
+import { SheetDemo } from "./features/setting/pages/ContractorEditSheet";
+
 
 
 
@@ -64,10 +66,13 @@ const App = () => {
              
             <Route path="timeline" element={<DashboardTimeline />} />
              <Route path="timeline/:H_ID" element={<DashboardTimeline />} />
+
+            
            
           
 
           </Route>
+           <Route path="seet" element={<SheetDemo />} />
           <Route path="/login" element={<Login></Login>} />
           <Route path="/register" element={<Register></Register>} />
         </Routes>

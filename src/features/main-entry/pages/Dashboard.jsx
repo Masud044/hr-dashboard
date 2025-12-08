@@ -141,12 +141,8 @@ const Dashboard = () => {
                 name="DESCRIPTION"
                 value={formData.DESCRIPTION}
                 onChange={handleChange}
-                className="border border-gray-300 rounded bg-gray-50
-                 px-4 py-3 
-                 text-[15px]
-                 w-2/3 
-                 focus:outline-none focus:ring-2 focus:ring-green-400"
-                style={{ height: "45px" }} // 👈 your custom height
+              
+                // style={{ height: "45px" }} // 👈 your custom height
               />
             </div>
 
@@ -161,11 +157,11 @@ const Dashboard = () => {
                   name="PROJECT_START_PLAN"
                   value={formData.PROJECT_START_PLAN}
                   onChange={handleChange}
-                  className="border border-gray-300 rounded  bg-gray-50
-                 px-4 py-3 
-                 text-[15px]
-                 w-full
-                 focus:outline-none focus:ring-2 focus:ring-green-400"
+                //   className="border border-gray-300   bg-gray-50
+                //  px-4 py-3 
+                //  text-[15px]
+                //  w-full
+                //  focus:outline-none focus:ring-2 focus:ring-green-400"
                   style={{ height: "45px" }}
                 />
               </div>
@@ -180,11 +176,7 @@ const Dashboard = () => {
                   name="PROJECT_END_PLAN"
                   value={formData.PROJECT_END_PLAN}
                   onChange={handleChange}
-                  className="border border-gray-300 rounded bg-gray-50
-                 px-4 py-3 
-                 text-[15px]
-                 w-full
-                 focus:outline-none focus:ring-2 focus:ring-green-400"
+                 
                   style={{ height: "45px" }}
                 />
               </div>
