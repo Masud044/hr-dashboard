@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProjectTable } from "../components/ProjectTable";
 import api from "@/api/Api";
+import { Button } from "@/components/ui/button";
 
 const Project = () => {
   const { id } = useParams();
@@ -670,10 +671,10 @@ const handleCreateDashboard = async () => {
  
 
           <div className="col-span-4 flex justify-end gap-3 mt-4">
-            <button
+            <Button
               type="submit"
               disabled={mutation.isPending}
-              className="bg-green-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
+              // className="bg-green-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
             >
               <Save size={16} />
               {mutation.isPending
@@ -681,29 +682,29 @@ const handleCreateDashboard = async () => {
                 : isEditing
                 ? "Update Project"
                 : "Save Project"}
-            </button>
+            </Button>
 
             {(id || savedProjectId) && (
-              <button
+              <Button
                 type="button"
                 onClick={handleProcess}
                 disabled={processMutation.isPending}
-                className="bg-blue-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-500"
+                // className="bg-blue-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-500"
               >
                 <Cog
                   size={16}
                   className={processMutation.isPending ? "animate-spin" : ""}
                 />
                 {processMutation.isPending ? "Processing..." : "Make Process"}
-              </button>
+              </Button>
             )}
-          <button
+          <Button
   type="button"
   onClick={() => setShowDashboardModal(true)}
-  className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
+  // className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
 >
   Create Dashboard
-</button>
+</Button>
 
 
             {/* <button
@@ -824,13 +825,13 @@ const handleCreateDashboard = async () => {
 
         {editableLines.length > 0 && (
           <div className="flex justify-end mt-3">
-            <button
+            <Button
               onClick={() => updateProcessMutation.mutate(editableLines)}
-              className="bg-purple-600 text-white text-sm px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-500"
+              // className="bg-purple-600 text-white text-sm px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-500"
             >
               <Upload size={16} />
               {updateProcessMutation.isPending ? "Updating..." : "Save Changes"}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -840,27 +841,27 @@ const handleCreateDashboard = async () => {
     <div className="bg-white rounded-lg p-6 w-96">
       <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
 
-      <input
+      <Input
         type="date"
         value={dashboardDate}
         onChange={(e) => setDashboardDate(e.target.value)}
-        className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+        // className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
       />
 
       <div className="flex justify-end gap-3">
-        <button
+        <Button
           onClick={() => setShowDashboardModal(false)}
-          className="px-4 py-2 rounded border border-gray-400"
+          // className="px-4 py-2 rounded border border-gray-400"
         >
           Cancel
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={handleCreateDashboard}
-          className="px-4 py-2 rounded bg-blue-600 text-white"
+          // className="px-4 py-2 rounded bg-blue-600 text-white"
         >
           Create
-        </button>
+        </Button>
       </div>
     </div>
   </div>

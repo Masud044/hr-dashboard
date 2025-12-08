@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import React, { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,26 +8,22 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
-import { useQuery } from "@tanstack/react-query"
-import api from "@/api/Api"
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api/Api";
 
-import { Link } from "react-router-dom"
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal, ExternalLink } from "lucide-react"
+import { Pencil, Trash2, ArrowUpDown, ChevronDown } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -35,174 +31,166 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { DataTablePagination } from "@/components/DataTablePagination"
+} from "@/components/ui/table";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
-// ⭐ All Table Columns with Enhanced Features
-const columns = [
-  // ✅ SELECT COLUMN (NEW)
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  
-  // ✅ SORTABLE COLUMNS
-  {
-    accessorKey: "CONTRATOR_NAME",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          CONTRATOR NAME
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="ml-3">{row.getValue("CONTRATOR_NAME")}</div>,
-  },
-  {
-    accessorKey: "ENTRY_DATE",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          ENTRY_DATE
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_DATE")}</div>,
-  
-  },
-  {
-    accessorKey: "EMAIL",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          EMAIL
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="ml-3">{row.getValue("EMAIL")}</div>,
-  },
-  {
-    accessorKey: "ADDRESS",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          ADDRESS
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-     cell: ({ row }) => <div className="ml-3">{row.getValue("ADDRESS")}</div>,
-  },
-  {
-    accessorKey: "MOBILE",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          MOBILE
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="ml-3">{row.getValue("MOBILE")}</div>,
-  },
- 
-
-  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
-    {
-     id: "actions",
-     enableHiding: false,
-     header: () => <div className="text-center">Actions</div>,
-     cell: ({ row }) => {
-       const item = row.original;
-   
-       return (
-         <div className="flex items-center gap-3 justify-center">
-           
-           {/* Edit Button */}
-           <Link
-             to={`/dashboard/contractor/${item.CONTRATOR_ID}`}
-             className="text-blue-600 hover:text-blue-800"
-           >
-             <Pencil size={18} />
-           </Link>
-   
-           {/* Copy Button
-           <button
-             onClick={() => navigator.clipboard.writeText(item.P_ID)}
-             className="text-gray-600 hover:text-black"
-           >
-             <ExternalLink size={18} />
-           </button> */}
-   
-           {/* Delete Button */}
-           <button
-             onClick={() => console.log("Delete:", item.CONTRATOR_ID)}
-             className="text-red-600 hover:text-red-800"
-           >
-             <Trash2 size={18} />
-           </button>
-   
-         </div>
-       );
-     },
-   }
-];
-
-export function ContractorTable() {
-  // ⭐ Fetch API Using React Query
+export function ContractorTable({ onEdit }) {
+  // Fetch API Using React Query
   const { data, isLoading } = useQuery({
     queryKey: ["contrators"],
     queryFn: async () => {
       const res = await api.get("/contrator.php");
       return res.data?.data || [];
-    }
+    },
   });
 
   const apiData = data || [];
 
-  // ✅ NEW STATE VARIABLES
-  const [sorting, setSorting] = React.useState([]);
-  const [columnFilters, setColumnFilters] = React.useState([]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  // State variables
+  const [sorting, setSorting] = useState([]);
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [rowSelection, setRowSelection] = useState({});
 
-  // ⭐ Setup TanStack Table with Enhanced Features
+  // Table columns definition
+  const columns = [
+    // SELECT COLUMN
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+
+    // SORTABLE COLUMNS
+    {
+      accessorKey: "CONTRATOR_NAME",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            CONTRACTOR NAME
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="ml-3">{row.getValue("CONTRATOR_NAME")}</div>
+      ),
+    },
+    {
+      accessorKey: "ENTRY_DATE",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            ENTRY DATE
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="ml-3">{row.getValue("ENTRY_DATE")}</div>
+      ),
+    },
+    {
+      accessorKey: "EMAIL",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            EMAIL
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="ml-3">{row.getValue("EMAIL")}</div>,
+    },
+    {
+      accessorKey: "ADDRESS",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            ADDRESS
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="ml-3">{row.getValue("ADDRESS")}</div>,
+    },
+    {
+      accessorKey: "MOBILE",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            MOBILE
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="ml-3">{row.getValue("MOBILE")}</div>,
+    },
+
+    // ACTIONS COLUMN
+    {
+      id: "actions",
+      enableHiding: false,
+      header: () => <div className="text-center">Actions</div>,
+      cell: ({ row }) => {
+        const item = row.original;
+
+        return (
+          <div className="flex items-center gap-3 justify-center">
+            {/* Edit Button */}
+            <button
+              onClick={() => onEdit(item.CONTRATOR_ID)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <Pencil size={18} />
+            </button>
+
+            {/* Delete Button */}
+            <button
+              onClick={() => console.log("Delete:", item.CONTRATOR_ID)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  // Setup TanStack Table
   const table = useReactTable({
     data: apiData,
     columns,
@@ -223,20 +211,19 @@ export function ContractorTable() {
   });
 
   return (
-    <div className=" mt-4 shadow-2xl rounded-lg bg-white">
-      
-      {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
-      <div className="flex items-center py-4">
+    <div className="mt-4 shadow-2xl rounded-lg bg-white">
+      {/* SEARCH AND COLUMN TOGGLE */}
+      <div className="flex items-center py-4 px-4">
         <Input
-          placeholder="Filter descriptions..."
-          value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+          placeholder="Filter contractors..."
+          value={table.getColumn("CONTRATOR_NAME")?.getFilterValue() ?? ""}
           onChange={(e) =>
-            table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+            table.getColumn("CONTRATOR_NAME")?.setFilterValue(e.target.value)
           }
           className="max-w-sm"
         />
-        
-        {/* ✅ COLUMN VISIBILITY DROPDOWN (NEW) */}
+
+        {/* COLUMN VISIBILITY DROPDOWN */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -259,7 +246,7 @@ export function ContractorTable() {
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
-                )
+                );
               })}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -269,13 +256,16 @@ export function ContractorTable() {
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map(group => (
+            {table.getHeaderGroups().map((group) => (
               <TableRow key={group.id}>
-                {group.headers.map(header => (
+                {group.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -286,7 +276,10 @@ export function ContractorTable() {
             {/* Loading */}
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center h-24"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
@@ -294,14 +287,17 @@ export function ContractorTable() {
 
             {/* Data Rows */}
             {!isLoading && table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map(row => (
-                <TableRow 
+              table.getRowModel().rows.map((row) => (
+                <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -311,7 +307,10 @@ export function ContractorTable() {
             {/* No Data */}
             {!isLoading && table.getRowModel().rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center h-24"
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -320,33 +319,8 @@ export function ContractorTable() {
         </Table>
       </div>
 
-      {/* ✅ ENHANCED PAGINATION WITH ROW SELECTION COUNT */}
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div> */}
-      <DataTablePagination table={table}></DataTablePagination>
-
+      {/* PAGINATION */}
+      <DataTablePagination table={table} />
     </div>
   );
 }
