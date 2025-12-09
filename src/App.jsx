@@ -23,6 +23,7 @@ import Supplier from "./features/setting/pages/Supplier";
 import Admin from "./features/user/pages/Admin";
 import DashboardTimeline from "./features/main-entry/pages/DashboardTimeline";
 import User from "./features/user/pages/User";
+import CreateProcess from "./features/setting/pages/CreateProcess";
 
 
 
@@ -67,6 +68,9 @@ const App = () => {
              
             <Route path="timeline" element={<DashboardTimeline />} />
              <Route path="timeline/:H_ID" element={<DashboardTimeline />} />
+              <Route path="process" element={<CreateProcess />} />
+
+              <Route path="process/:id" element={<CreateProcess />} />
              
 
             

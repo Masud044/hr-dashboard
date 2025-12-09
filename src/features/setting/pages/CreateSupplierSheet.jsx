@@ -132,7 +132,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Organization ID</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} placeholder="Org number" />
+                      <Input type="number" {...field} placeholder=" Enter org number" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,7 +149,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                       Contact Person <span className="text-red-700">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter Contact person" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,7 +164,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Mobile</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} placeholder="Enter mobile number" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -179,7 +179,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} placeholder="Enter phone number" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -194,7 +194,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input type="email" {...field} placeholder="Enter email " />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +209,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Fax</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter fax"/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -224,7 +224,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Due</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter due"/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,7 +238,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                   <FormItem >
                     <FormLabel>Remarks</FormLabel>
                     <FormControl>
-                      <Textarea rows={2} {...field} />
+                      <Textarea rows={2} {...field} placeholder="Enter remarks" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -255,7 +255,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
                       Address <span className="text-red-700">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea rows={3} {...field} />
+                      <Textarea rows={3} {...field} placeholder="Enter address" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -265,7 +265,7 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
              
 
               {/* Submit Buttons */}
-              <div className="col-span-2 flex justify-end gap-3 mt-4">
+              <div className="col-span-2 flex justify-between gap-3 mt-4">
                 <Button type="button" variant="outline" onClick={handleClose}>
                 
                   Cancel
