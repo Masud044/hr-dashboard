@@ -1,52 +1,76 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Cog, Upload } from "lucide-react";
-
-
 import { toast } from "react-toastify";
 
 import { SectionContainer } from "@/components/SectionContainer";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProjectTable } from "../components/ProjectTable";
-import api from "@/api/Api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { ProjectTable } from "../components/ProjectTable";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+import api from "@/api/Api";
+
+const projectSchema = z.object({
+  P_NAME: z.string().min(1, "Project name is required"),
+  P_TYPE: z.string().min(1, "Project type is required"),
+  P_ADDRESS: z.string().min(1, "Address is required"),
+  SUBWRB: z.string().min(1, "Suburb is required"),
+  POSTCODE: z.string().min(1, "Postcode is required"),
+  STATE: z.string().min(1, "State is required"),
+  USER_ID: z.coerce.number().default(105),
+  USER_BY: z.coerce.number().default(105),
+  UPDATED_BY: z.coerce.number().default(105),
+});
 
 const Project = () => {
+
+  const navigate = useNavigate();
+
+  const goToDashboard = () => {
+   
+    navigate("/dashboard/dashboard-schedule");
+  };
+
   const { id } = useParams();
-   useEffect(() => {
-    window.scrollTo({
-      top: 80,
-      behavior: "smooth",
-    });
-  }, [id]);
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
-  const [formData, setFormData] = useState({
-    P_NAME: "",
-    P_TYPE: "",
-    P_ADDRESS: "",
-    SUBWRB: "",
-    POSTCODE: "",
-    STATE: "",
-    USER_ID: 105,
-    USER_BY: 105,
-    UPDATED_BY: 105,
+  const form = useForm({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      P_NAME: "",
+      P_TYPE: "",
+      P_ADDRESS: "",
+      SUBWRB: "",
+      POSTCODE: "",
+      STATE: "",
+      USER_ID: 105,
+      USER_BY: 105,
+      UPDATED_BY: 105,
+    },
   });
 
   const [message, setMessage] = useState({ type: "", text: "" });
   const [savedProjectId, setSavedProjectId] = useState(null);
   const [editableLines, setEditableLines] = useState([]);
-const [showDashboardModal, setShowDashboardModal] = useState(false);
-const [dashboardDate, setDashboardDate] = useState(""); // YYYY-MM-DD
-const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
+  const [showDashboardModal, setShowDashboardModal] = useState(false);
+  const [dashboardDate, setDashboardDate] = useState("");
+  const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
 
-  // 🔹 Fetch Project Types
-  const { data: projectTypes, isLoading: loadingTypes } = useQuery({
+  useEffect(() => {
+    window.scrollTo({ top: 80, behavior: "smooth" });
+  }, [id]);
+
+  // Fetch Project Types
+  const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
     queryFn: async () => {
       const res = await api.get("/project_type_api.php");
@@ -54,7 +78,7 @@ const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
     },
   });
 
-  // 🔹 Fetch Contractor Types (21 items)
+  // Fetch Contractor Types
   const { data: contractorTypes = [] } = useQuery({
     queryKey: ["contractorTypes"],
     queryFn: async () => {
@@ -63,6 +87,7 @@ const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
     },
   });
 
+  // Fetch Contractor Names
   const { data: contractorNames = [] } = useQuery({
     queryKey: ["contractorNames"],
     queryFn: async () => {
@@ -70,157 +95,103 @@ const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
       return res.data?.data || [];
     },
   });
-  console.log(contractorNames);
 
-  // 🔹 Fetch Project Data (for edit mode)
-  const { data } = useQuery({
+  // Fetch Existing Project for Edit
+  const { data: existingProject } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
       const res = await api.get(`/project.php?project_id=${id}`);
       const projectData = res.data?.data;
-      if (Array.isArray(projectData)) {
-        return projectData.find((p) => p.P_ID === id);
-      }
+      if (Array.isArray(projectData)) return projectData.find(p => p.P_ID === id);
       return projectData;
     },
     enabled: !!id,
   });
 
   useEffect(() => {
-    if (data) setFormData(data);
-  }, [data]);
+    if (existingProject) form.reset(existingProject);
+  }, [existingProject]);
 
-  // 🔹 Save / Update Project
+  // Save / Update Project
   const mutation = useMutation({
     mutationFn: async (formData) => {
-      if (isEditing) {
-        return await api.put("/project.php", { ...formData, P_ID: id });
-      } else {
-        return await api.post("/project.php", formData);
-      }
+      if (isEditing) return api.put("/project.php", { ...formData, P_ID: id });
+      return api.post("/project.php", formData);
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries(["projects"]);
       const newId = res.data?.P_ID || id;
       setSavedProjectId(newId);
-      toast.success(
-        isEditing
-          ? "Project updated successfully!"
-          : "Project added successfully!"
-      );
+      toast.success(isEditing ? "Project updated successfully!" : "Project added successfully!");
     },
-
-    onError: () => {
-      toast.error("❌ Failed to save project data. Please try again.");
-    },
+    onError: () => toast.error("❌ Failed to save project data. Please try again."),
   });
 
-  // 🔹 Fetch Construction Process Lines (21 rows)
+  // Fetch Construction Process Lines
   const { data: processLines = [], refetch: refetchProcess } = useQuery({
     queryKey: ["constructionProcess", id || savedProjectId],
     queryFn: async () => {
       const processId = id || savedProjectId;
       if (!processId) return [];
-      const res = await api.get(
-        `/construction_process.php?action=read&PROCESS_ID=${processId}`
-      );
+      const res = await api.get(`/construction_process.php?action=read&PROCESS_ID=${processId}`);
       return res.data?.data || [];
     },
     enabled: !!(id || savedProjectId),
   });
-  console.log(data);
 
   useEffect(() => {
-    if (processLines.length > 0 && contractorNames.length > 0) {
-      const updatedLines = processLines.map((line) => {
-        const contractor = contractorNames.find(
-          (c) => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
-        );
-
-        return {
-          ...line,
-          CONTRACTOR_NAME: contractor ? contractor.CONTRATOR_NAME : "",
-        };
+    if ((processLines || []).length > 0 && (contractorNames || []).length > 0) {
+      const updatedLines = processLines.map(line => {
+        const contractor = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID));
+        return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
       });
-
-      setEditableLines((prev) => {
-        const changed =
-          JSON.stringify(prev.map((p) => p.ID)) !==
-          JSON.stringify(updatedLines.map((p) => p.ID));
+      setEditableLines(prev => {
+        const changed = JSON.stringify(prev.map(p => p.ID)) !== JSON.stringify(updatedLines.map(p => p.ID));
         return changed ? updatedLines : prev;
       });
     }
   }, [processLines, contractorNames]);
 
-  // 🔹 Create 21 Process Lines
+  // Create 21 Process Lines
   const processMutation = useMutation({
-    mutationFn: async (process_id) => {
-      return await api.post("/process_contractor.php", { process_id });
-    },
-    onSuccess: (res) => {
-      console.log(" Process lines created:", res.data);
+    mutationFn: async (process_id) => api.post("/process_contractor.php", { process_id }),
+    onSuccess: () => {
       toast.success("Process lines created successfully!");
       refetchProcess();
     },
-    onError: () => {
-      toast.error(" Failed to create process lines.");
-    },
+    onError: () => toast.error("Failed to create process lines."),
   });
 
   const handleProcess = () => {
     const pid = id || savedProjectId;
     if (!pid) {
-      setMessage({
-        type: "error",
-        text: "❌ Save the project first before creating process.",
-      });
+      setMessage({ type: "error", text: "❌ Save the project first before creating process." });
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
       return;
     }
     processMutation.mutate(pid);
   };
 
-  // editableLines.forEach((line) => console.log(line));
-
   const handleLineChange = (index, field, value) => {
-    setEditableLines((prev) => {
+    setEditableLines(prev => {
       const updated = [...prev];
       const current = updated[index];
-
       let newValue = value;
 
-      // Only convert to number if value is non-empty
-      if (
-        field === "SORT_ID" ||
-        field === "COST" ||
-        field === "SUB_CONTRACT_ID" ||
-        field === "DEPENDENT_ID" ||
-        field === "CONTRACTOR_ID"
-      ) {
-        if (value === "" || value === null) {
-          newValue = ""; // Keep it empty, not 0
-        } else {
-          newValue = Number(value);
-        }
+      if (["SORT_ID","COST","SUB_CONTRACT_ID","DEPENDENT_ID","CONTRACTOR_ID"].includes(field)) {
+        newValue = value === "" ? "" : Number(value);
       }
 
-      const newLine = {
-        ...current,
-        [field]: newValue,
-      };
+      const newLine = { ...current, [field]: newValue };
 
-      // Update DEPENDENT_NAME if DEPENDENT_ID changes
       if (field === "DEPENDENT_ID") {
-        const selected = contractorTypes.find((c) => c.ID === newValue);
-        newLine.DEPENDENT_NAME = selected ? selected.NAME : "";
+        const selected = contractorTypes.find(c => c.ID === newValue);
+        newLine.DEPENDENT_NAME = selected?.NAME || "";
       }
 
-      // Update CONTRACTOR_NAME if CONTRACTOR_ID changes
       if (field === "CONTRACTOR_ID") {
-        const selected = contractorNames.find(
-          (c) => Number(c.CONTRATOR_ID) === Number(newValue)
-        );
-        newLine.CONTRACTOR_NAME = selected ? selected.CONTRATOR_NAME : "";
+        const selected = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(newValue));
+        newLine.CONTRACTOR_NAME = selected?.CONTRATOR_NAME || "";
       }
 
       updated[index] = newLine;
@@ -228,194 +199,34 @@ const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
     });
   };
 
-  // 🔹 Update all process lines safely
   const updateProcessMutation = useMutation({
-    mutationFn: async (lines) => {
-      return Promise.all(
-        lines.map((line) => {
-          const payload = {
-            ID: line.ID,
-            PROCESS_ID: line.PROCESS_ID,
-            SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
-            SUB_CONTRACT_ID: line.SUB_CONTRACT_ID
-              ? Number(line.SUB_CONTRACT_ID)
-              : null,
-            DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-            SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
-            CONTRACTOR_ID: line.CONTRACTOR_ID || "",
-            SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
-          };
-
-          // Only include COST if it was edited (not undefined or empty)
-          if (line.COST !== undefined && line.COST !== "") {
-            payload.COST = Number(line.COST);
-          }
-
-          console.log("✅ Final PUT payload:", payload);
-          return api.put("/construction_process.php?action=update", payload);
-        })
-      );
-    },
+    mutationFn: async (lines) => Promise.all(
+      (lines || []).map(line => {
+        const payload = {
+          ID: line.ID,
+          PROCESS_ID: line.PROCESS_ID,
+          SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
+          SUB_CONTRACT_ID: line.SUB_CONTRACT_ID ? Number(line.SUB_CONTRACT_ID) : null,
+          DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+          SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
+          CONTRACTOR_ID: line.CONTRACTOR_ID || "",
+          SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
+          ...(line.COST !== undefined && line.COST !== "" ? { COST: Number(line.COST) } : {})
+        };
+        return api.put("/construction_process.php?action=update", payload);
+      })
+    ),
     onSuccess: () => {
       refetchProcess();
       toast.success("Process lines updated successfully!");
     },
-    onError: (error) => {
-      console.error("❌ Update error:", error.response?.data || error.message);
-      toast.error("Update failed. Check required fields and payload.");
-    },
+    onError: (err) => toast.error("Update failed. Check required fields."),
   });
 
-  // const createDashboard = async () => {
-  //   try {
-  //     const pid = id || savedProjectId;
-
-  //     if (!pid) {
-  //       toast.error("Please save the project first!");
-  //       return;
-  //     }
-
-  //     if (!contractorTypes || contractorTypes.length === 0) {
-  //       toast.error("Contractor Types not loaded yet!");
-  //       return;
-  //     }
-
-  //     // 🔥 Auto create 21 lines
-  //     const autoLines = contractorTypes.map((c) => ({
-  //       C_P_ID: c.ID,
-  //       DESCRIPTION: "",
-  //       SCHEDULE_START_DATE: "",
-  //       SCHEDULE_END_DATE: "",
-  //     }));
-
-  //     const payload = {
-  //       P_ID: Number(pid),
-  //       CREATION_BY: 105,
-  //       LINES: autoLines, // 🔥 21 LINES SENT HERE
-  //     };
-
-  //     console.log("Sending payload:", payload);
-
-  //     const res = await api.post("/shedule.php", payload, {
-  //       headers: { "Content-Type": "application/json" },
-  //     });
-
-  //     console.log("Dashboard created:", res.data);
-
-  //     if (res.data?.success) {
-  //       toast.success("Dashboard created!");
-
-  //       window.location.href = `/dashboard/test/${res.data.H_ID}`;
-  //     } else {
-  //       toast.error(res.data?.message || "Server error");
-  //     }
-  //   } catch (err) {
-  //     console.log("❌ Dashboard Error:", err.response?.data || err);
-  //     toast.error("Failed to create dashboard");
-  //   }
-  // };
-
-  //  const createDashboard = async () => {
-  //     try {
-  //       const pid = id || savedProjectId;
-
-  //       if (!pid) {
-  //         toast.error("Please save the project first!");
-  //         return;
-  //       }
-
-  //       if (!contractorTypes || contractorTypes.length === 0) {
-  //         toast.error("Contractor Types not loaded yet!");
-  //         return;
-  //       }
-
-  //      // 🔥 Auto create 21 lines
-  //       const autoLines = contractorTypes.map((c) => ({
-  //         C_P_ID: c.ID,
-  //         DESCRIPTION: "",
-  //         SCHEDULE_START_DATE: "",
-  //         SCHEDULE_END_DATE: "",
-  //       }));
-
-  //       const payload = {
-  //         P_ID: Number(pid),
-  //         CREATION_BY: 105,
-  //          LINES: autoLines, // 🔥 21 LINES SENT HERE
-  //       };
-
-  //       console.log("Sending payload:", payload);
-
-  //       const res = await api.post("/shedule.php", payload, {
-  //         headers: { "Content-Type": "application/json" },
-  //       });
-
-  //       console.log("Dashboard created:", res.data);
-
-  //       if (res.data?.success) {
-  //         toast.success("Dashboard created!");
-
-  //         window.location.href = `/dashboard/test/${pid}`;
-  //       } else {
-  //         toast.error(res.data?.message || "Server error");
-  //       }
-  //     } catch (err) {
-  //       console.log("❌ Dashboard Error:", err.response?.data || err);
-  //       toast.error("Failed to create dashboard");
-  //     }
-  //   };
-
-//  const handleCreateDashboard = async () => {
-//   if (!dashboardDate) {
-//     toast.error("Please select a start date!");
-//     return;
-//   }
-
-//   try {
-//     const pid = id || savedProjectId;
-
-//     if (!pid) {
-//       toast.error("Please save the project first!");
-//       return;
-//     }
-
-//     const payload = {
-//       p_pid: Number(pid),
-//       p_s_date: dashboardDate, // pass selected date
-//     };
-
-//     // 🔹 Call API
-//     const res = await api.post("/shedule_api.php", payload, {
-//       headers: { "Content-Type": "application/json" },
-//     });
-
-//     if (res.data?.success) {
-//       // 🔹 Get H_ID from response
-//       const H_ID = res.data?.data?.H_ID;
-//       console.log(H_ID);
-
-//       // if (!H_ID) {
-//       //   toast.error("H_ID not returned from server!");
-//       //   return;
-//     //  }
-
-//       toast.success("Dashboard created successfully!");
-//       setShowDashboardModal(false);
-
-//       // 🔹 Redirect using H_ID
-//       window.location.href = `/dashboard/test/${pid}`;
-//     } else {
-//       toast.error(res.data?.message || "Server error");
-//     }
-//   } catch (err) {
-//     console.error("Dashboard creation error:", err.response?.data || err);
-//     toast.error("Failed to create dashboard");
-//   }
-// };
 
 
-
-
-const handleCreateDashboard = async () => {
+  // 🔹 Create Dashboard Function
+ const handleCreateDashboard = async () => {
   if (!dashboardDate) {
     toast.error("Please select a start date!");
     return;
@@ -527,195 +338,115 @@ const handleCreateDashboard = async () => {
 };
 
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const required = [
-      "P_NAME",
-      "P_TYPE",
-      "P_ADDRESS",
-      "SUBWRB",
-      "POSTCODE",
-      "STATE",
-    ];
-    const empty = required.find(
-      (f) => !formData[f] || formData[f].toString().trim() === ""
-    );
-    if (empty) {
-      setMessage({ text: "Please fill all required fields.", type: "error" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-      return;
-    }
-    mutation.mutate(formData);
-  };
+    const onSubmit = (values) => mutation.mutate(values);
 
   return (
     <SectionContainer>
- <div className="">
       <div className="p-6 bg-white shadow rounded-lg mt-8">
         <h2 className="font-semibold mb-6 text-sm text-gray-800 border-b pb-2">
           {isEditing ? "Edit Project" : "Add New Project"}
         </h2>
 
         {message.text && (
-          <div
-            className={`mb-4 p-3 rounded text-white ${
-              message.type === "success" ? "bg-green-600" : "bg-red-600"
-            }`}
-          >
+          <div className={`mb-4 p-3 rounded text-white ${message.type === "success" ? "bg-green-600" : "bg-red-600"}`}>
             {message.text}
           </div>
         )}
 
         {/* 🔹 Project Form */}
-        <form
-          onSubmit={handleSubmit}
-         className="grid grid-cols-1 md:grid-cols-4 gap-6"
-          
-        >
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Project Name */}
+            <FormField control={form.control} name="P_NAME" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Project Name</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-     
-<div className="flex flex-col gap-1 w-[70%] flex-1 ">
-    <Label className="text-sm font-medium text-gray-900">
-      Project Name <span className="text-red-600">*</span>
-    </Label>
-    <Input
-      name="P_NAME"
-      value={formData.P_NAME}
-      onChange={handleChange}
-      placeholder="Enter project name"
-      className="h-10 bg-gray-50 border-gray-300 "
-    />
-  </div>
- 
-  
-       
+             {/* Suburb */}
+            <FormField control={form.control} name="SUBWRB" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Suburb</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-  
- {/* Project Type */}
-  <div className="flex flex-col gap-1 flex-1 w-[50%]">
-    <Label className="text-sm font-medium text-gray-900">Project Type</Label>
 
-    <Select
-      value={formData.P_TYPE}
-      onValueChange={(val) =>
-        handleChange({ target: { name: "P_TYPE", value: val } })
-      }
-    >
-      <SelectTrigger className="h-10 bg-gray-50 border-gray-300 w-full ">
-        <SelectValue placeholder="Select Type" />
-      </SelectTrigger>
+            {/* Project Type */}
+            <FormField control={form.control} name="P_TYPE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project Type</FormLabel>
+                <FormControl>
+                  <Select value={field.value || ""} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      {(projectTypes || []).map(pt => (
+                        <SelectItem key={pt.ID} value={pt.ID.toString()}>{pt.NAME}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-      <SelectContent>
-        {projectTypes?.map((type) => (
-          <SelectItem key={type.ID} value={type.ID}>
-            {type.NAME}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
+           
+           
+            {/* Postcode */}
+            <FormField control={form.control} name="POSTCODE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Postcode</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-  
+            {/* State */}
+            <FormField control={form.control} name="STATE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>State</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-  {/* Suburb */}
-  <div className="flex flex-col gap-1 flex-1 w-[70%]">
-    <Label className="text-sm font-medium text-gray-900">Suburb</Label>
-    <Input
-      name="SUBWRB"
-      value={formData.SUBWRB}
-      onChange={handleChange}
-      className="h-10 bg-gray-50 border-gray-300 "
-    />
-  </div>
-   {/* State */}
-  <div className="flex flex-col gap-1 w-[70%]">
-    <Label className="text-sm font-medium text-gray-900">State</Label>
-    <Input
-      name="STATE"
-      value={formData.STATE}
-      onChange={handleChange}
-      className="h-10 bg-gray-50 border-gray-300 shadow-sm"
-    />
-  </div>
+             {/* Address */}
+            <FormField control={form.control} name="P_ADDRESS" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Project Address</FormLabel>
+                <FormControl><Textarea rows={3} {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-  
-  {/* Address */}
-  <div className="flex flex-col md:col-span-2  gap-1 flex-1 ">
-    <Label className="text-sm font-medium text-gray-900">Address</Label>
-    <Textarea
-      name="P_ADDRESS"
-      value={formData.P_ADDRESS}
-      onChange={handleChange}
-      placeholder="Enter address"
-      className="min-h-[70px] bg-gray-50 border-gray-300"
-    />
-  </div>
-  {/* Postcode */}
-  <div className="flex flex-col gap-1 w-[40%]">
-    <Label className="text-sm font-medium text-gray-900">Postcode</Label>
-    <Input
-      name="POSTCODE"
-      value={formData.POSTCODE}
-      onChange={handleChange}
-      className="h-10 bg-gray-50 border-gray-300 "
-    />
-  </div>
 
- 
-     
- 
-
-          <div className="col-span-4 flex justify-end gap-3 mt-4">
-            <Button
-              type="submit"
-              disabled={mutation.isPending}
-              // className="bg-green-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-green-500"
-            >
-              <Save size={16} />
-              {mutation.isPending
-                ? "Saving..."
-                : isEditing
-                ? "Update Project"
-                : "Save Project"}
-            </Button>
-
-            {(id || savedProjectId) && (
-              <Button
-                type="button"
-                onClick={handleProcess}
-                disabled={processMutation.isPending}
-                // className="bg-blue-600 text-sm text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-500"
-              >
-                <Cog
-                  size={16}
-                  className={processMutation.isPending ? "animate-spin" : ""}
-                />
-                {processMutation.isPending ? "Processing..." : "Make Process"}
+            {/* Buttons */}
+            <div className="col-span-3 flex justify-end gap-2 mt-4">
+              <Button type="submit" disabled={mutation.isPending}>
+                <Save size={16} className="mr-2" />
+                {mutation.isPending ? "Saving..." : "Save Project"}
               </Button>
-            )}
-          <Button
-  type="button"
-  onClick={() => setShowDashboardModal(true)}
-  // className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
->
-  Create Dashboard
-</Button>
 
+              {(id || savedProjectId) && (
+                <Button type="button" onClick={handleProcess} disabled={processMutation.isPending}>
+                  <Cog size={16} className={processMutation.isPending ? "animate-spin" : ""} />
+                  {processMutation.isPending ? "Processing..." : "Make Process"}
+                </Button>
+              )}
 
-            {/* <button
-              type="button"
-              onClick={createDashboard}
-              className="bg-blue-600 text-sm text-white px-4 py-2 rounded"
-            >
-              Create Dashboard
-            </button> */}
-          </div>
-        </form>
+              <Button type="button" onClick={() => setShowDashboardModal(true)}>
+                Create Dashboard
+              </Button>
+
+               <Button type="button" onClick={goToDashboard} >
+                Go to Dashboard
+              </Button>
+            </div>
+          </form>
+        </Form>
 
         {/* 🔹 Process Table */}
         <div className="overflow-x-auto mt-6">
@@ -723,90 +454,56 @@ const handleCreateDashboard = async () => {
             <thead>
               <tr className="bg-gray-100 text-gray-700 text-left">
                 <th className="px-3 py-2 border">Project ID</th>
-                <th className="px-3 py-2 border ">Contract type</th>
-                <th className="px-3 py-2 border ">
-                  Contractor
-                </th>
-
-                <th className="px-3 py-2 border ">Dependent</th>
-                <th className="px-3 py-2 border text-center ">Sort</th>
+                <th className="px-3 py-2 border">Contract type</th>
+                <th className="px-3 py-2 border">Contractor</th>
+                <th className="px-3 py-2 border">Dependent</th>
+                <th className="px-3 py-2 border text-center">Sort</th>
                 <th className="px-3 py-2 border text-center">Cost</th>
               </tr>
             </thead>
             <tbody>
-              {editableLines.length > 0 ? (
-                editableLines.map((line, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 w-[5%] border ">
-                      {line.PROCESS_ID}
-                    </td>
-                    <td className="px-3 py-2 w-[30%] border ">
-                    <div className=" mx-auto ">
-      {contractorTypes.find(
-        (c) => c.ID === line.SUB_CONTRACT_ID
-      )?.NAME || ""}
-    </div>
-                    </td>
-
-                    <td className="py-2 border w-[20%] ">
+              {(editableLines || []).length > 0 ? (
+                (editableLines || []).map((line, index) => (
+                  <tr key={line.ID || index} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 w-[5%] border">{line.PROCESS_ID}</td>
+                    <td className="px-3 py-2 w-[30%] border">{(contractorTypes || []).find(c => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}</td>
+                    <td className="py-2 border w-[20%]">
                       <select
                         value={line.CONTRACTOR_ID || ""}
-                        onChange={(e) =>
-                          handleLineChange(
-                            index,
-                            "CONTRACTOR_ID",
-                            e.target.value
-                          )
-                        }
-                        className="rounded text-sm px-2 py-1 w-[90%]  focus:outline-none"
+                        onChange={(e) => handleLineChange(index, "CONTRACTOR_ID", e.target.value)}
+                        className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
                       >
                         <option value="">Select Contractor</option>
-                        {contractorNames.map((c) => (
-                          <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
-                            {c.CONTRATOR_NAME}
-                          </option>
+                        {(contractorNames || []).map(c => (
+                          <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>{c.CONTRATOR_NAME}</option>
                         ))}
                       </select>
                     </td>
-
-                    <td className=" py-2 border w-[15%]">
+                    <td className="py-2 border w-[15%]">
                       <select
                         value={line.DEPENDENT_ID || ""}
-                        onChange={(e) =>
-                          handleLineChange(
-                            index,
-                            "DEPENDENT_ID",
-                            e.target.value
-                          )
-                        }
-                        className="rounded text-sm px-2 py-1 w-[90%]  focus:outline-none"
+                        onChange={(e) => handleLineChange(index, "DEPENDENT_ID", e.target.value)}
+                        className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
                       >
                         <option value="">Select Dependent</option>
-                        {contractorTypes.map((c) => (
-                          <option key={c.ID} value={c.ID}>
-                            {c.NAME}
-                          </option>
+                        {(contractorTypes || []).map(c => (
+                          <option key={c.ID} value={c.ID}>{c.NAME}</option>
                         ))}
                       </select>
                     </td>
-
-                    <td className="px-3 w-[5%] py-2 text-center border ">
+                    <td className="px-3 py-2 w-[5%] text-center border">
                       <input
                         type="number"
                         value={line.SORT_ID || ""}
-                        onChange={(e) =>
-                          handleLineChange(index, "SORT_ID", e.target.value)
-                        }
+                        onChange={(e) => handleLineChange(index, "SORT_ID", e.target.value)}
                         className="w-full border-none outline-none bg-transparent text-center"
                       />
                     </td>
-                    <td className="px-3 py-2 w-[10%] border text-center">
+                    <td className="px-3 py-2 w-[10%] text-center border">
                       <input
                         type="number"
                         value={line.COST || ""}
-                        onChange={(e) =>
-                          handleLineChange(index, "COST", e.target.value)
-                        }
+                        onChange={(e) => handleLineChange(index, "COST", e.target.value)}
                         className="w-full border-none outline-none bg-transparent text-center"
                       />
                     </td>
@@ -814,9 +511,7 @@ const handleCreateDashboard = async () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-3 text-gray-500">
-                    No process lines found for this project.
-                  </td>
+                  <td colSpan="6" className="text-center py-3 text-gray-500">No process lines found for this project.</td>
                 </tr>
               )}
             </tbody>
@@ -825,56 +520,32 @@ const handleCreateDashboard = async () => {
 
         {editableLines.length > 0 && (
           <div className="flex justify-end mt-3">
-            <Button
-              onClick={() => updateProcessMutation.mutate(editableLines)}
-              // className="bg-purple-600 text-white text-sm px-4 py-2 rounded flex items-center gap-2 hover:bg-purple-500"
-            >
+            <Button onClick={() => updateProcessMutation.mutate(editableLines)}>
               <Upload size={16} />
               {updateProcessMutation.isPending ? "Updating..." : "Save Changes"}
             </Button>
           </div>
         )}
+
+        {/* 🔹 Dashboard Modal */}
+        {showDashboardModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-white rounded-lg p-6 w-96">
+              <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
+              <Input type="date" value={dashboardDate} onChange={e => setDashboardDate(e.target.value)} />
+              <div className="flex justify-end gap-3 mt-4">
+                <Button onClick={() => setShowDashboardModal(false)}>Cancel</Button>
+                <Button onClick={ handleCreateDashboard}>Create</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Project Table */}
+        <ProjectTable />
       </div>
-
-      {showDashboardModal && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-    <div className="bg-white rounded-lg p-6 w-96">
-      <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
-
-      <Input
-        type="date"
-        value={dashboardDate}
-        onChange={(e) => setDashboardDate(e.target.value)}
-        // className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-      />
-
-      <div className="flex justify-end gap-3">
-        <Button
-          onClick={() => setShowDashboardModal(false)}
-          // className="px-4 py-2 rounded border border-gray-400"
-        >
-          Cancel
-        </Button>
-
-        <Button
-          onClick={handleCreateDashboard}
-          // className="px-4 py-2 rounded bg-blue-600 text-white"
-        >
-          Create
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-     <ProjectTable></ProjectTable>
-    </div>
     </SectionContainer>
-   
   );
 };
-
-
 
 export default Project;
