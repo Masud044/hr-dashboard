@@ -374,8 +374,8 @@ const Project = () => {
               </FormItem>
             )} />
 
-
-            {/* Project Type */}
+{/* 
+            Project Type */}
             <FormField control={form.control} name="P_TYPE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Project Type</FormLabel>
@@ -383,8 +383,9 @@ const Project = () => {
                   <Select value={field.value || ""} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
-                      {(projectTypes || []).map(pt => (
+                      {(projectTypes || []).map(pt => ( 
                         <SelectItem key={pt.ID} value={pt.ID.toString()}>{pt.NAME}</SelectItem>
+                       
                       ))}
                     </SelectContent>
                   </Select>

@@ -122,7 +122,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem className="md:col-span-2">
                     <FormLabel>Contractor Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter Contractor Name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -136,7 +136,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem className="md:col-span-2">
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} {...field} />
+                      <Textarea rows={3} {...field} placeholder="Enter address Name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +151,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>ABN</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter abn"/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -166,7 +166,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>License No</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter license number"/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,7 +181,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Suburb</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter suburb Name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -196,7 +196,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Postcode</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter postcode" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -211,7 +211,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>State</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter state "/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -226,7 +226,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Contact Person</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter contact Name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -241,7 +241,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter phone number"/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -256,7 +256,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Mobile</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter mobile number" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -271,7 +271,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input type="email" {...field} placeholder="Enter email " />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
