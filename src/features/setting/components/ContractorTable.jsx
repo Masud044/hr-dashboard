@@ -13,7 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import api from "@/api/Api";
 
-import { Pencil, Trash2, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,8 +33,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { EditContractorSheet } from "../pages/EditContractorSheet";
+import { CreateContractorSheet } from "../pages/CreateContractorSheet";
 
-export function ContractorTable({ onEdit }) {
+export function ContractorTable() {
   // Fetch API Using React Query
   const { data, isLoading } = useQuery({
     queryKey: ["contrators"],
@@ -51,6 +53,20 @@ export function ContractorTable({ onEdit }) {
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
+
+  const [EditSheetOpen, setEditSheetOpen] = React.useState(false);
+  const [createSheetOpen, setCreateSheetOpen] = React.useState(false);
+    const [selectedContractorId, setSelectedContractorId] = React.useState(null);
+  
+    // Edit button handler
+    const handleEdit = (contractorId) => {
+      setSelectedContractorId(contractorId);
+      setEditSheetOpen(true);
+    };
+
+    const handleAddNew = () => {
+    setCreateSheetOpen(true);
+  };
 
   // Table columns definition
   const columns = [
@@ -170,20 +186,20 @@ export function ContractorTable({ onEdit }) {
         return (
           <div className="flex items-center gap-3 justify-center">
             {/* Edit Button */}
-            <button
-              onClick={() => onEdit(item.CONTRATOR_ID)}
-              className="text-blue-600 hover:text-blue-800"
+            <Button variant="ghost" size="icon-sm"
+              onClick={() => handleEdit(item.CONTRATOR_ID)}
+              // className=" hover:text-blue-800"
             >
               <Pencil size={18} />
-            </button>
+            </Button>
 
             {/* Delete Button */}
-            <button
+            <Button variant="ghost" size="icon-sm"
               onClick={() => console.log("Delete:", item.CONTRATOR_ID)}
-              className="text-red-600 hover:text-red-800"
+              // className=" hover:text-red-800"
             >
               <Trash2 size={18} />
-            </button>
+            </Button>
           </div>
         );
       },
@@ -211,8 +227,12 @@ export function ContractorTable({ onEdit }) {
   });
 
   return (
+    <>
     <div className="mt-4 shadow-2xl rounded-lg bg-white">
       {/* SEARCH AND COLUMN TOGGLE */}
+      
+
+
       <div className="flex items-center py-4 px-4">
         <Input
           placeholder="Filter contractors..."
@@ -222,6 +242,8 @@ export function ContractorTable({ onEdit }) {
           }
           className="max-w-sm"
         />
+
+         
 
         {/* COLUMN VISIBILITY DROPDOWN */}
         <DropdownMenu>
@@ -250,6 +272,13 @@ export function ContractorTable({ onEdit }) {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <div className="flex justify-end ml-2">
+            <Button onClick={handleAddNew}>
+              <PlusIcon size={16} className="mr-2" />
+              Add New Contractor
+            </Button>
+          </div>
       </div>
 
       {/* Table Container */}
@@ -322,5 +351,23 @@ export function ContractorTable({ onEdit }) {
       {/* PAGINATION */}
       <DataTablePagination table={table} />
     </div>
+
+     {/* Edit contractor Sheet */}
+          <EditContractorSheet
+            isOpen={EditSheetOpen}
+            onClose={() => {
+              setEditSheetOpen(false);
+              setSelectedContractorId(null);
+            }}
+            contractorId={selectedContractorId}
+          />
+
+           {/* Create Contractor Sheet */}
+      <CreateContractorSheet
+        isOpen={createSheetOpen}
+        onClose={() => setCreateSheetOpen(false)}
+      />
+
+          </>
   );
 }
