@@ -55,7 +55,7 @@ if (!user) return null;
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg z-[101]"
+        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg z-[105]"
         sideOffset={4}
         align="end"
       >

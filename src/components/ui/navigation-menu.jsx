@@ -4,7 +4,7 @@ import { cva } from "class-variance-authority";
 
 
 import { cn } from "@/lib/utils";
-import { IconCaretDownFilled } from "@tabler/icons-react";
+import {  IconChevronDown } from "@tabler/icons-react";
 
 function NavigationMenu({ className, children, viewport = true, ...props }) {
   return (
@@ -59,7 +59,7 @@ function NavigationMenuTrigger({ className, children, ...props }) {
     >
       {children}
      
-      <IconCaretDownFilled
+      <IconChevronDown
         className="relative top-[1px] ml-1 size-3  transition duration-300 group-data-[state=open]:rotate-180"
         aria-hidden="true"
       />
