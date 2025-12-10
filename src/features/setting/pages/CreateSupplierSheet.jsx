@@ -265,14 +265,14 @@ export function CreateSupplierSheet({ isOpen, onClose }) {
              
 
               {/* Submit Buttons */}
-              <div className="col-span-2 flex justify-between gap-3 mt-4">
+              <div className="col-span-2 flex justify-between gap-3 mt-4 mb-40">
                 <Button type="button" variant="outline" onClick={handleClose}>
                 
                   Cancel
                 </Button>
                 <Button type="submit" disabled={mutation.isPending}>
                  
-                  {mutation.isPending ? "Saving..." : "Save Supplier"}
+                  {mutation.isPending ? "Saving..." : "Submit"}
                 </Button>
               </div>
             </form>
