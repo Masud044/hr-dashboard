@@ -139,14 +139,15 @@ export function CreateProjectSheet({ isOpen, onClose }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent className=" sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Add New Project</SheetTitle>
+          <hr />
         </SheetHeader>
 
-        <div className="mt-6">
+        <div >
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 px-3 md:grid-cols-2 gap-4">
               {/* Project Name */}
               <FormField
                 control={form.control}
@@ -247,14 +248,14 @@ export function CreateProjectSheet({ isOpen, onClose }) {
               />
 
               {/* Submit Buttons */}
-              <div className="col-span-2 flex justify-end gap-3 mt-4">
+              <div className="col-span-2 flex justify-between gap-3 mt-4">
                 <Button type="button" variant="outline" onClick={handleClose}>
-                  <X size={16} className="mr-2" />
+                 
                   Cancel
                 </Button>
                 <Button type="submit" disabled={mutation.isPending}>
-                  <Save size={16} className="mr-2" />
-                  {mutation.isPending ? "Saving..." : "Save Project"}
+                
+                  {mutation.isPending ? "Saving..." : "Submit"}
                 </Button>
               </div>
 
@@ -262,7 +263,7 @@ export function CreateProjectSheet({ isOpen, onClose }) {
               {savedProjectId && (
                 <div
                   ref={makeProcessRef}
-                  className="col-span-2 flex justify-center mt-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+                  className="col-span-2 flex justify-between mt-4 p-4 bg-green-50 border border-green-200 rounded-lg"
                 >
                   <Button
                     type="button"

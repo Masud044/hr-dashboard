@@ -67,12 +67,8 @@ export function ProjectTable() {
   const [columnFilters, setColumnFilters] = React.useState([]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [createSheetOpen, setCreateSheetOpen] = React.useState(false);
-
-  // Add button handler
-  const handleAddNew = () => {
-    setCreateSheetOpen(true);
-  };
+  
+  
 
   // Edit/Process button handler - redirects to process page
   const handleEditProcess = (projectId) => {
@@ -281,13 +277,7 @@ export function ProjectTable() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* ADD NEW BUTTON */}
-          <div className="flex justify-end ml-2">
-            <Button onClick={handleAddNew}>
-              <PlusIcon size={16} className="mr-2" />
-              Add New Project
-            </Button>
-          </div>
+        
         </div>
 
         {/* Table Container */}
@@ -361,11 +351,7 @@ export function ProjectTable() {
         <DataTablePagination table={table} />
       </div>
 
-      {/* Create Project Sheet */}
-      <CreateProjectSheet
-        isOpen={createSheetOpen}
-        onClose={() => setCreateSheetOpen(false)}
-      />
+     
     </>
   );
 }
