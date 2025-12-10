@@ -28,7 +28,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md sticky top-0 z-[102]">
+    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-xs sticky top-0 z-[102]">
       {/* Logo */}
       <div className="flex items-center gap-2">
         {/* Mobile Menu Button */}
@@ -52,7 +52,7 @@ export default function Navbar() {
         <NavigationMenuList className="flex-wrap">
           {NAV_ITEMS.map((item, idx) => (
             <NavigationMenuItem key={idx}>
-              <NavigationMenuTrigger>{item.label}</NavigationMenuTrigger>
+              <NavigationMenuTrigger className="gap-1 text-muted-for"><item.ItemIcon size={20}/> {item.label}</NavigationMenuTrigger>
               <NavigationMenuContent>
                 {item.links.map((linkItem, linkItemIndex) => (
                   <NavLink
@@ -63,8 +63,8 @@ export default function Navbar() {
                     className={({ isActive }) =>
                       `  px-4 py-2 w-48 flex items-center gap-2  text-sm font-sans rounded-lg cursor-pointer ${
                         isActive
-                          ? "text-green-700 font-medium bg-green-50"
-                          : " hover:bg-green-100 transition-colors duration-300"
+                          ? "text-accent-foreground font-medium bg-accent"
+                          : " hover:bg-accent/70 transition-colors duration-300"
                       }`
                     }
                   >
