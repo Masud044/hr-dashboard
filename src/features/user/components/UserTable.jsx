@@ -13,8 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import api from "@/api/Api"
 
-import { Link } from "react-router-dom"
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal, PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -37,184 +36,234 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DataTablePagination } from "@/components/DataTablePagination"
-
-// ⭐ All Table Columns with Enhanced Features
-const columns = [
-  // ✅ SELECT COLUMN (NEW)
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  
-  // ✅ SORTABLE COLUMNS
-  {
-    accessorKey: "USER_NAME",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          USER_NAME 
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: "TYPE_NAME",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          TYPE_NAME
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: "EMAIL",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          EMAIL
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: "PHONE",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          PHONE
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-  },
- {
-  accessorKey: "STATUS",
-  header: ({ column }) => {
-    return (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        STATUS
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    )
-  },
-  cell: ({ row }) => {
-    const status = row.getValue("STATUS");
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-        status === "1" 
-          ? "bg-green-100 text-green-800" 
-          : "bg-red-100 text-red-800"
-      }`}>
-        {status === "1" ? "Active" : "Inactive"}
-      </span>
-    );
-  },
-},
+import { CreateUserSheet } from "../pages/CreateUserSheet"
+import { EditUserSheet } from "../pages/EditUserSheet"
 
 
-  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
-  {
-    id: "actions",
-    enableHiding: false,
-    header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }) => {
-      const item = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(item.ID)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link to={`/dashboard/user/${item.ID}`}>
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Pencil size={16} className="text-blue-600" />
-                  Edit
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-            //   onClick={() => console.log("Delete ID:", item.H_ID)}
-              className="text-red-600"
-            >
-              <Trash2 size={16} className="mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
 
 export function UserTable() {
-  // ⭐ Fetch API Using React Query
+  // State for Sheets
+  const [createSheetOpen, setCreateSheetOpen] = React.useState(false);
+  const [updateSheetOpen, setUpdateSheetOpen] = React.useState(false);
+  const [selectedUser, setSelectedUser] = React.useState(null);
+
+  // Fetch API Using React Query
   const { data = [], isLoading } = useQuery({
-      queryKey: ["users"],
-      queryFn: async () => {
-        const res = await api.get("/user.php");
-        return res.data.data || [];
-      },
-    });
+    queryKey: ["users"],
+    queryFn: async () => {
+      const res = await api.get("/user.php");
+      return res.data.data || [];
+    },
+  });
 
   const apiData = data || [];
-  console.log(data)
 
-  // ✅ NEW STATE VARIABLES
+  // Table State Variables
   const [sorting, setSorting] = React.useState([]);
   const [columnFilters, setColumnFilters] = React.useState([]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // ⭐ Setup TanStack Table with Enhanced Features
+  // Handle Edit Click
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setUpdateSheetOpen(true);
+  };
+
+  // Handle Add New Click
+  const handleAddNew = () => {
+    setCreateSheetOpen(true);
+  };
+
+  // Table Columns
+  const columns = [
+    // SELECT COLUMN
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    
+    // SORTABLE COLUMNS
+    {
+      accessorKey: "USER_NAME",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            USER NAME 
+            <ArrowUpDown />
+          </Button>
+        )
+      },
+       cell: ({ row }) => <div className="ml-3">{row.getValue("USER_NAME")}</div>,
+    },
+    {
+      accessorKey: "TYPE_NAME",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            TYPE NAME
+            <ArrowUpDown />
+          </Button>
+        )
+      },
+       cell: ({ row }) => <div className="ml-3">{row.getValue("TYPE_NAME")}</div>,
+    },
+    {
+      accessorKey: "EMAIL",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            EMAIL
+            <ArrowUpDown />
+          </Button>
+        )
+      },
+       cell: ({ row }) => <div className="ml-3">{row.getValue("EMAIL")}</div>,
+    },
+    {
+      accessorKey: "PHONE",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            PHONE
+            <ArrowUpDown />
+          </Button>
+        )
+      },
+       cell: ({ row }) => <div className="ml-3">{row.getValue("PHONE")}</div>,
+    },
+    {
+      accessorKey: "STATUS",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            STATUS
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => {
+        const status = row.getValue("STATUS");
+        return (
+          <span className={`px-2 py-1 rounded-full ml-3 text-xs font-semibold ${
+            status === "1" 
+              ? "bg-green-100 text-green-800" 
+              : "bg-red-100 text-red-800"
+          }`}>
+            {status === "1" ? "Active" : "Inactive"}
+          </span>
+        );
+      },
+      
+    },
+
+    // ✅ ACTIONS COLUMN
+        {
+          id: "actions",
+          enableHiding: false,
+          header: () => <div className="text-center">Actions</div>,
+          cell: ({ row }) => {
+            const item = row.original;
+    
+            return (
+              <div className="flex items-center gap-3 justify-center">
+                {/* Edit Button - Redirects to Process Page */}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleEdit(item)}
+                >
+                  <Pencil size={18} />
+                </Button>
+    
+                {/* Delete Button */}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => console.log("Delete:")}
+                >
+                  <Trash2 size={18} />
+                </Button>
+              </div>
+            );
+          },
+        },
+
+    // // ACTIONS WITH DROPDOWN MENU
+    // {
+    //   id: "actions",
+    //   enableHiding: false,
+    //   header: () => <div className="text-center">Actions</div>,
+    //   cell: ({ row }) => {
+    //     const item = row.original;
+
+    //     return (
+    //       <DropdownMenu>
+    //         <DropdownMenuTrigger asChild>
+    //           <Button variant="ghost" className="h-8 w-8 p-0">
+    //             <span className="sr-only">Open menu</span>
+    //             <MoreHorizontal />
+    //           </Button>
+    //         </DropdownMenuTrigger>
+    //         <DropdownMenuContent align="end">
+    //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+    //           <DropdownMenuItem
+    //             onClick={() => navigator.clipboard.writeText(item.ID)}
+    //           >
+    //             Copy ID
+    //           </DropdownMenuItem>
+    //           <DropdownMenuSeparator />
+    //           <DropdownMenuItem onClick={() => handleEdit(item)}>
+    //             <div className="flex items-center gap-2 text-blue-600">
+    //               <Pencil size={16} className="text-blue-600" />
+    //               Edit
+    //             </div>
+    //           </DropdownMenuItem>
+    //           <DropdownMenuItem className="text-red-600">
+    //             <Trash2 size={16} className="mr-2" />
+    //             Delete
+    //           </DropdownMenuItem>
+    //         </DropdownMenuContent>
+    //       </DropdownMenu>
+    //     );
+    //   },
+    // },
+  ];
+
+  // Setup TanStack Table
   const table = useReactTable({
     data: apiData,
     columns,
@@ -235,12 +284,12 @@ export function UserTable() {
   });
 
   return (
-    <div className="w-full px-4 mt-4 shadow-2xl rounded-lg bg-white ">
+    <div className="w-full px-4 mt-4 shadow-2xl rounded-lg bg-white">
       
-      {/* ✅ ENHANCED SEARCH AND COLUMN TOGGLE */}
-      <div className="flex items-center py-4">
+      {/* SEARCH AND COLUMN TOGGLE */}
+      <div className="flex items-center py-4 gap-2">
         <Input
-          placeholder="Filter descriptions..."
+          placeholder="Filter by email..."
           value={table.getColumn("EMAIL")?.getFilterValue() ?? ""}
           onChange={(e) =>
             table.getColumn("EMAIL")?.setFilterValue(e.target.value)
@@ -248,7 +297,7 @@ export function UserTable() {
           className="max-w-sm"
         />
         
-        {/* ✅ COLUMN VISIBILITY DROPDOWN (NEW) */}
+        {/* COLUMN VISIBILITY DROPDOWN */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -275,6 +324,12 @@ export function UserTable() {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* ADD NEW USER BUTTON */}
+        <Button onClick={handleAddNew}>
+          <PlusIcon  size={16}></PlusIcon>
+          Add New User
+        </Button>
       </div>
 
       {/* Table Container */}
@@ -332,33 +387,21 @@ export function UserTable() {
         </Table>
       </div>
 
-      {/* ✅ ENHANCED PAGINATION WITH ROW SELECTION COUNT */}
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div> */}
-      <DataTablePagination table={table}></DataTablePagination>
+      {/* PAGINATION */}
+      <DataTablePagination table={table} />
 
+      {/* CREATE USER SHEET */}
+      <CreateUserSheet
+        open={createSheetOpen} 
+        onOpenChange={setCreateSheetOpen} 
+      />
+
+      {/* UPDATE USER SHEET */}
+      <EditUserSheet
+        open={updateSheetOpen} 
+        onOpenChange={setUpdateSheetOpen}
+        userData={selectedUser}
+      />
     </div>
   );
 }

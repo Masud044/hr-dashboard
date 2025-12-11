@@ -45,7 +45,7 @@ export const NAV_ITEMS = [
     ItemIcon: IconSettings,
     links: [
       
-      { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },
+      // { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },
      
       { to: "/dashboard/project", label: "Project", Icon: IconBuildingSkyscraper },
       { to: "/dashboard/contractor", label: "Contractor", Icon: IconUserHexagon },

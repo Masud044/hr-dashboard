@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query"
 import api from "@/api/Api"
 
 import { Link } from "react-router-dom"
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, MoreHorizontal, PlusIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -37,8 +37,50 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DataTablePagination } from "@/components/DataTablePagination"
+import CreateAdminSheet from "../pages/CreateAdminSheet"
+import { EditAdminSheet } from "../pages/EditAdminSheet"
 
-// ⭐ All Table Columns with Enhanced Features
+
+
+export function AdminTable() {
+
+  const [createSheetOpen, setCreateSheetOpen] = React.useState(false);
+    const [updateSheetOpen, setUpdateSheetOpen] = React.useState(false);
+    const [selectedUser, setSelectedUser] = React.useState(null);
+
+    // ⭐ Fetch API Using React Query
+  const { data = [], isLoading } = useQuery({
+      queryKey: ["adminUsers"],
+      queryFn: async () => {
+        const res = await api.get("/admin_user.php");
+        return res.data.data || [];
+      },
+    });
+
+  const apiData = data || [];
+  console.log(data)
+
+  // ✅ NEW STATE VARIABLES
+  const [sorting, setSorting] = React.useState([]);
+  const [columnFilters, setColumnFilters] = React.useState([]);
+  const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  
+
+    // Handle Edit Click
+  const handleEdit = (adminId) => {
+    setSelectedUser(adminId);
+    setUpdateSheetOpen(true);
+  };
+
+  // Handle Add New Click
+  const handleAddNew = () => {
+    setCreateSheetOpen(true);
+  };
+
+
+  // ⭐ All Table Columns with Enhanced Features
 const columns = [
   // ✅ SELECT COLUMN (NEW)
   {
@@ -111,73 +153,84 @@ const columns = [
     },
   },
 
+// ✅ ACTIONS COLUMN
+        {
+          id: "actions",
+          enableHiding: false,
+          header: () => <div className="text-center">Actions</div>,
+          cell: ({ row }) => {
+            const item = row.original;
+    
+            return (
+              <div className="flex items-center gap-3 justify-center">
+                {/* Edit Button - Redirects to Process Page */}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleEdit(item)}
+                >
+                  <Pencil size={18} />
+                </Button>
+    
+                {/* Delete Button */}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => console.log("Delete:")}
+                >
+                  <Trash2 size={18} />
+                </Button>
+              </div>
+            );
+          },
+        },
 
+  // // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
+  // {
+  //   id: "actions",
+  //   enableHiding: false,
+  //   header: () => <div className="text-center">Actions</div>,
+  //   cell: ({ row }) => {
+  //     const item = row.original;
 
-  // ✅ ACTIONS WITH DROPDOWN MENU (NEW)
-  {
-    id: "actions",
-    enableHiding: false,
-    header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }) => {
-      const item = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(item.ID)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link to={`/dashboard/admin/${item.ID}`}>
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Pencil size={16} className="text-blue-600" />
-                  Edit
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-            //   onClick={() => console.log("Delete ID:", item.H_ID)}
-              className="text-red-600"
-            >
-              <Trash2 size={16} className="mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
+  //     return (
+  //       <DropdownMenu>
+  //         <DropdownMenuTrigger asChild>
+  //           <Button variant="ghost" className="h-8 w-8 p-0">
+  //             <span className="sr-only">Open menu</span>
+  //             <MoreHorizontal />
+  //           </Button>
+  //         </DropdownMenuTrigger>
+  //         <DropdownMenuContent align="end">
+  //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+  //           <DropdownMenuItem
+  //             onClick={() => navigator.clipboard.writeText(item.ID)}
+  //           >
+  //             Copy ID
+  //           </DropdownMenuItem>
+  //           <DropdownMenuSeparator />
+  //           <DropdownMenuItem>
+  //             <Link to={`/dashboard/admin/${item.ID}`}>
+  //               <div className="flex items-center gap-2 text-blue-600">
+  //                 <Pencil size={16} className="text-blue-600" />
+  //                 Edit
+  //               </div>
+  //             </Link>
+  //           </DropdownMenuItem>
+  //           <DropdownMenuItem
+  //           //   onClick={() => console.log("Delete ID:", item.H_ID)}
+  //             className="text-red-600"
+  //           >
+  //             <Trash2 size={16} className="mr-2" />
+  //             Delete
+  //           </DropdownMenuItem>
+  //         </DropdownMenuContent>
+  //       </DropdownMenu>
+  //     );
+  //   },
+  // },
 ];
-
-export function AdminTable() {
-  // ⭐ Fetch API Using React Query
-  const { data = [], isLoading } = useQuery({
-      queryKey: ["adminUsers"],
-      queryFn: async () => {
-        const res = await api.get("/admin_user.php");
-        return res.data.data || [];
-      },
-    });
-
-  const apiData = data || [];
-  console.log(data)
-
-  // ✅ NEW STATE VARIABLES
-  const [sorting, setSorting] = React.useState([]);
-  const [columnFilters, setColumnFilters] = React.useState([]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [rowSelection, setRowSelection] = React.useState({});
-
+  
   // ⭐ Setup TanStack Table with Enhanced Features
   const table = useReactTable({
     data: apiData,
@@ -239,6 +292,12 @@ export function AdminTable() {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+
+          {/* ADD NEW USER BUTTON */}
+                 <Button onClick={handleAddNew} className="ml-2">
+                   <PlusIcon  size={16}></PlusIcon>
+                   Add New Admin
+                 </Button>
       </div>
 
       {/* Table Container */}
@@ -296,32 +355,21 @@ export function AdminTable() {
         </Table>
       </div>
 
-      {/* ✅ ENHANCED PAGINATION WITH ROW SELECTION COUNT */}
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div> */}
+     
       <DataTablePagination table={table}></DataTablePagination>
+
+       {/* CREATE USER SHEET */}
+            <CreateAdminSheet
+              open={createSheetOpen} 
+              onOpenChange={setCreateSheetOpen} 
+            />
+
+             <EditAdminSheet
+                    open={updateSheetOpen} 
+        onOpenChange={setUpdateSheetOpen}
+        adminId={selectedUser}
+                   
+                  />
 
     </div>
   );
