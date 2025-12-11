@@ -39,7 +39,7 @@ const DashboardTimeline = () => {
     "#000000", "#71C0BB", "#7C4585", "#174143", "#FFC400", "#FF0060",
   ];
 
-  // ✅ Initialize with a narrow window - will be updated when tasks load
+  // ✅ Initialize with a narrow window - will be updated when project header loads
   const [visibleTimeStart, setVisibleTimeStart] = useState(
     moment().subtract(3, "days").startOf("day").valueOf()
   );
@@ -98,41 +98,49 @@ const DashboardTimeline = () => {
     fetchContractors();
   }, []);
 
+  // ✅ Fetch Project Header to set timeline range based on project dates
+  // const fetchProjectHeader = async () => {
+  //   try {
+  //     const res = await api.get(
+  //       `/shedule_header.php?hid=${H_ID}`
+  //     );
 
-//   const fetchProjectHeader = async () => {
-//   try {
-//     const res = await axios.get(
-//       `http://103.172.44.99:8989/api_bwal/shedule_header.php?hid=${H_ID}}`
-//     );
+  //     if (res.data.success && res.data.data) {
+  //       const projectData = res.data.data;
+  //       console.log(projectData)
+        
+  //       if (projectData.PROJECT_START_PLAN && projectData.PROJECT_END_PLAN) {
+  //         // Parse dates - handling DD-MMM-YY format
+  //         const start = moment(projectData.PROJECT_START_PLAN, "DD-MMM-YY")
+  //           .startOf("day")
+  //           .valueOf();
 
-//     if (res.data && res.data.project_start_plan && res.data.project_end_plan) {
+  //         const end = moment(projectData.PROJECT_END_PLAN, "DD-MMM-YY")
+  //           .endOf("day")
+  //           .valueOf();
 
-//       const start = moment(res.data.project_start_plan)
-//         .startOf("day")
-//         .valueOf();
+  //         setVisibleTimeStart(start);
+  //         setVisibleTimeEnd(end);
+          
+  //         console.log("Project Date Range Set:", {
+  //           start: moment(start).format("YYYY-MM-DD"),
+  //           end: moment(end).format("YYYY-MM-DD")
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Header load error", error);
+  //     toast.error("Failed to load project dates");
+  //   }
+  // };
 
-//       const end = moment(res.data.project_end_plan)
-//         .endOf("day")
-//         .valueOf();
+  // useEffect(() => {
+  //   if (H_ID) {
+  //     fetchProjectHeader();
+  //   }
+  // }, [H_ID]);
 
-//       setVisibleTimeStart(start);
-//       setVisibleTimeEnd(end);
-//     }
-//     console.log(res.data, res.data.project_end_plan)
-//   } catch (error) {
-//     console.log("Header load error", error);
-//     toast.error("Failed to load project date");
-//   }
-// };
-//  useEffect(() => {
-//     if (H_ID) {
-//        fetchProjectHeader();
-     
-//     }
-//   }, [H_ID]);
-
-
-  // ✅ Fetch Gantt data and adjust timeline window
+  // ✅ Fetch Gantt data
   const fetchGanttData = async () => {
     try {
       const res = await axios.get(
@@ -168,8 +176,7 @@ const DashboardTimeline = () => {
               },
             };
           });
-
-        // ✅ Auto-adjust timeline window based on task dates
+           // ✅ Auto-adjust timeline window based on task dates
         if (formattedItems.length > 0) {
           const startDates = formattedItems.map((i) => i.start_time);
           const endDates = formattedItems.map((i) => i.end_time);
@@ -194,7 +201,6 @@ const DashboardTimeline = () => {
 
   useEffect(() => {
     if (H_ID) {
-      
       fetchGanttData();
     }
   }, [H_ID]);
@@ -301,6 +307,8 @@ const DashboardTimeline = () => {
     }
   };
 
+  
+
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
       const i = prev.findIndex((item) => item.id === itemId);
@@ -380,7 +388,6 @@ const DashboardTimeline = () => {
         .react-calendar-timeline .rct-dateHeader {
           background-color: rgba(220, 38, 38, 0.15) !important;
           opacity: 0.9;
-        
         }
       `}</style>
 
@@ -426,24 +433,6 @@ const DashboardTimeline = () => {
                 items={items}
                 visibleTimeStart={visibleTimeStart}
                 visibleTimeEnd={visibleTimeEnd}
-
-//                 onTimeChange={(start, end, updateScrollCanvas) => {
-//   let newStart = start;
-//   let newEnd = end;
-
-//   if (start < visibleTimeStart) {
-//     newStart = visibleTimeStart;
-//     newEnd = visibleTimeStart + (end - start);
-//   }
-
-//   if (end > visibleTimeEnd) {
-//     newEnd = visibleTimeEnd;
-//     newStart = visibleTimeEnd - (end - start);
-//   }
-
-//   updateScrollCanvas(newStart, newEnd);
-// }}
-
                 onTimeChange={(start, end, updateScrollCanvas) => {
                   setVisibleTimeStart(start);
                   setVisibleTimeEnd(end);
@@ -467,7 +456,6 @@ const DashboardTimeline = () => {
                   <div style={{ 
                     fontSize: "10px", 
                     fontWeight: 600,
-                   
                   }}>
                     {group.title}
                   </div>
@@ -505,58 +493,11 @@ const DashboardTimeline = () => {
                       color: "#ffffff",
                       textAlign: "center",
                       fontSize: "11px",
-                     
                       borderLeft: "1px solid #e5e7eb",
                       borderRight: "1px solid #e5e7eb",
                       opacity: 0.9,
-                      
                     }}
                   />
-
-             {/* <DateHeader
-  unit="day"
-  intervalRenderer={({ getIntervalProps, intervalContext }) => {
-    const date = moment(intervalContext.interval.start);
-    const dayNumber = date.format("DD");
-    const dayName = date.format("ddd");
-
-    const intervalProps = getIntervalProps();
-
-    return (
-      <div
-        {...intervalProps}
-        style={{
-          ...intervalProps.style,
-          background: "#750811",
-          color: "#fff",
-          textAlign: "center",
-          borderLeft: "1px solid #e5e7eb",
-          borderRight: "1px solid #e5e7eb",
-          height: "38px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ fontSize: "14px", fontWeight: "bold" }}>
-          {dayNumber}
-        </div>
-
-        <div style={{ fontSize: "10px", opacity: 0.8 }}>
-          {dayName}
-        </div>
-      </div>
-    );
-  }}
-/> */}
-
-
-
-
-                 
-                
                 </TimelineHeaders>
 
                 <TimelineMarkers>
