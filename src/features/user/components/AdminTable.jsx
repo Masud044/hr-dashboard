@@ -69,10 +69,10 @@ export function AdminTable() {
   
 
     // Handle Edit Click
-  const handleEdit = (adminId) => {
-    setSelectedUser(adminId);
+ const handleEdit = (item) => {
+    setSelectedUser(item.ID);  // ✅ শুধু ID পাঠান
     setUpdateSheetOpen(true);
-  };
+};
 
   // Handle Add New Click
   const handleAddNew = () => {
@@ -121,6 +121,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("USERNAME")}</div>,
   },
  
   
@@ -137,6 +138,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("ADDRESS")}</div>,
   },
   {
     accessorKey: "POSITION",
@@ -151,6 +153,7 @@ const columns = [
         </Button>
       )
     },
+    cell: ({ row }) => <div className="ml-3">{row.getValue("POSITION")}</div>,
   },
 
 // ✅ ACTIONS COLUMN

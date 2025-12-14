@@ -285,6 +285,9 @@ export function UserTable() {
 
   return (
     <div className="w-full px-4 mt-4 shadow-2xl rounded-lg bg-white">
+       <h1>User List</h1>
+
+
       
       {/* SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4 gap-2">
