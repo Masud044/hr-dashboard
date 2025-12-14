@@ -16,6 +16,7 @@ import { Link, useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/Api";
 import { SectionContainer } from "@/components/SectionContainer";
+import TaskHoverCard from "../components/DashboardTooltip";
 
 const DashboardTimeline = () => {
   const navigate = useNavigate();
@@ -73,8 +74,8 @@ const DashboardTimeline = () => {
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        const res = await axios.get(
-          "http://103.172.44.99:8989/api_bwal/contractor_api.php"
+        const res = await api.get(
+          "/contractor_api.php"
         );
 
         if (res.data.success && Array.isArray(res.data.data)) {
@@ -143,8 +144,8 @@ const DashboardTimeline = () => {
   // ✅ Fetch Gantt data
   const fetchGanttData = async () => {
     try {
-      const res = await axios.get(
-        "http://103.172.44.99:8989/api_bwal/gantt_api.php"
+      const res = await api.get(
+        "/gantt_api.php"
       );
 
       if (res.data.success && Array.isArray(res.data.data)) {
@@ -211,7 +212,7 @@ const DashboardTimeline = () => {
     lastUpdatedRef.current = key;
 
     try {
-      await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+      await api.put("/gantt_api.php", {
         L_ID: item.id,
         C_P_ID: item.group,
         SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),
@@ -275,7 +276,7 @@ const DashboardTimeline = () => {
     toast.info("Splitting and saving...");
 
     try {
-      await axios.put("http://103.172.44.99:8989/api_bwal/gantt_api.php", {
+      await api.put("/gantt_api.php", {
         L_ID: item.id,
         C_P_ID: firstHalf.group,
         SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
@@ -284,7 +285,7 @@ const DashboardTimeline = () => {
       });
 
       const res = await axios.post(
-        "http://103.172.44.99:8989/api_bwal/gantt_api.php",
+        "/gantt_api.php",
         {
           C_P_ID: secondHalf.group,
           SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
@@ -371,6 +372,19 @@ const DashboardTimeline = () => {
     return [];
   };
 
+
+   const itemRenderer = ({ item, itemContext, getItemProps }) => {
+    return (
+      <TaskHoverCard
+        item={item}
+        itemContext={itemContext}
+        getItemProps={getItemProps}
+        groups={groups}
+         holidayDates={holidayDates}
+      />
+    );
+  };
+
   return (
     <>
       <style>{`
@@ -424,9 +438,13 @@ const DashboardTimeline = () => {
           </div>
         </div>
 
+       
+
         {/* Timeline */}
         <div className="flex-1 overflow-hidden">
           <div className="h-full bg-white rounded-lg shadow-lg">
+
+            
             {groups.length > 0 ? (
               <Timeline
                 groups={groups}
@@ -452,6 +470,7 @@ const DashboardTimeline = () => {
                 sidebarWidth={200}
                 stackItems
                 verticalLineClassNamesForTime={verticalLineClassNamesForTime}
+               itemRenderer={itemRenderer}
                 groupRenderer={({ group }) => (
                   <div style={{ 
                     fontSize: "10px", 

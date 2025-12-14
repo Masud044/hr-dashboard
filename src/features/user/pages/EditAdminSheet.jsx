@@ -30,9 +30,10 @@ const adminSchema = z.object({
 
 export const EditAdminSheet = ({ open, onOpenChange, adminId } ) => {
   const queryClient = useQueryClient();
-  const isEditing = !!adminId;
-  console.log(isEditing);
-
+  
+  // ✅ adminId থেকে ID extract করুন
+  const userId = typeof adminId === 'object' ? adminId?.ID : adminId;
+  const isEditing = !!userId;
 
   const form = useForm({
     resolver: zodResolver(adminSchema),
@@ -48,20 +49,24 @@ export const EditAdminSheet = ({ open, onOpenChange, adminId } ) => {
     },
   });
 
-  // Fetch admin data if editing
-  const { data } = useQuery({
-    queryKey: ["admin_user", adminId],
+  // ✅ Fetch admin data if editing
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin_user", userId],
     queryFn: async () => {
-      const res = await api.get(`/admin_user.php?id=${adminId}`);
+      const res = await api.get(`/admin_user.php?id=${userId}`);
       const userData = res.data?.data;
-      if (Array.isArray(userData)) return userData.find(u => Number(u.ID) === Number(adminId));
+      if (Array.isArray(userData)) {
+        return userData.find(u => Number(u.ID) === Number(userId));
+      }
       return userData;
     },
-    enabled: !!adminId
+    enabled: !!userId && open  // ✅ open হলেই fetch করবে
   });
 
   useEffect(() => {
-    if (data) {
+    if (isLoading) return; // ✅ loading থাকলে return
+    
+    if (data && userId) {
       form.reset({
         USERNAME: data.USERNAME || "",
         PASSWORD: "",
@@ -72,41 +77,29 @@ export const EditAdminSheet = ({ open, onOpenChange, adminId } ) => {
         POSITION: data.POSITION || "",
         ADDRESS: data.ADDRESS || "",
       });
-    } else if (!adminId) {
-      form.reset({
-        USERNAME: "",
-        PASSWORD: "",
-        FIRSTNAME: "",
-        LASTNAME: "",
-        SUPERADMIN: "0",
-        DEPT: "",
-        POSITION: "",
-        ADDRESS: "",
-      });
     }
-  }, [data, adminId, form]);
+  }, [data, userId, form, isLoading, open]); // ✅ open dependency add
 
   // Mutation for create/update
   const mutation = useMutation({
     mutationFn: async (values) => {
       if (isEditing) {
-        return await api.put("/admin_user.php", { ...values, ID: adminId });
+        return await api.put("/admin_user.php", { ...values, ID: userId });
       } else {
         return await api.post("/admin_user.php", values);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin_user"]);
+      queryClient.invalidateQueries(["adminUsers"]); // ✅ table data refresh
       toast.success(isEditing ? "Admin updated!" : "Admin added!");
       form.reset();
-     onOpenChange(false);
+      onOpenChange(false);
     },
     onError: () => toast.error("Failed to save admin data."),
   });
 
   const onSubmit = (values) => mutation.mutate(values);
-
-
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -116,133 +109,137 @@ export const EditAdminSheet = ({ open, onOpenChange, adminId } ) => {
           <hr className="my-2" />
         </SheetHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3">
-            
-            {/* Username */}
-            <FormField
-              control={form.control}
-              name="USERNAME"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Username *</FormLabel>
-                  <FormControl><Input placeholder="Enter username" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             {/* Address */}
-            <FormField
-              control={form.control}
-              name="ADDRESS"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Address *</FormLabel>
-                  <FormControl><Textarea rows={3} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Password (only for new user) */}
-            {!isEditing && (
+        {isLoading ? (
+          <div className="text-center py-8">Loading...</div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3">
+              
+              {/* Username */}
               <FormField
                 control={form.control}
-                name="PASSWORD"
+                name="USERNAME"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Password *</FormLabel>
-                    <FormControl><Input type="password" placeholder="Enter password" {...field} /></FormControl>
+                    <FormLabel>Username *</FormLabel>
+                    <FormControl><Input placeholder="Enter username" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
+              
+              {/* Address */}
+              <FormField
+                control={form.control}
+                name="ADDRESS"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Address *</FormLabel>
+                    <FormControl><Textarea rows={3} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* First Name */}
-            <FormField
-              control={form.control}
-              name="FIRSTNAME"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name *</FormLabel>
-                  <FormControl><Input placeholder="Enter first name" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
+              {/* Password (only for new user) */}
+              {!isEditing && (
+                <FormField
+                  control={form.control}
+                  name="PASSWORD"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Password *</FormLabel>
+                      <FormControl><Input type="password" placeholder="Enter password" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
 
-            {/* Last Name */}
-            <FormField
-              control={form.control}
-              name="LASTNAME"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name *</FormLabel>
-                  <FormControl><Input placeholder="Enter last name" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* First Name */}
+              <FormField
+                control={form.control}
+                name="FIRSTNAME"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name *</FormLabel>
+                    <FormControl><Input placeholder="Enter first name" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Department */}
-            <FormField
-              control={form.control}
-              name="DEPT"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Department *</FormLabel>
-                  <FormControl><Input placeholder="Enter department" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Last Name */}
+              <FormField
+                control={form.control}
+                name="LASTNAME"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name *</FormLabel>
+                    <FormControl><Input placeholder="Enter last name" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Position */}
-            <FormField
-              control={form.control}
-              name="POSITION"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Position *</FormLabel>
-                  <FormControl><Input placeholder="Enter position" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Department */}
+              <FormField
+                control={form.control}
+                name="DEPT"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department *</FormLabel>
+                    <FormControl><Input placeholder="Enter department" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-           
+              {/* Position */}
+              <FormField
+                control={form.control}
+                name="POSITION"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position *</FormLabel>
+                    <FormControl><Input placeholder="Enter position" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Super Admin */}
-            <FormField
-              control={form.control}
-              name="SUPERADMIN"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Super Admin</FormLabel>
-                  <FormControl>
-                    <select {...field} className="border rounded p-2 w-full">
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Super Admin */}
+              <FormField
+                control={form.control}
+                name="SUPERADMIN"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Super Admin</FormLabel>
+                    <FormControl>
+                      <select {...field} className="border rounded p-2 w-full">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Buttons */}
-            <div className="md:col-span-2 flex justify-between gap-4 mt-4">
-              <SheetClose asChild>
-                <Button variant="outline" type="button"  onClick={() => onOpenChange(false)}>
-                    Cancel</Button>
-              </SheetClose>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Saving..." : isEditing ? "Update Admin" : "Save Admin"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              {/* Buttons */}
+              <div className="md:col-span-2 flex justify-between gap-4 mt-4">
+                <SheetClose asChild>
+                  <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                </SheetClose>
+                <Button type="submit" disabled={mutation.isPending}>
+                  {mutation.isPending ? "Saving..." : isEditing ? "Update Admin" : "Save Admin"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
       </SheetContent>
     </Sheet>
   );
