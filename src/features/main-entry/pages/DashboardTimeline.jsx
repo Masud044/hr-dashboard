@@ -230,83 +230,83 @@ const DashboardTimeline = () => {
     }
   };
 
-  const handleItemDoubleClick = async (itemId, e, time) => {
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
+  // const handleItemDoubleClick = async (itemId, e, time) => {
+  //   const item = items.find((i) => i.id === itemId);
+  //   if (!item) return;
 
-    const splitDate = moment(time).startOf("day");
+  //   const splitDate = moment(time).startOf("day");
 
-    if (
-      splitDate.isSameOrBefore(moment(item.start_time)) ||
-      splitDate.isSameOrAfter(moment(item.end_time))
-    ) {
-      toast.warn("Split date must be between start and end date");
-      return;
-    }
+  //   if (
+  //     splitDate.isSameOrBefore(moment(item.start_time)) ||
+  //     splitDate.isSameOrAfter(moment(item.end_time))
+  //   ) {
+  //     toast.warn("Split date must be between start and end date");
+  //     return;
+  //   }
 
-    const contractorColor = colorMap.current[item.group];
+  //   const contractorColor = colorMap.current[item.group];
 
-    const firstHalf = {
-      ...item,
-      end_time: splitDate.clone().endOf("day").valueOf(),
-      itemProps: {
-        style: { ...item.itemProps.style, background: contractorColor },
-      },
-    };
+  //   const firstHalf = {
+  //     ...item,
+  //     end_time: splitDate.clone().endOf("day").valueOf(),
+  //     itemProps: {
+  //       style: { ...item.itemProps.style, background: contractorColor },
+  //     },
+  //   };
 
-    const secondHalf = {
-      ...item,
-      id: Date.now(),
-      start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
-      end_time: item.end_time,
-      itemProps: {
-        style: { ...item.itemProps.style, background: contractorColor },
-      },
-    };
+  //   const secondHalf = {
+  //     ...item,
+  //     id: Date.now(),
+  //     start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+  //     end_time: item.end_time,
+  //     itemProps: {
+  //       style: { ...item.itemProps.style, background: contractorColor },
+  //     },
+  //   };
 
-    setItems((prev) => {
-      const updated = prev.filter((i) => i.id !== itemId);
-      return [...updated, firstHalf, secondHalf];
-    });
-    setAllItems((prev) => {
-      const updated = prev.filter((i) => i.id !== itemId);
-      return [...updated, firstHalf, secondHalf];
-    });
+  //   setItems((prev) => {
+  //     const updated = prev.filter((i) => i.id !== itemId);
+  //     return [...updated, firstHalf, secondHalf];
+  //   });
+  //   setAllItems((prev) => {
+  //     const updated = prev.filter((i) => i.id !== itemId);
+  //     return [...updated, firstHalf, secondHalf];
+  //   });
 
-    toast.info("Splitting and saving...");
+  //   toast.info("Splitting and saving...");
 
-    try {
-      await api.put("/gantt_api.php", {
-        L_ID: item.id,
-        C_P_ID: firstHalf.group,
-        SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
-        SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
-        DESCRIPTION: item.title || "Split Task (Part 1)",
-      });
+  //   try {
+  //     await api.put("/gantt_api.php", {
+  //       L_ID: item.id,
+  //       C_P_ID: firstHalf.group,
+  //       SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
+  //       SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
+  //       DESCRIPTION: item.title || "Split Task (Part 1)",
+  //     });
 
-      const res = await axios.post(
-        "/gantt_api.php",
-        {
-          C_P_ID: secondHalf.group,
-          SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
-          SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
-          DESCRIPTION: item.title || "Split Task (Part 2)",
-          CREATION_BY: 1,
-          H_ID: H_ID,
-        }
-      );
+  //     const res = await axios.post(
+  //       "/gantt_api.php",
+  //       {
+  //         C_P_ID: secondHalf.group,
+  //         SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
+  //         SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
+  //         DESCRIPTION: item.title || "Split Task (Part 2)",
+  //         CREATION_BY: 1,
+  //         H_ID: H_ID,
+  //       }
+  //     );
 
-      if (res.data.success) {
-        toast.success("Task successfully split and saved");
-        await fetchGanttData();
-      } else {
-        toast.warn("Split updated locally, but backend didn't confirm success");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to split task on server");
-    }
-  };
+  //     if (res.data.success) {
+  //       toast.success("Task successfully split and saved");
+  //       await fetchGanttData();
+  //     } else {
+  //       toast.warn("Split updated locally, but backend didn't confirm success");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to split task on server");
+  //   }
+  // };
 
   
 
@@ -460,7 +460,7 @@ const DashboardTimeline = () => {
                 onItemResize={handleItemResize}
                 onItemSelect={handleItemSelect}
                 onItemDeselect={handleItemDeselect}
-                onItemDoubleClick={handleItemDoubleClick}
+                // onItemDoubleClick={handleItemDoubleClick}
                 selected={selectedItems}
                 canMove
                 canResize="both"
