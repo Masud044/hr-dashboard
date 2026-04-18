@@ -50,7 +50,7 @@ export function DashboardTable() {
     queryKey: ["schedules"],
     queryFn: async () => {
       // const res = await api.get("/shedule.php");
-      const res = await axios.get("http://localhost:4000/api/shedule");
+      const res = await axios.get("http://localhost:3000/api/shedule");
       const fetchedData = res.data?.data || [];
 
       fetchedData.sort((a, b) => (Number(b.H_ID) || 0) - (Number(a.H_ID) || 0));

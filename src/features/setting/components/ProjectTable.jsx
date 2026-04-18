@@ -51,7 +51,7 @@ export function ProjectTable() {
     queryKey: ["customers"],
     queryFn: async () => {
       // const res = await api.get("/project.php");
-      const res = await axios.get("http://localhost:4000/api/project");
+      const res = await axios.get("http://localhost:3000/api/project");
 
       const fetchedData = res.data?.data || [];
 

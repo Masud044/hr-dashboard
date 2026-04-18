@@ -42,7 +42,7 @@ export function ContractorTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["contrators"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:4000/api/contractor");
+      const res = await axios.get("http://localhost:3000/api/contractor");
       return res.data?.data || [];
     },
   });
