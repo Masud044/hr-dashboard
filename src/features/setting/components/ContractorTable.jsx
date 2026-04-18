@@ -1,4 +1,4 @@
-"use client";
+
 
 import React, { useState } from "react";
 import {
@@ -9,9 +9,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import axios from "axios";
 
 import { useQuery } from "@tanstack/react-query";
-import api from "@/api/Api";
+// import api from "@/api/Api";
 
 import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon } from "lucide-react";
 
@@ -41,12 +42,13 @@ export function ContractorTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["contrators"],
     queryFn: async () => {
-      const res = await api.get("/contrator.php");
+      const res = await axios.get("http://localhost:4000/api/contractor");
       return res.data?.data || [];
     },
   });
 
   const apiData = data || [];
+  console.log(apiData)
 
   // State variables
   const [sorting, setSorting] = useState([]);

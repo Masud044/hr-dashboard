@@ -15,8 +15,9 @@ import { ProjectTable } from "../components/ProjectTable";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import axios from "axios";
 
-import api from "@/api/Api";
+// import api from "@/api/Api";
 
 const projectSchema = z.object({
   P_NAME: z.string().min(1, "Project name is required"),
@@ -57,7 +58,8 @@ const Project = () => {
   const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
     queryFn: async () => {
-      const res = await api.get("/project_type_api.php");
+      // const res = await api.get("/project_type_api.php");
+      const res = await axios.get("http://localhost:4000/api/project-type");
       return res.data?.data || [];
     },
   });
@@ -65,7 +67,8 @@ const Project = () => {
   // Save New Project and Redirect to Edit Page
   const mutation = useMutation({
     mutationFn: async (formData) => {
-      return api.post("/project.php", formData);
+      // return api.post("/project.php", formData);
+      return await axios.post("http://localhost:4000/api/project", formData);
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries(["projects"]);

@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-table";
 
 import { useQuery } from "@tanstack/react-query";
-import api from "@/api/Api";
+// import api from "@/api/Api";
 
 import { Link } from "react-router-dom";
 import {
@@ -42,13 +42,15 @@ import {
 import { DataTablePagination } from "@/components/DataTablePagination";
 
 import { EditDashboardHeaderSheet } from "../pages/EditDashboardHeaderSheet";
+import axios from "axios";
 
 export function DashboardTable() {
   // ⭐ Fetch API Using React Query
   const { data, isLoading } = useQuery({
     queryKey: ["schedules"],
     queryFn: async () => {
-      const res = await api.get("/shedule.php");
+      // const res = await api.get("/shedule.php");
+      const res = await axios.get("http://localhost:4000/api/shedule");
       const fetchedData = res.data?.data || [];
 
       fetchedData.sort((a, b) => (Number(b.H_ID) || 0) - (Number(a.H_ID) || 0));
