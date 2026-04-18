@@ -14,8 +14,9 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import axios from "axios";
 
-import api from "@/api/Api";
+// import api from "@/api/Api";
 
 const projectSchema = z.object({
   P_NAME: z.string().min(1, "Project name is required"),
@@ -32,6 +33,7 @@ const projectSchema = z.object({
 const EditProject = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  
   const queryClient = useQueryClient();
 
   const form = useForm({
@@ -62,7 +64,9 @@ const EditProject = () => {
   const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
     queryFn: async () => {
-      const res = await api.get("/project_type_api.php");
+      // const res = await api.get("/project_type_api.php");
+      const res = await axios.get("http://localhost:4000/api/project-type");
+     
       return res.data?.data || [];
     },
   });
@@ -73,7 +77,8 @@ const EditProject = () => {
   const { data: contractorTypes = [] } = useQuery({
     queryKey: ["contractorTypes"],
     queryFn: async () => {
-      const res = await api.get("/contractor_api.php");
+      // const res = await api.get("/contractor_api.php");
+        const res = await axios.get("http://localhost:4000/api/contractor-type");
       return res.data?.data || [];
     },
   });
@@ -82,7 +87,9 @@ const EditProject = () => {
   const { data: contractorNames = [] } = useQuery({
     queryKey: ["contractorNames"],
     queryFn: async () => {
-      const res = await api.get("/contrator.php");
+      // const res = await api.get("/contrator.php");
+      const res = await axios.get("http://localhost:4000/api/contractor");
+
       return res.data?.data || [];
     },
   });
@@ -91,15 +98,23 @@ const EditProject = () => {
 const { data: existingProject, isLoading: projectLoading } = useQuery({
   queryKey: ["project", id],
   queryFn: async () => {
-    const res = await api.get(`/project.php?project_id=${id}`);
-    const projectData = res.data?.data;
+    // const res = await api.get(`/project.php?project_id=${id}`);
+     const res = await axios.get(`http://localhost:4000/api/project?project_id=${id}`);
+      const projectData = res.data?.data;
     
    
-    if (Array.isArray(projectData)) return projectData.find(p => p.P_ID === id);
+    //  if (Array.isArray(projectData)) return projectData.find(p => p.P_ID === id);
+    if (Array.isArray(projectData)) {
+      return projectData.find(p => Number(p.P_ID) === Number(id));
+    }
+
+
     return projectData;
   },
   enabled: !!id,
 });
+
+
 
 useEffect(() => {
   if (existingProject && projectTypes.length > 0) {
@@ -124,7 +139,8 @@ useEffect(() => {
   // Update Project
   const updateMutation = useMutation({
     mutationFn: async (formData) => {
-      return api.put("/project.php", { ...formData, P_ID: id });
+      // return api.put("/project.php", { ...formData, P_ID: id });
+        return axios.put("http://localhost:4000/api/project", { ...formData, P_ID: id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["projects"]);
@@ -139,31 +155,70 @@ useEffect(() => {
     queryKey: ["constructionProcess", id],
     queryFn: async () => {
       if (!id) return [];
-      const res = await api.get(`/construction_process.php?action=read&PROCESS_ID=${id}`);
+      // const res = await api.get(`/construction_process.php?action=read&PROCESS_ID=${id}`);
+      const res = await axios.get(`http://localhost:4000/api/construction-process?action=read&PROCESS_ID=${id}`);
+       console.log("📦 processLines API response:", res.data);
       return res.data?.data || [];
     },
     enabled: !!id,
   });
 
+  // useEffect(() => {
+  //   if ((processLines || []).length > 0 && (contractorNames || []).length > 0) {
+  //     const updatedLines = processLines.map(line => {
+  //       const contractor = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID));
+  //       return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
+  //     });
+  //     setEditableLines(updatedLines);
+  //   }
+  // }, [processLines, contractorNames]);
+
   useEffect(() => {
-    if ((processLines || []).length > 0 && (contractorNames || []).length > 0) {
-      const updatedLines = processLines.map(line => {
-        const contractor = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID));
-        return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
-      });
-      setEditableLines(updatedLines);
-    }
-  }, [processLines, contractorNames]);
+  // ✅ processLines ki assche?
+  console.log("🔄 processLines:", processLines);
+  console.log("🔄 contractorNames:", contractorNames);
+
+  if (processLines.length > 0) {
+    const updatedLines = processLines.map(line => {
+      const contractor = contractorNames.find(
+        c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
+      );
+      return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
+    });
+    console.log("✅ editableLines set:", updatedLines);
+    setEditableLines(updatedLines);
+  } else {
+    console.warn("⚠️ processLines empty — UI te dhekabe na");
+  }
+}, [processLines, contractorNames]);
+
 
   // Create 21 Process Lines
-  const processMutation = useMutation({
-    mutationFn: async (process_id) => api.post("/process_contractor.php", { process_id }),
-    onSuccess: () => {
-      toast.success("Process lines created successfully!");
-      refetchProcess();
-    },
-    onError: () => toast.error("Failed to create process lines."),
-  });
+  // const processMutation = useMutation({
+  //   // mutationFn: async (process_id) => api.post("/process_contractor.php", { process_id }),
+  //   mutationFn: async (process_id) => axios.post("http://localhost:4000/api/process-contractor", { process_id }),
+
+  //   onSuccess: () => {
+  //     toast.success("Process lines created successfully!");
+  //     refetchProcess();
+  //   },
+  //   onError: () => toast.error("Failed to create process lines."),
+  // });
+const processMutation = useMutation({
+  mutationFn: async (process_id) =>
+    axios.post("http://localhost:4000/api/process-contractor", { process_id }),
+
+  onSuccess: async (response) => {
+    // ✅ Backend ki response diche dekho
+    console.log("✅ processMutation response:", response.data);
+    toast.success("Process lines created successfully!");
+    // ✅ Cache invalidate করো, তারপর refetch
+    await queryClient.invalidateQueries(["constructionProcess", id]);
+    refetchProcess();
+  },
+  onError: () => toast.error("Failed to create process lines."),
+});
+ 
 
   const handleProcess = () => {
     if (!id) {
@@ -203,18 +258,31 @@ useEffect(() => {
   const updateProcessMutation = useMutation({
     mutationFn: async (lines) => Promise.all(
       (lines || []).map(line => {
-        const payload = {
-          ID: line.ID,
-          PROCESS_ID: line.PROCESS_ID,
-          SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
-          SUB_CONTRACT_ID: line.SUB_CONTRACT_ID ? Number(line.SUB_CONTRACT_ID) : null,
-          DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-          SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
-          CONTRACTOR_ID: line.CONTRACTOR_ID || "",
-          SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
-          ...(line.COST !== undefined && line.COST !== "" ? { COST: Number(line.COST) } : {})
-        };
-        return api.put("/construction_process.php?action=update", payload);
+        // const payload = {
+        //   ID: line.ID,
+        //   PROCESS_ID: line.PROCESS_ID,
+        //   SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
+        //   SUB_CONTRACT_ID: line.SUB_CONTRACT_ID ? Number(line.SUB_CONTRACT_ID) : null,
+        //   DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+        //   SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
+        //   CONTRACTOR_ID: line.CONTRACTOR_ID || "",
+        //   SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
+        //   ...(line.COST !== undefined && line.COST !== "" ? { COST: Number(line.COST) } : {}),
+        //    UPDATED_BY: 105,
+        // };
+        // EditProject.jsx — inside updateProcessMutation mutationFn
+const payload = {
+  ID: line.ID,
+  DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+  SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
+  COST: line.COST !== undefined && line.COST !== "" ? Number(line.COST) : null,
+  CONTRACTOR_ID: line.CONTRACTOR_ID ? Number(line.CONTRACTOR_ID) : null, // ✅ null instead of ""
+  UPDATED_BY: 105, // ✅ was missing — caused ORA-01036
+};
+
+        // return api.put("/construction_process.php?action=update", payload);
+        return axios.put("http://localhost:4000/api/construction-process?action=update", payload);
+
       })
     ),
     onSuccess: () => {
@@ -239,7 +307,8 @@ useEffect(() => {
         p_s_date: dashboardDate,
       };
 
-      const createRes = await api.post("/shedule_api.php", payload, {
+      // const createRes = await api.post("/shedule_api.php", payload, {
+        const createRes = await axios.post("http://localhost:4000/api/shedule_api", payload, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -252,7 +321,8 @@ useEffect(() => {
       toast.success("Dashboard created! Fetching H_ID...");
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      const fetchRes = await api.get("/shedule.php");
+      // const fetchRes = await api.get("/shedule.php");
+        const fetchRes = await axios.get("http://localhost:4000/api/shedule");
       let schedules = [];
       if (fetchRes.data?.data && Array.isArray(fetchRes.data.data)) {
         schedules = fetchRes.data.data;
@@ -346,6 +416,7 @@ useEffect(() => {
     <FormItem>
       <FormLabel>Project Type</FormLabel>
       <Select 
+       key={field.value}
         value={field.value} 
         onValueChange={field.onChange}
       >

@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-table";
 
 import { useQuery } from "@tanstack/react-query";
-import api from "@/api/Api";
+// import api from "@/api/Api";
 
 import {
   Pencil,
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { CreateProjectSheet } from "../pages/CreateProjectSheet";
+import axios from "axios";
 
 
 export function ProjectTable() {
@@ -49,7 +50,9 @@ export function ProjectTable() {
   const { data, isLoading } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
-      const res = await api.get("/project.php");
+      // const res = await api.get("/project.php");
+      const res = await axios.get("http://localhost:4000/api/project");
+
       const fetchedData = res.data?.data || [];
 
       fetchedData.sort(

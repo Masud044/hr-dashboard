@@ -24,7 +24,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-import api from "@/api/Api";
+// import api from "@/api/Api";
+import axios from "axios";
 
 export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
   const queryClient = useQueryClient();
@@ -43,7 +44,8 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
   const { data, isLoading } = useQuery({
     queryKey: ["schedule-header", scheduleId],
     queryFn: async () => {
-      const res = await api.get(`/shedule_header.php?hid=${scheduleId}`);
+      // const res = await api.get(`/shedule_header.php?hid=${scheduleId}`);
+        const res = await axios.get(`http://localhost:4000/api/schedule-header?hid=${scheduleId}`);
       return res.data?.data || {};
     },
     enabled: !!scheduleId && isOpen,
@@ -81,7 +83,9 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
         project_end_plan: moment(values.PROJECT_END_PLAN).format("DD-MMM-YY"),
       };
 
-      const res = await api.put("/shedule_header.php", payload);
+      // const res = await api.put("/shedule_header.php", payload);
+      const res = await axios.put("http://localhost:4000/api/schedule-header", payload);
+
 
       if (res.data?.success) return res.data;
       throw new Error("Failed");

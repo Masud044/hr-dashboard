@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import api from "@/api/Api";
+// import api from "@/api/Api";
 import { toast } from "react-toastify";
 
 // Form validation schema
@@ -70,7 +71,7 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
   const { data, isLoading } = useQuery({
     queryKey: ["contrator", contractorId],
     queryFn: async () => {
-      const res = await api.get(`/contrator.php?contrator_id=${contractorId}`);
+      const res = await axios.get(`http://localhost:4000/api/contractor?contrator_id=${contractorId}`);
       const result = res.data?.data || res.data;
       return Array.isArray(result) ? result[0] : result;
     },
@@ -91,9 +92,10 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
         ...formData,
         ENTRY_BY: Number(formData.ENTRY_BY) || 500,
       };
-      return await api.put("/contrator.php", {
+      return await axios.put("http://localhost:4000/api/contractor", {
         ...payload,
-        CONTRATOR_ID: contractorId,
+        CONTRATOR_ID: contractorId || formData.CONTRATOR_ID,
+        UPDATE_BY: 500,
       });
     },
     onSuccess: () => {

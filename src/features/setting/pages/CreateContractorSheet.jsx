@@ -23,8 +23,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-import api from "@/api/Api";
+// import api from "@/api/Api";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 // Form validation schema
 const contractorSchema = z.object({
@@ -71,7 +72,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
         ...formData,
         ENTRY_BY: Number(formData.ENTRY_BY) || 500,
       };
-      return await api.post("/contrator.php", payload);
+      return await axios.post("http://localhost:4000/api/contractor", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["contrators"]);

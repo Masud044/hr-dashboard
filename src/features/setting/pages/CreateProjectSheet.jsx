@@ -31,8 +31,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import axios from "axios";
 
-import api from "@/api/Api";
+// import api from "@/api/Api";
 
 const projectSchema = z.object({
   P_NAME: z.string().min(1, "Project name is required"),
@@ -73,16 +74,22 @@ export function CreateProjectSheet({ isOpen, onClose }) {
   const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
     queryFn: async () => {
-      const res = await api.get("/project_type_api.php");
+      // const res = await api.get("/project_type_api.php");
+       const res = await axios.get(" http://localhost:4000/api/project-type");
+     
       return res.data?.data || [];
     },
   });
 
   // Save Project Mutation
   const mutation = useMutation({
-    mutationFn: async (formData) => api.post("/project.php", formData),
+    // mutationFn: async (formData) => api.post("/project.php", formData),
+     mutationFn: async (formData) => axios.post("http://localhost:4000/api/project", formData),
+   
     onSuccess: (res) => {
-      const newId = res.data?.data?.P_ID;
+      // const newId = res.data?.data?.P_ID;
+     const newId = res.data?.data;
+      console.log("Created project with ID:", newId);
       setSavedProjectId(newId);
       queryClient.invalidateQueries(["customers"]);
       toast.success("Project added successfully!");
@@ -90,6 +97,8 @@ export function CreateProjectSheet({ isOpen, onClose }) {
     onError: () => {
       toast.error("Failed to save project data.");
     },
+
+
   });
 
   // Auto-scroll Make Process button into view when savedProjectId changes
@@ -102,6 +111,7 @@ export function CreateProjectSheet({ isOpen, onClose }) {
   // Submit handler
   const onSubmit = (data) => {
     mutation.mutate(data);
+    console.log(data)
   };
 
   // Reset form when sheet closes
@@ -117,10 +127,13 @@ export function CreateProjectSheet({ isOpen, onClose }) {
     setCreatingProcess(true);
 
     try {
-      const res = await api.post("/process_contractor.php", {
+      // const res = await api.post("/process_contractor.php", {
+       const res = await axios.post("http://localhost:4000/api/process-contractor", {
         P_ID: savedProjectId,
         CREATION_BY: 105,
       });
+
+
 
       const processId = res.data?.data?.PROCESS_ID;
 
@@ -136,6 +149,8 @@ export function CreateProjectSheet({ isOpen, onClose }) {
       setCreatingProcess(false);
     }
   };
+
+
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
