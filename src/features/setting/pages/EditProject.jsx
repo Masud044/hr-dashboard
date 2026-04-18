@@ -65,7 +65,7 @@ const EditProject = () => {
     queryKey: ["projectTypes"],
     queryFn: async () => {
       // const res = await api.get("/project_type_api.php");
-      const res = await axios.get("http://localhost:4000/api/project-type");
+      const res = await axios.get("http://localhost:3000/api/project-type");
      
       return res.data?.data || [];
     },
@@ -78,7 +78,7 @@ const EditProject = () => {
     queryKey: ["contractorTypes"],
     queryFn: async () => {
       // const res = await api.get("/contractor_api.php");
-        const res = await axios.get("http://localhost:4000/api/contractor-type");
+        const res = await axios.get("http://localhost:3000/api/contractor-type");
       return res.data?.data || [];
     },
   });
@@ -88,7 +88,7 @@ const EditProject = () => {
     queryKey: ["contractorNames"],
     queryFn: async () => {
       // const res = await api.get("/contrator.php");
-      const res = await axios.get("http://localhost:4000/api/contractor");
+      const res = await axios.get("http://localhost:3000/api/contractor");
 
       return res.data?.data || [];
     },
@@ -99,7 +99,7 @@ const { data: existingProject, isLoading: projectLoading } = useQuery({
   queryKey: ["project", id],
   queryFn: async () => {
     // const res = await api.get(`/project.php?project_id=${id}`);
-     const res = await axios.get(`http://localhost:4000/api/project?project_id=${id}`);
+     const res = await axios.get(`http://localhost:3000/api/project?project_id=${id}`);
       const projectData = res.data?.data;
     
    
@@ -140,7 +140,7 @@ useEffect(() => {
   const updateMutation = useMutation({
     mutationFn: async (formData) => {
       // return api.put("/project.php", { ...formData, P_ID: id });
-        return axios.put("http://localhost:4000/api/project", { ...formData, P_ID: id });
+        return axios.put("http://localhost:3000/api/project", { ...formData, P_ID: id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["projects"]);
@@ -156,7 +156,7 @@ useEffect(() => {
     queryFn: async () => {
       if (!id) return [];
       // const res = await api.get(`/construction_process.php?action=read&PROCESS_ID=${id}`);
-      const res = await axios.get(`http://localhost:4000/api/construction-process?action=read&PROCESS_ID=${id}`);
+      const res = await axios.get(`http://localhost:3000/api/construction-process?action=read&PROCESS_ID=${id}`);
        console.log("📦 processLines API response:", res.data);
       return res.data?.data || [];
     },
@@ -206,7 +206,7 @@ useEffect(() => {
   // });
 const processMutation = useMutation({
   mutationFn: async (process_id) =>
-    axios.post("http://localhost:4000/api/process-contractor", { process_id }),
+    axios.post("http://localhost:3000/api/process-contractor", { process_id }),
 
   onSuccess: async (response) => {
     // ✅ Backend ki response diche dekho
@@ -281,7 +281,7 @@ const payload = {
 };
 
         // return api.put("/construction_process.php?action=update", payload);
-        return axios.put("http://localhost:4000/api/construction-process?action=update", payload);
+        return axios.put("http://localhost:3000/api/construction-process?action=update", payload);
 
       })
     ),
@@ -308,7 +308,7 @@ const payload = {
       };
 
       // const createRes = await api.post("/shedule_api.php", payload, {
-        const createRes = await axios.post("http://localhost:4000/api/shedule_api", payload, {
+        const createRes = await axios.post("http://localhost:3000/api/shedule_api", payload, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -322,7 +322,7 @@ const payload = {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // const fetchRes = await api.get("/shedule.php");
-        const fetchRes = await axios.get("http://localhost:4000/api/shedule");
+        const fetchRes = await axios.get("http://localhost:3000/api/shedule");
       let schedules = [];
       if (fetchRes.data?.data && Array.isArray(fetchRes.data.data)) {
         schedules = fetchRes.data.data;

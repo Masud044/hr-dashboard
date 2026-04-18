@@ -71,7 +71,7 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
   const { data, isLoading } = useQuery({
     queryKey: ["contrator", contractorId],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:4000/api/contractor?contrator_id=${contractorId}`);
+      const res = await axios.get(`http://localhost:3000/api/contractor?contrator_id=${contractorId}`);
       const result = res.data?.data || res.data;
       return Array.isArray(result) ? result[0] : result;
     },
@@ -92,7 +92,7 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
         ...formData,
         ENTRY_BY: Number(formData.ENTRY_BY) || 500,
       };
-      return await axios.put("http://localhost:4000/api/contractor", {
+      return await axios.put("http://localhost:3000/api/contractor", {
         ...payload,
         CONTRATOR_ID: contractorId || formData.CONTRATOR_ID,
         UPDATE_BY: 500,

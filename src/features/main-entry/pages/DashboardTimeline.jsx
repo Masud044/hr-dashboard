@@ -53,7 +53,7 @@ const DashboardTimeline = () => {
     const fetchCalendar = async () => {
       try {
         // const res = await api.get("/calender_api.php");
-        const res = await axios.get("http://localhost:4000/api/calendar");
+        const res = await axios.get("http://localhost:3000/api/calendar");
         if (res.data.success && Array.isArray(res.data.records)) {
           const holidayRecords = res.data.records.filter(
             (r) => r.working_status === "Holiday"
@@ -78,7 +78,7 @@ const DashboardTimeline = () => {
         // const res = await api.get(
         //   "/contractor_api.php"
         // );
-          const res = await axios.get("http://localhost:4000/api/contractor-type");
+          const res = await axios.get("http://localhost:3000/api/contractor-type");
 
         if (res.data.success && Array.isArray(res.data.data)) {
           const formatted = res.data.data.map((c, index) => {
@@ -149,7 +149,7 @@ const DashboardTimeline = () => {
       // const res = await api.get(
       //   "/gantt_api.php"
       // );
-        const res = await axios.get("http://localhost:4000/api/gantt");
+        const res = await axios.get("http://localhost:3000/api/gantt");
 
       if (res.data.success && Array.isArray(res.data.data)) {
         const filtered = res.data.data.filter(
@@ -216,7 +216,7 @@ const DashboardTimeline = () => {
 
     try {
       // await api.put("/gantt_api.php", {
-        await axios.put("http://localhost:4000/api/gantt", {
+        await axios.put("http://localhost:3000/api/gantt", {
         L_ID: item.id,
         C_P_ID: item.group,
         SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),

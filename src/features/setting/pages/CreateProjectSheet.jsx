@@ -75,7 +75,7 @@ export function CreateProjectSheet({ isOpen, onClose }) {
     queryKey: ["projectTypes"],
     queryFn: async () => {
       // const res = await api.get("/project_type_api.php");
-       const res = await axios.get(" http://localhost:4000/api/project-type");
+       const res = await axios.get(" http://localhost:3000/api/project-type");
      
       return res.data?.data || [];
     },
@@ -84,7 +84,7 @@ export function CreateProjectSheet({ isOpen, onClose }) {
   // Save Project Mutation
   const mutation = useMutation({
     // mutationFn: async (formData) => api.post("/project.php", formData),
-     mutationFn: async (formData) => axios.post("http://localhost:4000/api/project", formData),
+     mutationFn: async (formData) => axios.post("http://localhost:3000/api/project", formData),
    
     onSuccess: (res) => {
       // const newId = res.data?.data?.P_ID;
@@ -128,7 +128,7 @@ export function CreateProjectSheet({ isOpen, onClose }) {
 
     try {
       // const res = await api.post("/process_contractor.php", {
-       const res = await axios.post("http://localhost:4000/api/process-contractor", {
+       const res = await axios.post("http://localhost:3000/api/process-contractor", {
         P_ID: savedProjectId,
         CREATION_BY: 105,
       });

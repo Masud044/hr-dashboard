@@ -59,7 +59,7 @@ const Project = () => {
     queryKey: ["projectTypes"],
     queryFn: async () => {
       // const res = await api.get("/project_type_api.php");
-      const res = await axios.get("http://localhost:4000/api/project-type");
+      const res = await axios.get("http://localhost:3000/api/project-type");
       return res.data?.data || [];
     },
   });
@@ -68,7 +68,7 @@ const Project = () => {
   const mutation = useMutation({
     mutationFn: async (formData) => {
       // return api.post("/project.php", formData);
-      return await axios.post("http://localhost:4000/api/project", formData);
+      return await axios.post("http://localhost:3000/api/project", formData);
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries(["projects"]);

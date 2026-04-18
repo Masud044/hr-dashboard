@@ -72,7 +72,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
         ...formData,
         ENTRY_BY: Number(formData.ENTRY_BY) || 500,
       };
-      return await axios.post("http://localhost:4000/api/contractor", payload);
+      return await axios.post("http://localhost:3000/api/contractor", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["contrators"]);
