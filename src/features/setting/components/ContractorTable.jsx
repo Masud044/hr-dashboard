@@ -36,13 +36,15 @@ import {
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { EditContractorSheet } from "../pages/EditContractorSheet";
 import { CreateContractorSheet } from "../pages/CreateContractorSheet";
-
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export function ContractorTable() {
   // Fetch API Using React Query
   const { data, isLoading } = useQuery({
     queryKey: ["contrators"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:3000/api/contractor");
+      // const res = await axios.get("http://localhost:3000/api/contractor");
+      const res = await axios.get(`${url}/api/contractor`);
+      
       return res.data?.data || [];
     },
   });

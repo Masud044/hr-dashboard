@@ -30,7 +30,7 @@ const projectSchema = z.object({
   USER_BY: z.coerce.number().default(105),
   UPDATED_BY: z.coerce.number().default(105),
 });
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 const Project = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -59,7 +59,8 @@ const Project = () => {
     queryKey: ["projectTypes"],
     queryFn: async () => {
       // const res = await api.get("/project_type_api.php");
-      const res = await axios.get("http://localhost:3000/api/project-type");
+      // const res = await axios.get("http://localhost:3000/api/project-type");
+        const res = await axios.get(`${url}/api/project-type`);
       return res.data?.data || [];
     },
   });
@@ -68,7 +69,8 @@ const Project = () => {
   const mutation = useMutation({
     mutationFn: async (formData) => {
       // return api.post("/project.php", formData);
-      return await axios.post("http://localhost:3000/api/project", formData);
+      // return await axios.post("http://localhost:3000/api/project", formData);
+        return await axios.post(`${url}/api/project`, formData);
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries(["projects"]);

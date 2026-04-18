@@ -44,6 +44,7 @@ const contractorSchema = z.object({
   EMAIL: z.string().email("Invalid email address").min(1, "Email is required"),
   MOBILE: z.string().min(1, "Mobile is required"),
 });
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function EditContractorSheet({ isOpen, onClose, contractorId }) {
   const queryClient = useQueryClient();
@@ -71,7 +72,9 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
   const { data, isLoading } = useQuery({
     queryKey: ["contrator", contractorId],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:3000/api/contractor?contrator_id=${contractorId}`);
+      // const res = await axios.get(`http://localhost:3000/api/contractor?contrator_id=${contractorId}`);
+      const res = await axios.get(`${url}/api/contractor?contrator_id=${contractorId}`);
+
       const result = res.data?.data || res.data;
       return Array.isArray(result) ? result[0] : result;
     },
@@ -92,7 +95,8 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
         ...formData,
         ENTRY_BY: Number(formData.ENTRY_BY) || 500,
       };
-      return await axios.put("http://localhost:3000/api/contractor", {
+      // return await axios.put("http://localhost:3000/api/contractor", {
+        return await axios.put(`${url}/api/contractor`, {
         ...payload,
         CONTRATOR_ID: contractorId || formData.CONTRATOR_ID,
         UPDATE_BY: 500,
