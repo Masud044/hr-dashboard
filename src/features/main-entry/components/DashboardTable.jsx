@@ -43,14 +43,15 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 
 import { EditDashboardHeaderSheet } from "../pages/EditDashboardHeaderSheet";
 import axios from "axios";
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export function DashboardTable() {
   // ⭐ Fetch API Using React Query
   const { data, isLoading } = useQuery({
     queryKey: ["schedules"],
     queryFn: async () => {
       // const res = await api.get("/shedule.php");
-      const res = await axios.get("http://localhost:3000/api/shedule");
+      // const res = await axios.get("http://localhost:3000/api/shedule");
+        const res = await axios.get(`${url}/api/shedule`);
       const fetchedData = res.data?.data || [];
 
       fetchedData.sort((a, b) => (Number(b.H_ID) || 0) - (Number(a.H_ID) || 0));

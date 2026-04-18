@@ -26,7 +26,7 @@ import {
 
 // import api from "@/api/Api";
 import axios from "axios";
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
   const queryClient = useQueryClient();
 
@@ -45,7 +45,8 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
     queryKey: ["schedule-header", scheduleId],
     queryFn: async () => {
       // const res = await api.get(`/shedule_header.php?hid=${scheduleId}`);
-        const res = await axios.get(`http://localhost:3000/api/schedule-header?hid=${scheduleId}`);
+        // const res = await axios.get(`http://localhost:3000/api/schedule-header?hid=${scheduleId}`);
+          const res = await axios.get(`${url}/api/schedule-header?hid=${scheduleId}`);
       return res.data?.data || {};
     },
     enabled: !!scheduleId && isOpen,
@@ -84,8 +85,9 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
       };
 
       // const res = await api.put("/shedule_header.php", payload);
-      const res = await axios.put("http://localhost:3000/api/schedule-header", payload);
+      // const res = await axios.put("http://localhost:3000/api/schedule-header", payload);
 
+        const res = await axios.put(`${url}/api/schedule-header`, payload);
 
       if (res.data?.success) return res.data;
       throw new Error("Failed");

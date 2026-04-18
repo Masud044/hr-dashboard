@@ -43,7 +43,7 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import { CreateProjectSheet } from "../pages/CreateProjectSheet";
 import axios from "axios";
 
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export function ProjectTable() {
   const navigate = useNavigate();
   // ⭐ Fetch API Using React Query
@@ -51,7 +51,8 @@ export function ProjectTable() {
     queryKey: ["customers"],
     queryFn: async () => {
       // const res = await api.get("/project.php");
-      const res = await axios.get("http://localhost:3000/api/project");
+      // const res = await axios.get("http://localhost:3000/api/project");
+        const res = await axios.get(`${url}/api/project`);
 
       const fetchedData = res.data?.data || [];
 

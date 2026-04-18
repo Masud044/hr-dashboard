@@ -43,6 +43,8 @@ const contractorSchema = z.object({
   MOBILE: z.string().min(1, "Mobile is required"),
 });
 
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
 export function CreateContractorSheet({ isOpen, onClose }) {
   const queryClient = useQueryClient();
 
@@ -72,7 +74,8 @@ export function CreateContractorSheet({ isOpen, onClose }) {
         ...formData,
         ENTRY_BY: Number(formData.ENTRY_BY) || 500,
       };
-      return await axios.post("http://localhost:3000/api/contractor", payload);
+      // return await axios.post("http://localhost:3000/api/contractor", payload);
+         return await axios.post(`${url}/api/contractor`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["contrators"]);
