@@ -18,9 +18,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/authentication/AuthProvider";
+// import { Button } from "@/components/ui/button";
+// import { useAuth } from "@/authentication/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 
 // const user = {
 //   name: "User 536",
@@ -31,7 +32,7 @@ import { useNavigate } from "react-router-dom";
 
 
 export default function UserDropDown() {
-  const { user, logout } = useAuth();
+ const { user, logout } = useAuthV2(); 
   console.log(user)
   const navigate = useNavigate();
 
@@ -62,7 +63,7 @@ if (!user) return null;
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="size-8 rounded-lg">
-              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarImage src={user.avatar} alt={user.username} />
               <AvatarFallback className="rounded-lg">TB</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
