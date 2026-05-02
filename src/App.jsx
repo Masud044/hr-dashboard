@@ -5,14 +5,13 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Register from "./pages/Registration";
+
 import Home from "./pages/Home";
 
 import { ToastContainer } from 'react-toastify';
 
 
-import { AuthProvider } from "./authentication/AuthProvider";
+
 import WelcomePage from "./pages/welcomePage";
 import DashboardLayout from "./Layout/DashboardLayout";
 import Dashboard from "./features/main-entry/pages/Dashboard"
@@ -26,6 +25,8 @@ import DashboardTimeline from "./features/main-entry/pages/DashboardTimeline";
 // import CreateProcess from "./features/setting/pages/CreateProcess";
 import EditProject from "./features/setting/pages/EditProject";
 import User from "./features/user/pages/User";
+import LoginV2 from "./features/authentication-v2/index";
+import RegisterV2 from "./features/authentication-v2/register-index";
 
 
 
@@ -40,7 +41,7 @@ const App = () => {
   //   return isAuthenticated ? children : <Navigate to="/login" />;
   // }
   return (
-    <AuthProvider>
+    <>
       <ToastContainer position="top-right" autoClose={3000} />
       <Router>
         <Routes>
@@ -81,11 +82,11 @@ const App = () => {
 
           </Route>
           
-          <Route path="/login" element={<Login></Login>} />
-          <Route path="/register" element={<Register></Register>} />
+          <Route path="/login" element={<LoginV2></LoginV2>} />
+          <Route path="/register" element={<RegisterV2></RegisterV2>} />
         </Routes>
       </Router>
-    </AuthProvider>
+    </>
   );
 };
 

@@ -57,7 +57,7 @@ const DashboardTimeline = () => {
           const res = await axios.get(`${url}/api/calendar`);
         if (res.data.success && Array.isArray(res.data.records)) {
           const holidayRecords = res.data.records.filter(
-            (r) => r.working_status === "Holiday"
+            (r) => r.working_status === "N"
           );
           const holidayDateSet = new Set(
             holidayRecords.map((r) => moment(r.day).format("YYYY-MM-DD"))
