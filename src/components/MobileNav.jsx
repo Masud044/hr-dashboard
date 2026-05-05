@@ -13,6 +13,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { NAV_ITEMS } from "@/lib/constants/nav-items";
+// import { NAV_ITEMS } from "@/lib/constants/nav-items";
 
 export default function MobileNav({ open, onOpenChange }) {
   const [openSections, setOpenSections] = useState([]);
@@ -31,7 +32,7 @@ export default function MobileNav({ open, onOpenChange }) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className=" z-[103]">
+      <SheetContent side="left" className=" z-103">
         <SheetHeader className="border-b px-6 py-4">
           <SheetTitle className="text-left">
              <img
