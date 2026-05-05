@@ -12,6 +12,23 @@ export const removeToken = ()      => localStorage.removeItem("hrms_token");
 
 // ── Fetchers ──────────────────────────────────────────────────────────────────
 
+// const fetchCurrentUser = async () => {
+//   const token = getToken();
+//   if (!token) return null;
+
+//   const res = await fetch(`${API_BASE}/me`, {
+//     headers: { Authorization: `Bearer ${token}` },
+//   });
+
+//   if (!res.ok) {
+//     removeToken();
+//     return null;
+//   }
+
+//   const json = await res.json();
+//   return json.data.user ?? null;
+// };
+
 const fetchCurrentUser = async () => {
   const token = getToken();
   if (!token) return null;
@@ -20,8 +37,14 @@ const fetchCurrentUser = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (!res.ok) {
+  // ✅ শুধু auth error (401/403)-এ token মুছবে, server error-এ নয়
+  if (res.status === 401 || res.status === 403) {
     removeToken();
+    return null;
+  }
+
+  if (!res.ok) {
+    // 5xx বা অন্য error — token রাখো, null return করো
     return null;
   }
 
@@ -86,6 +109,7 @@ export const useCurrentUserV2 = () =>
     queryFn: fetchCurrentUser,
     staleTime: Infinity,
     retry: false,
+    enabled: !!getToken(),
   });
 
 export const useLoginV2 = () => {

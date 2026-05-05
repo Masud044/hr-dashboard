@@ -5,87 +5,220 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import { ToastContainer } from "react-toastify";
 
 import Home from "./pages/Home";
-
-import { ToastContainer } from 'react-toastify';
-
-
-
 import WelcomePage from "./pages/welcomePage";
 import DashboardLayout from "./Layout/DashboardLayout";
-import Dashboard from "./features/main-entry/pages/Dashboard"
+import Dashboard from "./features/main-entry/pages/Dashboard";
 import Project from "./features/setting/pages/Project";
 import Contractor from "./features/setting/pages/Contractor";
-
 import Supplier from "./features/setting/pages/Supplier";
-import Admin from "./features/user/pages/Admin";
+
 import DashboardTimeline from "./features/main-entry/pages/DashboardTimeline";
-// import User from "./features/user/pages/User";
-// import CreateProcess from "./features/setting/pages/CreateProcess";
 import EditProject from "./features/setting/pages/EditProject";
-import User from "./features/user/pages/User";
+
 import LoginV2 from "./features/authentication-v2/index";
 import RegisterV2 from "./features/authentication-v2/register-index";
+import ProtectedRoute from "./pages/route/ProtectedRoute";
+import UnauthorizedPage from "./pages/route/Unauthorized";
+import { useAuthV2 } from "./features/authentication-v2/use-auth-v2";
+import { NuqsAdapter } from "nuqs/adapters/react";
+import Grades from "./features/user-management";
+import UserDetailsPage from "./features/user-management/user-details";
+import Roles from "./features/users/role";
+import Modules from "./features/users/module";
+import Permissions from "./features/users/permission";
 
+const ADMIN = ["Admin"];
 
-
-
-
-
-
+// ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
+const DashboardIndex = () => {
+  const { user, isLoading } = useAuthV2();
+  if (isLoading) return null;
+  if (user?.roles?.includes("Admin")) return <WelcomePage />;
+  return <Navigate to="/login" replace />;
+};
 
 const App = () => {
-  // function PrivateRoute({ children }) {
-  //   const { isAuthenticated } = useAuth();
-  //   return isAuthenticated ? children : <Navigate to="/login" />;
-  // }
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
+       <NuqsAdapter>
       <Router>
         <Routes>
-          <Route path="/" element={<Home></Home>} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            {/* Default dashboard view */}
-            <Route index element={<WelcomePage />} />
+          {/* Public */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginV2 />} />
+          <Route path="/register" element={<RegisterV2 />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-            
-            <Route path="supplier" element={<Supplier />} />
-            <Route path="supplier/:id" element={<Supplier />} />
-       
-            <Route path="admin" element={<Admin/>} />
-            <Route path="admin/:id" element={<Admin/>} />
+          {/* Protected Layout — Admin only */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute anyRole={ADMIN}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Index */}
+            <Route index element={<DashboardIndex />} />
+
+             <Route
+                path="user-management"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Grades />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="user-management/users/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <UserDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="role"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Roles />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="module"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Modules />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="permission"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Permissions />
+                  </ProtectedRoute>
+                }
+              />
+
+
+            <Route
+              path="supplier"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Supplier />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="supplier/:id"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Supplier />
+                </ProtectedRoute>
+              }
+            />
+
            
-            <Route path="project" element={<Project/>} />
-            <Route path="project/:id" element={<Project/>} />
-
-            <Route path="contractor" element={<Contractor/>} />
-            <Route path="contractor/:id" element={<Contractor/>} />
-
-            <Route path="user" element={<User/>} />
-            <Route path="user/:id" element={<User/>} />
-            
-             <Route path="dashboard-schedule" element={<Dashboard/>} />
-             <Route path="dashboard-schedule/:id" element={<Dashboard/>} />
-             
-            <Route path="timeline" element={<DashboardTimeline />} />
-             <Route path="timeline/:H_ID" element={<DashboardTimeline />} />
-              <Route path="process" element={<EditProject />} />
-
-              <Route path="process/:id" element={<EditProject />} />
-             
-
-            
            
-          
+            <Route
+              path="project"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Project />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="project/:id"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Project />
+                </ProtectedRoute>
+              }
+            />
 
+            <Route
+              path="contractor"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Contractor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="contractor/:id"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Contractor />
+                </ProtectedRoute>
+              }
+            />
+
+           
+           
+
+            <Route
+              path="dashboard-schedule"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="dashboard-schedule/:id"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="timeline"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <DashboardTimeline />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="timeline/:H_ID"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <DashboardTimeline />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="process"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <EditProject />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="process/:id"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <EditProject />
+                </ProtectedRoute>
+              }
+            />
           </Route>
-          
-          <Route path="/login" element={<LoginV2></LoginV2>} />
-          <Route path="/register" element={<RegisterV2></RegisterV2>} />
         </Routes>
       </Router>
+       </NuqsAdapter>
+
     </>
   );
 };

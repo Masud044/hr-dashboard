@@ -99,12 +99,12 @@ export default function LoginFormV2() {
         </Button>
 
         {/* Register link */}
-        <p className="text-center text-sm text-muted-foreground">
+        {/* <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link to="/register" className="text-primary hover:underline font-medium">
             Create account
           </Link>
-        </p>
+        </p> */}
       </form>
     </div>
   );

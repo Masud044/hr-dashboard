@@ -21,6 +21,7 @@ export const NAV_ITEMS = [
   {
     label: "Main Entry",
     ItemIcon: IconDashboard,
+    roles: ["Admin"],   
     links: [
      
       { to: "/dashboard/dashboard-schedule", label: "Dashboard", Icon: LayoutDashboard },
@@ -29,20 +30,25 @@ export const NAV_ITEMS = [
   },
 
  
-
-  {
-    label: "Users",
+   {
+    label: "User Management",
     ItemIcon: IconUsers,
+    roles: ["Admin"],                  // শুধু Admin
     links: [
-      { to: "/dashboard/user", label: "User", Icon: User },
-    
-      { to: "/dashboard/admin", label: "Admin User", Icon: IconUserShield},
+      { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
+      { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
+      { to: "/dashboard/role", label: "Role", Icon: FileText },
+      { to: "/dashboard/permission", label: "Permission", Icon: FileText },
     ],
   },
+
+
+ 
 
   {
     label: "Settings",
     ItemIcon: IconSettings,
+     roles: ["Admin"],   
     links: [
       
       // { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },

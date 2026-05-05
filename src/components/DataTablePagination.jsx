@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { cn, getPageNumbers } from "@/lib/utils"
+import { cn, getPageNumbers } from "@/lib/constants/utils"
+// import { cn, getPageNumbers } from "@/lib/utils"
 
 export function DataTablePagination({ table, className }) {
   const currentPage = table.getState().pagination.pageIndex + 1
