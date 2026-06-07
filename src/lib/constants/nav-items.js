@@ -55,6 +55,8 @@ export const NAV_ITEMS = [
      
       { to: "/dashboard/project", label: "Project", Icon: IconBuildingSkyscraper },
       { to: "/dashboard/contractor", label: "Contractor", Icon: IconUserHexagon },
+      { to: "/dashboard/owner-info", label: "Owner Info", Icon: IconUserHexagon },
+      { to: "/dashboard/contractor-type-info", label: "Contractor info", Icon: IconUserHexagon },
     ],
   },
 ];
