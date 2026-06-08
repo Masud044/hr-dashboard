@@ -274,7 +274,7 @@ export function ProjectTable() {
   });
 
   return (
-    <div className="mt-4 shadow-2xl rounded-lg bg-white">
+    <div className="mt-4  bg-white">
       {/* Search + Column Toggle */}
       <div className="flex items-center py-4 px-4 gap-2">
         <Input
