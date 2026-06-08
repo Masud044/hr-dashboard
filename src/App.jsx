@@ -29,6 +29,8 @@ import UserDetailsPage from "./features/user-management/user-details";
 import Roles from "./features/users/role";
 import Modules from "./features/users/module";
 import Permissions from "./features/users/permission";
+import OwnerInfo from "./features/setting/owner-info/owner-info";
+import ContractorTypeInfo from "./features/setting/contractor-type-info/contractor-type-info";
 
 const ADMIN = ["Admin"];
 
@@ -152,17 +154,19 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="contractor/:id"
               element={
                 <ProtectedRoute anyRole={ADMIN}>
                   <Contractor />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
            
-           
+           <Route path="owner-info" element={<OwnerInfo />} />
+
+           <Route path="contractor-type-info" element={<ContractorTypeInfo />} />
 
             <Route
               path="dashboard-schedule"

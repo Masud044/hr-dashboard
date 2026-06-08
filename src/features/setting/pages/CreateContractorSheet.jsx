@@ -102,7 +102,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto">
+      <SheetContent className="sm:max-w-lg overflow-y-auto z-104">
         <SheetHeader>
           <SheetTitle>Add New Contractor</SheetTitle>
 

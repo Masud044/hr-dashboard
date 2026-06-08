@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Cog, Upload, ArrowLeft } from "lucide-react";
+import { Save, Cog, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { SectionContainer } from "@/components/SectionContainer";
@@ -16,40 +16,52 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import axios from "axios";
 
-// import api from "@/api/Api";
-
 const projectSchema = z.object({
-  P_NAME: z.string().min(1, "Project name is required"),
-  P_TYPE: z.string().min(1, "Project type is required"),
-  P_ADDRESS: z.string().min(1, "Address is required"),
-  SUBWRB: z.string().min(1, "Suburb is required"),
-  POSTCODE: z.string().min(1, "Postcode is required"),
-  STATE: z.string().min(1, "State is required"),
-  USER_ID: z.coerce.number().default(105),
-  USER_BY: z.coerce.number().default(105),
-  UPDATED_BY: z.coerce.number().default(105),
+  P_NAME:                 z.string().min(1, "Project name is required"),
+  P_TYPE:                 z.string().min(1, "Project type is required"),
+  P_ADDRESS:              z.string().min(1, "Address is required"),
+  SUBWRB:                 z.string().min(1, "Suburb is required"),
+  POSTCODE:               z.string().min(1, "Postcode is required"),
+  STATE:                  z.string().min(1, "State is required"),
+  USER_ID:                z.coerce.number().default(105),
+  USER_BY:                z.coerce.number().default(105),
+  UPDATED_BY:             z.coerce.number().default(105),
+  // ✅ নতুন fields
+  LOT:                    z.string().optional().nullable(),
+  DP:                     z.string().optional().nullable(),
+  INSURANCE_NO:           z.string().optional().nullable(),
+  P_ENTATIVE_START_DATE: z.string().optional().nullable(),
+  P_TENTATIVE_END_DATE:   z.string().optional().nullable(),
+  P_CODE:                 z.string().optional().nullable(),
+  DESCRIPTION:            z.string().optional().nullable(),
 });
 
-const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const EditProject = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  
   const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      P_NAME: "",
-      P_TYPE: "",
-      P_ADDRESS: "",
-      SUBWRB: "",
-      POSTCODE: "",
-      STATE: "",
-      USER_ID: 105,
-      USER_BY: 105,
-      UPDATED_BY: 105,
+      P_NAME:                 "",
+      P_TYPE:                 "",
+      P_ADDRESS:              "",
+      SUBWRB:                 "",
+      POSTCODE:               "",
+      STATE:                  "",
+      USER_ID:                105,
+      USER_BY:                105,
+      UPDATED_BY:             105,
+      LOT:                    "",
+      DP:                     "",
+      INSURANCE_NO:           "",
+      P_ENTATIVE_START_DATE: "",
+      P_TENTATIVE_END_DATE:   "",
+      P_CODE:                 "",
+      DESCRIPTION:            "",
     },
   });
 
@@ -66,23 +78,16 @@ const EditProject = () => {
   const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
     queryFn: async () => {
-      // const res = await api.get("/project_type_api.php");
-      // const res = await axios.get("http://localhost:3000/api/project-type");
-        const res = await axios.get(`${url}/api/project-type`);
-     
+      const res = await axios.get(`${url}/api/project-type`);
       return res.data?.data || [];
     },
   });
-  console.log("Project Types:", projectTypes);
-
 
   // Fetch Contractor Types
   const { data: contractorTypes = [] } = useQuery({
     queryKey: ["contractorTypes"],
     queryFn: async () => {
-      // const res = await api.get("/contractor_api.php");
-        // const res = await axios.get("http://localhost:3000/api/contractor-type");
-        const res = await axios.get(`${url}/api/contractor-type`);
+      const res = await axios.get(`${url}/api/contractor-type`);
       return res.data?.data || [];
     },
   });
@@ -91,63 +96,53 @@ const EditProject = () => {
   const { data: contractorNames = [] } = useQuery({
     queryKey: ["contractorNames"],
     queryFn: async () => {
-      // const res = await api.get("/contrator.php");
-      // const res = await axios.get("http://localhost:3000/api/contractor");
-        const res = await axios.get(`${url}/api/contractor`);
-
+      const res = await axios.get(`${url}/api/contractor`);
       return res.data?.data || [];
     },
   });
 
   // Fetch Existing Project
-const { data: existingProject, isLoading: projectLoading } = useQuery({
-  queryKey: ["project", id],
-  queryFn: async () => {
-    // const res = await api.get(`/project.php?project_id=${id}`);
-    //  const res = await axios.get(`http://localhost:3000/api/project?project_id=${id}`);
+  const { data: existingProject, isLoading: projectLoading } = useQuery({
+    queryKey: ["project", id],
+    queryFn: async () => {
       const res = await axios.get(`${url}/api/project?project_id=${id}`);
       const projectData = res.data?.data;
-    
-   
-    //  if (Array.isArray(projectData)) return projectData.find(p => p.P_ID === id);
-    if (Array.isArray(projectData)) {
-      return projectData.find(p => Number(p.P_ID) === Number(id));
+      if (Array.isArray(projectData)) {
+        return projectData.find(p => Number(p.P_ID) === Number(id));
+      }
+      return projectData;
+    },
+    enabled: !!id,
+  });
+
+  // Populate form when data arrives
+  useEffect(() => {
+    if (existingProject && projectTypes.length > 0) {
+      form.reset({
+        P_NAME:                 existingProject.P_NAME || "",
+        P_TYPE:                 existingProject.P_TYPE?.toString() || "",
+        P_ADDRESS:              existingProject.P_ADDRESS || "",
+        SUBWRB:                 existingProject.SUBWRB || "",
+        POSTCODE:               existingProject.POSTCODE || "",
+        STATE:                  existingProject.STATE || "",
+        USER_ID:                existingProject.USER_ID || 105,
+        USER_BY:                existingProject.USER_BY || 105,
+        UPDATED_BY:             existingProject.UPDATED_BY || 105,
+        LOT:                    existingProject.LOT || "",
+        DP:                     existingProject.DP || "",
+        INSURANCE_NO:           existingProject.INSURANCE_NO || "",
+        P_ENTATIVE_START_DATE: existingProject.P_ENTATIVE_START_DATE || "",
+        P_TENTATIVE_END_DATE:   existingProject.P_TENTATIVE_END_DATE || "",
+        P_CODE:                 existingProject.P_CODE || "",
+        DESCRIPTION:            existingProject.DESCRIPTION || "",
+      });
     }
-
-
-    return projectData;
-  },
-  enabled: !!id,
-});
-
-
-
-useEffect(() => {
-  if (existingProject && projectTypes.length > 0) {
-    form.reset({
-      ...existingProject,
-      P_TYPE: existingProject.P_TYPE?.toString() || "",
-    });
-  }
-}, [existingProject, projectTypes]);
-
-
-
-
-
-
-//   useEffect(() => {
-//     if (existingProject) {
-//       form.reset(existingProject);
-//     }
-//   }, [existingProject]);
+  }, [existingProject, projectTypes]);
 
   // Update Project
   const updateMutation = useMutation({
     mutationFn: async (formData) => {
-      // return api.put("/project.php", { ...formData, P_ID: id });
-        // return axios.put("http://localhost:3000/api/project", { ...formData, P_ID: id });
-        return axios.put(`${url}/api/project`, { ...formData, P_ID: id });
+      return axios.put(`${url}/api/project`, { ...formData, P_ID: id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["projects"]);
@@ -162,79 +157,38 @@ useEffect(() => {
     queryKey: ["constructionProcess", id],
     queryFn: async () => {
       if (!id) return [];
-      // const res = await api.get(`/construction_process.php?action=read&PROCESS_ID=${id}`);
-      // const res = await axios.get(`http://localhost:3000/api/construction-process?action=read&PROCESS_ID=${id}`);
-       const res = await axios.get(`${url}/api/construction-process?action=read&PROCESS_ID=${id}`);
-
-       console.log("📦 processLines API response:", res.data);
+      const res = await axios.get(`${url}/api/construction-process?action=read&PROCESS_ID=${id}`);
       return res.data?.data || [];
     },
     enabled: !!id,
   });
 
-  // useEffect(() => {
-  //   if ((processLines || []).length > 0 && (contractorNames || []).length > 0) {
-  //     const updatedLines = processLines.map(line => {
-  //       const contractor = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID));
-  //       return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
-  //     });
-  //     setEditableLines(updatedLines);
-  //   }
-  // }, [processLines, contractorNames]);
-
   useEffect(() => {
-  // ✅ processLines ki assche?
-  console.log("🔄 processLines:", processLines);
-  console.log("🔄 contractorNames:", contractorNames);
+    if (processLines.length > 0) {
+      const updatedLines = processLines.map(line => {
+        const contractor = contractorNames.find(
+          c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
+        );
+        return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
+      });
+      setEditableLines(updatedLines);
+    }
+  }, [processLines, contractorNames]);
 
-  if (processLines.length > 0) {
-    const updatedLines = processLines.map(line => {
-      const contractor = contractorNames.find(
-        c => Number(c.CONTRATOR_ID) === Number(line.CONTRACTOR_ID)
-      );
-      return { ...line, CONTRACTOR_NAME: contractor?.CONTRATOR_NAME || "" };
-    });
-    console.log("✅ editableLines set:", updatedLines);
-    setEditableLines(updatedLines);
-  } else {
-    console.warn("⚠️ processLines empty — UI te dhekabe na");
-  }
-}, [processLines, contractorNames]);
-
-
-  // Create 21 Process Lines
-  // const processMutation = useMutation({
-  //   // mutationFn: async (process_id) => api.post("/process_contractor.php", { process_id }),
-  //   mutationFn: async (process_id) => axios.post("http://localhost:4000/api/process-contractor", { process_id }),
-
-  //   onSuccess: () => {
-  //     toast.success("Process lines created successfully!");
-  //     refetchProcess();
-  //   },
-  //   onError: () => toast.error("Failed to create process lines."),
-  // });
-const processMutation = useMutation({
-  mutationFn: async (process_id) =>
-    // axios.post("http://localhost:3000/api/process-contractor", { process_id }),
-    axios.post(`${url}/api/process-contractor`, { process_id }),
-
-  onSuccess: async (response) => {
-    // ✅ Backend ki response diche dekho
-    console.log("✅ processMutation response:", response.data);
-    toast.success("Process lines created successfully!");
-    // ✅ Cache invalidate করো, তারপর refetch
-    await queryClient.invalidateQueries(["constructionProcess", id]);
-    refetchProcess();
-  },
-  onError: () => toast.error("Failed to create process lines."),
-});
- 
+  // Create Process Lines
+  const processMutation = useMutation({
+    mutationFn: async (process_id) =>
+      axios.post(`${url}/api/process-contractor`, { process_id }),
+    onSuccess: async () => {
+      toast.success("Process lines created successfully!");
+      await queryClient.invalidateQueries(["constructionProcess", id]);
+      refetchProcess();
+    },
+    onError: () => toast.error("Failed to create process lines."),
+  });
 
   const handleProcess = () => {
-    if (!id) {
-      toast.error("❌ Project ID not found.");
-      return;
-    }
+    if (!id) { toast.error("❌ Project ID not found."); return; }
     processMutation.mutate(id);
   };
 
@@ -243,23 +197,18 @@ const processMutation = useMutation({
       const updated = [...prev];
       const current = updated[index];
       let newValue = value;
-
-      if (["SORT_ID","COST","SUB_CONTRACT_ID","DEPENDENT_ID","CONTRACTOR_ID"].includes(field)) {
+      if (["SORT_ID", "COST", "SUB_CONTRACT_ID", "DEPENDENT_ID", "CONTRACTOR_ID"].includes(field)) {
         newValue = value === "" ? "" : Number(value);
       }
-
       const newLine = { ...current, [field]: newValue };
-
       if (field === "DEPENDENT_ID") {
         const selected = contractorTypes.find(c => c.ID === newValue);
         newLine.DEPENDENT_NAME = selected?.NAME || "";
       }
-
       if (field === "CONTRACTOR_ID") {
         const selected = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(newValue));
         newLine.CONTRACTOR_NAME = selected?.CONTRATOR_NAME || "";
       }
-
       updated[index] = newLine;
       return updated;
     });
@@ -267,110 +216,54 @@ const processMutation = useMutation({
 
   const updateProcessMutation = useMutation({
     mutationFn: async (lines) => Promise.all(
-      (lines || []).map(line => {
-        // const payload = {
-        //   ID: line.ID,
-        //   PROCESS_ID: line.PROCESS_ID,
-        //   SUB_CONTRACT_NAME: line.SUB_CONTRACT_NAME || "",
-        //   SUB_CONTRACT_ID: line.SUB_CONTRACT_ID ? Number(line.SUB_CONTRACT_ID) : null,
-        //   DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-        //   SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
-        //   CONTRACTOR_ID: line.CONTRACTOR_ID || "",
-        //   SUPPLIER_ID: line.SUPPLIER_ID ? Number(line.SUPPLIER_ID) : null,
-        //   ...(line.COST !== undefined && line.COST !== "" ? { COST: Number(line.COST) } : {}),
-        //    UPDATED_BY: 105,
-        // };
-        // EditProject.jsx — inside updateProcessMutation mutationFn
-const payload = {
-  ID: line.ID,
-  DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-  SORT_ID: line.SORT_ID ? Number(line.SORT_ID) : 0,
-  COST: line.COST !== undefined && line.COST !== "" ? Number(line.COST) : null,
-  CONTRACTOR_ID: line.CONTRACTOR_ID ? Number(line.CONTRACTOR_ID) : null, // ✅ null instead of ""
-  UPDATED_BY: 105, // ✅ was missing — caused ORA-01036
-};
-
-        // return api.put("/construction_process.php?action=update", payload);
-        // return axios.put("http://localhost:3000/api/construction-process?action=update", payload);
+      lines.map(line => {
+        const payload = {
+          ID:           line.ID,
+          DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+          SORT_ID:      line.SORT_ID ? Number(line.SORT_ID) : 0,
+          COST:         line.COST !== undefined && line.COST !== "" ? Number(line.COST) : null,
+          CONTRACTOR_ID: line.CONTRACTOR_ID ? Number(line.CONTRACTOR_ID) : null,
+          UPDATED_BY:   105,
+        };
         return axios.put(`${url}/api/construction-process?action=update`, payload);
-
-
       })
     ),
-    onSuccess: () => {
-      refetchProcess();
-      toast.success("Process lines updated successfully!");
-    },
+    onSuccess: () => { refetchProcess(); toast.success("Process lines updated successfully!"); },
     onError: () => toast.error("Update failed. Check required fields."),
   });
 
-  // Create Dashboard Function
+  // Create Dashboard
   const handleCreateDashboard = async () => {
-    if (!dashboardDate) {
-      toast.error("Please select a start date!");
-      return;
-    }
-
+    if (!dashboardDate) { toast.error("Please select a start date!"); return; }
     setIsCreatingDashboard(true);
-
     try {
-      const payload = {
-        p_pid: Number(id),
-        p_s_date: dashboardDate,
-      };
-
-      // const createRes = await api.post("/shedule_api.php", payload, {
-        // const createRes = await axios.post("http://localhost:3000/api/shedule_api", payload, {
-        const createRes = await axios.post(`${url}/api/shedule_api`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
-
+      const createRes = await axios.post(`${url}/api/shedule_api`,
+        { p_pid: Number(id), p_s_date: dashboardDate },
+        { headers: { "Content-Type": "application/json" } }
+      );
       if (!createRes.data?.success) {
         toast.error(createRes.data?.message || "Failed to create dashboard");
         setIsCreatingDashboard(false);
         return;
       }
-
       toast.success("Dashboard created! Fetching H_ID...");
       await new Promise(resolve => setTimeout(resolve, 500));
-
-      // const fetchRes = await api.get("/shedule.php");
-        // const fetchRes = await axios.get("http://localhost:3000/api/shedule");
-        const fetchRes = await axios.get(`${url}/api/shedule`);
+      const fetchRes = await axios.get(`${url}/api/shedule`);
       let schedules = [];
-      if (fetchRes.data?.data && Array.isArray(fetchRes.data.data)) {
-        schedules = fetchRes.data.data;
-      } else if (Array.isArray(fetchRes.data)) {
-        schedules = fetchRes.data;
-      }
-
+      if (fetchRes.data?.data && Array.isArray(fetchRes.data.data)) schedules = fetchRes.data.data;
+      else if (Array.isArray(fetchRes.data)) schedules = fetchRes.data;
       const projectSchedules = schedules.filter(s => String(s.P_ID) === String(id));
-
-      if (projectSchedules.length === 0) {
-        toast.error("No schedule found for this project. Please try again.");
-        setIsCreatingDashboard(false);
-        return;
+      if (!projectSchedules.length) {
+        toast.error("No schedule found for this project."); setIsCreatingDashboard(false); return;
       }
-
       const latestSchedule = projectSchedules.sort((a, b) => Number(b.H_ID) - Number(a.H_ID))[0];
       const H_ID = latestSchedule?.H_ID;
-
-      if (!H_ID) {
-        toast.error("H_ID not found in response");
-        setIsCreatingDashboard(false);
-        return;
-      }
-
+      if (!H_ID) { toast.error("H_ID not found"); setIsCreatingDashboard(false); return; }
       toast.success(`Dashboard ready with H_ID: ${H_ID}`);
       setShowDashboardModal(false);
       setDashboardDate("");
-
-      setTimeout(() => {
-        window.location.href = `/dashboard/timeline/${H_ID}`;
-      }, 1000);
-
+      setTimeout(() => { window.location.href = `/dashboard/timeline/${H_ID}`; }, 1000);
     } catch (err) {
-      console.error("❌ Error:", err);
       toast.error(err.response?.data?.message || "Failed to create dashboard");
       setIsCreatingDashboard(false);
     }
@@ -382,7 +275,7 @@ const payload = {
     return (
       <SectionContainer>
         <div className="p-6 bg-white shadow rounded-lg mt-8">
-          <div className="text-center py-8">Loading project...</div>
+          <div className="text-center py-8 text-gray-500">Loading project...</div>
         </div>
       </SectionContainer>
     );
@@ -391,25 +284,109 @@ const payload = {
   return (
     <SectionContainer>
       <div className="p-6 bg-white shadow rounded-lg mt-8">
-        {/* Header with Back Button */}
+
+        {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-2 border-b">
-          <h2 className="font-semibold text-sm text-gray-800">
-            Edit Project
-          </h2>
+          <h2 className="font-semibold text-sm text-gray-800">Edit Project</h2>
           <Button variant="outline" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} className="mr-2" />
-            Back
+            <ArrowLeft size={16} className="mr-2" /> Back
           </Button>
         </div>
 
-        {/* Project Form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* ── Section: Basic Info ── */}
+            <div className="md:col-span-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Basic Information
+              </p>
+            </div>
+
             {/* Project Name */}
             <FormField control={form.control} name="P_NAME" render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Project Name</FormLabel>
+                <FormLabel>Project Name <span className="text-red-500">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* P_CODE */}
+            <FormField control={form.control} name="P_CODE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project Code</FormLabel>
+                <FormControl><Input {...field} placeholder="e.g. PRJ-001" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Project Type */}
+            <FormField control={form.control} name="P_TYPE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project Type <span className="text-red-500">*</span></FormLabel>
+                <Select key={field.value} value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {projectTypes.map(pt => (
+                      <SelectItem key={pt.ID} value={pt.ID.toString()}>{pt.NAME}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Insurance No */}
+            <FormField control={form.control} name="INSURANCE_NO" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance No</FormLabel>
+                <FormControl><Input {...field} placeholder="Enter insurance number" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Tentative Start Date */}
+            <FormField control={form.control} name="P_ENTATIVE_START_DATE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tentative Start Date</FormLabel>
+                <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Tentative End Date */}
+            <FormField control={form.control} name="P_TENTATIVE_END_DATE" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tentative End Date</FormLabel>
+                <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* ── Section: Land Details ── */}
+            <div className="md:col-span-3 mt-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Land Details
+              </p>
+            </div>
+
+            {/* LOT */}
+            <FormField control={form.control} name="LOT" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Lot</FormLabel>
+                <FormControl><Input {...field} placeholder="e.g. 5" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* DP */}
+            <FormField control={form.control} name="DP" render={({ field }) => (
+              <FormItem>
+                <FormLabel>DP (Deposited Plan)</FormLabel>
+                <FormControl><Input {...field} placeholder="e.g. 123456" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -417,45 +394,16 @@ const payload = {
             {/* Suburb */}
             <FormField control={form.control} name="SUBWRB" render={({ field }) => (
               <FormItem>
-                <FormLabel>Suburb</FormLabel>
+                <FormLabel>Suburb <span className="text-red-500">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-{/* Project Type */}
-<FormField 
-  control={form.control} 
-  name="P_TYPE" 
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Project Type</FormLabel>
-      <Select 
-       key={field.value}
-        value={field.value} 
-        onValueChange={field.onChange}
-      >
-        <FormControl>
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent>
-          {(projectTypes || []).map(pt => (
-            <SelectItem key={pt.ID} value={pt.ID.toString()}>
-              {pt.NAME}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <FormMessage />
-    </FormItem>
-  )} 
-/>
 
             {/* Postcode */}
             <FormField control={form.control} name="POSTCODE" render={({ field }) => (
               <FormItem>
-                <FormLabel>Postcode</FormLabel>
+                <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -464,8 +412,8 @@ const payload = {
             {/* State */}
             <FormField control={form.control} name="STATE" render={({ field }) => (
               <FormItem>
-                <FormLabel>State</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormLabel>State <span className="text-red-500">*</span></FormLabel>
+                <FormControl><Input {...field} placeholder="e.g. NSW" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -473,8 +421,17 @@ const payload = {
             {/* Address */}
             <FormField control={form.control} name="P_ADDRESS" render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Project Address</FormLabel>
+                <FormLabel>Project Address <span className="text-red-500">*</span></FormLabel>
                 <FormControl><Textarea rows={3} {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Description */}
+            <FormField control={form.control} name="DESCRIPTION" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl><Textarea rows={3} {...field} placeholder="Enter description" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -487,7 +444,7 @@ const payload = {
               </Button>
 
               <Button type="button" onClick={handleProcess} disabled={processMutation.isPending}>
-                <Cog size={16} className={processMutation.isPending ? "animate-spin" : ""} />
+                <Cog size={16} className={processMutation.isPending ? "animate-spin mr-2" : "mr-2"} />
                 {processMutation.isPending ? "Processing..." : "Create Process"}
               </Button>
 
@@ -498,8 +455,8 @@ const payload = {
           </form>
         </Form>
 
-        {/* Process Table */}
-        <div className="overflow-x-auto mt-6">
+        {/* ── Construction Process Table ── */}
+        <div className="overflow-x-auto mt-8">
           <h3 className="font-semibold text-sm text-gray-800 mb-3">Construction Process Lines</h3>
           <table className="w-full border-collapse text-sm">
             <thead>
@@ -513,12 +470,12 @@ const payload = {
               </tr>
             </thead>
             <tbody>
-              {(editableLines || []).length > 0 ? (
-                (editableLines || []).map((line, index) => (
+              {editableLines.length > 0 ? (
+                editableLines.map((line, index) => (
                   <tr key={line.ID || index} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 w-[5%] border">{line.PROCESS_ID}</td>
-                    <td className="px-3 py-2 w-[30%] border">
-                      {(contractorTypes || []).find(c => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}
+                    <td className="px-3 py-2 border w-[5%]">{line.PROCESS_ID}</td>
+                    <td className="px-3 py-2 border w-[25%]">
+                      {contractorTypes.find(c => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}
                     </td>
                     <td className="py-2 border w-[20%]">
                       <select
@@ -527,24 +484,24 @@ const payload = {
                         className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
                       >
                         <option value="">Select Contractor</option>
-                        {(contractorNames || []).map(c => (
+                        {contractorNames.map(c => (
                           <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>{c.CONTRATOR_NAME}</option>
                         ))}
                       </select>
                     </td>
-                    <td className="py-2 border w-[15%]">
+                    <td className="py-2 border w-[20%]">
                       <select
                         value={line.DEPENDENT_ID || ""}
                         onChange={(e) => handleLineChange(index, "DEPENDENT_ID", e.target.value)}
                         className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
                       >
                         <option value="">Select Dependent</option>
-                        {(contractorTypes || []).map(c => (
+                        {contractorTypes.map(c => (
                           <option key={c.ID} value={c.ID}>{c.NAME}</option>
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 w-[5%] text-center border">
+                    <td className="px-3 py-2 border w-[5%] text-center">
                       <input
                         type="number"
                         value={line.SORT_ID || ""}
@@ -552,7 +509,7 @@ const payload = {
                         className="w-full border-none outline-none bg-transparent text-center"
                       />
                     </td>
-                    <td className="px-3 py-2 w-[10%] text-center border">
+                    <td className="px-3 py-2 border w-[10%] text-center">
                       <input
                         type="number"
                         value={line.COST || ""}
@@ -564,7 +521,7 @@ const payload = {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-3 text-gray-500">
+                  <td colSpan="6" className="text-center py-4 text-gray-500">
                     No process lines found. Click "Create Process" to generate them.
                   </td>
                 </tr>
@@ -575,8 +532,10 @@ const payload = {
 
         {editableLines.length > 0 && (
           <div className="flex justify-end mt-3">
-            <Button onClick={() => updateProcessMutation.mutate(editableLines)} disabled={updateProcessMutation.isPending}>
-             
+            <Button
+              onClick={() => updateProcessMutation.mutate(editableLines)}
+              disabled={updateProcessMutation.isPending}
+            >
               {updateProcessMutation.isPending ? "Updating..." : "Update Process"}
             </Button>
           </div>
@@ -585,11 +544,13 @@ const payload = {
         {/* Dashboard Modal */}
         {showDashboardModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="bg-white rounded-lg p-6 w-96">
+            <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
               <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
               <Input type="date" value={dashboardDate} onChange={e => setDashboardDate(e.target.value)} />
               <div className="flex justify-end gap-3 mt-4">
-                <Button variant="outline" onClick={() => setShowDashboardModal(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => { setShowDashboardModal(false); setDashboardDate(""); }}>
+                  Cancel
+                </Button>
                 <Button onClick={handleCreateDashboard} disabled={isCreatingDashboard}>
                   {isCreatingDashboard ? "Creating..." : "Create"}
                 </Button>
@@ -597,6 +558,7 @@ const payload = {
             </div>
           </div>
         )}
+
       </div>
     </SectionContainer>
   );

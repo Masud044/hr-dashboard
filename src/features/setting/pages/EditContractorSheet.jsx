@@ -127,7 +127,7 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto sm:max-w-lg z-104">
         <SheetHeader>
           <SheetTitle>Edit Contractor</SheetTitle>
           <hr className="mt-3"></hr>
