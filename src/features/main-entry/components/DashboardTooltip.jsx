@@ -11,6 +11,20 @@ import {
 import { Calendar, User, Clock, Briefcase } from "lucide-react";
 
 const TaskHoverCard = ({ item, itemContext, getItemProps, groups, holidayDates }) => {
+
+  const getDateColor = (bgColor) => {
+    if (!bgColor) return "rgba(255,255,255,0.9)";
+    const hex = bgColor.replace("#", "");
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    // Luminance check — উজ্জ্বল color হলে dark text, অন্ধকার হলে white text
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55 ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.92)";
+  };
+
+  const barColor = item.itemProps?.style?.background;
+  const dateColor = getDateColor(barColor);
   // --- Logic Layer ---
   const contractor = groups.find((g) => g.id === item.group);
   const contractorName = contractor?.title || "Unknown";
@@ -50,51 +64,46 @@ while (currentDate.isSameOrBefore(endDay, "day")) {
   return (
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>
-       <div
-  {...getItemProps({
-    style: {
-      ...item.itemProps.style,
-      cursor: "pointer",
-      overflow: "visible",  // ✅ এটা add করুন
-      position: "relative", // ✅ এটা add করুন
-    },
-    className: "group rounded-sm transition-all hover:brightness-95",
-  })}
->
-  {/* ✅ উপরে date label */}
-  {itemContext.dimensions.width > 60 && (
-    <div
-      style={{
-        position: "absolute",
-        top: "-16px",
-        left: "0",
-        right: "0",
-        fontSize: "9px",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        color: "#374151",
-        fontWeight: 600,
-        lineHeight: "14px",
-        pointerEvents: "none",
-        zIndex: 10,
-      }}
-    >
-      {moment(item.start_time).format("MMM D")} – {moment(item.end_time).format("MMM D")}
-    </div>
-  )}
-
-  {/* ✅ Bar এর ভেতরে title */}
-  <div
-    className="flex items-center px-2 truncate text-xs font-medium text-white"
-    style={{
-      height: itemContext.dimensions.height,
-      lineHeight: `${itemContext.dimensions.height}px`,
-    }}
-  >
-    {itemContext.title}
-  </div>
-</div>
+        <div
+          {...getItemProps({
+            style: {
+              ...item.itemProps.style,
+              cursor: "pointer",
+              overflow: "hidden",
+              position: "relative",
+            },
+            className: "group rounded-sm transition-all hover:brightness-95",
+          })}
+        >
+          <div
+            style={{
+              height: itemContext.dimensions.height,
+              display: "flex",
+              alignItems: "start",
+              justifyContent: "start",  // ✅ center align
+              paddingLeft: "6px",
+              paddingRight: "6px",
+              overflow: "hidden",
+              width: "100%",
+            }}
+          >
+            {/* ✅ Date — bar color অনুযায়ী color, সবসময় center এ */}
+            <span
+              style={{
+                fontSize: "10px",
+                fontWeight: 600,
+                color: dateColor,
+                whiteSpace: "nowrap",
+                letterSpacing: "0.2px",
+                textShadow: dateColor.includes("255,255,255")
+                  ? "0 1px 2px rgba(0,0,0,0.4)"   // white text এ dark shadow
+                  : "0 1px 2px rgba(255,255,255,0.3)", // dark text এ light shadow
+              }}
+            >
+              {moment(item.start_time).format("MMM D")} – {moment(item.end_time).format("MMM D")}
+            </span>
+          </div>
+        </div>
       </HoverCardTrigger>
 
       <HoverCardContent 
