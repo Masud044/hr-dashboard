@@ -1,6 +1,7 @@
+// src\components\MobileNav.jsx
 import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
-import { LogOut, ChevronDown } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +14,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { NAV_ITEMS } from "@/lib/constants/nav-items";
-// import { NAV_ITEMS } from "@/lib/constants/nav-items";
+import img from "../assets/image2.png";
 
 export default function MobileNav({ open, onOpenChange }) {
   const [openSections, setOpenSections] = useState([]);
@@ -32,34 +33,40 @@ export default function MobileNav({ open, onOpenChange }) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className=" z-103">
-        <SheetHeader className="border-b px-6 py-4">
+      <SheetContent side="left" className="z-[103] p-0 bg-card border-r border-border">
+
+        {/* Header */}
+        <SheetHeader className="border-b border-border px-5 py-4">
           <SheetTitle className="text-left">
-             <img
-          src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png"
-          alt="Logo"
-          className="w-24 md:w-28"
-        />
+            <img src={img} alt="Logo" className="w-24" />
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col h-[calc(100%-73px)] overflow-y-auto">
-          <nav className="flex-1 px-4 py-4 space-y-2">
+        {/* Nav */}
+        <div className="flex flex-col h-[calc(100%-65px)] overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 space-y-0.5">
             {NAV_ITEMS.map((item, idx) => (
               <Collapsible
                 key={idx}
                 open={openSections.includes(idx)}
                 onOpenChange={() => toggleSection(idx)}
               >
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  {item.label}
+                {/* Section trigger */}
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted rounded-[6px] transition-colors duration-150">
+                  <div className="flex items-center gap-2">
+                    {item.ItemIcon && <item.ItemIcon size={15} className="text-muted-foreground" />}
+                    {item.label}
+                  </div>
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${
+                    size={15}
+                    className={`text-muted-foreground transition-transform duration-200 ${
                       openSections.includes(idx) ? "rotate-180" : ""
                     }`}
                   />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-1 space-y-1">
+
+                {/* Section links */}
+                <CollapsibleContent className="mt-0.5 ml-3 pl-3 border-l border-border space-y-0.5">
                   {item.links.map((linkItem, linkIdx) => (
                     <NavLink
                       key={linkIdx}
@@ -67,15 +74,15 @@ export default function MobileNav({ open, onOpenChange }) {
                       end={linkItem.to === "/dashboard"}
                       onClick={handleLinkClick}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-2.5 ml-4 text-sm rounded-lg transition-colors ${
+                        `flex items-center gap-2 px-3 py-2 text-sm rounded-[6px] transition-colors duration-150 ${
                           isActive
-                            ? "text-green-700 font-medium bg-green-50"
-                            : "text-gray-600 hover:bg-gray-100"
+                            ? "bg-accent text-accent-foreground font-medium"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`
                       }
                     >
                       {linkItem.Icon && (
-                        <linkItem.Icon className="w-4 h-4 shrink-0" />
+                        <linkItem.Icon size={14} className="shrink-0 opacity-70" />
                       )}
                       {linkItem.label}
                     </NavLink>
@@ -84,9 +91,8 @@ export default function MobileNav({ open, onOpenChange }) {
               </Collapsible>
             ))}
           </nav>
-
-          
         </div>
+
       </SheetContent>
     </Sheet>
   );

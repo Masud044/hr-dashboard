@@ -1,3 +1,4 @@
+// src\features\setting\components\ProjectTable.jsx
 "use client";
 
 import * as React from "react";
@@ -16,6 +17,12 @@ import { Pencil, Trash2, ArrowUpDown, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -23,10 +30,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import axios from "axios";
+import { Badge } from "@/components/ui/badge";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -48,18 +61,31 @@ export function ProjectTable() {
   const [sorting, setSorting] = React.useState([]);
   const [columnFilters, setColumnFilters] = React.useState([]);
   const [columnVisibility, setColumnVisibility] = React.useState({
-    // নতুন columns default এ লুকানো থাকবে — Columns button দিয়ে দেখা যাবে
-    LOT:                    false,
-    DP:                     false,
-    INSURANCE_NO:           false,
+    LOT: false,
+    DP: false,
+    INSURANCE_NO: false,
     P_ENTATIVE_START_DATE: false,
-    P_TENTATIVE_END_DATE:   false,
-    P_CODE:                 false,
-    DESCRIPTION:            false,
+    P_TENTATIVE_END_DATE: false,
+    P_CODE: false,
+    DESCRIPTION: false,
   });
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const handleEditProcess = (projectId) => navigate(`/dashboard/process/${projectId}`);
+  const handleEditProcess = (projectId) =>
+    navigate(`/dashboard/process/${projectId}`);
+
+  // Reusable sortable header
+  const SortHeader = ({ column, label }) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="text-xs font-medium text-muted-foreground uppercase tracking-widest -ml-3 h-8 hover:text-foreground"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    >
+      {label}
+      <ArrowUpDown size={12} className="ml-1 opacity-50" />
+    </Button>
+  );
 
   const columns = [
     // ── Select ──
@@ -67,7 +93,10 @@ export function ProjectTable() {
       id: "select",
       header: ({ table }) => (
         <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
@@ -87,150 +116,162 @@ export function ProjectTable() {
     {
       accessorKey: "P_NAME",
       header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          PROJECT NAME <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+        <SortHeader column={column} label="Project Name" />
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("P_NAME")}</div>,
+      cell: ({ row }) => (
+        <span
+          className="text-sm font-medium text-foreground hover:text-primary cursor-pointer transition-colors duration-150"
+          onClick={() => handleEditProcess(row.original.P_ID)}
+        >
+          {row.getValue("P_NAME")}
+        </span>
+      ),
     },
 
     // ── Project Code ──
     {
       accessorKey: "P_CODE",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          P. CODE <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="Code" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground font-mono">
+          {row.getValue("P_CODE") || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("P_CODE") || "-"}</div>,
     },
 
     // ── Project Type ──
     {
       accessorKey: "P_TYPE",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          TYPE <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="Type" />,
+      cell: ({ row }) => (
+        <Badge
+          variant="outline"
+          className="bg-accent text-accent-foreground border-0 font-medium"
+        >
+          Type {row.getValue("P_TYPE")}
+        </Badge>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("P_TYPE")}</div>,
     },
 
     // ── Suburb ──
     {
       accessorKey: "SUBWRB",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          SUBURB <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="Suburb" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-foreground">
+          {row.getValue("SUBWRB")}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("SUBWRB")}</div>,
     },
 
     // ── Postcode ──
     {
       accessorKey: "POSTCODE",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          POSTCODE <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="Postcode" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("POSTCODE")}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("POSTCODE")}</div>,
     },
 
-    // ── State ──
     {
-      accessorKey: "STATE",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          STATE <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("STATE")}</div>,
-    },
+  accessorKey: "STATE",
+  header: ({ column }) => <SortHeader column={column} label="State" />,
+  cell: ({ row }) => {
+    const state = row.getValue("STATE");
+    return (
+      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-0 font-medium dark:bg-emerald-500/10 dark:text-emerald-400">
+        {state || "—"}
+      </Badge>
+    );
+  },
+},
 
     // ── Address ──
     {
       accessorKey: "P_ADDRESS",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          ADDRESS <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
-      ),
+      header: ({ column }) => <SortHeader column={column} label="Address" />,
       cell: ({ row }) => (
-        <div className="ml-3 max-w-[180px] truncate" title={row.getValue("P_ADDRESS")}>
+        <span
+          className="text-sm text-muted-foreground max-w-[180px] truncate block"
+          title={row.getValue("P_ADDRESS")}
+        >
           {row.getValue("P_ADDRESS")}
-        </div>
+        </span>
       ),
     },
 
     // ── LOT (hidden by default) ──
     {
       accessorKey: "LOT",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          LOT <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="Lot" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("LOT") || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("LOT") || "-"}</div>,
     },
 
     // ── DP (hidden by default) ──
     {
       accessorKey: "DP",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          DP <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="DP" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("DP") || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("DP") || "-"}</div>,
     },
 
     // ── Insurance No (hidden by default) ──
     {
       accessorKey: "INSURANCE_NO",
       header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          INSURANCE NO <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+        <SortHeader column={column} label="Insurance No" />
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("INSURANCE_NO") || "-"}</div>,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("INSURANCE_NO") || "—"}
+        </span>
+      ),
     },
 
-    // ── Tentative Start Date (hidden by default) ──
+    // ── Start Date (hidden by default) ──
     {
       accessorKey: "P_ENTATIVE_START_DATE",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          START DATE <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="Start Date" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("P_ENTATIVE_START_DATE") || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("P_ENTATIVE_START_DATE") || "-"}</div>,
     },
 
-    // ── Tentative End Date (hidden by default) ──
+    // ── End Date (hidden by default) ──
     {
       accessorKey: "P_TENTATIVE_END_DATE",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          END DATE <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+      header: ({ column }) => <SortHeader column={column} label="End Date" />,
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("P_TENTATIVE_END_DATE") || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("P_TENTATIVE_END_DATE") || "-"}</div>,
     },
 
     // ── Description (hidden by default) ──
     {
       accessorKey: "DESCRIPTION",
       header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          DESCRIPTION <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+        <SortHeader column={column} label="Description" />
       ),
       cell: ({ row }) => (
-        <div className="ml-3 max-w-[160px] truncate" title={row.getValue("DESCRIPTION")}>
-          {row.getValue("DESCRIPTION") || "-"}
-        </div>
+        <span
+          className="text-sm text-muted-foreground max-w-[160px] truncate block"
+          title={row.getValue("DESCRIPTION")}
+        >
+          {row.getValue("DESCRIPTION") || "—"}
+        </span>
       ),
     },
 
@@ -238,22 +279,49 @@ export function ProjectTable() {
     {
       id: "actions",
       enableHiding: false,
-      header: () => <div className="text-center">Actions</div>,
+      header: () => (
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+          Actions
+        </span>
+      ),
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <div className="flex items-center gap-3 justify-center">
-            <Button variant="ghost" size="icon-sm" onClick={() => handleEditProcess(item.P_ID)}>
-              <Pencil size={18} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => console.log("Delete:", item.P_ID)}
-            >
-              <Trash2 size={18} />
-            </Button>
-          </div>
+          <TooltipProvider>
+            <div className="flex items-center gap-1 ">
+              {/* Edit */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => handleEditProcess(item.P_ID)}
+                    aria-label="Edit project"
+                  >
+                    <Pencil size={14} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit</TooltipContent>
+              </Tooltip>
+
+              {/* Delete */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:border-destructive"
+                    onClick={() => console.log("Delete:", item.P_ID)}
+                    aria-label="Delete project"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         );
       },
     },
@@ -274,20 +342,21 @@ export function ProjectTable() {
   });
 
   return (
-    <div className="mt-4 shadow-2xl rounded-lg bg-white">
-      {/* Search + Column Toggle */}
-      <div className="flex items-center py-4 px-4 gap-2">
+    <div className="bg-card border border-border rounded-lg">
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-border">
         <Input
           placeholder="Filter by project name..."
           value={table.getColumn("P_NAME")?.getFilterValue() ?? ""}
-          onChange={(e) => table.getColumn("P_NAME")?.setFilterValue(e.target.value)}
-          className="max-w-sm"
+          onChange={(e) =>
+            table.getColumn("P_NAME")?.setFilterValue(e.target.value)
+          }
+          className="max-w-xs"
         />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-1 h-4 w-4" />
+            <Button variant="outline" size="sm" className="ml-auto gap-1">
+              Columns <ChevronDown size={13} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
@@ -297,7 +366,7 @@ export function ProjectTable() {
               .map((column) => (
                 <DropdownMenuCheckboxItem
                   key={column.id}
-                  className="capitalize"
+                  className="capitalize text-sm"
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
@@ -309,16 +378,22 @@ export function ProjectTable() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((group) => (
-              <TableRow key={group.id}>
+              <TableRow
+                key={group.id}
+                className="bg-muted/50 hover:bg-muted/50"
+              >
                 {group.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="py-2">
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -328,27 +403,40 @@ export function ProjectTable() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24 text-gray-500">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center h-24 text-sm text-muted-foreground"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             )}
 
-            {!isLoading && table.getRowModel().rows.length > 0 &&
+            {!isLoading &&
+              table.getRowModel().rows.length > 0 &&
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow
+                  key={row.id}
+                  className="h-11 border-b border-border last:border-0"
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <TableCell key={cell.id} className="py-2">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            }
+              ))}
 
             {!isLoading && table.getRowModel().rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24 text-gray-500">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center h-24 text-sm text-muted-foreground"
+                >
                   No results.
                 </TableCell>
               </TableRow>
