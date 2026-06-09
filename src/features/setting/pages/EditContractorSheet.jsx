@@ -204,7 +204,7 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent className="sm:max-w-2xl overflow-y-auto z-[104]">
+      <SheetContent className="!w-screen !h-screen !max-w-none overflow-y-auto flex flex-col gap-0 p-0 rounded-none z-[104]">
         <SheetHeader className="mb-4">
           <SheetTitle className="text-lg font-semibold">
             Edit Contractor
@@ -220,169 +220,183 @@ export function EditContractorSheet({ isOpen, onClose, contractorId }) {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 px-1 pb-6"
+              // className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 px-1 pb-6"
             >
               {/* ── GENERAL INFO ─────────────────────────────────────── */}
               <SectionHeading label="General Information" />
 
-              <FormField control={form.control} name="CONTRATOR_NAME" render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Contractor Name <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+             {/* ── BASIC INFO ───────────────────────────────────────── */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="CONTRATOR_NAME" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Contractor Name <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="ADDRESS" render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Address <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Textarea rows={2} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="ADDRESS" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Address <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Textarea rows={2} {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
 
-              <FormField control={form.control} name="ABN" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ABN <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+<div className="grid grid-cols-1 md:grid-cols-4 gap-x-3 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="ABN" render={({ field }) => (
+    <FormItem>
+      <FormLabel>ABN <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="LIEC_NO" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>License No <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="LIEC_NO" render={({ field }) => (
+    <FormItem>
+      <FormLabel>License No <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="SUBURB" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Suburb <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="SUBURB" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Suburb <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="POSTCODE" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="POSTCODE" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
 
-              <FormField control={form.control} name="STATE" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>State <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+<div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="STATE" render={({ field }) => (
+    <FormItem>
+      <FormLabel>State <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="FAX" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fax</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="FAX" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Fax</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
 
-              {/* ── CONTACT ───────────────────────────────────────────── */}
-              <SectionHeading label="Contact Details" />
+{/* ── CONTACT ───────────────────────────────────────── */}
+<SectionHeading label="Contact Details" />
 
-              <FormField control={form.control} name="CONTACT_PERSON" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Person <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+<div className="grid grid-cols-1 md:grid-cols-4 gap-x-3 mt-3 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="CONTACT_PERSON" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Contact Person <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="PHONE" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="PHONE" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Phone <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="MOBILE" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="MOBILE" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Mobile <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="EMAIL" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
-                  <FormControl><Input type="email" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="EMAIL" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+      <FormControl><Input type="email" {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
 
-              {/* ── BANKING ───────────────────────────────────────────── */}
-              <SectionHeading label="Banking & Insurance" />
+{/* ── BANKING ───────────────────────────────────────── */}
+<SectionHeading label="Banking & Insurance" />
 
-              <FormField control={form.control} name="BANK_ACC_NAME" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bank Account Name</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+<div className="grid grid-cols-1 md:grid-cols-3 mt-3 gap-x-3 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="BANK_ACC_NAME" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Bank Account Name</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="BSB" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>BSB</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="BSB" render={({ field }) => (
+    <FormItem>
+      <FormLabel>BSB</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="AC_NO" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account No</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="AC_NO" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Account No</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
 
-              <FormField control={form.control} name="INSURER" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Insurer</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+<div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="INSURER" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Insurer</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="POLICY_NUMBER" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Policy Number</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="POLICY_NUMBER" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Policy Number</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
 
-              <FormField control={form.control} name="DUE" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+  <FormField control={form.control} name="DUE" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Due</FormLabel>
+      <FormControl><Input {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
 
-              <FormField control={form.control} name="REMARKS" render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Remarks</FormLabel>
-                  <FormControl><Textarea rows={2} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
+<div className="grid grid-cols-1 gap-x-3 gap-y-2 px-1 pb-6">
+  <FormField control={form.control} name="REMARKS" render={({ field }) => (
+    <FormItem>
+      <FormLabel>Remarks</FormLabel>
+      <FormControl><Textarea rows={2} {...field} /></FormControl>
+      <FormMessage />
+    </FormItem>
+  )} />
+</div>
               {/* ── CONTRACTOR TYPES (Dynamic rows) ─────────────────────── */}
               <div className="md:col-span-2">
                 <div className="flex items-center justify-between mb-3">

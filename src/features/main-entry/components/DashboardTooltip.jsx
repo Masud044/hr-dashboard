@@ -20,15 +20,29 @@ const TaskHoverCard = ({ item, itemContext, getItemProps, groups, holidayDates }
   const totalDays = endDate.diff(startDate, "days") + 1;
 
   let holidayCount = 0;
-  let currentDate = startDate.clone();
+  // let currentDate = startDate.clone();
 
-  while (currentDate.isSameOrBefore(endDate, "day")) {
-    const dateStr = currentDate.format("YYYY-MM-DD");
-    if (holidayDates && holidayDates.has(dateStr)) {
-      holidayCount++;
-    }
-    currentDate.add(1, "day");
+  // while (currentDate.isSameOrBefore(endDate, "day")) {
+  //   const dateStr = currentDate.format("YYYY-MM-DD");
+  //   if (holidayDates && holidayDates.has(dateStr)) {
+  //     holidayCount++;
+  //   }
+  //   currentDate.add(1, "day");
+  // }
+
+  // ✅ Fixed code
+const startDay = moment(item.start_time).startOf("day");
+const endDay = moment(item.end_time).startOf("day"); // endOf এর বদলে startOf
+
+let currentDate = startDay.clone();
+
+while (currentDate.isSameOrBefore(endDay, "day")) {
+  const dateStr = currentDate.format("YYYY-MM-DD");
+  if (holidayDates && holidayDates.has(dateStr)) {
+    holidayCount++;
   }
+  currentDate.add(1, "day");
+}
 
   const workingDays = totalDays - holidayCount;
   // -------------------
@@ -36,25 +50,51 @@ const TaskHoverCard = ({ item, itemContext, getItemProps, groups, holidayDates }
   return (
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>
-        <div
-          {...getItemProps({
-            style: {
-              ...item.itemProps.style,
-              cursor: "pointer",
-            },
-            className: "group rounded-sm transition-all hover:brightness-95",
-          })}
-        >
-          <div
-            className="flex items-center px-2 truncate text-xs font-medium text-foreground"
-            style={{
-              height: itemContext.dimensions.height,
-              lineHeight: `${itemContext.dimensions.height}px`,
-            }}
-          >
-            {itemContext.title}
-          </div>
-        </div>
+       <div
+  {...getItemProps({
+    style: {
+      ...item.itemProps.style,
+      cursor: "pointer",
+      overflow: "visible",  // ✅ এটা add করুন
+      position: "relative", // ✅ এটা add করুন
+    },
+    className: "group rounded-sm transition-all hover:brightness-95",
+  })}
+>
+  {/* ✅ উপরে date label */}
+  {itemContext.dimensions.width > 60 && (
+    <div
+      style={{
+        position: "absolute",
+        top: "-16px",
+        left: "0",
+        right: "0",
+        fontSize: "9px",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        color: "#374151",
+        fontWeight: 600,
+        lineHeight: "14px",
+        pointerEvents: "none",
+        zIndex: 10,
+      }}
+    >
+      {moment(item.start_time).format("MMM D")} – {moment(item.end_time).format("MMM D")}
+    </div>
+  )}
+
+  {/* ✅ Bar এর ভেতরে title */}
+  <div
+    className="flex items-center px-2 truncate text-xs font-medium text-white"
+    style={{
+      height: itemContext.dimensions.height,
+      lineHeight: `${itemContext.dimensions.height}px`,
+    }}
+  >
+    {itemContext.title}
+  </div>
+</div>
       </HoverCardTrigger>
 
       <HoverCardContent 

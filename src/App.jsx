@@ -31,6 +31,9 @@ import Modules from "./features/users/module";
 import Permissions from "./features/users/permission";
 import OwnerInfo from "./features/setting/owner-info/owner-info";
 import ContractorTypeInfo from "./features/setting/contractor-type-info/contractor-type-info";
+import Calendar from "./features/setting/calendar/calender";
+import ProjectType from "./features/setting/project-type/project-type";
+import ContractorType from "./features/setting/contractor-type/contractor-type";
 
 const ADMIN = ["Admin"];
 
@@ -163,7 +166,31 @@ const App = () => {
               }
             /> */}
 
-           
+           <Route
+                path="calendar"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Calendar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="project-type"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <ProjectType />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="contractor-type"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <ContractorType />
+                  </ProtectedRoute>
+                }
+              />
            <Route path="owner-info" element={<OwnerInfo />} />
 
            <Route path="contractor-type-info" element={<ContractorTypeInfo />} />

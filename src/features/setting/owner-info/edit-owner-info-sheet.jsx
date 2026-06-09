@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const ownerSchema = z.object({
   oName:     z.string().min(1, "Owner name is required"),
@@ -125,7 +126,7 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto z-104">
+      <SheetContent className="!w-screen !h-screen !max-w-none overflow-y-auto flex flex-col gap-0 p-0 rounded-none z-103">
         <SheetHeader>
           <SheetTitle>Edit Owner</SheetTitle>
           <hr className="mt-3" />
@@ -139,9 +140,10 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 mt-6 px-3"
+              // className="space-y-4 mt-6 px-3"
             >
-              {/* Owner Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3">
+                 {/* Owner Name */}
               <FormField
                 control={form.control}
                 name="oName"
@@ -155,8 +157,24 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
                   </FormItem>
                 )}
               />
-
-              {/* Project */}
+               {/* Address */}
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                       <Textarea rows={2} {...field} placeholder="Enter address" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </div>
+             
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-3">
+            {/* Project */}
               <FormField
                 control={form.control}
                 name="projectId"
@@ -185,24 +203,7 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
                 )}
               />
 
-              {/* Address */}
               <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input {...field} className="opacity-70" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                {/* Suburb */}
-                <FormField
                   control={form.control}
                   name="suburb"
                   render={({ field }) => (
@@ -230,24 +231,13 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
                     </FormItem>
                   )}
                 />
-              </div>
+                
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* State */}
-                <FormField
-                  control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="text-sm opacity-70" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+           </div>
+              
 
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-3">
+               
                 {/* Phone */}
                 <FormField
                   control={form.control}
@@ -262,9 +252,8 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
                     </FormItem>
                   )}
                 />
-              </div>
 
-              {/* Email */}
+                  {/* Email */}
               <FormField
                 control={form.control}
                 name="email"
@@ -278,6 +267,24 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
                   </FormItem>
                 )}
               />
+
+                 {/* State */}
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="text-sm opacity-70" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+            
 
               <SheetFooter className="flex flex-row items-center justify-between">
                 <SheetClose asChild>
