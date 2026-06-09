@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const ownerSchema = z.object({
   oName:     z.string().min(1, "Owner name is required"),
@@ -97,7 +98,7 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto z-103">
+      <SheetContent className="!w-screen !h-screen !max-w-none overflow-y-auto flex flex-col gap-0 p-0 rounded-none z-103">
         <SheetHeader>
           <SheetTitle>Add New Owner</SheetTitle>
           <hr />
@@ -107,14 +108,15 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3"
+              // className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3"
             >
               {/* Owner Name */}
-              <FormField
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3">
+                 <FormField
                 control={form.control}
                 name="oName"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem >
                     <FormLabel>Owner Name</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter owner name" />
@@ -124,12 +126,29 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
                 )}
               />
 
-              {/* Project */}
+              {/* Address */}
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem >
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                     <Textarea rows={2} {...field} placeholder="Enter address" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-3">
+                 {/* Project */}
               <FormField
                 control={form.control}
                 name="projectId"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem >
                     <FormLabel>Project</FormLabel>
                     <Select
                       onValueChange={(val) => field.onChange(Number(val))}
@@ -153,20 +172,7 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
                 )}
               />
 
-              {/* Address */}
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter address" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              
 
               {/* Suburb */}
               <FormField
@@ -212,8 +218,10 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
                   </FormItem>
                 )}
               />
+              </div>
+             
 
-              {/* Phone */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3"> {/* Phone */}
               <FormField
                 control={form.control}
                 name="phone"
@@ -233,7 +241,7 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem >
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input type="email" {...field} placeholder="Enter email" />
@@ -241,7 +249,9 @@ export function CreateOwnerInfoSheet({ isOpen, onClose }) {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /></div>
+
+             
 
               {/* Buttons */}
               <div className="col-span-2 flex justify-between gap-3 mt-4">

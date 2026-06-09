@@ -1,0 +1,136 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+// ── Zod schema ────────────────────────────────────────────────────────────────
+const schema = z.object({
+  NAME:        z.string().min(1, "Name is required"),
+  DESCRIPTION: z.string().optional(),
+});
+
+const defaultValues = { NAME: "", DESCRIPTION: "" };
+
+// ── Section heading helper ────────────────────────────────────────────────────
+function SectionHeading({ label }) {
+  return (
+    <div className="flex items-center gap-2 mt-2 mb-3">
+      <span className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+export function CreateProjectTypeSheet({ isOpen, onClose }) {
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues,
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (formData) =>
+      axios.post(`${url}/api/project-type`, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["project-types"]);
+      toast.success("Project type created successfully!");
+      form.reset(defaultValues);
+      onClose();
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to create project type.");
+    },
+  });
+
+  const onSubmit = (data) => mutation.mutate(data);
+
+  const handleClose = () => {
+    form.reset(defaultValues);
+    onClose();
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={handleClose}>
+      <SheetContent className="sm:max-w-xl overflow-y-auto flex flex-col gap-0 p-0 rounded-none z-[104]">
+        <SheetHeader className="mb-4 px-6 pt-6">
+          <SheetTitle className="text-lg font-semibold">Add Project Type</SheetTitle>
+          <hr />
+        </SheetHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 pb-8">
+            {/* <SectionHeading label="Project Type Information" /> */}
+
+            <div className="grid grid-cols-1 gap-y-4 max-w-xl">
+              {/* Name */}
+              <FormField
+                control={form.control}
+                name="NAME"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter project type name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="DESCRIPTION"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea rows={3} {...field} placeholder="Enter description (optional)" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* ── Footer ──────────────────────────────────────────────── */}
+            <div className="flex justify-between gap-3 mt-8 pt-4 border-t max-w-xl">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "Saving..." : "Save Project Type"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}

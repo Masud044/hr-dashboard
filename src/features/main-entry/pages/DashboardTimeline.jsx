@@ -17,11 +17,11 @@ import { useNavigate } from "react-router-dom";
 // import api from "@/api/Api";
 import { SectionContainer } from "@/components/SectionContainer";
 import TaskHoverCard from "../components/DashboardTooltip";
-const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 const DashboardTimeline = () => {
   const navigate = useNavigate();
   const { H_ID } = useParams();
-  
+
   const [groups, setGroups] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
   const [items, setItems] = useState([]);
@@ -34,18 +34,35 @@ const DashboardTimeline = () => {
   const lastUpdatedRef = useRef(null);
 
   const distinctColors = [
-    "#001BB7", "#4FB7B3", "#4DFFBE", "#78C841", "#A3B087",
-    "#FCB53B", "#F5DEA3", "#7B542F", "#FF8040", "#E49BA6",
-    "#DC0E0E", "#850E35", "#E83C91", "#9112BC", "#3C467B",
-    "#000000", "#71C0BB", "#7C4585", "#174143", "#FFC400", "#FF0060",
+    "#001BB7",
+    "#4FB7B3",
+    "#4DFFBE",
+    "#78C841",
+    "#A3B087",
+    "#FCB53B",
+    "#F5DEA3",
+    "#7B542F",
+    "#FF8040",
+    "#E49BA6",
+    "#DC0E0E",
+    "#850E35",
+    "#E83C91",
+    "#9112BC",
+    "#3C467B",
+    "#000000",
+    "#71C0BB",
+    "#7C4585",
+    "#174143",
+    "#FFC400",
+    "#FF0060",
   ];
 
   // ✅ Initialize with a narrow window - will be updated when project header loads
   const [visibleTimeStart, setVisibleTimeStart] = useState(
-    moment().subtract(3, "days").startOf("day").valueOf()
+    moment().subtract(3, "days").startOf("day").valueOf(),
   );
   const [visibleTimeEnd, setVisibleTimeEnd] = useState(
-    moment().add(20, "days").endOf("day").valueOf()
+    moment().add(20, "days").endOf("day").valueOf(),
   );
 
   // ✅ Fetch Calendar (Holiday/Working day info)
@@ -54,13 +71,15 @@ const DashboardTimeline = () => {
       try {
         // const res = await api.get("/calender_api.php");
         // const res = await axios.get("http://localhost:3000/api/calendar");
-          const res = await axios.get(`${url}/api/calendar`);
-        if (res.data.success && Array.isArray(res.data.records)) {
-          const holidayRecords = res.data.records.filter(
-            (r) => r.working_status === "N"
+        const res = await axios.get(`${url}/api/calendar`);
+        // ✅ Fixed code
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const holidayRecords = res.data.data.filter(
+            (r) =>
+              r.WORKING_STATUS === "WEEKEND" || r.WORKING_STATUS === "HOLIDAY",
           );
           const holidayDateSet = new Set(
-            holidayRecords.map((r) => moment(r.day).format("YYYY-MM-DD"))
+            holidayRecords.map((r) => moment.utc(r.DAY).format("YYYY-MM-DD")),
           );
           setHolidayDates(holidayDateSet);
         }
@@ -79,9 +98,8 @@ const DashboardTimeline = () => {
         // const res = await api.get(
         //   "/contractor_api.php"
         // );
-          // const res = await axios.get("http://localhost:3000/api/contractor-type");
-          const res = await axios.get(`${url}/api/contractor-type`);
-
+        // const res = await axios.get("http://localhost:3000/api/contractor-type");
+        const res = await axios.get(`${url}/api/contractor-type`);
 
         if (res.data.success && Array.isArray(res.data.data)) {
           const formatted = res.data.data.map((c, index) => {
@@ -114,7 +132,7 @@ const DashboardTimeline = () => {
   //     if (res.data.success && res.data.data) {
   //       const projectData = res.data.data;
   //       console.log(projectData)
-        
+
   //       if (projectData.PROJECT_START_PLAN && projectData.PROJECT_END_PLAN) {
   //         // Parse dates - handling DD-MMM-YY format
   //         const start = moment(projectData.PROJECT_START_PLAN, "DD-MMM-YY")
@@ -127,7 +145,7 @@ const DashboardTimeline = () => {
 
   //         setVisibleTimeStart(start);
   //         setVisibleTimeEnd(end);
-          
+
   //         console.log("Project Date Range Set:", {
   //           start: moment(start).format("YYYY-MM-DD"),
   //           end: moment(end).format("YYYY-MM-DD")
@@ -152,12 +170,12 @@ const DashboardTimeline = () => {
       // const res = await api.get(
       //   "/gantt_api.php"
       // );
-        // const res = await axios.get("http://localhost:3000/api/gantt");
-        const res = await axios.get(`${url}/api/gantt`);
+      // const res = await axios.get("http://localhost:3000/api/gantt");
+      const res = await axios.get(`${url}/api/gantt`);
 
       if (res.data.success && Array.isArray(res.data.data)) {
         const filtered = res.data.data.filter(
-          (i) => Number(i.H_ID) === Number(H_ID)
+          (i) => Number(i.H_ID) === Number(H_ID),
         );
 
         const formattedItems = filtered
@@ -184,15 +202,15 @@ const DashboardTimeline = () => {
               },
             };
           });
-           // ✅ Auto-adjust timeline window based on task dates
+        // ✅ Auto-adjust timeline window based on task dates
         if (formattedItems.length > 0) {
           const startDates = formattedItems.map((i) => i.start_time);
           const endDates = formattedItems.map((i) => i.end_time);
-          
+
           // Find earliest start date and set timeline to start from there
           const earliestDate = moment(Math.min(...startDates)).startOf("day");
           const latestDate = moment(Math.max(...endDates)).endOf("day");
-          
+
           // Show from earliest task date to latest + some buffer
           setVisibleTimeStart(earliestDate.valueOf());
           setVisibleTimeEnd(latestDate.add(15, "days").valueOf());
@@ -220,8 +238,8 @@ const DashboardTimeline = () => {
 
     try {
       // await api.put("/gantt_api.php", {
-        // await axios.put("http://localhost:3000/api/gantt", {
-          await axios.put(`${url}/api/gantt`, {
+      // await axios.put("http://localhost:3000/api/gantt", {
+      await axios.put(`${url}/api/gantt`, {
         L_ID: item.id,
         C_P_ID: item.group,
         SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),
@@ -317,8 +335,6 @@ const DashboardTimeline = () => {
   //   }
   // };
 
-  
-
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
       const i = prev.findIndex((item) => item.id === itemId);
@@ -362,10 +378,10 @@ const DashboardTimeline = () => {
       setItems(allItems);
     } else {
       const filteredGroups = allGroups.filter(
-        (g) => g.id === Number(selectedContractor)
+        (g) => g.id === Number(selectedContractor),
       );
       const filteredItems = allItems.filter(
-        (i) => i.group === Number(selectedContractor)
+        (i) => i.group === Number(selectedContractor),
       );
       setGroups(filteredGroups);
       setItems(filteredItems);
@@ -381,15 +397,14 @@ const DashboardTimeline = () => {
     return [];
   };
 
-
-   const itemRenderer = ({ item, itemContext, getItemProps }) => {
+  const itemRenderer = ({ item, itemContext, getItemProps }) => {
     return (
       <TaskHoverCard
         item={item}
         itemContext={itemContext}
         getItemProps={getItemProps}
         groups={groups}
-         holidayDates={holidayDates}
+        holidayDates={holidayDates}
       />
     );
   };
@@ -447,13 +462,9 @@ const DashboardTimeline = () => {
           </div>
         </div>
 
-       
-
         {/* Timeline */}
         <div className="flex-1 overflow-hidden">
           <div className="h-full bg-white rounded-lg shadow-lg">
-
-            
             {groups.length > 0 ? (
               <Timeline
                 groups={groups}
@@ -479,12 +490,14 @@ const DashboardTimeline = () => {
                 sidebarWidth={200}
                 stackItems
                 verticalLineClassNamesForTime={verticalLineClassNamesForTime}
-               itemRenderer={itemRenderer}
+                itemRenderer={itemRenderer}
                 groupRenderer={({ group }) => (
-                  <div style={{ 
-                    fontSize: "10px", 
-                    fontWeight: 600,
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                    }}
+                  >
                     {group.title}
                   </div>
                 )}
