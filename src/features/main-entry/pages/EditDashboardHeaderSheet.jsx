@@ -116,7 +116,7 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
-      <SheetContent  className=" sm:max-w-sm overflow-y-auto">
+      <SheetContent  className=" sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Set Dashboard Header</SheetTitle>
            <hr></hr>
@@ -148,7 +148,8 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
                   )}
                 />
 
-                {/* Project Start Plan */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   {/* Project Start Plan */}
                 <FormField
                   control={form.control}
                   name="PROJECT_START_PLAN"
@@ -178,6 +179,9 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
                   )}
                 />
 
+                </div>
+
+               
                 {/* Submit Buttons */}
                 <div className=" col-span-2 flex justify-between gap-3 mt-6">
                   <Button type="button" variant="outline" onClick={handleClose}>
