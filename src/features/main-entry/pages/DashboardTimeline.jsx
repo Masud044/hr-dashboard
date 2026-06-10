@@ -12,12 +12,12 @@ import moment from "moment";
 import axios from "axios";
 import "react-calendar-timeline/style.css";
 
-import { Link, useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-// import api from "@/api/Api";
+import { useParams, useNavigate } from "react-router-dom";
 import { SectionContainer } from "@/components/SectionContainer";
 import TaskHoverCard from "../components/DashboardTooltip";
+
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
 const DashboardTimeline = () => {
   const navigate = useNavigate();
   const { H_ID } = useParams();
@@ -29,57 +29,37 @@ const DashboardTimeline = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [holidayDates, setHolidayDates] = useState(new Set());
   const [selectedContractor, setSelectedContractor] = useState("all");
+  const [projectName, setProjectName] = useState("");
 
   const colorMap = useRef({});
   const lastUpdatedRef = useRef(null);
 
   const distinctColors = [
-    "#001BB7",
-    "#4FB7B3",
-    "#4DFFBE",
-    "#78C841",
-    "#A3B087",
-    "#FCB53B",
-    "#F5DEA3",
-    "#7B542F",
-    "#FF8040",
-    "#E49BA6",
-    "#DC0E0E",
-    "#850E35",
-    "#E83C91",
-    "#9112BC",
-    "#3C467B",
-    "#000000",
-    "#71C0BB",
-    "#7C4585",
-    "#174143",
-    "#FFC400",
-    "#FF0060",
+    "#001BB7", "#4FB7B3", "#4DFFBE", "#78C841", "#A3B087",
+    "#FCB53B", "#F5DEA3", "#7B542F", "#FF8040", "#E49BA6",
+    "#DC0E0E", "#850E35", "#E83C91", "#9112BC", "#3C467B",
+    "#000000", "#71C0BB", "#7C4585", "#174143", "#FFC400", "#FF0060",
   ];
 
-  // ✅ Initialize with a narrow window - will be updated when project header loads
   const [visibleTimeStart, setVisibleTimeStart] = useState(
-    moment().subtract(3, "days").startOf("day").valueOf(),
+    moment().subtract(3, "days").startOf("day").valueOf()
   );
   const [visibleTimeEnd, setVisibleTimeEnd] = useState(
-    moment().add(20, "days").endOf("day").valueOf(),
+    moment().add(20, "days").endOf("day").valueOf()
   );
 
-  // ✅ Fetch Calendar (Holiday/Working day info)
+  // ✅ Fetch Calendar
   useEffect(() => {
     const fetchCalendar = async () => {
       try {
-        // const res = await api.get("/calender_api.php");
-        // const res = await axios.get("http://localhost:3000/api/calendar");
         const res = await axios.get(`${url}/api/calendar`);
-        // ✅ Fixed code
         if (res.data.success && Array.isArray(res.data.data)) {
           const holidayRecords = res.data.data.filter(
             (r) =>
-              r.WORKING_STATUS === "WEEKEND" || r.WORKING_STATUS === "HOLIDAY",
+              r.WORKING_STATUS === "WEEKEND" || r.WORKING_STATUS === "HOLIDAY"
           );
           const holidayDateSet = new Set(
-            holidayRecords.map((r) => moment.utc(r.DAY).format("YYYY-MM-DD")),
+            holidayRecords.map((r) => moment.utc(r.DAY).format("YYYY-MM-DD"))
           );
           setHolidayDates(holidayDateSet);
         }
@@ -91,26 +71,19 @@ const DashboardTimeline = () => {
     fetchCalendar();
   }, []);
 
-  // ✅ Fetch contractors
+  // ✅ Fetch Contractors
   useEffect(() => {
     const fetchContractors = async () => {
       try {
-        // const res = await api.get(
-        //   "/contractor_api.php"
-        // );
-        // const res = await axios.get("http://localhost:3000/api/contractor-type");
         const res = await axios.get(`${url}/api/contractor-type`);
-
         if (res.data.success && Array.isArray(res.data.data)) {
           const formatted = res.data.data.map((c, index) => {
             const id = Number(c.ID);
             if (!colorMap.current[id]) {
-              const colorIndex = index % distinctColors.length;
-              colorMap.current[id] = distinctColors[colorIndex];
+              colorMap.current[id] = distinctColors[index % distinctColors.length];
             }
             return { id, title: c.NAME };
           });
-
           setGroups(formatted);
           setAllGroups(formatted);
         }
@@ -122,60 +95,29 @@ const DashboardTimeline = () => {
     fetchContractors();
   }, []);
 
-  // ✅ Fetch Project Header to set timeline range based on project dates
-  // const fetchProjectHeader = async () => {
-  //   try {
-  //     const res = await api.get(
-  //       `/shedule_header.php?hid=${H_ID}`
-  //     );
+  // ✅ Fetch Project Header
+  useEffect(() => {
+    const fetchProjectHeader = async () => {
+      try {
+        const res = await axios.get(`${url}/api/schedule-header?hid=${H_ID}`);
+        if (res.data.success) {
+          const project = res.data.data;
+          setProjectName(project.P_NAME || "");
+        }
+      } catch (error) {
+        console.error("Project header load failed:", error);
+      }
+    };
+    if (H_ID) fetchProjectHeader();
+  }, [H_ID]);
 
-  //     if (res.data.success && res.data.data) {
-  //       const projectData = res.data.data;
-  //       console.log(projectData)
-
-  //       if (projectData.PROJECT_START_PLAN && projectData.PROJECT_END_PLAN) {
-  //         // Parse dates - handling DD-MMM-YY format
-  //         const start = moment(projectData.PROJECT_START_PLAN, "DD-MMM-YY")
-  //           .startOf("day")
-  //           .valueOf();
-
-  //         const end = moment(projectData.PROJECT_END_PLAN, "DD-MMM-YY")
-  //           .endOf("day")
-  //           .valueOf();
-
-  //         setVisibleTimeStart(start);
-  //         setVisibleTimeEnd(end);
-
-  //         console.log("Project Date Range Set:", {
-  //           start: moment(start).format("YYYY-MM-DD"),
-  //           end: moment(end).format("YYYY-MM-DD")
-  //         });
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Header load error", error);
-  //     toast.error("Failed to load project dates");
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (H_ID) {
-  //     fetchProjectHeader();
-  //   }
-  // }, [H_ID]);
-
-  // ✅ Fetch Gantt data
+  // ✅ Fetch Gantt Data
   const fetchGanttData = async () => {
     try {
-      // const res = await api.get(
-      //   "/gantt_api.php"
-      // );
-      // const res = await axios.get("http://localhost:3000/api/gantt");
       const res = await axios.get(`${url}/api/gantt`);
-
       if (res.data.success && Array.isArray(res.data.data)) {
         const filtered = res.data.data.filter(
-          (i) => Number(i.H_ID) === Number(H_ID),
+          (i) => Number(i.H_ID) === Number(H_ID)
         );
 
         const formattedItems = filtered
@@ -183,10 +125,10 @@ const DashboardTimeline = () => {
           .map((i) => {
             const contractorId = Number(i.C_P_ID);
             const color = colorMap.current[contractorId] || "#999";
-
             return {
               id: Number(i.L_ID),
               group: contractorId,
+              contractorName: i.CONTRATOR_NAME,
               start_time: moment(i.SCHEDULE_START_DATE).valueOf(),
               end_time: moment(i.SCHEDULE_END_DATE).endOf("day").valueOf(),
               canMove: true,
@@ -202,16 +144,12 @@ const DashboardTimeline = () => {
               },
             };
           });
-        // ✅ Auto-adjust timeline window based on task dates
+
         if (formattedItems.length > 0) {
           const startDates = formattedItems.map((i) => i.start_time);
           const endDates = formattedItems.map((i) => i.end_time);
-
-          // Find earliest start date and set timeline to start from there
           const earliestDate = moment(Math.min(...startDates)).startOf("day");
           const latestDate = moment(Math.max(...endDates)).endOf("day");
-
-          // Show from earliest task date to latest + some buffer
           setVisibleTimeStart(earliestDate.valueOf());
           setVisibleTimeEnd(latestDate.add(15, "days").valueOf());
         }
@@ -226,19 +164,15 @@ const DashboardTimeline = () => {
   };
 
   useEffect(() => {
-    if (H_ID) {
-      fetchGanttData();
-    }
+    if (H_ID) fetchGanttData();
   }, [H_ID]);
 
+  // ✅ Update item on server (move/resize)
   const updateItemOnServer = async (item) => {
     const key = `${item.id}-${item.start_time}-${item.end_time}`;
     if (lastUpdatedRef.current === key) return;
     lastUpdatedRef.current = key;
-
     try {
-      // await api.put("/gantt_api.php", {
-      // await axios.put("http://localhost:3000/api/gantt", {
       await axios.put(`${url}/api/gantt`, {
         L_ID: item.id,
         C_P_ID: item.group,
@@ -257,83 +191,97 @@ const DashboardTimeline = () => {
     }
   };
 
-  // const handleItemDoubleClick = async (itemId, e, time) => {
-  //   const item = items.find((i) => i.id === itemId);
-  //   if (!item) return;
+  // ✅ Double-click to split — fixed race condition + ID conflict
+  const handleItemDoubleClick = async (itemId, e, time) => {
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
 
-  //   const splitDate = moment(time).startOf("day");
+    const splitDate = moment(time).startOf("day");
 
-  //   if (
-  //     splitDate.isSameOrBefore(moment(item.start_time)) ||
-  //     splitDate.isSameOrAfter(moment(item.end_time))
-  //   ) {
-  //     toast.warn("Split date must be between start and end date");
-  //     return;
-  //   }
+    if (
+      splitDate.isSameOrBefore(moment(item.start_time)) ||
+      splitDate.isSameOrAfter(moment(item.end_time))
+    ) {
+      toast.warn("Split date must be between start and end date");
+      return;
+    }
 
-  //   const contractorColor = colorMap.current[item.group];
+    const contractorColor = colorMap.current[item.group];
 
-  //   const firstHalf = {
-  //     ...item,
-  //     end_time: splitDate.clone().endOf("day").valueOf(),
-  //     itemProps: {
-  //       style: { ...item.itemProps.style, background: contractorColor },
-  //     },
-  //   };
+    const firstHalf = {
+      ...item,
+      end_time: splitDate.clone().endOf("day").valueOf(),
+      itemProps: {
+        style: { ...item.itemProps.style, background: contractorColor },
+      },
+    };
 
-  //   const secondHalf = {
-  //     ...item,
-  //     id: Date.now(),
-  //     start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
-  //     end_time: item.end_time,
-  //     itemProps: {
-  //       style: { ...item.itemProps.style, background: contractorColor },
-  //     },
-  //   };
+    // ✅ Negative temp ID — never collides with a real DB integer ID
+    const tempId = -Date.now();
 
-  //   setItems((prev) => {
-  //     const updated = prev.filter((i) => i.id !== itemId);
-  //     return [...updated, firstHalf, secondHalf];
-  //   });
-  //   setAllItems((prev) => {
-  //     const updated = prev.filter((i) => i.id !== itemId);
-  //     return [...updated, firstHalf, secondHalf];
-  //   });
+    const secondHalf = {
+      ...item,
+      id: tempId,
+      start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+      end_time: item.end_time,
+      itemProps: {
+        style: { ...item.itemProps.style, background: contractorColor },
+      },
+    };
 
-  //   toast.info("Splitting and saving...");
+    // Optimistic UI update
+    const applyUpdate = (prev) => {
+      const rest = prev.filter((i) => i.id !== itemId);
+      return [...rest, firstHalf, secondHalf];
+    };
+    setItems(applyUpdate);
+    setAllItems(applyUpdate);
 
-  //   try {
-  //     await api.put("/gantt_api.php", {
-  //       L_ID: item.id,
-  //       C_P_ID: firstHalf.group,
-  //       SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
-  //       SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
-  //       DESCRIPTION: item.title || "Split Task (Part 1)",
-  //     });
+    toast.info("Splitting task...");
 
-  //     const res = await axios.post(
-  //       "/gantt_api.php",
-  //       {
-  //         C_P_ID: secondHalf.group,
-  //         SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
-  //         SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
-  //         DESCRIPTION: item.title || "Split Task (Part 2)",
-  //         CREATION_BY: 1,
-  //         H_ID: H_ID,
-  //       }
-  //     );
+    try {
+      // 1. Update first half (existing record)
+      await axios.put(`${url}/api/gantt`, {
+        L_ID: item.id,
+        C_P_ID: firstHalf.group,
+        SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
+        SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
+        DESCRIPTION: item.title || "Split Task (Part 1)",
+      });
 
-  //     if (res.data.success) {
-  //       toast.success("Task successfully split and saved");
-  //       await fetchGanttData();
-  //     } else {
-  //       toast.warn("Split updated locally, but backend didn't confirm success");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to split task on server");
-  //   }
-  // };
+      // 2. Create second half (new record)
+      const res = await axios.post(`${url}/api/gantt`, {
+        C_P_ID: secondHalf.group,
+        SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
+        SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
+        DESCRIPTION: item.title || "Split Task (Part 2)",
+        CREATION_BY: 1,
+        H_ID: H_ID,
+      });
+
+      if (res.data.success) {
+        toast.success("Task split successfully");
+        // ✅ Refresh only after BOTH calls succeed — no race condition
+        await fetchGanttData();
+      } else {
+        toast.warn("Saved locally, but server did not confirm");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to split task on server");
+      // ✅ Rollback optimistic update on failure
+      setItems((prev) =>
+        prev
+          .filter((i) => i.id !== firstHalf.id && i.id !== tempId)
+          .concat(item)
+      );
+      setAllItems((prev) =>
+        prev
+          .filter((i) => i.id !== firstHalf.id && i.id !== tempId)
+          .concat(item)
+      );
+    }
+  };
 
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
@@ -378,10 +326,10 @@ const DashboardTimeline = () => {
       setItems(allItems);
     } else {
       const filteredGroups = allGroups.filter(
-        (g) => g.id === Number(selectedContractor),
+        (g) => g.id === Number(selectedContractor)
       );
       const filteredItems = allItems.filter(
-        (i) => i.group === Number(selectedContractor),
+        (i) => i.group === Number(selectedContractor)
       );
       setGroups(filteredGroups);
       setItems(filteredItems);
@@ -389,25 +337,22 @@ const DashboardTimeline = () => {
   }, [selectedContractor, allGroups, allItems]);
 
   // ✅ Holiday column highlighting
-  const verticalLineClassNamesForTime = (timeStart, timeEnd) => {
+  const verticalLineClassNamesForTime = (timeStart) => {
     const dateStr = moment(timeStart).format("YYYY-MM-DD");
-    if (holidayDates.has(dateStr)) {
-      return ["holiday"];
-    }
-    return [];
+    return holidayDates.has(dateStr) ? ["holiday"] : [];
   };
 
-  const itemRenderer = ({ item, itemContext, getItemProps }) => {
-    return (
-      <TaskHoverCard
-        item={item}
-        itemContext={itemContext}
-        getItemProps={getItemProps}
-        groups={groups}
-        holidayDates={holidayDates}
-      />
-    );
-  };
+  const itemRenderer = ({ item, itemContext, getItemProps }) => (
+    <TaskHoverCard
+      item={item}
+      itemContext={itemContext}
+      getItemProps={getItemProps}
+      groups={groups}
+      holidayDates={holidayDates}
+      projectName={projectName}
+      contractorName={item.contractorName}
+    />
+  );
 
   return (
     <>
@@ -418,11 +363,9 @@ const DashboardTimeline = () => {
           z-index: 100;
           background: #fff;
         }
-
         .rct-vl.holiday {
           background-color: rgba(220, 38, 38, 0.15) !important;
         }
-
         .react-calendar-timeline .rct-dateHeader {
           background-color: rgba(220, 38, 38, 0.15) !important;
           opacity: 0.9;
@@ -480,24 +423,19 @@ const DashboardTimeline = () => {
                 onItemResize={handleItemResize}
                 onItemSelect={handleItemSelect}
                 onItemDeselect={handleItemDeselect}
-                // onItemDoubleClick={handleItemDoubleClick}
+                onItemDoubleClick={handleItemDoubleClick}
                 selected={selectedItems}
                 canMove
                 canResize="both"
                 canChangeGroup
-                lineHeight={20}
+                lineHeight={40}
                 itemHeightRatio={0.75}
                 sidebarWidth={200}
                 stackItems
                 verticalLineClassNamesForTime={verticalLineClassNamesForTime}
                 itemRenderer={itemRenderer}
                 groupRenderer={({ group }) => (
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div style={{ fontSize: "10px", fontWeight: 600 }}>
                     {group.title}
                   </div>
                 )}

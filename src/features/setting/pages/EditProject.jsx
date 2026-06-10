@@ -262,7 +262,12 @@ const EditProject = () => {
       toast.success(`Dashboard ready with H_ID: ${H_ID}`);
       setShowDashboardModal(false);
       setDashboardDate("");
-      setTimeout(() => { window.location.href = `/dashboard/timeline/${H_ID}`; }, 1000);
+      // setTimeout(() => { window.location.href = `/dashboard/timeline/${H_ID}`; }, 1000);
+       setTimeout(() => {
+      navigate(`/dashboard/timeline/${H_ID}`, {
+        state: { projectStartDate: dashboardDate }  // "YYYY-MM-DD"
+      });
+    }, 1000);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create dashboard");
       setIsCreatingDashboard(false);
