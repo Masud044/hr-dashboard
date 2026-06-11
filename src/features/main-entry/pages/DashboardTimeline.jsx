@@ -29,6 +29,9 @@ const DashboardTimeline = () => {
   const [selectedItems, setSelectedItems]     = useState([]);
   const [holidayDates, setHolidayDates]       = useState(new Set());
   const [selectedContractor, setSelectedContractor] = useState("all");
+  const [projectName, setProjectName] = useState("");
+
+  const [splitConfirm, setSplitConfirm]   = useState(null);  // { itemId, time }
 
   const colorMap       = useRef({});
   const lastUpdatedRef = useRef(null);
@@ -154,6 +157,37 @@ const DashboardTimeline = () => {
     if (H_ID) fetchGanttData();
   }, [H_ID]);
 
+//project name finding ids
+  const fetchProjectInfo = async () => {
+  try {
+    const res = await axios.get(`${url}/api/shedule`);
+
+    let schedules = [];
+
+    if (res.data?.data && Array.isArray(res.data.data)) {
+      schedules = res.data.data;
+    } else if (Array.isArray(res.data)) {
+      schedules = res.data;
+    }
+
+    const schedule = schedules.find(
+      (s) => Number(s.H_ID) === Number(H_ID)
+    );
+
+    if (schedule) {
+      setProjectName(schedule.P_NAME);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  if (H_ID) {
+    fetchProjectInfo();
+  }
+}, [H_ID]);
+
   // ── Update on server ─────────────────────────────────────────────────────
   const updateItemOnServer = async (item) => {
     const key = `${item.id}-${item.start_time}-${item.end_time}`;
@@ -176,7 +210,167 @@ const DashboardTimeline = () => {
     }
   };
 
-  // ── Drag / Resize ────────────────────────────────────────────────────────
+
+  //  const handleItemDoubleClick = async (itemId, e, time) => {
+  //   const item = items.find((i) => i.id === itemId);
+  //   if (!item) return;
+
+  //   const splitDate = moment(time).startOf("day");
+
+  //   if (
+  //     splitDate.isSameOrBefore(moment(item.start_time)) ||
+  //     splitDate.isSameOrAfter(moment(item.end_time))
+  //   ) {
+  //     toast.warn("Split date must be between start and end date");
+  //     return;
+  //   }
+
+  //   const contractorColor = colorMap.current[item.group];
+
+  //   const firstHalf = {
+  //     ...item,
+  //     end_time: splitDate.clone().endOf("day").valueOf(),
+  //     itemProps: {
+  //       style: { ...item.itemProps.style, background: contractorColor },
+  //     },
+  //   };
+
+  //   const secondHalf = {
+  //     ...item,
+  //     id: Date.now(),
+  //     start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+  //     end_time: item.end_time,
+  //     itemProps: {
+  //       style: { ...item.itemProps.style, background: contractorColor },
+  //     },
+  //   };
+
+  //   setItems((prev) => {
+  //     const updated = prev.filter((i) => i.id !== itemId);
+  //     return [...updated, firstHalf, secondHalf];
+  //   });
+  //   setAllItems((prev) => {
+  //     const updated = prev.filter((i) => i.id !== itemId);
+  //     return [...updated, firstHalf, secondHalf];
+  //   });
+
+  //   toast.info("Splitting and saving...");
+
+  //   try {
+  //     await axios.put(`${url}/api/gantt`, {
+  //       L_ID: item.id,
+  //       C_P_ID: firstHalf.group,
+  //       SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
+  //       SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
+  //       DESCRIPTION: item.title || "Split Task (Part 1)",
+  //     });
+
+  //     const res = await axios.post(
+  //      `${url}/api/gantt`,
+  //       {
+  //         C_P_ID: secondHalf.group,
+  //         SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
+  //         SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
+  //         DESCRIPTION: item.title || "Split Task (Part 2)",
+  //         CREATION_BY: 1,
+  //         H_ID: H_ID,
+  //       }
+  //     );
+
+  //     if (res.data.success) {
+  //       toast.success("Task successfully split and saved");
+  //       await fetchGanttData();
+  //     } else {
+  //       toast.warn("Split updated locally, but backend didn't confirm success");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to split task on server");
+  //   }
+  // };
+
+ const handleItemDoubleClick = (itemId, e, time) => {
+  const item = items.find((i) => i.id === itemId);
+  if (!item) return;
+
+  const splitDate = moment(time).startOf("day");
+
+  if (
+    splitDate.isSameOrBefore(moment(item.start_time)) ||
+    splitDate.isSameOrAfter(moment(item.end_time))
+  ) {
+    toast.warn("Split date must be between start and end date");
+    return;
+  }
+
+  // শুধু confirm modal দেখাও, এখনই split করো না
+  setSplitConfirm({ itemId, time });
+};
+
+const confirmSplit = async () => {
+  if (!splitConfirm) return;
+  const { itemId, time } = splitConfirm;
+  setSplitConfirm(null);
+
+  const item = items.find((i) => i.id === itemId);
+  if (!item) return;
+
+  const splitDate = moment(time).startOf("day");
+  const contractorColor = colorMap.current[item.group];
+
+  const firstHalf = {
+    ...item,
+    end_time: splitDate.clone().endOf("day").valueOf(),
+    itemProps: {
+      style: { ...item.itemProps.style, background: contractorColor },
+    },
+  };
+
+  const secondHalf = {
+    ...item,
+    id: Date.now(),
+    start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
+    end_time: item.end_time,
+    itemProps: {
+      style: { ...item.itemProps.style, background: contractorColor },
+    },
+  };
+
+  setItems((prev) => [...prev.filter((i) => i.id !== itemId), firstHalf, secondHalf]);
+  setAllItems((prev) => [...prev.filter((i) => i.id !== itemId), firstHalf, secondHalf]);
+
+  toast.info("Splitting and saving...");
+
+  try {
+    await axios.put(`${url}/api/gantt`, {
+      L_ID: item.id,
+      C_P_ID: firstHalf.group,
+      SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
+      SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
+      DESCRIPTION: item.title || "Split Task (Part 1)",
+    });
+
+    const res = await axios.post(`${url}/api/gantt`, {
+      C_P_ID: secondHalf.group,
+      SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
+      SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
+      DESCRIPTION: item.title || "Split Task (Part 2)",
+      CREATION_BY: 1,
+      H_ID: H_ID,
+    });
+
+    if (res.data.success) {
+      toast.success("Task successfully split and saved");
+      await fetchGanttData();
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to split task on server");
+  }
+};
+
+
+
   const handleItemMove = (itemId, dragTime, newGroupOrder) => {
     setItems((prev) => {
       const i    = prev.findIndex((item) => item.id === itemId);
@@ -230,7 +424,7 @@ const DashboardTimeline = () => {
     return holidayDates.has(dateStr) ? ["holiday"] : [];
   };
 
-  // ── Item renderer: passes contractorName to TaskHoverCard ────────────────
+  //── Item renderer: passes contractorName to TaskHoverCard ────────────────
   const itemRenderer = ({ item, itemContext, getItemProps }) => (
     <TaskHoverCard
       item={item}
@@ -241,6 +435,10 @@ const DashboardTimeline = () => {
       contractorName={item.contractorName}   // ✅ bar এ দেখানোর জন্য
     />
   );
+
+  
+
+
 
   return (
     <>
@@ -262,34 +460,55 @@ const DashboardTimeline = () => {
 
       <SectionContainer>
         {/* Filter Bar */}
-        <div className="bg-white flex items-center justify-between">
-          <div className="bg-white p-4">
-            <h1 className="text-sm font-bold text-gray-800 mb-2">
-              Dashboard Timeline
-            </h1>
-          </div>
-          <div className="flex justify-end items-center gap-2">
-            <button
-              className="border-1 px-1 text-sm rounded-sm bg-purple-600 text-white"
-              onClick={() => navigate("/dashboard/dashboard-schedule")}
-            >
-              Back
-            </button>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">Contractor:</label>
-              <select
-                value={selectedContractor}
-                onChange={(e) => setSelectedContractor(e.target.value)}
-                className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-400"
-              >
-                <option value="all">All Contractors</option>
-                {allGroups.map((g) => (
-                  <option key={g.id} value={g.id}>{g.title}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 bg-white px-6 py-4 shadow-sm">
+  {/* Left Side: Title & Project Info */}
+  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+    <div>
+      <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+        Dashboard Timeline
+      </h1>
+    </div>
+    <div className="pt-1 sm:pt-0 sm:pl-4">
+      <div className="flex items-center gap-1.5">
+        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+        <p className="text-sm font-medium text-gray-500">
+          Project: <span className="font-semibold text-gray-800">{projectName}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {/* Right Side: Actions (Button + Dropdown) */}
+  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0">
+    {/* Modern Back Button */}
+    <button
+      onClick={() => navigate("/dashboard/dashboard-schedule")}
+      className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-500">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+      Back
+    </button>
+
+    {/* Contractor Filter Dropdown */}
+    <div className="flex items-center gap-2">
+      <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 hidden md:inline">
+        Contractor:
+      </label>
+      <select
+        value={selectedContractor}
+        onChange={(e) => setSelectedContractor(e.target.value)}
+        className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-xs outline-none transition-all hover:border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+      >
+        <option value="all">All Contractors</option>
+        {allGroups.map((g) => (
+          <option key={g.id} value={g.id}>{g.title}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+</div>
 
         {/* Timeline */}
         <div className="flex-1 overflow-hidden">
@@ -309,6 +528,7 @@ const DashboardTimeline = () => {
                 onItemResize={handleItemResize}
                 onItemSelect={handleItemSelect}
                 onItemDeselect={handleItemDeselect}
+                 onItemDoubleClick={handleItemDoubleClick}
                 selected={selectedItems}
                 canMove
                 canResize="both"
@@ -384,6 +604,79 @@ const DashboardTimeline = () => {
             )}
           </div>
         </div>
+
+      {splitConfirm && (() => {
+  const item = items.find((i) => i.id === splitConfirm.itemId);
+  const splitDate = moment(splitConfirm.time).startOf("day");
+  const part1Start = item ? moment(item.start_time).format("MMM D") : "";
+  const part1End   = splitDate.format("MMM D");
+  const part2Start = splitDate.clone().add(1, "day").format("MMM D");
+  const part2End   = item ? moment(item.end_time).format("MMM D") : "";
+
+  return (
+    <div
+      style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.45)",
+        display:"flex", alignItems:"center", justifyContent:"center" }}
+      onClick={() => setSplitConfirm(null)}
+    >
+      <div
+        style={{ background:"#fff", borderRadius:10, padding:"14px 16px",
+          width:280, boxShadow:"0 8px 32px rgba(0,0,0,0.18)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p style={{ fontSize:13, fontWeight:750, margin:"0 0 10px", color:"#111" }}>
+          Split this task?
+        </p>
+
+        {/* Part 1 & Part 2 */}
+        <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:12 }}>
+          <div style={{ flex:1, background:"#fdf2f2", border:"0.5px solid #f5c6c6",
+            borderRadius:6, padding:"7px 10px" }}>
+            <div style={{ fontSize:9, fontWeight:600, color:"#750811",
+              textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 }}>
+              Part 1
+            </div>
+            <div style={{ fontSize:12, fontWeight:700, color:"#111", whiteSpace:"nowrap" }}>
+              {part1Start} – {part1End}
+            </div>
+          </div>
+
+          <span style={{ fontSize:14, flexShrink:0 }}>✂️</span>
+
+          <div style={{ flex:1, background:"#f2f4fd", border:"0.5px solid #c6cef5",
+            borderRadius:6, padding:"7px 10px" }}>
+            <div style={{ fontSize:9, fontWeight:600, color:"#3C467B",
+              textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 }}>
+              Part 2
+            </div>
+            <div style={{ fontSize:12, fontWeight:700, color:"#111", whiteSpace:"nowrap" }}>
+              {part2Start} – {part2End}
+            </div>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display:"flex", gap:6 }}>
+          <button
+            onClick={() => setSplitConfirm(null)}
+            style={{ flex:1, padding:"6px 0", borderRadius:6, fontSize:12,
+              border:"0.5px solid #ddd", background:"#fff", cursor:"pointer", color:"#333" }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmSplit}
+            style={{ flex:1, padding:"6px 0", borderRadius:6, fontSize:12,
+              border:"none", background:"#750811", color:"#fff", cursor:"pointer", fontWeight:500 }}
+          >
+            Yes, split
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+})()}
+
       </SectionContainer>
     </>
   );

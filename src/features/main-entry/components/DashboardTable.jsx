@@ -158,7 +158,7 @@ export function DashboardTable() {
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Start Plan
+          Project Start Plan
           <ArrowUpDown className="ml-1 h-4 w-4" />
         </Button>
       ),
@@ -186,7 +186,7 @@ export function DashboardTable() {
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          End Plan
+          project End Plan
           <ArrowUpDown className="ml-1 h-4 w-4" />
         </Button>
       ),
