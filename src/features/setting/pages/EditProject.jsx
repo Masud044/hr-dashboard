@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Cog, ArrowLeft } from "lucide-react";
+import { Save, Cog, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { SectionContainer } from "@/components/SectionContainer";
@@ -26,11 +26,10 @@ const projectSchema = z.object({
   USER_ID:                z.coerce.number().default(105),
   USER_BY:                z.coerce.number().default(105),
   UPDATED_BY:             z.coerce.number().default(105),
-  // ✅ নতুন fields
   LOT:                    z.string().optional().nullable(),
   DP:                     z.string().optional().nullable(),
   INSURANCE_NO:           z.string().optional().nullable(),
-  P_ENTATIVE_START_DATE: z.string().optional().nullable(),
+  P_ENTATIVE_START_DATE:  z.string().optional().nullable(),
   P_TENTATIVE_END_DATE:   z.string().optional().nullable(),
   P_CODE:                 z.string().optional().nullable(),
   DESCRIPTION:            z.string().optional().nullable(),
@@ -46,35 +45,35 @@ const EditProject = () => {
   const form = useForm({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      P_NAME:                 "",
-      P_TYPE:                 "",
-      P_ADDRESS:              "",
-      SUBWRB:                 "",
-      POSTCODE:               "",
-      STATE:                  "",
-      USER_ID:                105,
-      USER_BY:                105,
-      UPDATED_BY:             105,
-      LOT:                    "",
-      DP:                     "",
-      INSURANCE_NO:           "",
+      P_NAME:                "",
+      P_TYPE:                "",
+      P_ADDRESS:             "",
+      SUBWRB:                "",
+      POSTCODE:              "",
+      STATE:                 "",
+      USER_ID:               105,
+      USER_BY:               105,
+      UPDATED_BY:            105,
+      LOT:                   "",
+      DP:                    "",
+      INSURANCE_NO:          "",
       P_ENTATIVE_START_DATE: "",
-      P_TENTATIVE_END_DATE:   "",
-      P_CODE:                 "",
-      DESCRIPTION:            "",
+      P_TENTATIVE_END_DATE:  "",
+      P_CODE:                "",
+      DESCRIPTION:           "",
     },
   });
 
-  const [editableLines, setEditableLines] = useState([]);
+  const [editableLines, setEditableLines]           = useState([]);
   const [showDashboardModal, setShowDashboardModal] = useState(false);
-  const [dashboardDate, setDashboardDate] = useState("");
+  const [dashboardDate, setDashboardDate]           = useState("");
   const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 80, behavior: "smooth" });
   }, []);
 
-  // Fetch Project Types
+  // ── Fetch Project Types ──────────────────────────────────────────────────
   const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
     queryFn: async () => {
@@ -83,7 +82,7 @@ const EditProject = () => {
     },
   });
 
-  // Fetch Contractor Types
+  // ── Fetch Contractor Types ───────────────────────────────────────────────
   const { data: contractorTypes = [] } = useQuery({
     queryKey: ["contractorTypes"],
     queryFn: async () => {
@@ -92,7 +91,7 @@ const EditProject = () => {
     },
   });
 
-  // Fetch Contractor Names
+  // ── Fetch Contractor Names ───────────────────────────────────────────────
   const { data: contractorNames = [] } = useQuery({
     queryKey: ["contractorNames"],
     queryFn: async () => {
@@ -101,7 +100,7 @@ const EditProject = () => {
     },
   });
 
-  // Fetch Existing Project
+  // ── Fetch Existing Project ───────────────────────────────────────────────
   const { data: existingProject, isLoading: projectLoading } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
@@ -115,35 +114,52 @@ const EditProject = () => {
     enabled: !!id,
   });
 
-  // Populate form when data arrives
+  // ── Fetch All Schedules → check if dashboard already exists ─────────────
+  const { data: allSchedules = [] } = useQuery({
+    queryKey: ["allSchedules"],
+    queryFn: async () => {
+      const res = await axios.get(`${url}/api/shedule`);
+      if (res.data?.data && Array.isArray(res.data.data)) return res.data.data;
+      if (Array.isArray(res.data)) return res.data;
+      return [];
+    },
+    enabled: !!id,
+  });
+
+  // ── Derived flags ────────────────────────────────────────────────────────
+  // true  → already created once → block further creation
+  const dashboardAlreadyCreated = allSchedules.some(
+    s => String(s.P_ID) === String(id)
+  );
+
+  // ── Populate form when data arrives ─────────────────────────────────────
   useEffect(() => {
     if (existingProject && projectTypes.length > 0) {
       form.reset({
-        P_NAME:                 existingProject.P_NAME || "",
-        P_TYPE:                 existingProject.P_TYPE?.toString() || "",
-        P_ADDRESS:              existingProject.P_ADDRESS || "",
-        SUBWRB:                 existingProject.SUBWRB || "",
-        POSTCODE:               existingProject.POSTCODE || "",
-        STATE:                  existingProject.STATE || "",
-        USER_ID:                existingProject.USER_ID || 105,
-        USER_BY:                existingProject.USER_BY || 105,
-        UPDATED_BY:             existingProject.UPDATED_BY || 105,
-        LOT:                    existingProject.LOT || "",
-        DP:                     existingProject.DP || "",
-        INSURANCE_NO:           existingProject.INSURANCE_NO || "",
+        P_NAME:                existingProject.P_NAME || "",
+        P_TYPE:                existingProject.P_TYPE?.toString() || "",
+        P_ADDRESS:             existingProject.P_ADDRESS || "",
+        SUBWRB:                existingProject.SUBWRB || "",
+        POSTCODE:              existingProject.POSTCODE || "",
+        STATE:                 existingProject.STATE || "",
+        USER_ID:               existingProject.USER_ID || 105,
+        USER_BY:               existingProject.USER_BY || 105,
+        UPDATED_BY:            existingProject.UPDATED_BY || 105,
+        LOT:                   existingProject.LOT || "",
+        DP:                    existingProject.DP || "",
+        INSURANCE_NO:          existingProject.INSURANCE_NO || "",
         P_ENTATIVE_START_DATE: existingProject.P_ENTATIVE_START_DATE || "",
-        P_TENTATIVE_END_DATE:   existingProject.P_TENTATIVE_END_DATE || "",
-        P_CODE:                 existingProject.P_CODE || "",
-        DESCRIPTION:            existingProject.DESCRIPTION || "",
+        P_TENTATIVE_END_DATE:  existingProject.P_TENTATIVE_END_DATE || "",
+        P_CODE:                existingProject.P_CODE || "",
+        DESCRIPTION:           existingProject.DESCRIPTION || "",
       });
     }
   }, [existingProject, projectTypes]);
 
-  // Update Project
+  // ── Update Project ───────────────────────────────────────────────────────
   const updateMutation = useMutation({
-    mutationFn: async (formData) => {
-      return axios.put(`${url}/api/project`, { ...formData, P_ID: id });
-    },
+    mutationFn: async (formData) =>
+      axios.put(`${url}/api/project`, { ...formData, P_ID: id }),
     onSuccess: () => {
       queryClient.invalidateQueries(["projects"]);
       queryClient.invalidateQueries(["project", id]);
@@ -152,16 +168,21 @@ const EditProject = () => {
     onError: () => toast.error("❌ Failed to update project. Please try again."),
   });
 
-  // Fetch Construction Process Lines
+  // ── Fetch Construction Process Lines ────────────────────────────────────
   const { data: processLines = [], refetch: refetchProcess } = useQuery({
     queryKey: ["constructionProcess", id],
     queryFn: async () => {
       if (!id) return [];
-      const res = await axios.get(`${url}/api/construction-process?action=read&PROCESS_ID=${id}`);
+      const res = await axios.get(
+        `${url}/api/construction-process?action=read&PROCESS_ID=${id}`
+      );
       return res.data?.data || [];
     },
     enabled: !!id,
   });
+
+  // processAlreadyCreated: true if there are existing lines for this project
+  const processAlreadyCreated = processLines.length > 0;
 
   useEffect(() => {
     if (processLines.length > 0) {
@@ -175,7 +196,7 @@ const EditProject = () => {
     }
   }, [processLines, contractorNames]);
 
-  // Create Process Lines
+  // ── Create Process Lines ─────────────────────────────────────────────────
   const processMutation = useMutation({
     mutationFn: async (process_id) =>
       axios.post(`${url}/api/process-contractor`, { process_id }),
@@ -189,6 +210,11 @@ const EditProject = () => {
 
   const handleProcess = () => {
     if (!id) { toast.error("❌ Project ID not found."); return; }
+    // Guard: prevent re-creation
+    if (processAlreadyCreated) {
+      toast.warning("Process lines already exist for this project.");
+      return;
+    }
     processMutation.mutate(id);
   };
 
@@ -206,7 +232,9 @@ const EditProject = () => {
         newLine.DEPENDENT_NAME = selected?.NAME || "";
       }
       if (field === "CONTRACTOR_ID") {
-        const selected = contractorNames.find(c => Number(c.CONTRATOR_ID) === Number(newValue));
+        const selected = contractorNames.find(
+          c => Number(c.CONTRATOR_ID) === Number(newValue)
+        );
         newLine.CONTRACTOR_NAME = selected?.CONTRATOR_NAME || "";
       }
       updated[index] = newLine;
@@ -215,29 +243,40 @@ const EditProject = () => {
   };
 
   const updateProcessMutation = useMutation({
-    mutationFn: async (lines) => Promise.all(
-      lines.map(line => {
-        const payload = {
-          ID:           line.ID,
-          DEPENDENT_ID: line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
-          SORT_ID:      line.SORT_ID ? Number(line.SORT_ID) : 0,
-          COST:         line.COST !== undefined && line.COST !== "" ? Number(line.COST) : null,
-          CONTRACTOR_ID: line.CONTRACTOR_ID ? Number(line.CONTRACTOR_ID) : null,
-          UPDATED_BY:   105,
-        };
-        return axios.put(`${url}/api/construction-process?action=update`, payload);
-      })
-    ),
-    onSuccess: () => { refetchProcess(); toast.success("Process lines updated successfully!"); },
+    mutationFn: async (lines) =>
+      Promise.all(
+        lines.map(line => {
+          const payload = {
+            ID:            line.ID,
+            DEPENDENT_ID:  line.DEPENDENT_ID ? Number(line.DEPENDENT_ID) : null,
+            SORT_ID:       line.SORT_ID ? Number(line.SORT_ID) : 0,
+            COST:          line.COST !== undefined && line.COST !== "" ? Number(line.COST) : null,
+            CONTRACTOR_ID: line.CONTRACTOR_ID ? Number(line.CONTRACTOR_ID) : null,
+            UPDATED_BY:    105,
+          };
+          return axios.put(`${url}/api/construction-process?action=update`, payload);
+        })
+      ),
+    onSuccess: () => {
+      refetchProcess();
+      toast.success("Process lines updated successfully!");
+    },
     onError: () => toast.error("Update failed. Check required fields."),
   });
 
-  // Create Dashboard
+  // ── Create Dashboard ─────────────────────────────────────────────────────
   const handleCreateDashboard = async () => {
     if (!dashboardDate) { toast.error("Please select a start date!"); return; }
+    // Guard: prevent re-creation
+    if (dashboardAlreadyCreated) {
+      toast.warning("A dashboard already exists for this project.");
+      setShowDashboardModal(false);
+      return;
+    }
     setIsCreatingDashboard(true);
     try {
-      const createRes = await axios.post(`${url}/api/shedule_api`,
+      const createRes = await axios.post(
+        `${url}/api/shedule_api`,
         { p_pid: Number(id), p_s_date: dashboardDate },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -248,26 +287,35 @@ const EditProject = () => {
       }
       toast.success("Dashboard created! Fetching H_ID...");
       await new Promise(resolve => setTimeout(resolve, 500));
+
       const fetchRes = await axios.get(`${url}/api/shedule`);
       let schedules = [];
       if (fetchRes.data?.data && Array.isArray(fetchRes.data.data)) schedules = fetchRes.data.data;
       else if (Array.isArray(fetchRes.data)) schedules = fetchRes.data;
+
       const projectSchedules = schedules.filter(s => String(s.P_ID) === String(id));
       if (!projectSchedules.length) {
-        toast.error("No schedule found for this project."); setIsCreatingDashboard(false); return;
+        toast.error("No schedule found for this project.");
+        setIsCreatingDashboard(false);
+        return;
       }
-      const latestSchedule = projectSchedules.sort((a, b) => Number(b.H_ID) - Number(a.H_ID))[0];
+      const latestSchedule = projectSchedules.sort(
+        (a, b) => Number(b.H_ID) - Number(a.H_ID)
+      )[0];
       const H_ID = latestSchedule?.H_ID;
       if (!H_ID) { toast.error("H_ID not found"); setIsCreatingDashboard(false); return; }
+
+      // Invalidate so the "already created" flag updates immediately
+      queryClient.invalidateQueries(["allSchedules"]);
+
       toast.success(`Dashboard ready with H_ID: ${H_ID}`);
       setShowDashboardModal(false);
       setDashboardDate("");
-      // setTimeout(() => { window.location.href = `/dashboard/timeline/${H_ID}`; }, 1000);
-       setTimeout(() => {
-      navigate(`/dashboard/timeline/${H_ID}`, {
-        state: { projectStartDate: dashboardDate }  // "YYYY-MM-DD"
-      });
-    }, 1000);
+      setTimeout(() => {
+        navigate(`/dashboard/timeline/${H_ID}`, {
+          state: { projectStartDate: dashboardDate },
+        });
+      }, 1000);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create dashboard");
       setIsCreatingDashboard(false);
@@ -299,8 +347,10 @@ const EditProject = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
             {/* ── Section: Basic Info ── */}
             <div className="md:col-span-3">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -308,7 +358,6 @@ const EditProject = () => {
               </p>
             </div>
 
-            {/* Project Name */}
             <FormField control={form.control} name="P_NAME" render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Project Name <span className="text-red-500">*</span></FormLabel>
@@ -317,7 +366,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* P_CODE */}
             <FormField control={form.control} name="P_CODE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Project Code</FormLabel>
@@ -326,7 +374,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Project Type */}
             <FormField control={form.control} name="P_TYPE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Project Type <span className="text-red-500">*</span></FormLabel>
@@ -344,7 +391,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Insurance No */}
             <FormField control={form.control} name="INSURANCE_NO" render={({ field }) => (
               <FormItem>
                 <FormLabel>Insurance No</FormLabel>
@@ -353,7 +399,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Tentative Start Date */}
             <FormField control={form.control} name="P_ENTATIVE_START_DATE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tentative Start Date</FormLabel>
@@ -362,7 +407,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Tentative End Date */}
             <FormField control={form.control} name="P_TENTATIVE_END_DATE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tentative End Date</FormLabel>
@@ -378,7 +422,6 @@ const EditProject = () => {
               </p>
             </div>
 
-            {/* LOT */}
             <FormField control={form.control} name="LOT" render={({ field }) => (
               <FormItem>
                 <FormLabel>Lot</FormLabel>
@@ -387,7 +430,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* DP */}
             <FormField control={form.control} name="DP" render={({ field }) => (
               <FormItem>
                 <FormLabel>DP (Deposited Plan)</FormLabel>
@@ -396,7 +438,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Suburb */}
             <FormField control={form.control} name="SUBWRB" render={({ field }) => (
               <FormItem>
                 <FormLabel>Suburb <span className="text-red-500">*</span></FormLabel>
@@ -405,7 +446,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Postcode */}
             <FormField control={form.control} name="POSTCODE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
@@ -414,7 +454,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* State */}
             <FormField control={form.control} name="STATE" render={({ field }) => (
               <FormItem>
                 <FormLabel>State <span className="text-red-500">*</span></FormLabel>
@@ -423,7 +462,6 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Address */}
             <FormField control={form.control} name="P_ADDRESS" render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Project Address <span className="text-red-500">*</span></FormLabel>
@@ -432,37 +470,102 @@ const EditProject = () => {
               </FormItem>
             )} />
 
-            {/* Description */}
             <FormField control={form.control} name="DESCRIPTION" render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
-                <FormControl><Textarea rows={3} {...field} placeholder="Enter description" /></FormControl>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Enter description" />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
-            {/* Buttons */}
+            {/* ── Action Buttons ── */}
             <div className="col-span-3 flex justify-end gap-2 mt-4">
+
+              {/* Update */}
               <Button type="submit" disabled={updateMutation.isPending}>
                 <Save size={16} className="mr-2" />
                 {updateMutation.isPending ? "Updating..." : "Update Project"}
               </Button>
 
-              <Button type="button" onClick={handleProcess} disabled={processMutation.isPending}>
-                <Cog size={16} className={processMutation.isPending ? "animate-spin mr-2" : "mr-2"} />
-                {processMutation.isPending ? "Processing..." : "Create Process"}
-              </Button>
+              {/* Create Process — disabled once lines exist */}
+              <div className="relative group">
+                <Button
+                  type="button"
+                  onClick={handleProcess}
+                  disabled={processMutation.isPending || processAlreadyCreated}
+                  variant={processAlreadyCreated ? "outline" : "default"}
+                  className={processAlreadyCreated ? "opacity-60 cursor-not-allowed" : ""}
+                >
+                  {processAlreadyCreated ? (
+                    <>
+                      <CheckCircle size={16} className="mr-2 text-green-500" />
+                      Process Created
+                    </>
+                  ) : (
+                    <>
+                      <Cog
+                        size={16}
+                        className={processMutation.isPending ? "animate-spin mr-2" : "mr-2"}
+                      />
+                      {processMutation.isPending ? "Processing..." : "Create Process"}
+                    </>
+                  )}
+                </Button>
+                {/* Tooltip */}
+                {processAlreadyCreated && (
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap
+                                  bg-gray-800 text-white text-xs rounded px-2 py-1
+                                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    Process lines already created for this project
+                  </div>
+                )}
+              </div>
 
-              <Button type="button" onClick={() => setShowDashboardModal(true)}>
-                Create Dashboard
-              </Button>
+              {/* Create Dashboard — disabled once a schedule exists */}
+              <div className="relative group">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (dashboardAlreadyCreated) {
+                      toast.warning("A dashboard already exists for this project.");
+                      return;
+                    }
+                    setShowDashboardModal(true);
+                  }}
+                  disabled={dashboardAlreadyCreated}
+                  variant={dashboardAlreadyCreated ? "outline" : "default"}
+                  className={dashboardAlreadyCreated ? "opacity-60 cursor-not-allowed" : ""}
+                >
+                  {dashboardAlreadyCreated ? (
+                    <>
+                      <CheckCircle size={16} className="mr-2 text-green-500" />
+                      Dashboard Created
+                    </>
+                  ) : (
+                    "Create Dashboard"
+                  )}
+                </Button>
+                {/* Tooltip */}
+                {dashboardAlreadyCreated && (
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap
+                                  bg-gray-800 text-white text-xs rounded px-2 py-1
+                                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    Dashboard already created for this project
+                  </div>
+                )}
+              </div>
+
             </div>
           </form>
         </Form>
 
         {/* ── Construction Process Table ── */}
         <div className="overflow-x-auto mt-8">
-          <h3 className="font-semibold text-sm text-gray-800 mb-3">Construction Process Lines</h3>
+          <h3 className="font-semibold text-sm text-gray-800 mb-3">
+            Construction Process Lines
+          </h3>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-gray-100 text-gray-700 text-left">
@@ -490,7 +593,9 @@ const EditProject = () => {
                       >
                         <option value="">Select Contractor</option>
                         {contractorNames.map(c => (
-                          <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>{c.CONTRATOR_NAME}</option>
+                          <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
+                            {c.CONTRATOR_NAME}
+                          </option>
                         ))}
                       </select>
                     </td>
@@ -546,14 +651,21 @@ const EditProject = () => {
           </div>
         )}
 
-        {/* Dashboard Modal */}
+        {/* ── Dashboard Modal ── */}
         {showDashboardModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
               <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
-              <Input type="date" value={dashboardDate} onChange={e => setDashboardDate(e.target.value)} />
+              <Input
+                type="date"
+                value={dashboardDate}
+                onChange={e => setDashboardDate(e.target.value)}
+              />
               <div className="flex justify-end gap-3 mt-4">
-                <Button variant="outline" onClick={() => { setShowDashboardModal(false); setDashboardDate(""); }}>
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowDashboardModal(false); setDashboardDate(""); }}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleCreateDashboard} disabled={isCreatingDashboard}>
