@@ -125,19 +125,19 @@ export function ContractorTypeTable() {
       enableSorting: false,
       enableHiding: false,
     },
-    {
-      accessorKey: "ID",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          ID <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="ml-3 text-sm tabular-nums text-muted-foreground">
-          {row.getValue("ID")}
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: "ID",
+    //   header: ({ column }) => (
+    //     <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+    //       ID <ArrowUpDown className="ml-1 h-3 w-3" />
+    //     </Button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div className="ml-3 text-sm tabular-nums text-muted-foreground">
+    //       {row.getValue("ID")}
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: "NAME",
       header: ({ column }) => (

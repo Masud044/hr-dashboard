@@ -43,16 +43,29 @@ export function ProjectTable() {
     },
   });
 
+  // ✅ Project Types fetch
+  const { data: projectTypes = [] } = useQuery({
+    queryKey: ["projectTypes"],
+    queryFn: async () => {
+      const res = await axios.get(`${url}/api/project-type`);
+      return res.data?.data || [];
+    },
+  });
+
+  // ✅ ID → Name map
+  const projectTypeMap = React.useMemo(() => {
+    return Object.fromEntries(projectTypes.map(pt => [pt.ID.toString(), pt.NAME]));
+  }, [projectTypes]);
+
   const apiData = data || [];
 
   const [sorting, setSorting] = React.useState([]);
   const [columnFilters, setColumnFilters] = React.useState([]);
   const [columnVisibility, setColumnVisibility] = React.useState({
-    // নতুন columns default এ লুকানো থাকবে — Columns button দিয়ে দেখা যাবে
     LOT:                    false,
     DP:                     false,
     INSURANCE_NO:           false,
-    P_ENTATIVE_START_DATE: false,
+    P_ENTATIVE_START_DATE:  false,
     P_TENTATIVE_END_DATE:   false,
     P_CODE:                 false,
     DESCRIPTION:            false,
@@ -62,7 +75,6 @@ export function ProjectTable() {
   const handleEditProcess = (projectId) => navigate(`/dashboard/process/${projectId}`);
 
   const columns = [
-    // ── Select ──
     {
       id: "select",
       header: ({ table }) => (
@@ -82,8 +94,6 @@ export function ProjectTable() {
       enableSorting: false,
       enableHiding: false,
     },
-
-    // ── Project Name ──
     {
       accessorKey: "P_NAME",
       header: ({ column }) => (
@@ -93,8 +103,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("P_NAME")}</div>,
     },
-
-    // ── Project Code ──
     {
       accessorKey: "P_CODE",
       header: ({ column }) => (
@@ -105,7 +113,7 @@ export function ProjectTable() {
       cell: ({ row }) => <div className="ml-3">{row.getValue("P_CODE") || "-"}</div>,
     },
 
-    // ── Project Type ──
+    // ✅ P_TYPE এ এখন name দেখাবে
     {
       accessorKey: "P_TYPE",
       header: ({ column }) => (
@@ -113,10 +121,13 @@ export function ProjectTable() {
           TYPE <ArrowUpDown className="ml-1 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("P_TYPE")}</div>,
+      cell: ({ row }) => (
+        <div className="ml-3">
+          {projectTypeMap[row.getValue("P_TYPE")] || row.getValue("P_TYPE")}
+        </div>
+      ),
     },
 
-    // ── Suburb ──
     {
       accessorKey: "SUBWRB",
       header: ({ column }) => (
@@ -126,8 +137,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("SUBWRB")}</div>,
     },
-
-    // ── Postcode ──
     {
       accessorKey: "POSTCODE",
       header: ({ column }) => (
@@ -137,8 +146,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("POSTCODE")}</div>,
     },
-
-    // ── State ──
     {
       accessorKey: "STATE",
       header: ({ column }) => (
@@ -148,8 +155,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("STATE")}</div>,
     },
-
-    // ── Address ──
     {
       accessorKey: "P_ADDRESS",
       header: ({ column }) => (
@@ -163,8 +168,6 @@ export function ProjectTable() {
         </div>
       ),
     },
-
-    // ── LOT (hidden by default) ──
     {
       accessorKey: "LOT",
       header: ({ column }) => (
@@ -174,8 +177,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("LOT") || "-"}</div>,
     },
-
-    // ── DP (hidden by default) ──
     {
       accessorKey: "DP",
       header: ({ column }) => (
@@ -185,8 +186,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("DP") || "-"}</div>,
     },
-
-    // ── Insurance No (hidden by default) ──
     {
       accessorKey: "INSURANCE_NO",
       header: ({ column }) => (
@@ -196,8 +195,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("INSURANCE_NO") || "-"}</div>,
     },
-
-    // ── Tentative Start Date (hidden by default) ──
     {
       accessorKey: "P_ENTATIVE_START_DATE",
       header: ({ column }) => (
@@ -207,8 +204,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("P_ENTATIVE_START_DATE") || "-"}</div>,
     },
-
-    // ── Tentative End Date (hidden by default) ──
     {
       accessorKey: "P_TENTATIVE_END_DATE",
       header: ({ column }) => (
@@ -218,8 +213,6 @@ export function ProjectTable() {
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("P_TENTATIVE_END_DATE") || "-"}</div>,
     },
-
-    // ── Description (hidden by default) ──
     {
       accessorKey: "DESCRIPTION",
       header: ({ column }) => (
@@ -233,8 +226,6 @@ export function ProjectTable() {
         </div>
       ),
     },
-
-    // ── Actions ──
     {
       id: "actions",
       enableHiding: false,
@@ -274,8 +265,7 @@ export function ProjectTable() {
   });
 
   return (
-    <div className="mt-4  bg-white">
-      {/* Search + Column Toggle */}
+    <div className="mt-4 bg-white">
       <div className="flex items-center py-4 px-4 gap-2">
         <Input
           placeholder="Filter by project name..."
@@ -283,7 +273,6 @@ export function ProjectTable() {
           onChange={(e) => table.getColumn("P_NAME")?.setFilterValue(e.target.value)}
           className="max-w-sm"
         />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -308,7 +297,6 @@ export function ProjectTable() {
         </DropdownMenu>
       </div>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
@@ -324,7 +312,6 @@ export function ProjectTable() {
               </TableRow>
             ))}
           </TableHeader>
-
           <TableBody>
             {isLoading && (
               <TableRow>
@@ -333,7 +320,6 @@ export function ProjectTable() {
                 </TableCell>
               </TableRow>
             )}
-
             {!isLoading && table.getRowModel().rows.length > 0 &&
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
@@ -345,7 +331,6 @@ export function ProjectTable() {
                 </TableRow>
               ))
             }
-
             {!isLoading && table.getRowModel().rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center h-24 text-gray-500">
@@ -356,8 +341,6 @@ export function ProjectTable() {
           </TableBody>
         </Table>
       </div>
-
-      {/* Pagination */}
       <DataTablePagination table={table} />
     </div>
   );
