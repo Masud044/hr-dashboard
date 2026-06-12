@@ -63,6 +63,13 @@ function StatusBadge({ status }) {
   );
 }
 
+// columns এর উপরে এই map টা add করো
+const MONTH_NAMES = {
+  1: "January", 2: "February", 3: "March",    4: "April",
+  5: "May",     6: "June",     7: "July",      8: "August",
+  9: "September", 10: "October", 11: "November", 12: "December",
+};
+
 export function CalendarTable() {
   const queryClient = useQueryClient();
 
@@ -171,8 +178,10 @@ export function CalendarTable() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 text-sm">{row.getValue("MONTH_ID") ?? "—"}</div>
-      ),
+  <div className="ml-3 text-sm">
+    {MONTH_NAMES[row.getValue("MONTH_ID")] ?? "—"}
+  </div>
+),
     },
     {
       accessorKey: "WORKING_STATUS",
