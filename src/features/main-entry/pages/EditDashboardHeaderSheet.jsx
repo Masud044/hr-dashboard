@@ -62,14 +62,14 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
     form.setValue(
       "PROJECT_START_PLAN",
       data.PROJECT_START_PLAN
-        ? moment(data.PROJECT_START_PLAN, "DD-MMM-YY").format("YYYY-MM-DD")
+        ? moment(data.PROJECT_START_PLAN).format("YYYY-MM-DD")
         : ""
     );
 
     form.setValue(
       "PROJECT_END_PLAN",
       data.PROJECT_END_PLAN
-        ? moment(data.PROJECT_END_PLAN, "DD-MMM-YY").format("YYYY-MM-DD")
+        ? moment(data.PROJECT_END_PLAN).format("YYYY-MM-DD")
         : ""
     );
   }, [data, form]);
@@ -118,7 +118,7 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
     <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent  className=" sm:max-w-xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Set Dashboard Header</SheetTitle>
+          <SheetTitle>Dashboard Header</SheetTitle>
            <hr></hr>
         </SheetHeader>
 
