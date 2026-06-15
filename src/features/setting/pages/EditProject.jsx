@@ -91,6 +91,15 @@ const EditProject = () => {
     },
   });
 
+  // ── Fetch Contractor↔Type Mapping ────────────────────────────────────────
+  const { data: contractorTypeMap = [] } = useQuery({
+    queryKey: ["contractorTypeMap"],
+    queryFn: async () => {
+      const res = await axios.get(`${url}/api/contractor/contractor-type-info`);
+      return res.data?.data || [];
+    },
+  });
+
   // ── Fetch Contractor Names ───────────────────────────────────────────────
   const { data: contractorNames = [] } = useQuery({
     queryKey: ["contractorNames"],
@@ -585,7 +594,7 @@ const EditProject = () => {
                     <td className="px-3 py-2 border w-[25%]">
                       {contractorTypes.find(c => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}
                     </td>
-                    <td className="py-2 border w-[20%]">
+                    {/* <td className="py-2 border w-[20%]">
                       <select
                         value={line.CONTRACTOR_ID || ""}
                         onChange={(e) => handleLineChange(index, "CONTRACTOR_ID", e.target.value)}
@@ -597,6 +606,30 @@ const EditProject = () => {
                             {c.CONTRATOR_NAME}
                           </option>
                         ))}
+                      </select>
+                    </td> */}
+
+                    <td className="py-2 border w-[20%]">
+                      <select
+                        value={line.CONTRACTOR_ID || ""}
+                        onChange={(e) => handleLineChange(index, "CONTRACTOR_ID", e.target.value)}
+                        className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
+                      >
+                        <option value="">Select Contractor</option>
+                        {contractorNames
+                          .filter(c => {
+                            if (!line.SUB_CONTRACT_ID) return true;
+                            return contractorTypeMap.some(
+                              m =>
+                                Number(m.CONTRUCTOR_ID) === Number(c.CONTRATOR_ID) &&
+                                Number(m.CONTRUCTOR_TYPE) === Number(line.SUB_CONTRACT_ID)
+                            );
+                          })
+                          .map(c => (
+                            <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
+                              {c.CONTRATOR_NAME}
+                            </option>
+                          ))}
                       </select>
                     </td>
                     <td className="py-2 border w-[20%]">
