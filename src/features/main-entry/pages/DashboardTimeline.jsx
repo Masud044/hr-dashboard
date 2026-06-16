@@ -820,11 +820,12 @@ const DashboardTimeline = () => {
   const [projectName, setProjectName]               = useState("");
   const [projectStartPlan, setProjectStartPlan]     = useState(null);
   const [projectEndPlan, setProjectEndPlan]         = useState(null);
-  const [pId, setPId]                               = useState(null); // project P_ID for notes
+  const [pId, setPId]                               = useState(null);
 
   // ── Notes Sheet state ────────────────────────────────────────────────────
   const [notesOpen, setNotesOpen]                   = useState(false);
-  const [notesDefaultCtId, setNotesDefaultCtId]     = useState(null); // pre-filter by contractor
+  const [notesDefaultCtId, setNotesDefaultCtId]     = useState(null);
+  const [notesInitialMode, setNotesInitialMode]     = useState("list"); // "list" | "add"
 
   const [splitConfirm, setSplitConfirm] = useState(null);
 
@@ -843,9 +844,10 @@ const DashboardTimeline = () => {
     "#000000", "#71C0BB", "#7C4585", "#174143", "#FFC400", "#FF0060",
   ];
 
-  // ── Open notes (global or per-contractor) ────────────────────────────────
-  const openNotes = (contractorTypeId = null) => {
+  // ── Open notes (global or per-contractor, optionally in add mode) ─────────
+  const openNotes = (contractorTypeId = null, initialMode = "list") => {
     setNotesDefaultCtId(contractorTypeId);
+    setNotesInitialMode(initialMode);
     setNotesOpen(true);
   };
 
@@ -973,7 +975,7 @@ const DashboardTimeline = () => {
       );
       if (schedule) {
         setProjectName(schedule.P_NAME);
-        setPId(schedule.P_ID ?? null); // ← store P_ID for notes
+        setPId(schedule.P_ID ?? null);
 
         setProjectStartPlan(
           schedule.PROJECT_START_PLAN
@@ -1205,7 +1207,7 @@ const DashboardTimeline = () => {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          openNotes(group.id);
+          openNotes(group.id, "list");
         }}
         title={`Notes for ${group.title}`}
         className="flex-shrink-0 ml-1 p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
@@ -1290,7 +1292,7 @@ const DashboardTimeline = () => {
           <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0">
             <button
               onClick={() => navigate("/dashboard/dashboard-schedule")}
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-600 shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-500">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -1300,13 +1302,24 @@ const DashboardTimeline = () => {
 
             {/* ── Notes Button (global) ── */}
             <button
-              onClick={() => openNotes(null)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
+              onClick={() => openNotes(null, "list")}
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-gradient-to-r from-red-900 to-purple-700 px-3 py-1.5 text-sm font-medium text-white shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
             >
-              <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Notes
+            </button>
+
+            {/* ── Add Note Button (outside sheet, opens sheet in add mode) ── */}
+            <button
+              onClick={() => openNotes(null, "add")}
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-gradient-to-r from-red-900 to-purple-700  px-3 py-1.5 text-sm font-medium text-white shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Note
             </button>
 
             <div className="flex items-center gap-2">
@@ -1469,6 +1482,7 @@ const DashboardTimeline = () => {
         pId={pId}
         contractors={allGroups}
         defaultContractorTypeId={notesDefaultCtId}
+        initialMode={notesInitialMode}
       />
     </>
   );

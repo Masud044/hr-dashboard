@@ -8,7 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -88,7 +88,7 @@ function ContractorMultiSelect({ contractors, value = [], onChange, placeholder 
 }
 
 // ── Note Card ────────────────────────────────────────────────────────────────
-function NoteCard({ note, contractors, onEdit, onDelete, onDeleteDoc }) {
+function NoteCard({ note, contractors, onEdit, onDelete, onDeleteDoc, createdBy }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const ctNames = contractors.filter((c) => note.CONTRACTOR_TYPE_IDS?.includes(c.id)).map((c) => c.title);
 
@@ -167,12 +167,12 @@ function NoteCard({ note, contractors, onEdit, onDelete, onDeleteDoc }) {
         </div>
       )}
 
-      {/* Footer */}
+      {/* Footer — username display */}
       <div className="flex items-center gap-1.5 text-xs text-gray-400">
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
-        <span>User #{note.CREATED_BY}</span>
+        <span>{createdBy}</span>
         <span className="text-gray-300">·</span>
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -282,14 +282,14 @@ function NoteForm({ contractors, initialNote = null, defaultContractorTypeIds = 
         )}
       </div>
 
-      {/* Author (read-only) */}
+      {/* Author (read-only) — username দেখাবে */}
       <div>
         <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Author</label>
         <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg">
           <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span className="text-sm text-gray-500">User #{createdBy}</span>
+          <span className="text-sm text-gray-500">{createdBy}</span>
         </div>
       </div>
 
@@ -314,22 +314,30 @@ function NoteForm({ contractors, initialNote = null, defaultContractorTypeIds = 
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defaultContractorTypeId = null }) {
+export function ProjectNotesSheet({
+  isOpen,
+  onClose,
+  pId,
+  contractors = [],
+  defaultContractorTypeId = null,
+  initialMode = "list",
+}) {
   const queryClient = useQueryClient();
   const [filterCtIds, setFilterCtIds] = useState([]);
-  const [mode, setMode] = useState("list"); // "list" | "add" | "edit"
+  const [mode, setMode] = useState("list");
   const [editingNote, setEditingNote] = useState(null);
 
-  // Reset state when sheet opens/closes or defaultContractorTypeId changes
+  const { user } = useAuthV2();
+  const CREATED_BY = 1;                              // API এর জন্য — number
+  const displayName = user?.username ?? "Unknown";   // display এর জন্য — string
+
   useEffect(() => {
     if (isOpen) {
-      setMode("list");
       setEditingNote(null);
       setFilterCtIds(defaultContractorTypeId ? [defaultContractorTypeId] : []);
+      setMode(initialMode === "add" ? "add" : "list");
     }
-  }, [isOpen, defaultContractorTypeId]);
-
-  const CREATED_BY = 1; // Replace with actual logged-in user ID from your auth context
+  }, [isOpen, defaultContractorTypeId, initialMode]);
 
   // ── Fetch Notes ───────────────────────────────────────────────────────────
   const { data: notesData, isLoading } = useQuery({
@@ -351,7 +359,7 @@ export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defa
       const fd = new FormData();
       fd.append("pId", pId);
       fd.append("description", description);
-      fd.append("createdBy", CREATED_BY);
+      fd.append("createdBy", CREATED_BY);            // number → backend
       fd.append("contractorTypeIds", JSON.stringify(contractorTypeIds));
       files.forEach((f) => fd.append("files", f));
       return axios.post(`${url}/api/project-note`, fd, {
@@ -371,7 +379,7 @@ export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defa
     mutationFn: async ({ noteId, description, contractorTypeIds, files }) => {
       const fd = new FormData();
       fd.append("description", description);
-      fd.append("createdBy", CREATED_BY);
+      fd.append("createdBy", CREATED_BY);            // number → backend
       fd.append("contractorTypeIds", JSON.stringify(contractorTypeIds));
       files.forEach((f) => fd.append("files", f));
       return axios.put(`${url}/api/project-note/${noteId}`, fd, {
@@ -420,8 +428,9 @@ export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defa
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="!w-screen !h-screen !max-w-none overflow-y-auto flex flex-col gap-0 p-0 rounded-none z-[104] sm:!w-[480px] sm:!h-screen sm:!max-w-none">
+
         {/* Header */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
+        {/* <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base font-semibold text-gray-900">Project Notes</SheetTitle>
             {mode === "list" && (
@@ -447,7 +456,7 @@ export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defa
               </button>
             )}
           </div>
-        </SheetHeader>
+        </SheetHeader> */}
 
         <div className="flex-1 overflow-y-auto">
           {/* Add / Edit Form */}
@@ -463,7 +472,7 @@ export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defa
                   contractors={contractors}
                   initialNote={mode === "edit" ? editingNote : null}
                   defaultContractorTypeIds={defaultContractorTypeId ? [defaultContractorTypeId] : []}
-                  createdBy={CREATED_BY}
+                  createdBy={displayName}            // ← username দেখাবে form এ
                   onSave={handleSave}
                   onCancel={() => { setMode("list"); setEditingNote(null); }}
                 />
@@ -519,6 +528,7 @@ export function ProjectNotesSheet({ isOpen, onClose, pId, contractors = [], defa
                     <NoteCard
                       key={note.NOTE_ID}
                       note={note}
+                      createdBy={displayName} 
                       contractors={contractors}
                       onEdit={(n) => { setEditingNote(n); setMode("edit"); }}
                       onDelete={(noteId) => deleteMutation.mutate(noteId)}
