@@ -55,7 +55,7 @@ function StatusBadge({ status }) {
     WEEKEND:  "bg-yellow-100 text-yellow-700 border-yellow-200",
     HALFDAY:  "bg-blue-100 text-blue-700 border-blue-200",
   };
-  const cls = map[status?.toUpperCase()] ?? "bg-gray-100 text-gray-600 border-gray-200";
+  const cls = map[status?.toUpperCase()] ?? "bg-muted text-muted-foreground border-border";
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${cls}`}>
       {status ?? "—"}
@@ -241,7 +241,7 @@ export function CalendarTable() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-red-500 hover:text-red-700"
+              className="bg-destructive hover:bg-destructive/90"
               onClick={() => handleDeleteClick(item.DAY_ID)}
               title="Delete"
               disabled={deleteMutation.isPending}
@@ -271,7 +271,7 @@ export function CalendarTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-white">
+      <div className="mt-4 shadow-2xl rounded-lg bg-card">
         {/* ── Toolbar ────────────────────────────────────────────────────── */}
         <div className="flex items-center py-4 px-4 gap-2">
           <Input

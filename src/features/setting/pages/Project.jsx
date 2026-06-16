@@ -439,6 +439,14 @@ const Project = () => {
           >
             {/* ══ Section: Basic Information ══════════════════════════════ */}
             <SectionLabel label="Basic Information" />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* ── Section: Basic Info ── */}
+            <div className="md:col-span-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Basic Information
+              </p>
+            </div>
 
             {/* Project Name */}
             <FormField control={form.control} name="P_NAME" render={({ field }) => (
@@ -505,6 +513,12 @@ const Project = () => {
 
             {/* ══ Section: Land Details ════════════════════════════════════ */}
             <SectionLabel label="Land Details" />
+            {/* ── Section: Land Details ── */}
+            <div className="md:col-span-3 mt-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Land Details
+              </p>
+            </div>
 
             <FormField control={form.control} name="LOT" render={({ field }) => (
               <FormItem>

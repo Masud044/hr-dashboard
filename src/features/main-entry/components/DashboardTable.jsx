@@ -171,7 +171,7 @@ export function DashboardTable() {
                 {val}
               </span>
             ) : (
-              <span className="text-gray-400 text-xs">Not set</span>
+              <span className="text-muted-foreground text-xs">Not set</span>
             )}
           </div>
         );
@@ -199,7 +199,7 @@ export function DashboardTable() {
                 {val}
               </span>
             ) : (
-              <span className="text-gray-400 text-xs">Not set</span>
+              <span className="text-muted-foreground text-xs">Not set</span>
             )}
           </div>
         );
@@ -234,7 +234,7 @@ export function DashboardTable() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 text-sm text-gray-600">{row.getValue("CREATION_DATE")}</div>
+        <div className="ml-3 text-sm text-muted-foreground">{row.getValue("CREATION_DATE")}</div>
       ),
     },
 
@@ -253,7 +253,7 @@ export function DashboardTable() {
               onClick={() => handleEdit(item.H_ID)}
               title="Edit schedule header"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs cursor-pointer font-medium
-                         bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors"
+                         bg-muted text-foreground hover:bg-muted/70 transition-colors"
             >
               <Pencil size={13} />
               Edit
@@ -276,7 +276,7 @@ export function DashboardTable() {
               onClick={() => handleDeleteClick(item)}
               title="Delete schedule"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium
-                     bg-red-50 text-red-600 hover:bg-red-100  transition-colors   "
+                     bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
             >
               <Trash2 size={13} />
              
@@ -304,7 +304,7 @@ export function DashboardTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-white">
+      <div className="mt-4 shadow-2xl rounded-lg bg-card">
         {/* Search + Column Toggle */}
         <div className="flex items-center py-4 px-4">
           <Input
@@ -400,13 +400,13 @@ export function DashboardTable() {
       {/* ── Delete Confirm Modal ── */}
       {deleteModal.open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+          <div className="bg-card rounded-lg p-6 w-96 shadow-xl">
             <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle size={22} className="text-red-500 mt-0.5 shrink-0" />
+              <AlertTriangle size={22} className="text-destructive mt-0.5 shrink-0" />
               <div>
-                <h3 className="text-base font-semibold text-gray-800">Delete Schedule</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  <span className="font-medium text-gray-700">
+                <h3 className="text-base font-semibold text-foreground">Delete Schedule</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <span className="font-medium text-foreground">
                     {deleteModal.item?.P_NAME || `H_ID: ${deleteModal.item?.H_ID}`}
                   </span>{" "}
                   এর schedule এবং সব lines permanently delete হয়ে যাবে। এই কাজ undo করা যাবে না।

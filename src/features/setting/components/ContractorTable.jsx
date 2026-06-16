@@ -225,7 +225,7 @@ export function ContractorTable() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-red-500 hover:text-red-700"
+              className="text-destructive hover:text-destructive/80"
               onClick={() => handleDeleteClick(item.CONTRATOR_ID)}
               title="Delete"
               disabled={deleteMutation.isPending}
@@ -255,7 +255,7 @@ export function ContractorTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-white">
+      <div className="mt-4 shadow-2xl rounded-lg bg-card">
         {/* ── Toolbar ────────────────────────────────────────────────────── */}
         <div className="flex items-center py-4 px-4 gap-2">
           <Input
@@ -383,7 +383,7 @@ export function ContractorTable() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive/90"
               onClick={handleDeleteConfirm}
             >
               Delete

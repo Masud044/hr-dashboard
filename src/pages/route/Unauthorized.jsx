@@ -5,7 +5,7 @@ export default function UnauthorizedPage() {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <h1 className="text-3xl font-bold text-red-500">403 — Access Denied</h1>
+      <h1 className="text-3xl font-bold text-destructive">403 — Access Denied</h1>
      
       <button
         onClick={() => navigate("/dashboard")}

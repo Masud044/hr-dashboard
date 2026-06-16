@@ -51,7 +51,7 @@ export default function MobileNav({ open, onOpenChange }) {
                 open={openSections.includes(idx)}
                 onOpenChange={() => toggleSection(idx)}
               >
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 text-left font-medium text-foreground hover:bg-accent rounded-lg transition-colors">
                   {item.label}
                   <ChevronDown
                     className={`w-4 h-4 transition-transform duration-200 ${
@@ -70,7 +70,7 @@ export default function MobileNav({ open, onOpenChange }) {
                         `flex items-center gap-3 px-4 py-2.5 ml-4 text-sm rounded-lg transition-colors ${
                           isActive
                             ? "text-green-700 font-medium bg-green-50"
-                            : "text-gray-600 hover:bg-gray-100"
+                            : "text-muted-foreground hover:bg-accent"
                         }`
                       }
                     >

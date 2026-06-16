@@ -31,15 +31,15 @@ function ExistingThumb({ doc, onRequestDelete, disabled }) {
   const isPdf = doc.FILE_TYPE === "application/pdf";
 
   return (
-    <div className="relative group border rounded-lg overflow-hidden bg-gray-50 flex flex-col items-center justify-center p-2 gap-1 h-28">
+    <div className="relative group border rounded-lg overflow-hidden bg-background flex flex-col items-center justify-center p-2 gap-1 h-28">
       {isPdf
         ? <FileText className="h-10 w-10 text-red-400" />
         : <ImageIcon className="h-10 w-10 text-blue-400" />
       }
-      <p className="text-[10px] text-gray-600 truncate w-full text-center leading-tight">
+      <p className="text-[10px] text-muted-foreground truncate w-full text-center leading-tight">
         Doc #{doc.ID}
       </p>
-      <p className="text-[9px] text-gray-400">
+      <p className="text-[9px] text-muted-foreground">
         {doc.CREATION_DATE ? new Date(doc.CREATION_DATE).toLocaleDateString() : ""}
       </p>
 
@@ -47,7 +47,7 @@ function ExistingThumb({ doc, onRequestDelete, disabled }) {
         <a
           href={`${url}/api/gldoc?id=${doc.ID}&file=true`}
           target="_blank" rel="noreferrer"
-          className="bg-white rounded-full p-0.5 shadow" title="View"
+          className="bg-card rounded-full p-0.5 shadow" title="View"
         >
           <Eye className="h-3 w-3 text-blue-500" />
         </a>
@@ -55,9 +55,9 @@ function ExistingThumb({ doc, onRequestDelete, disabled }) {
           <button
             type="button"
             onClick={() => onRequestDelete(doc.ID)}
-            className="bg-white rounded-full p-0.5 shadow" title="Delete"
+            className="bg-card rounded-full p-0.5 shadow" title="Delete"
           >
-            <X className="h-3 w-3 text-red-500" />
+            <X className="h-3 w-3 text-destructive" />
           </button>
         )}
       </div>
@@ -80,15 +80,15 @@ function NewThumb({ file, idx, onRemove, disabled }) {
           : <ImageIcon className="h-10 w-10 text-blue-400" />
       }
       <p className="text-[10px] text-blue-600 truncate w-full text-center font-medium">New</p>
-      <p className="text-[9px] text-gray-500 truncate w-full text-center">{file.name}</p>
+      <p className="text-[9px] text-muted-foreground truncate w-full text-center">{file.name}</p>
 
       {!disabled && (
         <button
           type="button"
           onClick={() => onRemove(idx)}
-          className="absolute top-1 right-1 bg-white rounded-full p-0.5 shadow opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-1 right-1 bg-card rounded-full p-0.5 shadow opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <X className="h-3 w-3 text-gray-600" />
+          <X className="h-3 w-3 text-muted-foreground" />
         </button>
       )}
     </div>
@@ -156,7 +156,7 @@ export default function BillUploadPanelEdit({
       <div className="flex flex-col gap-2 h-full">
         {/* header */}
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Bills</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bills</span>
           {!disabled && (
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs"
               onClick={() => inputRef.current?.click()}>
@@ -180,12 +180,12 @@ export default function BillUploadPanelEdit({
           onClick={() => !disabled && totalCount === 0 && inputRef.current?.click()}
           className={`
             flex-1 min-h-[160px] rounded-lg border-2 border-dashed transition-colors
-            ${dragOver ? "border-blue-400 bg-blue-50" : "border-gray-300 bg-gray-50"}
+            ${dragOver ? "border-blue-400 bg-blue-50" : "border-border bg-background"}
             ${!disabled && totalCount === 0 ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50" : ""}
           `}
         >
           {totalCount === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-2 py-6 text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full gap-2 py-6 text-muted-foreground">
               <UploadCloud className="h-8 w-8" />
               <p className="text-xs text-center leading-snug">
                 Drop files here<br />or click <span className="text-blue-500 font-medium">Add</span>
@@ -211,7 +211,7 @@ export default function BillUploadPanelEdit({
 
         {/* legend */}
         {totalCount > 0 && (
-          <div className="flex items-center justify-between text-[11px] text-gray-500">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>
               {existingDocs.length > 0 && `${existingDocs.length} saved`}
               {existingDocs.length > 0 && newFiles.length > 0 && " · "}

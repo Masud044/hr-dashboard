@@ -32,7 +32,7 @@ export default function LoginForm() {
           aria-hidden="true"
         >
           <svg
-            className="stroke-zinc-800 dark:stroke-zinc-100"
+            className="stroke-foreground"
             xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"

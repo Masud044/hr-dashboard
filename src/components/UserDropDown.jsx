@@ -101,7 +101,7 @@ export default function UserDropDown() {
           onClick={handleLogout}
           className="text-red-600 cursor-pointer focus:text-red-700"
         >
-          <LogOutIcon className="text-red-600" />
+          <LogOutIcon className="text-destructive" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

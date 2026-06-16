@@ -41,13 +41,13 @@ import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 //   };
 
 //   return (
-//     <header className=" sticky flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md  top-0 z-102">
+//     <header className=" sticky flex items-center justify-between bg-card px-4 md:px-6 py-1 shadow-md  top-0 z-102">
 //       {/* Logo */}
 //       <div className="flex items-center gap-2">
 //         {/* Mobile Menu Button */}
 //       <button
 //         onClick={() => setMobileOpen(!mobileOpen)}
-//         className="md:hidden p-2 rounded hover:bg-gray-100"
+//         className="md:hidden p-2 rounded hover:bg-accent"
 //       >
 //         {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
 //       </button>
@@ -124,10 +124,10 @@ const canSee = (roles) =>
   const handleLinkClick = () => setMobileOpen(false);
 
   return (
-    <header className="sticky flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-md top-0 z-102">
+    <header className="sticky flex items-center justify-between bg-card px-4 md:px-6 py-1 shadow-md top-0 z-102">
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded hover:bg-gray-100">
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded hover:bg-accent">
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
         <img src={img} alt="Logo" className="w-24 md:w-28" />
