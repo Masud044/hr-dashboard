@@ -111,7 +111,7 @@ const Project = () => {
 
             {/* ── Section: Basic Info ── */}
             <div className="md:col-span-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Basic Information
               </p>
             </div>
@@ -181,7 +181,7 @@ const Project = () => {
 
             {/* ── Section: Land Details ── */}
             <div className="md:col-span-3 mt-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Land Details
               </p>
             </div>

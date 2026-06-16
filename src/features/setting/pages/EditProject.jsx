@@ -336,8 +336,8 @@ const EditProject = () => {
   if (projectLoading) {
     return (
       <SectionContainer>
-        <div className="p-6 bg-white shadow rounded-lg mt-8">
-          <div className="text-center py-8 text-gray-500">Loading project...</div>
+        <div className="p-6 bg-card shadow rounded-lg mt-8">
+          <div className="text-center py-8 text-muted-foreground">Loading project...</div>
         </div>
       </SectionContainer>
     );
@@ -345,11 +345,11 @@ const EditProject = () => {
 
   return (
     <SectionContainer>
-      <div className="p-6 bg-white shadow rounded-lg mt-8">
+      <div className="p-6 bg-card shadow rounded-lg mt-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-2 border-b">
-          <h2 className="font-semibold text-sm text-gray-800">Edit Project</h2>
+        <div className="flex items-center justify-between mb-6 pb-2 border-b border-border">
+          <h2 className="font-semibold text-sm text-foreground">Edit Project</h2>
           <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft size={16} className="mr-2" /> Back
           </Button>
@@ -362,14 +362,14 @@ const EditProject = () => {
           >
             {/* ── Section: Basic Info ── */}
             <div className="md:col-span-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Basic Information
               </p>
             </div>
 
             <FormField control={form.control} name="P_NAME" render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Project Name <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>Project Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -385,7 +385,7 @@ const EditProject = () => {
 
             <FormField control={form.control} name="P_TYPE" render={({ field }) => (
               <FormItem>
-                <FormLabel>Project Type <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>Project Type <span className="text-destructive">*</span></FormLabel>
                 <Select key={field.value} value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
@@ -426,7 +426,7 @@ const EditProject = () => {
 
             {/* ── Section: Land Details ── */}
             <div className="md:col-span-3 mt-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Land Details
               </p>
             </div>
@@ -449,7 +449,7 @@ const EditProject = () => {
 
             <FormField control={form.control} name="SUBWRB" render={({ field }) => (
               <FormItem>
-                <FormLabel>Suburb <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>Suburb <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -457,7 +457,7 @@ const EditProject = () => {
 
             <FormField control={form.control} name="POSTCODE" render={({ field }) => (
               <FormItem>
-                <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>Postcode <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -465,7 +465,7 @@ const EditProject = () => {
 
             <FormField control={form.control} name="STATE" render={({ field }) => (
               <FormItem>
-                <FormLabel>State <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>State <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} placeholder="e.g. NSW" /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -473,7 +473,7 @@ const EditProject = () => {
 
             <FormField control={form.control} name="P_ADDRESS" render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Project Address <span className="text-red-500">*</span></FormLabel>
+                <FormLabel>Project Address <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Textarea rows={3} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -525,7 +525,7 @@ const EditProject = () => {
                 {/* Tooltip */}
                 {processAlreadyCreated && (
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap
-                                  bg-gray-800 text-white text-xs rounded px-2 py-1
+                                  bg-foreground text-background text-xs rounded px-2 py-1
                                   opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     Process lines already created for this project
                   </div>
@@ -559,7 +559,7 @@ const EditProject = () => {
                 {/* Tooltip */}
                 {dashboardAlreadyCreated && (
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap
-                                  bg-gray-800 text-white text-xs rounded px-2 py-1
+                                  bg-foreground text-background text-xs rounded px-2 py-1
                                   opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     Dashboard already created for this project
                   </div>
@@ -572,26 +572,26 @@ const EditProject = () => {
 
         {/* ── Construction Process Table ── */}
         <div className="overflow-x-auto mt-8">
-          <h3 className="font-semibold text-sm text-gray-800 mb-3">
+          <h3 className="font-semibold text-sm text-foreground mb-3">
             Construction Process Lines
           </h3>
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-gray-100 text-gray-700 text-left">
-                <th className="px-3 py-2 border">Project ID</th>
-                <th className="px-3 py-2 border">Contract Type</th>
-                <th className="px-3 py-2 border">Contractor</th>
-                <th className="px-3 py-2 border">Dependent</th>
-                <th className="px-3 py-2 border text-center">Sort</th>
-                <th className="px-3 py-2 border text-center">Cost</th>
+              <tr className="bg-muted text-foreground text-left">
+                <th className="px-3 py-2 border border-border">Project ID</th>
+                <th className="px-3 py-2 border border-border">Contract Type</th>
+                <th className="px-3 py-2 border border-border">Contractor</th>
+                <th className="px-3 py-2 border border-border">Dependent</th>
+                <th className="px-3 py-2 border border-border text-center">Sort</th>
+                <th className="px-3 py-2 border border-border text-center">Cost</th>
               </tr>
             </thead>
             <tbody>
               {editableLines.length > 0 ? (
                 editableLines.map((line, index) => (
-                  <tr key={line.ID || index} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 border w-[5%]">{line.PROCESS_ID}</td>
-                    <td className="px-3 py-2 border w-[25%]">
+                  <tr key={line.ID || index} className="hover:bg-accent">
+                    <td className="px-3 py-2 border border-border w-[5%]">{line.PROCESS_ID}</td>
+                    <td className="px-3 py-2 border border-border w-[25%]">
                       {contractorTypes.find(c => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}
                     </td>
                     {/* <td className="py-2 border w-[20%]">
@@ -609,7 +609,7 @@ const EditProject = () => {
                       </select>
                     </td> */}
 
-                    <td className="py-2 border w-[20%]">
+                    <td className="py-2 border border-border w-[20%]">
                       <select
                         value={line.CONTRACTOR_ID || ""}
                         onChange={(e) => handleLineChange(index, "CONTRACTOR_ID", e.target.value)}
@@ -632,7 +632,7 @@ const EditProject = () => {
                           ))}
                       </select>
                     </td>
-                    <td className="py-2 border w-[20%]">
+                    <td className="py-2 border border-border w-[20%]">
                       <select
                         value={line.DEPENDENT_ID || ""}
                         onChange={(e) => handleLineChange(index, "DEPENDENT_ID", e.target.value)}
@@ -644,7 +644,7 @@ const EditProject = () => {
                         ))}
                       </select>
                     </td>
-                    <td className="px-3 py-2 border w-[5%] text-center">
+                    <td className="px-3 py-2 border border-border w-[5%] text-center">
                       <input
                         type="number"
                         value={line.SORT_ID || ""}
@@ -652,7 +652,7 @@ const EditProject = () => {
                         className="w-full border-none outline-none bg-transparent text-center"
                       />
                     </td>
-                    <td className="px-3 py-2 border w-[10%] text-center">
+                    <td className="px-3 py-2 border border-border w-[10%] text-center">
                       <input
                         type="number"
                         value={line.COST || ""}
@@ -664,7 +664,7 @@ const EditProject = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-500">
+                  <td colSpan="6" className="text-center py-4 text-muted-foreground">
                     No process lines found. Click "Create Process" to generate them.
                   </td>
                 </tr>
@@ -687,8 +687,8 @@ const EditProject = () => {
         {/* ── Dashboard Modal ── */}
         {showDashboardModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-              <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
+            <div className="bg-card rounded-lg p-6 w-96 shadow-xl">
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Select Project Start Date</h3>
               <Input
                 type="date"
                 value={dashboardDate}

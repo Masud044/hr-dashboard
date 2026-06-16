@@ -185,3 +185,129 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+
+
+/* ! ============================================================
+   react-calendar-timeline — Dark Mode Overrides
+   Add this block to your index.css (after the @layer base block)
+   Using html.dark prefix for maximum specificity to beat the
+   library's own stylesheet regardless of bundle injection order.
+   ============================================================ */
+
+/* ── Canvas background ──────────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-outer,
+html.dark .react-calendar-timeline .rct-scroll,
+html.dark .react-calendar-timeline .rct-canvas {
+  background-color: #1a1a2e !important;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-sidebar {
+  background-color: #1a1a2e !important;
+  border-right: 1px solid #2d2d44 !important;
+}
+
+html.dark .react-calendar-timeline .rct-sidebar .rct-sidebar-row {
+  border-bottom: 1px solid #2d2d44 !important;
+  color: #e2e8f0 !important;
+  background-color: #1a1a2e !important;
+}
+
+html.dark .react-calendar-timeline .rct-sidebar .rct-sidebar-row.rct-sidebar-row-odd {
+  background-color: #20203a !important;
+}
+
+html.dark .react-calendar-timeline .rct-sidebar .rct-sidebar-row.rct-sidebar-row-even {
+  background-color: #1a1a2e !important;
+}
+
+/* ── Sticky header root ─────────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-header-root {
+  background: #12121e !important;
+  border-bottom: 1px solid #2d2d44 !important;
+}
+
+/* ── Date header cells (day row) ────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-dateHeader {
+  background-color: rgba(117, 8, 17, 0.5) !important;
+  color: #fca5a5 !important;
+  border-left: 1px solid #2d2d44 !important;
+  border-bottom: 1px solid #2d2d44 !important;
+}
+
+/* ── Primary header (month/year row) ────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-dateHeader-primary {
+  background-color: #2a0a0a !important;
+  color: #fca5a5 !important;
+  border-bottom: 1px solid #5c2020 !important;
+}
+
+/* ── Horizontal row lines ───────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-horizontal-lines .rct-hl-odd {
+  background-color: #20203a !important;
+  border-bottom: 1px solid #2d2d44 !important;
+}
+
+html.dark .react-calendar-timeline .rct-horizontal-lines .rct-hl-even {
+  background-color: #1a1a2e !important;
+  border-bottom: 1px solid #2d2d44 !important;
+}
+
+/* ── Vertical grid lines ────────────────────────────────────────────────── */
+/* html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl {
+  border-left: 1px solid #2d2d44 !important;
+} */
+ html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl {
+  border-left: 1px solid #44446a !important;
+}
+
+/* ── Weekend columns ────────────────────────────────────────────────────── */
+/* html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-6,
+html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-0 {
+  background-color: rgba(220, 38, 38, 0.08) !important;
+} */
+html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-6,
+html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-0 {
+  background-color: rgba(220, 38, 38, 0.16) !important;
+}
+
+/* ── Holiday columns (custom class you add via verticalLineClassNamesForTime) */
+html.dark .rct-vl.holiday {
+  background-color: rgba(220, 38, 38, 0.22) !important;
+}
+
+/* ── Timeline items ─────────────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-items .rct-item {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.dark .react-calendar-timeline .rct-items .rct-item:hover {
+  filter: brightness(1.18) !important;
+}
+
+html.dark .react-calendar-timeline .rct-items .rct-item.selected {
+  outline: 2px solid #a78bfa !important;
+  outline-offset: 1px !important;
+}
+
+/* ── Item resize handles ────────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-item .rct-item-handler-right,
+html.dark .react-calendar-timeline .rct-item .rct-item-handler-left {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ── Scrollbar (WebKit) ─────────────────────────────────────────────────── */
+html.dark .react-calendar-timeline .rct-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+html.dark .react-calendar-timeline .rct-scroll::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+html.dark .react-calendar-timeline .rct-scroll::-webkit-scrollbar-thumb {
+  background: #3a3a5c;
+  border-radius: 3px;
+}

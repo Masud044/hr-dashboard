@@ -34,6 +34,7 @@ import ContractorTypeInfo from "./features/setting/contractor-type-info/contract
 import Calendar from "./features/setting/calendar/calender";
 import ProjectType from "./features/setting/project-type/project-type";
 import ContractorType from "./features/setting/contractor-type/contractor-type";
+import DashboardTimelineTwo from "./features/main-entry/pages/DashboardTimelineTwo";
 
 const ADMIN = ["Admin"];
 
@@ -216,7 +217,8 @@ const App = () => {
               path="timeline"
               element={
                 <ProtectedRoute anyRole={ADMIN}>
-                  <DashboardTimeline />
+                  {/* <DashboardTimeline /> */}
+                  <DashboardTimelineTwo />
                 </ProtectedRoute>
               }
             />
@@ -224,7 +226,8 @@ const App = () => {
               path="timeline/:H_ID"
               element={
                 <ProtectedRoute anyRole={ADMIN}>
-                  <DashboardTimeline />
+                  {/* <DashboardTimeline /> */}
+                  <DashboardTimelineTwo />
                 </ProtectedRoute>
               }
             />

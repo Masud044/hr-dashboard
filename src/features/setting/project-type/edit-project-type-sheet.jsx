@@ -126,7 +126,7 @@ export function EditProjectTypeSheet({ isOpen, onClose, projectTypeId }) {
                   name="NAME"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>Name <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
