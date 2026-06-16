@@ -19,7 +19,7 @@ export function DataTable({ table, actionBar, children, className, ...props }) {
       {...props}
     >
       {children}
-      <div className="overflow-hidden bg-red-500 rounded-md border">
+      <div className="overflow-hidden bg-card rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

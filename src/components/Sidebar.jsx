@@ -27,7 +27,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-60 bg-white border-r flex justify-between sticky top-0 min-h-screen">
+    <aside className="w-60 bg-card border-r flex justify-between sticky top-0 min-h-screen">
       <div>
         <div className="px-4 py-6 flex items-center gap-2">
           <img
@@ -47,14 +47,14 @@ export default function Sidebar() {
             className={`w-[95%] text-left px-4 py-2 cursor-pointer font-semibold rounded-r-full space-y-1 
       ${
         openMenu === "main"
-          ? "bg-green-200 text-black font-semibold"
+          ? "bg-green-200 text-foreground font-semibold"
           : "hover:bg-green-200"
       }`}
           >
             ▸ Main entry
           </button>
           {openMenu === "main" && (
-            <div className="bg-white">
+            <div className="bg-card">
               <NavLink
                 to="/dashboard"
                 end 
@@ -133,7 +133,7 @@ export default function Sidebar() {
               >
                 <Wrench className="w-4 h-4 mr-2" /> Chart of Account
               </NavLink>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <ClipboardList className="w-4 h-4 mr-2" /> All Chart of account
               </div>
             </div>
@@ -147,27 +147,27 @@ export default function Sidebar() {
             className={`w-[95%] text-left px-4 py-2 cursor-pointer font-semibold  rounded-r-full
       ${
         openMenu === "report"
-          ? "bg-green-200 text-black font-medium"
+          ? "bg-green-200 text-foreground font-medium"
           : "hover:bg-green-200"
       }`}
           >
             ▸ Report
           </button>
           {openMenu === "report" && (
-            <div className="bg-white">
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+            <div className="bg-card">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <ClipboardList className="w-4 h-4 mr-2" /> Daily Expense Report
               </div>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <ClipboardList className="w-4 h-4 mr-2" /> Daily Income Report
               </div>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <FileText className="w-4 h-4 mr-2" /> Ledger
               </div>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <FileText className="w-4 h-4 mr-2" /> Cash Book
               </div>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <ClipboardList className="w-4 h-4 mr-2" /> Chart of account
               </div>
             </div>
@@ -181,18 +181,18 @@ export default function Sidebar() {
             className={`w-[95%] text-left px-4 py-2 cursor-pointer font-semibold rounded-r-full 
       ${
         openMenu === "users"
-          ? "bg-green-200 text-black font-medium"
+          ? "bg-green-200 text-foreground font-medium"
           : "hover:bg-green-200"
       }`}
           >
             ▸ Users
           </button>
           {openMenu === "users" && (
-            <div className="bg-white">
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+            <div className="bg-card">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <User className="w-4 h-4 mr-2" /> User List
               </div>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <User className="w-4 h-4 mr-2" /> Add User
               </div>
             </div>
@@ -206,18 +206,18 @@ export default function Sidebar() {
             className={`w-[95%] text-left px-4 py-2 cursor-pointer font-semibold rounded-r-full 
       ${
         openMenu === "settings"
-          ? "bg-green-200 text-black font-medium"
+          ? "bg-green-200 text-foreground font-medium"
           : "hover:bg-green-200"
       }`}
           >
             ▸ Settings
           </button>
           {openMenu === "settings" && (
-            <div className="bg-white">
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+            <div className="bg-card">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" /> General Settings
               </div>
-              <div className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              <div className="flex items-center px-4 py-2 hover:bg-accent cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" /> Account Settings
               </div>
             </div>
@@ -235,12 +235,12 @@ export default function Sidebar() {
           />
           <div>
             <div className="font-medium">Md. Masud Mia</div>
-            <div className="text-gray-500">Web Engineer</div>
+            <div className="text-muted-foreground">Web Engineer</div>
           </div>
         </div>
 
         <Link to="/login">
-          <button className="flex items-center gap-2 bg-[#d28764] hover:bg-[#d28764] text-white px-8 py-2 rounded-lg text-sm shadow-sm">
+          <button className="flex items-center gap-2 bg-[#d28764] hover:bg-[#d28764] text-primary-foreground px-8 py-2 rounded-lg text-sm shadow-sm">
             Log Out <LogOutIcon className="w-4 h-4" />
           </button>
         </Link>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
+import { ModeToggle } from "@/components/mode-toggle";
 import {
 
   LogOutIcon,
@@ -29,13 +30,13 @@ export default function Navbar() {
   };
 
   return (
-    <header className="flex items-center justify-between bg-white px-4 md:px-6 py-1 shadow-xs sticky top-0 z-[102]">
+    <header className="flex items-center justify-between bg-card px-4 md:px-6 py-1 shadow-xs sticky top-0 z-[102]">
       {/* Logo */}
       <div className="flex items-center gap-2">
         {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden p-2 rounded hover:bg-gray-100"
+        className="md:hidden p-2 rounded hover:bg-accent"
       >
         {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
@@ -83,7 +84,9 @@ export default function Navbar() {
 
       {/* Right Side: User Info */}
       <div className="flex items-center gap-4">
+        <ModeToggle />
         <UserDropDown />
+        
       </div>
 
       

@@ -227,7 +227,7 @@ export function ContractorTypeInfoTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-white">
+      <div className="mt-4 shadow-2xl rounded-lg bg-card">
         <div className="flex items-center py-4 px-4">
           <Input
             placeholder="Filter by contractor..."

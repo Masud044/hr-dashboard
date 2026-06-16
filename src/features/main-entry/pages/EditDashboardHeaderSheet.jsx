@@ -124,7 +124,7 @@ export function EditDashboardHeaderSheet({ isOpen, onClose, scheduleId }) {
 
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
-            <p className="text-gray-500">Loading...</p>
+            <p className="text-muted-foreground">Loading...</p>
           </div>
         ) : (
           <div className="mt-2">

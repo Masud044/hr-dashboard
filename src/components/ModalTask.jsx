@@ -75,7 +75,7 @@ export function DialogDemo({ open, setOpen, contractors = [], onSave }) {
               name="C_P_ID"
               value={form.C_P_ID}
               onChange={handleChange}
-              className="border border-gray-300 rounded px-2 py-1.5"
+              className="border border-border rounded px-2 py-1.5"
               required
             >
               <option value="">Select Contractor</option>
