@@ -723,7 +723,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Save, Cog, ArrowLeft, CheckCircle, Upload, X,
-  CheckCircle2, Clock, FileText, ExternalLink,
+  CheckCircle2, Clock, ExternalLink,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -742,6 +742,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import axios from "axios";
+import { ContractorMultiSelect } from "./ContractorMultiSelect";
 
 const projectSchema = z.object({
   P_NAME:                z.string().min(1, "Project name is required"),
@@ -786,13 +787,13 @@ const EditProject = () => {
     },
   });
 
-  const [editableLines,         setEditableLines]         = useState([]);
-  const [showDashboardModal,    setShowDashboardModal]    = useState(false);
-  const [dashboardDate,         setDashboardDate]         = useState("");
-  const [isCreatingDashboard,   setIsCreatingDashboard]   = useState(false);
+  const [editableLines,           setEditableLines]           = useState([]);
+  const [showDashboardModal,      setShowDashboardModal]      = useState(false);
+  const [dashboardDate,           setDashboardDate]           = useState("");
+  const [isCreatingDashboard,     setIsCreatingDashboard]     = useState(false);
   const [selectedContractorTypes, setSelectedContractorTypes] = useState([]);
-  const [newMandatoryFiles,     setNewMandatoryFiles]     = useState([]);
-  const [dragOver,              setDragOver]              = useState(false);
+  const [newMandatoryFiles,       setNewMandatoryFiles]       = useState([]);
+  const [dragOver,                setDragOver]                = useState(false);
 
   useEffect(() => { window.scrollTo({ top: 80, behavior: "smooth" }); }, []);
 
@@ -843,11 +844,15 @@ const EditProject = () => {
   const dashboardAlreadyCreated = allSchedules.some((s) => String(s.P_ID) === String(id));
 
   // docs split
+  // NOTE: backend returns the label field as `DOC_FILE_LABEL` (not
+  // `DOC_TYPE_LABEL`). A mandatory doc has no CONTRACTOR_TYPE_ID and is
+  // already uploaded; a certificate doc always carries a CONTRACTOR_TYPE_ID
+  // and may be PENDING or UPLOADED.
   const existingMandatoryDocs = (existingProject?.DOCS || []).filter(
-    (d) => d.DOC_TYPE_LABEL === "MANDATORY" || d.UPLOAD_STATUS === "UPLOADED"
+    (d) => !d.CONTRACTOR_TYPE_ID && d.UPLOAD_STATUS === "UPLOADED"
   );
   const certDocs = (existingProject?.DOCS || []).filter(
-    (d) => d.DOC_TYPE_LABEL === "CERTIFICATE" || (d.CONTRACTOR_TYPE_ID && d.UPLOAD_STATUS !== "UPLOADED")
+    (d) => d.DOC_FILE_LABEL === "CERTIFICATE" || !!d.CONTRACTOR_TYPE_ID
   );
 
   // ── populate form ──────────────────────────────────────────────────────
@@ -896,10 +901,10 @@ const EditProject = () => {
   const removeNewFile = (idx) =>
     setNewMandatoryFiles((prev) => prev.filter((_, i) => i !== idx));
 
-  const toggleCt = (id) =>
-    setSelectedContractorTypes((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  // const toggleCt = (ctId) =>
+  //   setSelectedContractorTypes((prev) =>
+  //     prev.includes(ctId) ? prev.filter((x) => x !== ctId) : [...prev, ctId]
+  //   );
 
   // ── update project ─────────────────────────────────────────────────────
   const updateMutation = useMutation({
@@ -923,6 +928,38 @@ const EditProject = () => {
     },
     onError: () => toast.error("Failed to update project."),
   });
+
+  // ── certificate upload ─────────────────────────────────────────────────
+  const certUploadMutation = useMutation({
+    mutationFn: async ({ docId, file }) => {
+      const fd = new FormData();
+      fd.append("CERTIFICATE_FILE", file);
+      fd.append("UPDATED_BY", 105);
+      return axios.put(`${url}/api/project/doc/${docId}/upload`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["project", id]);
+      toast.success("Certificate uploaded successfully!");
+    },
+    onError: (err) =>
+      toast.error(err.response?.data?.message || "Failed to upload certificate."),
+  });
+
+  const handleCertFileSelect = (docId, fileList) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    if (!ALLOWED_MIME.includes(file.type)) {
+      toast.error(`"${file.name}" — unsupported file type.`);
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error(`"${file.name}" exceeds 20 MB limit.`);
+      return;
+    }
+    certUploadMutation.mutate({ docId, file });
+  };
 
   // ── process lines ──────────────────────────────────────────────────────
   const { data: processLines = [], refetch: refetchProcess } = useQuery({
@@ -974,7 +1011,7 @@ const EditProject = () => {
       const updated = [...prev];
       const current = updated[index];
       let newValue = value;
-      if (["SORT_ID","COST","SUB_CONTRACT_ID","DEPENDENT_ID","CONTRACTOR_ID"].includes(field)) {
+      if (["SORT_ID", "COST", "SUB_CONTRACT_ID", "DEPENDENT_ID", "CONTRACTOR_ID"].includes(field)) {
         newValue = value === "" ? "" : Number(value);
       }
       const newLine = { ...current, [field]: newValue };
@@ -1032,8 +1069,8 @@ const EditProject = () => {
       toast.success("Dashboard created!");
       await new Promise((r) => setTimeout(r, 500));
 
-      const fetchRes  = await axios.get(`${url}/api/shedule`);
-      const schedules = fetchRes.data?.data || fetchRes.data || [];
+      const fetchRes   = await axios.get(`${url}/api/shedule`);
+      const schedules  = fetchRes.data?.data || fetchRes.data || [];
       const projectSch = schedules.filter((s) => String(s.P_ID) === String(id));
       if (!projectSch.length) { toast.error("No schedule found."); setIsCreatingDashboard(false); return; }
 
@@ -1053,16 +1090,14 @@ const EditProject = () => {
 
   const onSubmit = (values) => updateMutation.mutate(values);
 
-  const fileIcon  = (mime) => mime?.startsWith("image/") ? "🖼️" : mime === "application/pdf" ? "📄" : "📎";
-  const fmtBytes  = (b)    => !b ? "" : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`;
+  const fileIcon = (mime) => mime?.startsWith("image/") ? "🖼️" : mime === "application/pdf" ? "📄" : "📎";
+  const fmtBytes = (b)    => !b ? "" : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`;
 
   if (projectLoading) {
     return (
       <SectionContainer>
         <div className="p-6 bg-white shadow rounded-lg mt-8 text-center py-16 text-gray-400">
           Loading project...
-        <div className="p-6 bg-card shadow rounded-lg mt-8">
-          <div className="text-center py-8 text-muted-foreground">Loading project...</div>
         </div>
       </SectionContainer>
     );
@@ -1070,17 +1105,13 @@ const EditProject = () => {
 
   return (
     <SectionContainer>
-      <div className="p-6 bg-card shadow rounded-lg mt-8">
+      <div className="p-6 bg-white shadow rounded-lg mt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-2 border-b">
           <h2 className="font-semibold text-sm text-gray-800">Edit Project</h2>
           <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft size={16} className="mr-1" /> Back
-        <div className="flex items-center justify-between mb-6 pb-2 border-b border-border">
-          <h2 className="font-semibold text-sm text-foreground">Edit Project</h2>
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} className="mr-2" /> Back
           </Button>
         </div>
 
@@ -1095,16 +1126,6 @@ const EditProject = () => {
             <FormField control={form.control} name="P_NAME" render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Project Name <Req /></FormLabel>
-            {/* ── Section: Basic Info ── */}
-            <div className="md:col-span-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Basic Information
-              </p>
-            </div>
-
-            <FormField control={form.control} name="P_NAME" render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Project Name <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -1121,7 +1142,6 @@ const EditProject = () => {
             <FormField control={form.control} name="P_TYPE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Project Type <Req /></FormLabel>
-                <FormLabel>Project Type <span className="text-destructive">*</span></FormLabel>
                 <Select key={field.value} value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
@@ -1162,12 +1182,6 @@ const EditProject = () => {
 
             {/* ══ Land Details ════════════════════════════════════════════ */}
             <SectionLabel label="Land Details" />
-            {/* ── Section: Land Details ── */}
-            <div className="md:col-span-3 mt-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Land Details
-              </p>
-            </div>
 
             <FormField control={form.control} name="LOT" render={({ field }) => (
               <FormItem>
@@ -1188,7 +1202,6 @@ const EditProject = () => {
             <FormField control={form.control} name="SUBWRB" render={({ field }) => (
               <FormItem>
                 <FormLabel>Suburb <Req /></FormLabel>
-                <FormLabel>Suburb <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -1197,7 +1210,6 @@ const EditProject = () => {
             <FormField control={form.control} name="POSTCODE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Postcode <Req /></FormLabel>
-                <FormLabel>Postcode <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -1206,7 +1218,6 @@ const EditProject = () => {
             <FormField control={form.control} name="STATE" render={({ field }) => (
               <FormItem>
                 <FormLabel>State <Req /></FormLabel>
-                <FormLabel>State <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Input {...field} placeholder="e.g. NSW" /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -1215,7 +1226,6 @@ const EditProject = () => {
             <FormField control={form.control} name="P_ADDRESS" render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Project Address <Req /></FormLabel>
-                <FormLabel>Project Address <span className="text-destructive">*</span></FormLabel>
                 <FormControl><Textarea rows={3} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -1310,7 +1320,7 @@ const EditProject = () => {
             {/* ══ Contractor Types ════════════════════════════════════════ */}
             <SectionLabel label="Contractor Types" />
 
-            <div className="md:col-span-3">
+            {/* <div className="md:col-span-3">
               {contractorTypes.length === 0 ? (
                 <p className="text-sm text-gray-400 italic">Loading...</p>
               ) : (
@@ -1335,7 +1345,16 @@ const EditProject = () => {
                   })}
                 </div>
               )}
-            </div>
+            </div> */}
+
+             <ContractorMultiSelect
+                          contractors={contractorTypes.map((ct) => ({
+                            id: ct.ID,
+                            title: ct.NAME,
+                          }))}
+                          value={selectedContractorTypes}
+                          onChange={setSelectedContractorTypes}
+                        />
 
             {/* ══ Certificate Status ══════════════════════════════════════ */}
             {(certDocs.length > 0 || selectedContractorTypes.length > 0) && (
@@ -1348,7 +1367,11 @@ const EditProject = () => {
                       const ct = contractorTypes.find(
                         (c) => c.ID === doc.CONTRACTOR_TYPE_ID
                       );
-                      const uploaded = doc.UPLOAD_STATUS === "UPLOADED";
+                      const uploaded   = doc.UPLOAD_STATUS === "UPLOADED";
+                      const inputId    = `cert-upload-${doc.ID}`;
+                      const isUploading =
+                        certUploadMutation.isPending &&
+                        certUploadMutation.variables?.docId === doc.ID;
                       return (
                         <div key={doc.ID}
                           className={`flex items-center gap-2 border rounded-md px-3 py-2
@@ -1380,6 +1403,26 @@ const EditProject = () => {
                             >
                               <ExternalLink size={14} />
                             </a>
+                          )}
+                          {!uploaded && (
+                            <>
+                              <input
+                                id={inputId}
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                className="hidden"
+                                onChange={(e) => handleCertFileSelect(doc.ID, e.target.files)}
+                              />
+                              <button
+                                type="button"
+                                disabled={isUploading}
+                                onClick={() => document.getElementById(inputId).click()}
+                                className="ml-2 shrink-0 text-xs font-medium text-blue-600 hover:text-blue-800
+                                  border border-blue-200 bg-white rounded px-2 py-1 disabled:opacity-50"
+                              >
+                                {isUploading ? "Uploading..." : "Upload"}
+                              </button>
+                            </>
                           )}
                         </div>
                       );
@@ -1437,9 +1480,6 @@ const EditProject = () => {
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap
                     bg-gray-800 text-white text-xs rounded px-2 py-1
                     opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                    Process lines already created
-                                  bg-foreground text-background text-xs rounded px-2 py-1
-                                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     Process lines already created for this project
                   </div>
                 )}
@@ -1465,9 +1505,6 @@ const EditProject = () => {
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap
                     bg-gray-800 text-white text-xs rounded px-2 py-1
                     opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                    Dashboard already created
-                                  bg-foreground text-background text-xs rounded px-2 py-1
-                                  opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     Dashboard already created for this project
                   </div>
                 )}
@@ -1482,7 +1519,7 @@ const EditProject = () => {
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-gray-100 text-gray-700 text-left">
-                {["Project ID","Contract Type","Contractor","Dependent","Sort","Cost"].map((h) => (
+                {["Project ID", "Contract Type", "Contractor", "Dependent", "Sort", "Cost"].map((h) => (
                   <th key={h} className="px-3 py-2 border">{h}</th>
                 ))}
               </tr>
@@ -1511,36 +1548,6 @@ const EditProject = () => {
                           )
                         )
                         .map((c) => (
-          <h3 className="font-semibold text-sm text-foreground mb-3">
-            Construction Process Lines
-          </h3>
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-muted text-foreground text-left">
-                <th className="px-3 py-2 border border-border">Project ID</th>
-                <th className="px-3 py-2 border border-border">Contract Type</th>
-                <th className="px-3 py-2 border border-border">Contractor</th>
-                <th className="px-3 py-2 border border-border">Dependent</th>
-                <th className="px-3 py-2 border border-border text-center">Sort</th>
-                <th className="px-3 py-2 border border-border text-center">Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              {editableLines.length > 0 ? (
-                editableLines.map((line, index) => (
-                  <tr key={line.ID || index} className="hover:bg-accent">
-                    <td className="px-3 py-2 border border-border w-[5%]">{line.PROCESS_ID}</td>
-                    <td className="px-3 py-2 border border-border w-[25%]">
-                      {contractorTypes.find(c => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}
-                    </td>
-                    {/* <td className="py-2 border w-[20%]">
-                      <select
-                        value={line.CONTRACTOR_ID || ""}
-                        onChange={(e) => handleLineChange(index, "CONTRACTOR_ID", e.target.value)}
-                        className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
-                      >
-                        <option value="">Select Contractor</option>
-                        {contractorNames.map(c => (
                           <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
                             {c.CONTRATOR_NAME}
                           </option>
@@ -1579,66 +1586,6 @@ const EditProject = () => {
               )) : (
                 <tr>
                   <td colSpan={6} className="text-center py-4 text-gray-400">
-                    No process lines. Click "Create Process" to generate them.
-                      </select>
-                    </td> */}
-
-                    <td className="py-2 border border-border w-[20%]">
-                      <select
-                        value={line.CONTRACTOR_ID || ""}
-                        onChange={(e) => handleLineChange(index, "CONTRACTOR_ID", e.target.value)}
-                        className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
-                      >
-                        <option value="">Select Contractor</option>
-                        {contractorNames
-                          .filter(c => {
-                            if (!line.SUB_CONTRACT_ID) return true;
-                            return contractorTypeMap.some(
-                              m =>
-                                Number(m.CONTRUCTOR_ID) === Number(c.CONTRATOR_ID) &&
-                                Number(m.CONTRUCTOR_TYPE) === Number(line.SUB_CONTRACT_ID)
-                            );
-                          })
-                          .map(c => (
-                            <option key={c.CONTRATOR_ID} value={c.CONTRATOR_ID}>
-                              {c.CONTRATOR_NAME}
-                            </option>
-                          ))}
-                      </select>
-                    </td>
-                    <td className="py-2 border border-border w-[20%]">
-                      <select
-                        value={line.DEPENDENT_ID || ""}
-                        onChange={(e) => handleLineChange(index, "DEPENDENT_ID", e.target.value)}
-                        className="rounded text-sm px-2 py-1 w-[90%] focus:outline-none"
-                      >
-                        <option value="">Select Dependent</option>
-                        {contractorTypes.map(c => (
-                          <option key={c.ID} value={c.ID}>{c.NAME}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-3 py-2 border border-border w-[5%] text-center">
-                      <input
-                        type="number"
-                        value={line.SORT_ID || ""}
-                        onChange={(e) => handleLineChange(index, "SORT_ID", e.target.value)}
-                        className="w-full border-none outline-none bg-transparent text-center"
-                      />
-                    </td>
-                    <td className="px-3 py-2 border border-border w-[10%] text-center">
-                      <input
-                        type="number"
-                        value={line.COST || ""}
-                        onChange={(e) => handleLineChange(index, "COST", e.target.value)}
-                        className="w-full border-none outline-none bg-transparent text-center"
-                      />
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center py-4 text-muted-foreground">
                     No process lines found. Click "Create Process" to generate them.
                   </td>
                 </tr>
@@ -1662,13 +1609,10 @@ const EditProject = () => {
           <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
               <h3 className="text-lg font-semibold mb-4">Select Project Start Date</h3>
-              <Input type="date" value={dashboardDate} onChange={(e) => setDashboardDate(e.target.value)} />
-            <div className="bg-card rounded-lg p-6 w-96 shadow-xl">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Select Project Start Date</h3>
               <Input
                 type="date"
                 value={dashboardDate}
-                onChange={e => setDashboardDate(e.target.value)}
+                onChange={(e) => setDashboardDate(e.target.value)}
               />
               <div className="flex justify-end gap-3 mt-4">
                 <Button variant="outline" onClick={() => { setShowDashboardModal(false); setDashboardDate(""); }}>

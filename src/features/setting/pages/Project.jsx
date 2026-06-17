@@ -276,7 +276,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Upload, X, FileText, CheckCircle2, Clock } from "lucide-react";
+import { Save, Upload, X, Clock } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { SectionContainer } from "@/components/SectionContainer";
@@ -327,8 +327,8 @@ const ALLOWED_MIME = [
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const Project = () => {
-  const navigate      = useNavigate();
-  const queryClient   = useQueryClient();
+  const navigate    = useNavigate();
+  const queryClient = useQueryClient();
 
   // ── local state ────────────────────────────────────────────────────────
   const [selectedContractorTypes, setSelectedContractorTypes] = useState([]);
@@ -380,8 +380,6 @@ const Project = () => {
 
   const removeFile = (idx) =>
     setMandatoryFiles((prev) => prev.filter((_, i) => i !== idx));
-
-  
 
   // ── mutation ───────────────────────────────────────────────────────────
   const mutation = useMutation({
@@ -439,14 +437,6 @@ const Project = () => {
           >
             {/* ══ Section: Basic Information ══════════════════════════════ */}
             <SectionLabel label="Basic Information" />
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {/* ── Section: Basic Info ── */}
-            <div className="md:col-span-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Basic Information
-              </p>
-            </div>
 
             {/* Project Name */}
             <FormField control={form.control} name="P_NAME" render={({ field }) => (
@@ -513,12 +503,6 @@ const Project = () => {
 
             {/* ══ Section: Land Details ════════════════════════════════════ */}
             <SectionLabel label="Land Details" />
-            {/* ── Section: Land Details ── */}
-            <div className="md:col-span-3 mt-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Land Details
-              </p>
-            </div>
 
             <FormField control={form.control} name="LOT" render={({ field }) => (
               <FormItem>
@@ -628,41 +612,14 @@ const Project = () => {
             {/* ══ Section: Contractor Types ════════════════════════════════ */}
             <SectionLabel label="Contractor Types" />
 
-            {/* <div className="md:col-span-3">
-              {contractorTypes.length === 0 ? (
-                <p className="text-sm text-gray-400 italic">Loading contractor types...</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {contractorTypes.map((ct) => {
-                    const selected = selectedContractorTypes.includes(ct.ID);
-                    return (
-                      <button
-                        key={ct.ID}
-                        type="button"
-                        onClick={() => toggleContractorType(ct.ID)}
-                        className={`px-3 py-1.5 rounded-full border text-sm font-medium transition-all
-                          ${selected
-                            ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-                            : "bg-white border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600"
-                          }`}
-                      >
-                        {selected && <CheckCircle2 size={13} className="inline mr-1 -mt-0.5" />}
-                        {ct.NAME}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div> */}
-
             <ContractorMultiSelect
-  contractors={contractorTypes.map((ct) => ({
-    id: ct.ID,
-    title: ct.NAME,
-  }))}
-  value={selectedContractorTypes}
-  onChange={setSelectedContractorTypes}
-/>
+              contractors={contractorTypes.map((ct) => ({
+                id: ct.ID,
+                title: ct.NAME,
+              }))}
+              value={selectedContractorTypes}
+              onChange={setSelectedContractorTypes}
+            />
 
             {/* ══ Section: Certificate Status ══════════════════════════════ */}
             {selectedContractorTypes.length > 0 && (

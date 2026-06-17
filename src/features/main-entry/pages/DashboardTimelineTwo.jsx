@@ -156,6 +156,8 @@ const DashboardTimelineTwo = () => {
   const [projectEndPlan, setProjectEndPlan]         = useState(null);
   const [pId, setPId]                               = useState(null);
 
+
+  const [notesInitialMode, setNotesInitialMode]     = useState("list"); // "list" | "add"
   const [notesOpen, setNotesOpen]               = useState(false);
   const [notesDefaultCtId, setNotesDefaultCtId] = useState(null);
 
@@ -176,8 +178,9 @@ const DashboardTimelineTwo = () => {
     "#000000", "#71C0BB", "#7C4585", "#174143", "#FFC400", "#FF0060",
   ];
 
-  const openNotes = (contractorTypeId = null) => {
+  const openNotes = (contractorTypeId = null, initialMode = "list") => {
     setNotesDefaultCtId(contractorTypeId);
+     setNotesInitialMode(initialMode);
     setNotesOpen(true);
   };
 
@@ -629,6 +632,17 @@ const DashboardTimelineTwo = () => {
               Notes
             </button>
 
+             {/* ── Add Note Button (outside sheet, opens sheet in add mode) ── */}
+            <button
+              onClick={() => openNotes(null, "add")}
+              className="inline-flex items-center gap-1.5 rounded-lg border bg-gradient-to-r from-red-900 to-purple-700  px-3 py-1.5 text-sm font-medium text-white shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Note
+            </button>
+
             <div className="flex items-center gap-2">
               <select
                 value={selectedContractor}
@@ -792,12 +806,13 @@ const DashboardTimelineTwo = () => {
 
       {/* ── Project Notes Sheet ──────────────────────────────────────────── */}
       <ProjectNotesSheet
-        isOpen={notesOpen}
-        onClose={() => setNotesOpen(false)}
-        pId={pId}
-        contractors={allGroups}
-        defaultContractorTypeId={notesDefaultCtId}
-      />
+             isOpen={notesOpen}
+             onClose={() => setNotesOpen(false)}
+             pId={pId}
+             contractors={allGroups}
+             defaultContractorTypeId={notesDefaultCtId}
+             initialMode={notesInitialMode}
+           />
     </>
   );
 };
