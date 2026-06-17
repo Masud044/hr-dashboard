@@ -723,7 +723,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Save, Cog, ArrowLeft, CheckCircle, Upload, X,
-  CheckCircle2, Clock, ExternalLink,
+  CheckCircle2, Clock, ExternalLink,Mail,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -794,6 +794,11 @@ const EditProject = () => {
   const [selectedContractorTypes, setSelectedContractorTypes] = useState([]);
   const [newMandatoryFiles,       setNewMandatoryFiles]       = useState([]);
   const [dragOver,                setDragOver]                = useState(false);
+
+
+  const [notifyTypeId, setNotifyTypeId] = useState(null);
+const [notifySubject, setNotifySubject] = useState("");
+const [notifyMessage, setNotifyMessage] = useState("");
 
   useEffect(() => { window.scrollTo({ top: 80, behavior: "smooth" }); }, []);
 
@@ -906,6 +911,12 @@ const EditProject = () => {
   //     prev.includes(ctId) ? prev.filter((x) => x !== ctId) : [...prev, ctId]
   //   );
 
+
+  const getContractorIdsForType = (ctId) =>
+  contractorTypeMap
+    .filter((m) => Number(m.CONTRUCTOR_TYPE) === Number(ctId))
+    .map((m) => Number(m.CONTRUCTOR_ID));
+
   // ── update project ─────────────────────────────────────────────────────
   const updateMutation = useMutation({
     mutationFn: async (formData) => {
@@ -946,6 +957,23 @@ const EditProject = () => {
     onError: (err) =>
       toast.error(err.response?.data?.message || "Failed to upload certificate."),
   });
+
+  const bulkNotifyMutation = useMutation({
+  mutationFn: ({ contractorIds, subject, message }) =>
+    axios.post(`${url}/api/project/notify-bulk`, {
+      CONTRACTOR_IDS: contractorIds,
+      SUBJECT: subject,
+      MESSAGE: message,
+      P_ID: id,
+    }),
+  onSuccess: (res) => {
+    toast.success(res.data.message);
+    setNotifyTypeId(null);
+    setNotifySubject("");
+    setNotifyMessage("");
+  },
+  onError: (err) => toast.error(err.response?.data?.message || "Failed to send emails."),
+});
 
   const handleCertFileSelect = (docId, fileList) => {
     const file = fileList?.[0];
@@ -1363,7 +1391,7 @@ const EditProject = () => {
                 <div className="md:col-span-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {/* Saved cert rows */}
-                    {certDocs.map((doc) => {
+                    {/* {certDocs.map((doc) => {
                       const ct = contractorTypes.find(
                         (c) => c.ID === doc.CONTRACTOR_TYPE_ID
                       );
@@ -1426,27 +1454,110 @@ const EditProject = () => {
                           )}
                         </div>
                       );
-                    })}
+                    })} */}
+                    {certDocs.map((doc) => {
+  const ct = contractorTypes.find(
+    (c) => c.ID === doc.CONTRACTOR_TYPE_ID
+  );
+  const uploaded   = doc.UPLOAD_STATUS === "UPLOADED";
+  const inputId    = `cert-upload-${doc.ID}`;
+  const isUploading =
+    certUploadMutation.isPending &&
+    certUploadMutation.variables?.docId === doc.ID;
+  const recipientCount = getContractorIdsForType(doc.CONTRACTOR_TYPE_ID).length;
+  return (
+    <div key={doc.ID}
+      className={`flex items-center gap-2 border rounded-md px-3 py-2
+        ${uploaded
+          ? "border-green-200 bg-green-50"
+          : "border-amber-200 bg-amber-50"
+        }`}
+    >
+      {uploaded
+        ? <CheckCircle2 size={14} className="text-green-500 shrink-0" />
+        : <Clock size={14} className="text-amber-500 shrink-0" />
+      }
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-gray-700 truncate">
+          {ct?.NAME || `Type ${doc.CONTRACTOR_TYPE_ID}`}
+        </p>
+        <p className={`text-xs font-semibold
+          ${uploaded ? "text-green-600" : "text-amber-600"}`}>
+          {doc.UPLOAD_STATUS}
+        </p>
+      </div>
+      {recipientCount > 0 && (
+        <button
+          type="button"
+          title={`Email ${recipientCount} contractor(s)`}
+          onClick={() => setNotifyTypeId(doc.CONTRACTOR_TYPE_ID)}
+          className="text-gray-400 hover:text-blue-600 shrink-0"
+        >
+          <Mail size={14} />
+        </button>
+      )}
+      {uploaded && doc.FILE_NAME && (
+        <a
+          href={`${url}/api/project/doc/${doc.ID}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-500 hover:text-blue-700 shrink-0"
+          title={doc.FILE_NAME}
+        >
+          <ExternalLink size={14} />
+        </a>
+      )}
+      {!uploaded && (
+        <>
+          <input
+            id={inputId}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            className="hidden"
+            onChange={(e) => handleCertFileSelect(doc.ID, e.target.files)}
+          />
+          <button
+            type="button"
+            disabled={isUploading}
+            onClick={() => document.getElementById(inputId).click()}
+            className="ml-2 shrink-0 text-xs font-medium text-blue-600 hover:text-blue-800
+              border border-blue-200 bg-white rounded px-2 py-1 disabled:opacity-50"
+          >
+            {isUploading ? "Uploading..." : "Upload"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+})}
 
                     {/* Newly selected types not yet in DB */}
-                    {selectedContractorTypes
-                      .filter(
-                        (ctId) =>
-                          !certDocs.some((d) => d.CONTRACTOR_TYPE_ID === ctId)
-                      )
-                      .map((ctId) => {
-                        const ct = contractorTypes.find((c) => c.ID === ctId);
-                        return (
-                          <div key={`new-${ctId}`}
-                            className="flex items-center gap-2 border border-dashed border-amber-300 bg-amber-50 rounded-md px-3 py-2">
-                            <Clock size={14} className="text-amber-400 shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-700 truncate">{ct?.NAME}</p>
-                              <p className="text-xs text-amber-500 font-medium">Will be created — PENDING</p>
-                            </div>
-                          </div>
-                        );
-                      })}
+                   {selectedContractorTypes
+  .filter((ctId) => !certDocs.some((d) => d.CONTRACTOR_TYPE_ID === ctId))
+  .map((ctId) => {
+    const ct = contractorTypes.find((c) => c.ID === ctId);
+    const recipientCount = getContractorIdsForType(ctId).length;
+    return (
+      <div key={`new-${ctId}`}
+        className="flex items-center gap-2 border border-dashed border-amber-300 bg-amber-50 rounded-md px-3 py-2">
+        <Clock size={14} className="text-amber-400 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-gray-700 truncate">{ct?.NAME}</p>
+          <p className="text-xs text-amber-500 font-medium">Will be created — PENDING</p>
+        </div>
+        {recipientCount > 0 && (
+          <button
+            type="button"
+            title={`Email ${recipientCount} contractor(s)`}
+            onClick={() => setNotifyTypeId(ctId)}
+            className="text-gray-400 hover:text-blue-600 shrink-0"
+          >
+            <Mail size={14} />
+          </button>
+        )}
+      </div>
+    );
+  })}
                   </div>
                 </div>
               </>
@@ -1625,6 +1736,47 @@ const EditProject = () => {
             </div>
           </div>
         )}
+
+
+        {notifyTypeId && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div className="bg-white rounded-lg p-6 w-[420px] shadow-xl">
+      <h3 className="text-lg font-semibold mb-1">
+        Email {contractorTypes.find((c) => c.ID === notifyTypeId)?.NAME} Contractors
+      </h3>
+      <p className="text-xs text-gray-500 mb-4">
+        {getContractorIdsForType(notifyTypeId).length} contractor(s) will receive this email.
+      </p>
+      <Input
+        placeholder="Subject"
+        value={notifySubject}
+        onChange={(e) => setNotifySubject(e.target.value)}
+        className="mb-3"
+      />
+      <Textarea
+        rows={5}
+        placeholder="Write your message..."
+        value={notifyMessage}
+        onChange={(e) => setNotifyMessage(e.target.value)}
+      />
+      <div className="flex justify-end gap-3 mt-4">
+        <Button variant="outline" onClick={() => setNotifyTypeId(null)}>Cancel</Button>
+        <Button
+          disabled={!notifySubject || !notifyMessage || bulkNotifyMutation.isPending}
+          onClick={() =>
+            bulkNotifyMutation.mutate({
+              contractorIds: getContractorIdsForType(notifyTypeId),
+              subject: notifySubject,
+              message: notifyMessage,
+            })
+          }
+        >
+          {bulkNotifyMutation.isPending ? "Sending..." : "Send Email"}
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
 
       </div>
     </SectionContainer>
