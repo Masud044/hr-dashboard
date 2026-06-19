@@ -50,6 +50,7 @@ export const NAV_ITEMS = [
        { to: "/dashboard/calendar", label: "Calender", Icon: IconUserHexagon },
         { to: "/dashboard/project-type", label: "Project Type", Icon: IconUserHexagon },
          { to: "/dashboard/contractor-type", label: "Contractor Type", Icon: IconUserHexagon },
+          { to: "/dashboard/statement", label: "Project Statement", Icon: IconUserHexagon },
     ],
   },
 

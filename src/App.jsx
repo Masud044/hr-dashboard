@@ -35,6 +35,7 @@ import Calendar from "./features/setting/calendar/calender";
 import ProjectType from "./features/setting/project-type/project-type";
 import ContractorType from "./features/setting/contractor-type/contractor-type";
 import DashboardTimelineTwo from "./features/main-entry/pages/DashboardTimelineTwo";
+import StatementUpload from "./features/setting/pages/statement-upload";
 
 const ADMIN = ["Admin"];
 
@@ -138,6 +139,14 @@ const App = () => {
               element={
                 <ProtectedRoute anyRole={ADMIN}>
                   <Project />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="statement"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <StatementUpload />
                 </ProtectedRoute>
               }
             />
