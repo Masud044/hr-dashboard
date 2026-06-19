@@ -439,23 +439,23 @@ const DashboardTimelineTwo = () => {
   };
 
   // ── Move & Resize ────────────────────────────────────────────────────────
-  const handleItemMove = (itemId, dragTime, newGroupOrder) => {
-    setItems((prev) => {
-      const i        = prev.findIndex((item) => item.id === itemId);
-      const item     = prev[i];
-      const duration = item.end_time - item.start_time;
-      const updated  = [...prev];
-      const newItem  = {
-        ...item,
-        start_time: dragTime,
-        end_time:   dragTime + duration,
-        group:      groups[newGroupOrder]?.id ?? item.group,
-      };
-      updated[i] = newItem;
-      updateItemOnServer(newItem);
-      return updated;
-    });
-  };
+  // const handleItemMove = (itemId, dragTime, newGroupOrder) => {
+  //   setItems((prev) => {
+  //     const i        = prev.findIndex((item) => item.id === itemId);
+  //     const item     = prev[i];
+  //     const duration = item.end_time - item.start_time;
+  //     const updated  = [...prev];
+  //     const newItem  = {
+  //       ...item,
+  //       start_time: dragTime,
+  //       end_time:   dragTime + duration,
+  //       group:      groups[newGroupOrder]?.id ?? item.group,
+  //     };
+  //     updated[i] = newItem;
+  //     updateItemOnServer(newItem);
+  //     return updated;
+  //   });
+  // };
 
   const handleItemResize = (itemId, time, edge) => {
     setItems((prev) => {
@@ -670,7 +670,7 @@ const DashboardTimelineTwo = () => {
                 visibleTimeStart={visibleTimeStart}
                 visibleTimeEnd={visibleTimeEnd}
                 onTimeChange={handleTimeChange}
-                onItemMove={handleItemMove}
+                // onItemMove={handleItemMove}
                 onItemResize={handleItemResize}
                 onItemSelect={handleItemSelect}
                 onItemDeselect={handleItemDeselect}
@@ -678,7 +678,7 @@ const DashboardTimelineTwo = () => {
                 selected={selectedItems}
                 canMove
                 canResize="both"
-                canChangeGroup
+                canChangeGroup={false}
                 lineHeight={34}
                 itemHeightRatio={0.75}
                 sidebarWidth={200}
