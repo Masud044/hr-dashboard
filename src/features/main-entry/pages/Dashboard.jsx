@@ -3,12 +3,9 @@ import { DashboardTable } from "../components/DashboardTable";
 
 const Dashboard = () => {
   return (
-    <SectionContainer>
-      <div>
-        {/* Dashboard Table with Edit Sheet */}
-        <DashboardTable />
-      </div>
-    </SectionContainer>
+    <SectionContainer variant="full" className="py-0">
+  <DashboardTable />
+</SectionContainer>
   );
 };
 

@@ -12,7 +12,7 @@ import {
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, LayoutDashboard, AlertTriangle } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, LayoutDashboard, AlertTriangle, Search } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -53,15 +53,13 @@ export function DashboardTable() {
 
   const apiData = data || [];
 
-  const [sorting, setSorting]                 = React.useState([]);
-  const [columnFilters, setColumnFilters]     = React.useState([]);
+  const [sorting, setSorting]                   = React.useState([]);
+  const [columnFilters, setColumnFilters]       = React.useState([]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
-  const [rowSelection, setRowSelection]       = React.useState({});
-  const [editSheetOpen, setEditSheetOpen]     = React.useState(false);
+  const [rowSelection, setRowSelection]         = React.useState({});
+  const [editSheetOpen, setEditSheetOpen]       = React.useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = React.useState(null);
-
-  // ── Delete state ─────────────────────────────────────────────────────────
-  const [deleteModal, setDeleteModal] = React.useState({ open: false, item: null });
+  const [deleteModal, setDeleteModal]           = React.useState({ open: false, item: null });
 
   const deleteMutation = useMutation({
     mutationFn: async (hId) => {
@@ -80,19 +78,17 @@ export function DashboardTable() {
     },
   });
 
-  const handleDeleteClick = (item) => setDeleteModal({ open: true, item });
+  const handleDeleteClick   = (item) => setDeleteModal({ open: true, item });
   const handleDeleteConfirm = () => {
     if (deleteModal.item?.H_ID) deleteMutation.mutate(deleteModal.item.H_ID);
   };
-  const handleDeleteCancel = () => setDeleteModal({ open: false, item: null });
-
+  const handleDeleteCancel  = () => setDeleteModal({ open: false, item: null });
   const handleEdit = (scheduleId) => {
     setSelectedScheduleId(scheduleId);
     setEditSheetOpen(true);
   };
 
   const columns = [
-    // ── Select ────────────────────────────────────────────────────────────
     {
       id: "select",
       header: ({ table }) => (
@@ -103,6 +99,7 @@ export function DashboardTable() {
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
+          className="border-border"
         />
       ),
       cell: ({ row }) => (
@@ -110,178 +107,158 @@ export function DashboardTable() {
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
+          className="border-border"
         />
       ),
       enableSorting: false,
       enableHiding: false,
     },
-
-    // ── Project Name (P_ID এর বদলে P_NAME) ───────────────────────────────
     {
       accessorKey: "P_NAME",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
           Project Name
-          <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 font-medium">{row.getValue("P_NAME") || "—"}</div>
+        <div className="font-medium text-foreground w-[110px] leading-snug break-words whitespace-normal">
+      {row.getValue("P_NAME") || "—"}
+    </div>
       ),
     },
-
-    // ── Description ───────────────────────────────────────────────────────
     {
       accessorKey: "DESCRIPTION",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
           Description
-          <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3">{row.getValue("DESCRIPTION") || "—"}</div>
+        <div className="text-sm text-muted-foreground max-w-[200px] truncate">
+          {row.getValue("DESCRIPTION") || "—"}
+        </div>
       ),
     },
-
-    // ── Project Start Plan ────────────────────────────────────────────────
-    {
+        {
       accessorKey: "PROJECT_START_PLAN",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
           Project Start Plan
-          <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => {
         const val = row.getValue("PROJECT_START_PLAN");
+        if (!val) return <span className="text-sm text-muted-foreground">Not set</span>;
+        const d = new Date(val);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const parts = dateStr.split(', ');
         return (
-          <div className="ml-3">
-            {val ? (
-              <span className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded">
-                {val}
-              </span>
-            ) : (
-              <span className="text-muted-foreground text-xs">Not set</span>
-            )}
-          </div>
+          <span className="inline-flex flex-col gap-2 pl-2 pr-5 py-2 rounded-xs text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 leading-tight">
+            <span>{parts[0]},</span>
+            <span>{parts[1]}</span>
+          </span>
         );
       },
     },
-
-    // ── Project End Plan ──────────────────────────────────────────────────
     {
       accessorKey: "PROJECT_END_PLAN",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
-          project End Plan
-          <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
+          Project End Plan
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => {
         const val = row.getValue("PROJECT_END_PLAN");
+        if (!val) return <span className="text-sm text-muted-foreground">Not set</span>;
+        const d = new Date(val);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const parts = dateStr.split(', ');
         return (
-          <div className="ml-3">
-            {val ? (
-              <span className="inline-block bg-orange-50 text-orange-700 text-xs font-medium px-2 py-0.5 rounded">
-                {val}
-              </span>
-            ) : (
-              <span className="text-muted-foreground text-xs">Not set</span>
-            )}
+          <span className="inline-flex flex-col gap-2 pl-2 pr-5 py-2 rounded-xs text-xs font-medium bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300 leading-tight">
+            <span>{parts[0]},</span>
+            <span>{parts[1]}</span>
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "CREATION_DATE",
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Created Date
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
+      ),
+      cell: ({ row }) => {
+        const val = row.getValue("CREATION_DATE");
+        if (!val) return <span className="text-sm text-muted-foreground">—</span>;
+        const d = new Date(val);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const parts = dateStr.split(', ');
+        return (
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground leading-tight">
+            <span>{parts[0]},</span>
+            <span>{parts[1]}</span>
           </div>
         );
       },
     },
-
-    // ── Created By ────────────────────────────────────────────────────────
-    // {
-    //   accessorKey: "CREATION_BY",
-    //   header: ({ column }) => (
-    //     <Button
-    //       variant="ghost"
-    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    //     >
-    //       Created By
-    //       <ArrowUpDown className="ml-1 h-4 w-4" />
-    //     </Button>
-    //   ),
-    //   cell: ({ row }) => <div className="ml-3">{row.getValue("CREATION_BY")}</div>,
-    // },
-
-    // ── Creation Date ─────────────────────────────────────────────────────
-    {
-      accessorKey: "CREATION_DATE",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Created Date
-          <ArrowUpDown className="ml-1 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="ml-3 text-sm text-muted-foreground">{row.getValue("CREATION_DATE")}</div>
-      ),
-    },
-
-    // ── Actions ───────────────────────────────────────────────────────────
     {
       id: "actions",
       enableHiding: false,
-      header: () => <div className="text-center">Actions</div>,
+      header: () => (
+        <div className="text-overline text-muted-foreground text-center">
+          Actions
+        </div>
+      ),
       cell: ({ row }) => {
         const item = row.original;
         return (
           <div className="flex items-center gap-2 justify-center">
-
-            {/* Edit */}
-            <Button
+            <button
               onClick={() => handleEdit(item.H_ID)}
-              title="Edit schedule header"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs cursor-pointer font-medium
-                         bg-muted text-foreground hover:bg-muted/70 transition-colors"
+              title="Edit"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-all"
             >
-              <Pencil size={13} />
-              Edit
-            </Button>
+              <Pencil size={14} />
+            </button>
 
-            {/* View Dashboard */}
             <Link to={`/dashboard/timeline/${item.H_ID}`}>
-              <Button
+              <button
                 title="Open timeline dashboard"
-                className="inline-flex items-center gap-1.5 px-3  rounded-md text-sm font-medium
-                           "
+                className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium border border-border bg-transparent text-foreground hover:bg-muted/50 transition-all"
               >
                 <LayoutDashboard size={13} />
                 Dashboard
-              </Button>
+              </button>
             </Link>
 
-            {/* Delete */}
-            <Button
+            <button
               onClick={() => handleDeleteClick(item)}
-              title="Delete schedule"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium
-                     bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+              title="Delete"
+              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all"
             >
-              <Trash2 size={13} />
-             
-            </Button>
-
+              <Trash2 size={14} />
+            </button>
           </div>
         );
       },
@@ -304,32 +281,37 @@ export function DashboardTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-card">
-        {/* Search + Column Toggle */}
-        <div className="flex items-center py-4 px-4">
-          <Input
-            placeholder="Filter by project name..."
-            value={table.getColumn("P_NAME")?.getFilterValue() ?? ""}
-            onChange={(e) =>
-              table.getColumn("P_NAME")?.setFilterValue(e.target.value)
-            }
-            className="max-w-sm"
-          />
+      <div className="mt-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Filter by project name..."
+              value={table.getColumn("P_NAME")?.getFilterValue() ?? ""}
+              onChange={(e) => table.getColumn("P_NAME")?.setFilterValue(e.target.value)}
+              className="pl-9 h-10 text-sm bg-card border-border rounded-md"
+            />
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown className="ml-1 h-4 w-4" />
+              <Button
+                variant="outline"
+                className="ml-auto h-10 text-sm border-border rounded-md gap-1.5 bg-transparent"
+              >
+                <LayoutDashboard size={14} />
+                Columns
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className=" bg-card border-border">
               {table
                 .getAllColumns()
                 .filter((col) => col.getCanHide())
                 .map((col) => (
                   <DropdownMenuCheckboxItem
                     key={col.id}
-                    className="capitalize"
+                    className="capitalize text-sm"
                     checked={col.getIsVisible()}
                     onCheckedChange={(value) => col.toggleVisibility(!!value)}
                   >
@@ -340,14 +322,16 @@ export function DashboardTable() {
           </DropdownMenu>
         </div>
 
-        {/* Table */}
-        <div className="overflow-hidden rounded-md border">
+        <div className="rounded-lg border border-border overflow-hidden bg-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((group) => (
-                <TableRow key={group.id}>
+                <TableRow
+                  key={group.id}
+                  className="border-b border-border bg-muted/20"
+                >
                   {group.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="px-4 py-3 font-medium">
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -360,15 +344,19 @@ export function DashboardTable() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24">
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="border-b border-border hover:bg-muted/30 transition-colors"
+                  >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="px-4 py-3 align-middle">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -376,7 +364,7 @@ export function DashboardTable() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24">
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
                     No results.
                   </TableCell>
                 </TableRow>
@@ -385,7 +373,9 @@ export function DashboardTable() {
           </Table>
         </div>
 
-        <DataTablePagination table={table} />
+        <div className="mt-0 border-t border-border">
+          <DataTablePagination table={table} />
+        </div>
       </div>
 
       <EditDashboardHeaderSheet
@@ -397,14 +387,15 @@ export function DashboardTable() {
         scheduleId={selectedScheduleId}
       />
 
-      {/* ── Delete Confirm Modal ── */}
       {deleteModal.open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-card rounded-lg p-6 w-96 shadow-xl">
-            <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle size={22} className="text-destructive mt-0.5 shrink-0" />
+          <div className="bg-card border border-border rounded-lg p-6 w-96 shadow-lg">
+            <div className="flex items-start gap-3 mb-5">
+              <div className="p-2 rounded-md bg-destructive/10 shrink-0">
+                <AlertTriangle size={18} className="text-destructive" />
+              </div>
               <div>
-                <h3 className="text-base font-semibold text-foreground">Delete Schedule</h3>
+                <h3 className="text-sm font-semibold text-foreground">Delete Schedule</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   <span className="font-medium text-foreground">
                     {deleteModal.item?.P_NAME || `H_ID: ${deleteModal.item?.H_ID}`}
@@ -413,14 +404,20 @@ export function DashboardTable() {
                 </p>
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-2">
-              <Button variant="outline" onClick={handleDeleteCancel} disabled={deleteMutation.isPending}>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={handleDeleteCancel}
+                disabled={deleteMutation.isPending}
+                className="h-9 text-sm border-border"
+              >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 disabled={deleteMutation.isPending}
+                className="h-9 text-sm"
               >
                 {deleteMutation.isPending ? "Deleting..." : "Yes, Delete"}
               </Button>

@@ -1,9 +1,22 @@
+/* ============================================================
+   GENESIS DESIGN SYSTEM — index.css
+   Migrated from: Violet Bloom theme
+   Fonts: General Sans (Fontshare) · DM Sans · JetBrains Mono
+   ============================================================ */
+
+/* Font Imports — must come before Tailwind */
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap");
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 
+/* ============================================================
+   THEME MAPPING — Tailwind color utilities → CSS vars
+   ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -41,11 +54,25 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
+  --font-display: var(--font-display);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* ── Genesis Radius Scale ──────────────────────────────────
+     4px  → tags, chips, badges, inline code
+     6px  → buttons, inputs, selects            ← base
+     8px  → dropdowns, panels, meta cards
+     12px → cards, search bar, featured
+     9999px → avatars, dots, pill badges
+  ──────────────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: var(--radius);
+  /* 6px */
+  --radius-md: calc(var(--radius) + 2px);
+  /* 8px */
+  --radius-lg: calc(var(--radius) + 6px);
+  /* 12px */
+  --radius-xl: calc(var(--radius) + 6px);
+  /* 12px */
+  --radius-full: 9999px;
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -64,250 +91,279 @@
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
 }
 
+
+/* ============================================================
+   LIGHT MODE — exact Genesis hex values
+   ============================================================ */
 :root {
-  --background: oklch(0.9940 0 0);
-  --foreground: oklch(0 0 0);
-  --card: oklch(0.9940 0 0);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(0.9911 0 0);
-  --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0.5393 0.2713 286.7462);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.9540 0.0063 255.4755);
-  --secondary-foreground: oklch(0.1344 0 0);
-  --muted: oklch(0.9702 0 0);
-  --muted-foreground: oklch(0.4386 0 0);
-  --accent: oklch(0.9393 0.0288 266.3680);
-  --accent-foreground: oklch(0.5445 0.1903 259.4848);
-  --destructive: oklch(0.6290 0.1902 23.0704);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.9300 0.0094 286.2156);
-  --input: oklch(0.9401 0 0);
-  --ring: oklch(0 0 0);
-  --chart-1: oklch(0.7459 0.1483 156.4499);
-  --chart-2: oklch(0.5393 0.2713 286.7462);
-  --chart-3: oklch(0.7336 0.1758 50.5517);
-  --chart-4: oklch(0.5828 0.1809 259.7276);
-  --chart-5: oklch(0.5590 0 0);
-  --sidebar: oklch(0.9777 0.0051 247.8763);
-  --sidebar-foreground: oklch(0 0 0);
-  --sidebar-primary: oklch(0 0 0);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
-  --sidebar-accent: oklch(0.9401 0 0);
-  --sidebar-accent-foreground: oklch(0 0 0);
-  --sidebar-border: oklch(0.9401 0 0);
-  --sidebar-ring: oklch(0 0 0);
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-serif: Lora, serif;
-  --font-mono: IBM Plex Mono, monospace;
-  --radius: 1.4rem;
-  --shadow-x: 0px;
-  --shadow-y: 2px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.16;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-2xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
-  --shadow-xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
-  --shadow-sm: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 1px 2px -1px hsl(0 0% 0% / 0.16);
-  --shadow: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 1px 2px -1px hsl(0 0% 0% / 0.16);
-  --shadow-md: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 2px 4px -1px hsl(0 0% 0% / 0.16);
-  --shadow-lg: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 4px 6px -1px hsl(0 0% 0% / 0.16);
-  --shadow-xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 8px 10px -1px hsl(0 0% 0% / 0.16);
-  --shadow-2xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.40);
-  --tracking-normal: -0.025em;
-  --spacing: 0.27rem;
+  /* ── Backgrounds ── */
+  --background: #FAFAFA;
+  /* page background, light warm gray */
+  --card: #FFFFFF;
+  /* cards, panels, modals, nav backdrop */
+  --card-foreground: #0A0A0A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A0A0A;
+
+  /* ── Text ── */
+  --foreground: #0A0A0A;
+  /* text primary — near-black */
+  --muted-foreground: #6B6B6B;
+  /* text secondary — descriptions, metadata */
+
+  /* ── Primary — Indigo ── */
+  --primary: #6366F1;
+  /* CTAs, active states, links, focus rings */
+  --primary-foreground: #FFFFFF;
+
+  /* ── Secondary — neutral surface ── */
+  --secondary: #F4F4F5;
+  --secondary-foreground: #0A0A0A;
+
+  /* ── Muted ── */
+  --muted: #F4F4F5;
+
+  /* ── Accent — light indigo tint for hover backgrounds ── */
+  --accent: #EEF2FF;
+  /* indigo-50 equivalent */
+  --accent-foreground: #6366F1;
+
+  /* ── Destructive — Error ── */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* ── Border & Input ── */
+  --border: #E8E8EC;
+  /* card borders, dividers, input borders */
+  --input: #D1D1D6;
+  /* input background */
+
+  /* ── Ring — indigo focus ── */
+  --ring: #6366F1;
+
+  /* ── Charts ── */
+  --chart-1: #10B981;
+  /* success green */
+  --chart-2: #6366F1;
+  /* indigo */
+  --chart-3: #F59E0B;
+  /* warning amber */
+  --chart-4: #6366F1;
+  --chart-5: #9C9C9C;
+  /* neutral */
+
+  /* ── Sidebar ── */
+  --sidebar: #FAFAFA;
+  --sidebar-foreground: #0A0A0A;
+  --sidebar-primary: #6366F1;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEF2FF;
+  --sidebar-accent-foreground: #6366F1;
+  --sidebar-border: #E8E8EC;
+  --sidebar-ring: #6366F1;
+
+  /* ── Fonts ── */
+  --font-display: 'General Sans', sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Radius — base = 6px ── */
+  --radius: 6px;
+
+  /* ── Tracking ── */
+  --tracking-normal: 0em;
+
+  /* ── Spacing — 4px base unit ── */
+  --spacing: 0.25rem;
+
+  /* ── Shadows — Genesis: minimal, only on interaction ──
+     Static elements:   no shadow
+     Card hover:        --shadow-lg
+     Primary btn hover: --shadow-xl  (indigo glow)
+  ────────────────────────────────────────────────────── */
+  --shadow-2xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.04);
+  --shadow-xs: 0px 1px 3px 0px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0px 2px 4px 0px rgba(0, 0, 0, 0.06),
+    0px 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.08),
+    0px 1px 3px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0px 4px 10px 0px rgba(0, 0, 0, 0.08),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0px 8px 30px 0px rgba(0, 0, 0, 0.08),
+    0px 4px 6px -1px rgba(0, 0, 0, 0.05);
+  /* card hover */
+  --shadow-xl: 0px 4px 12px 0px rgba(99, 102, 241, 0.35);
+  /* primary btn glow */
+  --shadow-2xl: 0px 8px 30px 0px rgba(0, 0, 0, 0.12);
 }
 
+
+/* ============================================================
+   DARK MODE
+   ============================================================ */
 .dark {
-  --background: oklch(0.2223 0.0060 271.1393);
-  --foreground: oklch(0.9551 0 0);
-  --card: oklch(0.2568 0.0076 274.6528);
-  --card-foreground: oklch(0.9551 0 0);
-  --popover: oklch(0.2568 0.0076 274.6528);
-  --popover-foreground: oklch(0.9551 0 0);
-  --primary: oklch(0.6132 0.2294 291.7437);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.2940 0.0130 272.9312);
-  --secondary-foreground: oklch(0.9551 0 0);
-  --muted: oklch(0.2940 0.0130 272.9312);
-  --muted-foreground: oklch(0.7058 0 0);
-  --accent: oklch(0.2795 0.0368 260.0310);
-  --accent-foreground: oklch(0.7857 0.1153 246.6596);
-  --destructive: oklch(0.7106 0.1661 22.2162);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.3289 0.0092 268.3843);
-  --input: oklch(0.3289 0.0092 268.3843);
-  --ring: oklch(0.6132 0.2294 291.7437);
-  --chart-1: oklch(0.8003 0.1821 151.7110);
-  --chart-2: oklch(0.6132 0.2294 291.7437);
-  --chart-3: oklch(0.8077 0.1035 19.5706);
-  --chart-4: oklch(0.6691 0.1569 260.1063);
-  --chart-5: oklch(0.7058 0 0);
-  --sidebar: oklch(0.2011 0.0039 286.0396);
-  --sidebar-foreground: oklch(0.9551 0 0);
-  --sidebar-primary: oklch(0.6132 0.2294 291.7437);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
-  --sidebar-accent: oklch(0.2940 0.0130 272.9312);
-  --sidebar-accent-foreground: oklch(0.6132 0.2294 291.7437);
-  --sidebar-border: oklch(0.3289 0.0092 268.3843);
-  --sidebar-ring: oklch(0.6132 0.2294 291.7437);
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-serif: Lora, serif;
-  --font-mono: IBM Plex Mono, monospace;
-  --radius: 1.4rem;
-  --shadow-x: 0px;
-  --shadow-y: 2px;
-  --shadow-blur: 3px;
-  --shadow-spread: 0px;
-  --shadow-opacity: 0.16;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-2xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
-  --shadow-xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
-  --shadow-sm: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 1px 2px -1px hsl(0 0% 0% / 0.16);
-  --shadow: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 1px 2px -1px hsl(0 0% 0% / 0.16);
-  --shadow-md: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 2px 4px -1px hsl(0 0% 0% / 0.16);
-  --shadow-lg: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 4px 6px -1px hsl(0 0% 0% / 0.16);
-  --shadow-xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.16), 0px 8px 10px -1px hsl(0 0% 0% / 0.16);
-  --shadow-2xl: 0px 2px 3px 0px hsl(0 0% 0% / 0.40);
+  --background: #16181F;
+  /* deep navy-dark */
+  --card: #1E2028;
+  /* slightly lighter surface */
+  --card-foreground: #F0F0F5;
+  --popover: #1E2028;
+  --popover-foreground: #F0F0F5;
+
+  --foreground: #F0F0F5;
+  /* near-white text */
+  --muted-foreground: #9C9C9C;
+  /* neutral — same as Genesis neutral */
+
+  --primary: #818CF8;
+  /* lighter indigo for dark bg */
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #2A2D3A;
+  --secondary-foreground: #F0F0F5;
+
+  --muted: #2A2D3A;
+
+  --accent: #2A2D3A;
+  --accent-foreground: #818CF8;
+
+  --destructive: #F87171;
+  /* lighter red on dark */
+  --destructive-foreground: #FFFFFF;
+
+  --border: #2E3140;
+  --input: #2A2D3A;
+
+  --ring: #818CF8;
+
+  --chart-1: #34D399;
+  /* lighter green on dark */
+  --chart-2: #818CF8;
+  --chart-3: #FCD34D;
+  /* lighter amber on dark */
+  --chart-4: #60A5FA;
+  --chart-5: #9C9C9C;
+
+  --sidebar: #13151B;
+  --sidebar-foreground: #F0F0F5;
+  --sidebar-primary: #818CF8;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #2A2D3A;
+  --sidebar-accent-foreground: #818CF8;
+  --sidebar-border: #2E3140;
+  --sidebar-ring: #818CF8;
+
+  /* Darker shadows for dark mode */
+  --shadow-2xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.12);
+  --shadow-xs: 0px 1px 3px 0px rgba(0, 0, 0, 0.16);
+  --shadow-sm: 0px 2px 4px 0px rgba(0, 0, 0, 0.20),
+    0px 1px 2px -1px rgba(0, 0, 0, 0.20);
+  --shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.24),
+    0px 1px 3px -1px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0px 4px 10px 0px rgba(0, 0, 0, 0.24),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0px 8px 30px 0px rgba(0, 0, 0, 0.32),
+    0px 4px 6px -1px rgba(0, 0, 0, 0.20);
+  --shadow-xl: 0px 4px 12px 0px rgba(129, 140, 248, 0.45);
+  --shadow-2xl: 0px 8px 30px 0px rgba(0, 0, 0, 0.40);
 }
 
 
-
-
-
-
+/* ============================================================
+   BASE LAYER — Genesis typography & global rules
+   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* General Sans for all headings — Genesis tight tracking */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  /* Genesis type scale */
+  h1 {
+    font-size: 2rem;
+  }
+
+  /* 32px section heading */
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  /* 24px subhead */
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  /* 20px */
+  h4 {
+    font-size: 1rem;
+  }
+
+  /* 16px */
+
+  /* Mono — code, CLI, API keys */
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  /* Genesis utility classes */
+  small {
+    font-size: 13px;
+  }
+
+  .text-caption {
+    font-size: 12px;
+  }
+
+  .text-overline {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+
+  /* Links */
+  a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #4F46E5;
+    /* primary hover */
+  }
+
+  /* Genesis focus ring — 3px indigo rgba, no default outline */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
   }
 }
 
 
 
-
-/* ! ============================================================
-   react-calendar-timeline — Dark Mode Overrides
-   Add this block to your index.css (after the @layer base block)
-   Using html.dark prefix for maximum specificity to beat the
-   library's own stylesheet regardless of bundle injection order.
-   ============================================================ */
-
-/* ── Canvas background ──────────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-outer,
-html.dark .react-calendar-timeline .rct-scroll,
-html.dark .react-calendar-timeline .rct-canvas {
-  background-color: #1a1a2e !important;
-}
-
-/* ── Sidebar ────────────────────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-sidebar {
-  background-color: #1a1a2e !important;
-  border-right: 1px solid #2d2d44 !important;
-}
-
-html.dark .react-calendar-timeline .rct-sidebar .rct-sidebar-row {
-  border-bottom: 1px solid #2d2d44 !important;
-  color: #e2e8f0 !important;
-  background-color: #1a1a2e !important;
-}
-
-html.dark .react-calendar-timeline .rct-sidebar .rct-sidebar-row.rct-sidebar-row-odd {
-  background-color: #20203a !important;
-}
-
-html.dark .react-calendar-timeline .rct-sidebar .rct-sidebar-row.rct-sidebar-row-even {
-  background-color: #1a1a2e !important;
-}
-
-/* ── Sticky header root ─────────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-header-root {
-  background: #12121e !important;
-  border-bottom: 1px solid #2d2d44 !important;
-}
-
-/* ── Date header cells (day row) ────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-dateHeader {
-  background-color: rgba(117, 8, 17, 0.5) !important;
-  color: #fca5a5 !important;
-  border-left: 1px solid #2d2d44 !important;
-  border-bottom: 1px solid #2d2d44 !important;
-}
-
-/* ── Primary header (month/year row) ────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-dateHeader-primary {
-  background-color: #2a0a0a !important;
-  color: #fca5a5 !important;
-  border-bottom: 1px solid #5c2020 !important;
-}
-
-/* ── Horizontal row lines ───────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-horizontal-lines .rct-hl-odd {
-  background-color: #20203a !important;
-  border-bottom: 1px solid #2d2d44 !important;
-}
-
-html.dark .react-calendar-timeline .rct-horizontal-lines .rct-hl-even {
-  background-color: #1a1a2e !important;
-  border-bottom: 1px solid #2d2d44 !important;
-}
-
-/* ── Vertical grid lines ────────────────────────────────────────────────── */
-/* html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl {
-  border-left: 1px solid #2d2d44 !important;
-} */
- html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl {
-  border-left: 1px solid #44446a !important;
-}
-
-/* ── Weekend columns ────────────────────────────────────────────────────── */
-/* html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-6,
-html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-0 {
-  background-color: rgba(220, 38, 38, 0.08) !important;
-} */
-html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-6,
-html.dark .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-0 {
-  background-color: rgba(220, 38, 38, 0.16) !important;
-}
-
-/* ── Holiday columns (custom class you add via verticalLineClassNamesForTime) */
-html.dark .rct-vl.holiday {
-  background-color: rgba(220, 38, 38, 0.22) !important;
-}
-
-/* ── Timeline items ─────────────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-items .rct-item {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6) !important;
-}
-
-html.dark .react-calendar-timeline .rct-items .rct-item:hover {
-  filter: brightness(1.18) !important;
-}
-
-html.dark .react-calendar-timeline .rct-items .rct-item.selected {
-  outline: 2px solid #a78bfa !important;
-  outline-offset: 1px !important;
-}
-
-/* ── Item resize handles ────────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-item .rct-item-handler-right,
-html.dark .react-calendar-timeline .rct-item .rct-item-handler-left {
-  background-color: rgba(255, 255, 255, 0.3) !important;
-}
-
-/* ── Scrollbar (WebKit) ─────────────────────────────────────────────────── */
-html.dark .react-calendar-timeline .rct-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-html.dark .react-calendar-timeline .rct-scroll::-webkit-scrollbar-track {
-  background: #1a1a2e;
-}
-
-html.dark .react-calendar-timeline .rct-scroll::-webkit-scrollbar-thumb {
-  background: #3a3a5c;
-  border-radius: 3px;
-}
