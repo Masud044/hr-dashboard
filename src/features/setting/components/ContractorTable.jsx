@@ -9,11 +9,12 @@ import {
 } from "@tanstack/react-table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon, Search } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -45,10 +46,37 @@ import { CreateContractorSheet } from "../pages/CreateContractorSheet";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
+const getInitials = (name) => {
+  if (!name) return "?";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+};
+
+
+// Random pastel colors for avatars (based on name hash)
+const getAvatarColor = (name) => {
+  if (!name) return "bg-muted";
+  const colors = [
+    "bg-indigo-500 text-white",
+    "bg-green-500 text-white",
+    "bg-orange-500 text-white",
+    "bg-purple-500 text-white",
+    "bg-blue-500 text-white",
+    "bg-pink-500 text-white",
+    "bg-teal-500 text-white",
+    "bg-red-500 text-white",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export function ContractorTable() {
   const queryClient = useQueryClient();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [sorting, setSorting]                       = useState([]);
   const [columnFilters, setColumnFilters]           = useState([]);
   const [columnVisibility, setColumnVisibility]     = useState({});
@@ -59,11 +87,9 @@ export function ContractorTable() {
   const [deleteDialogOpen, setDeleteDialogOpen]     = useState(false);
   const [deleteTargetId, setDeleteTargetId]         = useState(null);
 
-  // ── Fetch all contractors ─────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
     queryKey: ["contrators"],
     queryFn: async () => {
-      // New endpoint: GET /api/contractors
       const res = await axios.get(`${url}/api/contractor`);
       return res.data?.data || [];
     },
@@ -71,10 +97,8 @@ export function ContractorTable() {
 
   const apiData = data || [];
 
-  // ── Delete mutation ───────────────────────────────────────────────────────
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      // New endpoint: DELETE /api/contractors/:id
       return axios.delete(`${url}/api/contractor/${id}`);
     },
     onSuccess: () => {
@@ -89,7 +113,6 @@ export function ContractorTable() {
     },
   });
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleEdit = (contractorId) => {
     setSelectedContractorId(contractorId);
     setEditSheetOpen(true);
@@ -108,7 +131,6 @@ export function ContractorTable() {
     setDeleteTargetId(null);
   };
 
-  // ── Columns ───────────────────────────────────────────────────────────────
   const columns = [
     {
       id: "select",
@@ -120,6 +142,7 @@ export function ContractorTable() {
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
+          className="border-border"
         />
       ),
       cell: ({ row }) => (
@@ -127,118 +150,145 @@ export function ContractorTable() {
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
+          className="border-border"
         />
       ),
       enableSorting: false,
       enableHiding: false,
     },
-    {
-      accessorKey: "CONTRATOR_NAME",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          CONTRACTOR NAME <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="ml-3 font-medium">{row.getValue("CONTRATOR_NAME")}</div>
-      ),
-    },
+   {
+  accessorKey: "CONTRATOR_NAME",
+  header: ({ column }) => (
+    <button
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
+    >
+      Contractor Name
+      <ArrowUpDown className="h-3 w-3" />
+    </button>
+  ),
+  cell: ({ row }) => {
+    const name = row.getValue("CONTRATOR_NAME") || "—";
+    const parts = name.trim().split(" ");
+    const firstName = parts[0] || "";
+    const lastName = parts.slice(1).join(" ") || "";
+
+    return (
+      <div className="flex items-center gap-3">
+        <Avatar className="h-8 w-8 rounded-full border border-border">
+          <AvatarFallback className={`text-xs font-bold ${getAvatarColor(name)}`}>
+            {getInitials(name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex flex-col leading-tight">
+          <span className="font-medium text-foreground text-sm">{firstName}</span>
+          {lastName && <span className="font-medium text-foreground text-sm">{lastName}</span>}
+        </div>
+      </div>
+    );
+  },
+},
     {
       accessorKey: "ENTRY_DATE",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
-          ENTRY DATE <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
+          Entry Date
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 text-sm text-muted-foreground">
-          {row.getValue("ENTRY_DATE")}
+        <div className="text-sm text-muted-foreground">
+          {row.getValue("ENTRY_DATE") || "—"}
         </div>
       ),
     },
     {
       accessorKey: "EMAIL",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
-          EMAIL <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
+          Email
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 text-sm">{row.getValue("EMAIL")}</div>
+        <div className="text-sm text-foreground">
+          {row.getValue("EMAIL") || "—"}
+        </div>
       ),
     },
     {
       accessorKey: "ADDRESS",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
-          ADDRESS <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
+          Address
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 text-sm max-w-[200px] truncate">
-          {row.getValue("ADDRESS")}
+        <div className="text-sm text-foreground max-w-[200px] truncate">
+          {row.getValue("ADDRESS") || "—"}
         </div>
       ),
     },
     {
       accessorKey: "MOBILE",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
+        <button
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
         >
-          MOBILE <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
+          Mobile
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3 text-sm">{row.getValue("MOBILE")}</div>
+        <div className="text-sm text-foreground">
+          {row.getValue("MOBILE") || "—"}
+        </div>
       ),
     },
     {
       id: "actions",
       enableHiding: false,
-      header: () => <div className="text-center">Actions</div>,
+      header: () => (
+        <div className="text-overline text-muted-foreground text-center">
+          Actions
+        </div>
+      ),
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <div className="flex items-center gap-2 justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
+          <div className="flex items-center gap-1 justify-center">
+            <button
               onClick={() => handleEdit(item.CONTRATOR_ID)}
               title="Edit"
+              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
             >
               <Pencil size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive/80"
+            </button>
+            <button
               onClick={() => handleDeleteClick(item.CONTRATOR_ID)}
               title="Delete"
+              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
               disabled={deleteMutation.isPending}
             >
               <Trash2 size={16} />
-            </Button>
+            </button>
           </div>
         );
       },
     },
   ];
 
-  // ── Table instance ────────────────────────────────────────────────────────
   const table = useReactTable({
     data: apiData,
     columns,
@@ -255,55 +305,72 @@ export function ContractorTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-card">
-        {/* ── Toolbar ────────────────────────────────────────────────────── */}
-        <div className="flex items-center py-4 px-4 gap-2">
-          <Input
-            placeholder="Filter contractors..."
-            value={table.getColumn("CONTRATOR_NAME")?.getFilterValue() ?? ""}
-            onChange={(e) =>
-              table.getColumn("CONTRATOR_NAME")?.setFilterValue(e.target.value)
-            }
-            className="max-w-sm"
-          />
+      <div className="mt-6">
+        {/* ── Toolbar ──────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Filter contractors..."
+              value={table.getColumn("CONTRATOR_NAME")?.getFilterValue() ?? ""}
+              onChange={(e) =>
+                table.getColumn("CONTRATOR_NAME")?.setFilterValue(e.target.value)
+              }
+              className="pl-9 h-10 rounded-md border-border bg-card text-sm"
+            />
+          </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown className="ml-1 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((col) => col.getCanHide())
-                .map((col) => (
-                  <DropdownMenuCheckboxItem
-                    key={col.id}
-                    className="capitalize"
-                    checked={col.getIsVisible()}
-                    onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                  >
-                    {col.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-10 rounded-md border-border gap-2">
+                  <div className="w-4 h-4 flex items-center justify-center">
+                    <div className="grid grid-cols-2 gap-0.5">
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                    </div>
+                  </div>
+                  Columns
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 bg-card border-border">
+                {table
+                  .getAllColumns()
+                  .filter((col) => col.getCanHide())
+                  .map((col) => (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      className="capitalize text-sm"
+                      checked={col.getIsVisible()}
+                      onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                    >
+                      {col.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <Button onClick={() => setCreateSheetOpen(true)}>
-            <PlusIcon size={16} className="mr-1" />
-            Add New Contractor
-          </Button>
+            <Button 
+              onClick={() => setCreateSheetOpen(true)}
+              className="h-10 rounded-md gap-2"
+            >
+              <PlusIcon size={16} />
+              Add New Contractor
+            </Button>
+          </div>
         </div>
 
-        {/* ── Table ──────────────────────────────────────────────────────── */}
-        <div className="overflow-hidden rounded-md border">
+        {/* ── Table Card ───────────────────────────────────────────────── */}
+        <div className="rounded-lg border border-border overflow-hidden bg-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((group) => (
-                <TableRow key={group.id}>
+                <TableRow key={group.id} className="border-b border-border bg-muted/20">
                   {group.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="px-4 py-3 font-medium">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -319,7 +386,7 @@ export function ContractorTable() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
                     Loading...
                   </TableCell>
                 </TableRow>
@@ -330,9 +397,10 @@ export function ContractorTable() {
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    className="border-b border-border hover:bg-muted/30 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="px-4 py-3 align-middle">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -341,7 +409,7 @@ export function ContractorTable() {
 
               {!isLoading && table.getRowModel().rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
                     No contractors found.
                   </TableCell>
                 </TableRow>
@@ -350,10 +418,11 @@ export function ContractorTable() {
           </Table>
         </div>
 
-        <DataTablePagination table={table} />
+        <div className="border-t border-border">
+          <DataTablePagination table={table} />
+        </div>
       </div>
 
-      {/* ── Sheets ─────────────────────────────────────────────────────────── */}
       <CreateContractorSheet
         isOpen={createSheetOpen}
         onClose={() => setCreateSheetOpen(false)}
@@ -368,18 +437,17 @@ export function ContractorTable() {
         contractorId={selectedContractorId}
       />
 
-      {/* ── Delete Confirm Dialog ──────────────────────────────────────────── */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border rounded-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Contractor?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-foreground">Delete Contractor?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               This will permanently delete the contractor and all associated
               contractor types. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteTargetId(null)}>
+            <AlertDialogCancel onClick={() => setDeleteTargetId(null)} className="border-border">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

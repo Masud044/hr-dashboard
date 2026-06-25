@@ -144,43 +144,59 @@ const DashboardTimelineTwo = () => {
   const navigate = useNavigate();
   const { H_ID } = useParams();
 
-  const [groups, setGroups]                         = useState([]);
-  const [allGroups, setAllGroups]                   = useState([]);
-  const [items, setItems]                           = useState([]);
-  const [allItems, setAllItems]                     = useState([]);
-  const [selectedItems, setSelectedItems]           = useState([]);
-  const [holidayDates, setHolidayDates]             = useState(new Set());
+  const [groups, setGroups] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+  const [items, setItems] = useState([]);
+  const [allItems, setAllItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [holidayDates, setHolidayDates] = useState(new Set());
   const [selectedContractor, setSelectedContractor] = useState("all");
-  const [projectName, setProjectName]               = useState("");
-  const [projectStartPlan, setProjectStartPlan]     = useState(null);
-  const [projectEndPlan, setProjectEndPlan]         = useState(null);
-  const [pId, setPId]                               = useState(null);
+  const [projectName, setProjectName] = useState("");
+  const [projectStartPlan, setProjectStartPlan] = useState(null);
+  const [projectEndPlan, setProjectEndPlan] = useState(null);
+  const [pId, setPId] = useState(null);
 
-
-  const [notesInitialMode, setNotesInitialMode]     = useState("list"); // "list" | "add"
-  const [notesOpen, setNotesOpen]               = useState(false);
+  const [notesInitialMode, setNotesInitialMode] = useState("list"); // "list" | "add"
+  const [notesOpen, setNotesOpen] = useState(false);
   const [notesDefaultCtId, setNotesDefaultCtId] = useState(null);
 
   const [splitConfirm, setSplitConfirm] = useState(null);
 
   const [visibleTimeStart, setVisibleTimeStart] = useState(null);
-  const [visibleTimeEnd, setVisibleTimeEnd]     = useState(null);
+  const [visibleTimeEnd, setVisibleTimeEnd] = useState(null);
 
-  const minTimeRef     = useRef(null);
-  const maxTimeRef     = useRef(null);
-  const colorMap       = useRef({});
+  const minTimeRef = useRef(null);
+  const maxTimeRef = useRef(null);
+  const colorMap = useRef({});
   const lastUpdatedRef = useRef(null);
 
   const distinctColors = [
-    "#001BB7", "#4FB7B3", "#4DFFBE", "#78C841", "#A3B087",
-    "#FCB53B", "#F5DEA3", "#7B542F", "#FF8040", "#E49BA6",
-    "#DC0E0E", "#850E35", "#E83C91", "#9112BC", "#3C467B",
-    "#000000", "#71C0BB", "#7C4585", "#174143", "#FFC400", "#FF0060",
+    "#001BB7",
+    "#4FB7B3",
+    "#4DFFBE",
+    "#78C841",
+    "#A3B087",
+    "#FCB53B",
+    "#F5DEA3",
+    "#7B542F",
+    "#FF8040",
+    "#E49BA6",
+    "#DC0E0E",
+    "#850E35",
+    "#E83C91",
+    "#9112BC",
+    "#3C467B",
+    "#000000",
+    "#71C0BB",
+    "#7C4585",
+    "#174143",
+    "#FFC400",
+    "#FF0060",
   ];
 
   const openNotes = (contractorTypeId = null, initialMode = "list") => {
     setNotesDefaultCtId(contractorTypeId);
-     setNotesInitialMode(initialMode);
+    setNotesInitialMode(initialMode);
     setNotesOpen(true);
   };
 
@@ -191,10 +207,11 @@ const DashboardTimelineTwo = () => {
         const res = await axios.get(`${url}/api/calendar`);
         if (res.data.success && Array.isArray(res.data.data)) {
           const holidayRecords = res.data.data.filter(
-            (r) => r.WORKING_STATUS === "WEEKEND" || r.WORKING_STATUS === "HOLIDAY"
+            (r) =>
+              r.WORKING_STATUS === "WEEKEND" || r.WORKING_STATUS === "HOLIDAY",
           );
           const holidayDateSet = new Set(
-            holidayRecords.map((r) => moment.utc(r.DAY).format("YYYY-MM-DD"))
+            holidayRecords.map((r) => moment.utc(r.DAY).format("YYYY-MM-DD")),
           );
           setHolidayDates(holidayDateSet);
         }
@@ -215,7 +232,8 @@ const DashboardTimelineTwo = () => {
           const formatted = res.data.data.map((c, index) => {
             const id = Number(c.ID);
             if (!colorMap.current[id]) {
-              colorMap.current[id] = distinctColors[index % distinctColors.length];
+              colorMap.current[id] =
+                distinctColors[index % distinctColors.length];
             }
             return { id, title: c.NAME };
           });
@@ -237,7 +255,7 @@ const DashboardTimelineTwo = () => {
 
       if (res.data.success && Array.isArray(res.data.data)) {
         const filtered = res.data.data.filter(
-          (i) => Number(i.H_ID) === Number(H_ID)
+          (i) => Number(i.H_ID) === Number(H_ID),
         );
 
         const formattedItems = filtered
@@ -247,20 +265,20 @@ const DashboardTimelineTwo = () => {
             const color = colorMap.current[contractorId] || "#999";
 
             return {
-              id:             Number(i.L_ID),
-              group:          contractorId,
+              id: Number(i.L_ID),
+              group: contractorId,
               contractorName: i.CONTRATOR_NAME || "",
-              start_time:     moment(i.SCHEDULE_START_DATE).valueOf(),
-              end_time:       moment(i.SCHEDULE_END_DATE).endOf("day").valueOf(),
-              canMove:        true,
-              canResize:      "both",
+              start_time: moment(i.SCHEDULE_START_DATE).valueOf(),
+              end_time: moment(i.SCHEDULE_END_DATE).endOf("day").valueOf(),
+              canMove: true,
+              canResize: "both",
               canChangeGroup: true,
               itemProps: {
                 style: {
-                  background:   color,
-                  color:        "white",
+                  background: color,
+                  color: "white",
                   borderRadius: "4px",
-                  border:       "none",
+                  border: "none",
                 },
               },
             };
@@ -268,9 +286,9 @@ const DashboardTimelineTwo = () => {
 
         if (formattedItems.length > 0) {
           const startDates = formattedItems.map((i) => i.start_time);
-          const endDates   = formattedItems.map((i) => i.end_time);
-          const earliest   = moment(Math.min(...startDates)).startOf("day");
-          const latest     = moment(Math.max(...endDates)).endOf("day");
+          const endDates = formattedItems.map((i) => i.end_time);
+          const earliest = moment(Math.min(...startDates)).startOf("day");
+          const latest = moment(Math.max(...endDates)).endOf("day");
 
           minTimeRef.current = earliest.valueOf();
 
@@ -303,9 +321,7 @@ const DashboardTimelineTwo = () => {
         schedules = res.data;
       }
 
-      const schedule = schedules.find(
-        (s) => Number(s.H_ID) === Number(H_ID)
-      );
+      const schedule = schedules.find((s) => Number(s.H_ID) === Number(H_ID));
       if (schedule) {
         setProjectName(schedule.P_NAME);
         setPId(schedule.P_ID ?? null);
@@ -313,16 +329,18 @@ const DashboardTimelineTwo = () => {
         setProjectStartPlan(
           schedule.PROJECT_START_PLAN
             ? moment(schedule.PROJECT_START_PLAN).format("DD MMM YYYY")
-            : null
+            : null,
         );
         setProjectEndPlan(
           schedule.PROJECT_END_PLAN
             ? moment(schedule.PROJECT_END_PLAN).format("DD MMM YYYY")
-            : null
+            : null,
         );
 
         if (schedule.PROJECT_END_PLAN) {
-          maxTimeRef.current = moment(schedule.PROJECT_END_PLAN).endOf("day").valueOf();
+          maxTimeRef.current = moment(schedule.PROJECT_END_PLAN)
+            .endOf("day")
+            .valueOf();
         } else {
           maxTimeRef.current = null;
         }
@@ -343,18 +361,20 @@ const DashboardTimelineTwo = () => {
     lastUpdatedRef.current = key;
     try {
       await axios.put(`${url}/api/gantt`, {
-        L_ID:                item.id,
-        C_P_ID:              item.group,
+        L_ID: item.id,
+        C_P_ID: item.group,
         SCHEDULE_START_DATE: moment(item.start_time).format("YYYY-MM-DD"),
-        SCHEDULE_END_DATE:   moment(item.end_time).format("YYYY-MM-DD"),
-        DESCRIPTION:         item.title,
+        SCHEDULE_END_DATE: moment(item.end_time).format("YYYY-MM-DD"),
+        DESCRIPTION: item.title,
       });
       toast.success("Task updated successfully");
     } catch (err) {
       toast.error("Failed to update task");
       console.error("Failed to update item:", err);
     } finally {
-      setTimeout(() => { lastUpdatedRef.current = null; }, 500);
+      setTimeout(() => {
+        lastUpdatedRef.current = null;
+      }, 500);
     }
   };
 
@@ -384,7 +404,7 @@ const DashboardTimelineTwo = () => {
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
 
-    const splitDate       = moment(time).startOf("day");
+    const splitDate = moment(time).startOf("day");
     const contractorColor = colorMap.current[item.group];
 
     const firstHalf = {
@@ -397,35 +417,43 @@ const DashboardTimelineTwo = () => {
 
     const secondHalf = {
       ...item,
-      id:         Date.now(),
+      id: Date.now(),
       start_time: splitDate.clone().add(1, "day").startOf("day").valueOf(),
-      end_time:   item.end_time,
+      end_time: item.end_time,
       itemProps: {
         style: { ...item.itemProps.style, background: contractorColor },
       },
     };
 
-    setItems((prev) => [...prev.filter((i) => i.id !== itemId), firstHalf, secondHalf]);
-    setAllItems((prev) => [...prev.filter((i) => i.id !== itemId), firstHalf, secondHalf]);
+    setItems((prev) => [
+      ...prev.filter((i) => i.id !== itemId),
+      firstHalf,
+      secondHalf,
+    ]);
+    setAllItems((prev) => [
+      ...prev.filter((i) => i.id !== itemId),
+      firstHalf,
+      secondHalf,
+    ]);
 
     toast.info("Splitting and saving...");
 
     try {
       await axios.put(`${url}/api/gantt`, {
-        L_ID:                item.id,
-        C_P_ID:              firstHalf.group,
+        L_ID: item.id,
+        C_P_ID: firstHalf.group,
         SCHEDULE_START_DATE: moment(firstHalf.start_time).format("YYYY-MM-DD"),
-        SCHEDULE_END_DATE:   moment(firstHalf.end_time).format("YYYY-MM-DD"),
-        DESCRIPTION:         item.title || "Split Task (Part 1)",
+        SCHEDULE_END_DATE: moment(firstHalf.end_time).format("YYYY-MM-DD"),
+        DESCRIPTION: item.title || "Split Task (Part 1)",
       });
 
       const res = await axios.post(`${url}/api/gantt`, {
-        C_P_ID:              secondHalf.group,
+        C_P_ID: secondHalf.group,
         SCHEDULE_START_DATE: moment(secondHalf.start_time).format("YYYY-MM-DD"),
-        SCHEDULE_END_DATE:   moment(secondHalf.end_time).format("YYYY-MM-DD"),
-        DESCRIPTION:         item.title || "Split Task (Part 2)",
-        CREATION_BY:         1,
-        H_ID:                H_ID,
+        SCHEDULE_END_DATE: moment(secondHalf.end_time).format("YYYY-MM-DD"),
+        DESCRIPTION: item.title || "Split Task (Part 2)",
+        CREATION_BY: 1,
+        H_ID: H_ID,
       });
 
       if (res.data.success) {
@@ -459,8 +487,8 @@ const DashboardTimelineTwo = () => {
 
   const handleItemResize = (itemId, time, edge) => {
     setItems((prev) => {
-      const i       = prev.findIndex((item) => item.id === itemId);
-      const item    = prev[i];
+      const i = prev.findIndex((item) => item.id === itemId);
+      const item = prev[i];
       const updated = [...prev];
       const newItem = {
         ...item,
@@ -472,25 +500,25 @@ const DashboardTimelineTwo = () => {
     });
   };
 
-  const handleItemSelect   = (id) => setSelectedItems([id]);
-  const handleItemDeselect = ()   => setSelectedItems([]);
+  const handleItemSelect = (id) => setSelectedItems([id]);
+  const handleItemDeselect = () => setSelectedItems([]);
 
   // ── onTimeChange ─────────────────────────────────────────────────────────
   const handleTimeChange = (start, end, updateScrollCanvas) => {
-    const minTime  = minTimeRef.current;
-    const maxTime  = maxTimeRef.current;
+    const minTime = minTimeRef.current;
+    const maxTime = maxTimeRef.current;
     const duration = end - start;
 
     let clampedStart = start;
-    let clampedEnd   = end;
+    let clampedEnd = end;
 
     if (minTime && clampedStart < minTime) {
       clampedStart = minTime;
-      clampedEnd   = clampedStart + duration;
+      clampedEnd = clampedStart + duration;
     }
 
     if (maxTime && clampedEnd > maxTime) {
-      clampedEnd   = maxTime;
+      clampedEnd = maxTime;
       clampedStart = clampedEnd - duration;
       if (minTime && clampedStart < minTime) {
         clampedStart = minTime;
@@ -534,7 +562,10 @@ const DashboardTimelineTwo = () => {
   // ── Group (contractor row) renderer — with note icon ─────────────────────
   const groupRenderer = ({ group }) => (
     <div className="flex items-center justify-between pr-2 w-full h-full">
-      <span style={{ fontSize: "10px", fontWeight: 600 }} className="truncate flex-1">
+      <span
+        style={{ fontSize: "10px", fontWeight: 600 }}
+        className="truncate flex-1"
+      >
         {group.title}
       </span>
       <button
@@ -545,8 +576,18 @@ const DashboardTimelineTwo = () => {
         title={`Notes for ${group.title}`}
         className="flex-shrink-0 ml-1 p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
       >
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          className="w-3 h-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
       </button>
     </div>
@@ -560,105 +601,111 @@ const DashboardTimelineTwo = () => {
       <style>{TIMELINE_DARK_STYLES}</style>
 
       <SectionContainer>
-        {/* ── Filter Bar ──────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 dark:border-gray-700 bg-background  px-6 py-4 shadow-sm">
-          {/* Left Side */}
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-gray-700">
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                Dashboard Timeline
-              </h1>
-            </div>
+        {/* ── Filter Bar ── */}
+<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border bg-card px-6 py-3">
 
-            {/* Project Name */}
-            <div className="pt-1 sm:pt-0 sm:pl-4">
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Project:{" "}
-                  <span className="font-semibold text-gray-800 dark:text-gray-100">{projectName}</span>
-                </p>
+  {/* Left Side */}
+  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-0">
+
+    {/* Title */}
+    <h1 className="font-display text-base font-bold text-foreground tracking-tight pr-4">
+      Dashboard Timeline
+    </h1>
+
+    <div className="hidden sm:block w-px h-8 bg-border mx-3" />
+
+    {/* Project Name */}
+    <div className="sm:px-4 flex items-center gap-2">
+      <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+      <div className="flex flex-col">
+        <span className="text-xs text-muted-foreground leading-tight">Project:</span>
+        <span className="text-sm font-bold text-foreground leading-tight">{projectName}</span>
+      </div>
+    </div>
+
+    {/* Plan Dates */}
+    {(projectStartPlan || projectEndPlan) && (
+      <>
+        {projectStartPlan && (
+          <>
+            <div className="hidden sm:block w-px h-8 bg-border mx-3" />
+            <div className="sm:px-4 flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-blue-400 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground leading-tight">Project Start:</span>
+                <span className="text-sm font-bold text-foreground leading-tight">{projectStartPlan}</span>
               </div>
             </div>
-
-            {/* Plan Dates */}
-            {(projectStartPlan || projectEndPlan) && (
-              <div className="pt-1 sm:pt-0 sm:pl-4 flex items-center gap-3">
-                {projectStartPlan && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-block h-2 w-2 rounded-full bg-blue-400"></span>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Project Start:{" "}
-                      <span className="font-semibold text-gray-800 dark:text-gray-100">{projectStartPlan}</span>
-                    </p>
-                  </div>
-                )}
-                {projectStartPlan && projectEndPlan && (
-                  <span className="text-gray-300 dark:text-gray-600 text-sm">|</span>
-                )}
-                {projectEndPlan && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-block h-2 w-2 rounded-full bg-red-400"></span>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Project End:{" "}
-                      <span className="font-semibold text-gray-800 dark:text-gray-100">{projectEndPlan}</span>
-                    </p>
-                  </div>
-                )}
+          </>
+        )}
+        {projectEndPlan && (
+          <>
+            <div className="hidden sm:block w-px h-8 bg-border mx-3" />
+            <div className="sm:px-4 flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-red-400 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground leading-tight">Project End:</span>
+                <span className="text-sm font-bold text-foreground leading-tight">{projectEndPlan}</span>
               </div>
-            )}
-          </div>
-
-          {/* Right Side */}
-          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0">
-            <button
-              onClick={() => navigate("/dashboard/dashboard-schedule")}
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-600  px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-500 dark:text-gray-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-              </svg>
-              Back
-            </button>
-
-            {/* Notes Button (global) */}
-            <button
-              onClick={() => openNotes(null)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600"
-            >
-              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Notes
-            </button>
-
-             {/* ── Add Note Button (outside sheet, opens sheet in add mode) ── */}
-            <button
-              onClick={() => openNotes(null, "add")}
-              className="inline-flex items-center gap-1.5 rounded-lg border bg-gradient-to-r from-red-900 to-purple-700  px-3 py-1.5 text-sm font-medium text-white shadow-xs transition-all hover:bg-gray-50 active:bg-gray-100"
-            >
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Add Note
-            </button>
-
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedContractor}
-                onChange={(e) => setSelectedContractor(e.target.value)}
-                className="cursor-pointer rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-xs outline-none transition-all hover:border-gray-300 dark:hover:border-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900"
-              >
-                <option value="all">All Contractors</option>
-                {allGroups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.title}
-                  </option>
-                ))}
-              </select>
             </div>
-          </div>
-        </div>
+          </>
+        )}
+      </>
+    )}
+  </div>
+
+  {/* Right Side */}
+  <div className="flex items-center gap-2">
+
+    {/* All Contractors select */}
+    <select
+      value={selectedContractor}
+      onChange={(e) => setSelectedContractor(e.target.value)}
+      className="cursor-pointer rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground outline-none transition-colors hover:border-primary focus:border-primary focus:ring-[3px] focus:ring-primary/10"
+    >
+      <option value="all">All Contractors</option>
+      {allGroups.map((g) => (
+        <option key={g.id} value={g.id}>
+          {g.title}
+        </option>
+      ))}
+    </select>
+
+    {/* Back */}
+    <button
+      onClick={() => navigate("/dashboard/dashboard-schedule")}
+      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent hover:text-primary transition-colors"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+      Back
+    </button>
+
+    {/* Notes */}
+    <button
+      onClick={() => openNotes(null)}
+      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent hover:text-primary transition-colors"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Notes
+    </button>
+
+    {/* Add Note — primary */}
+    <button
+      onClick={() => openNotes(null, "add")}
+      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Note
+    </button>
+
+  </div>
+</div>
 
         {/* ── Timeline ────────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-hidden">
@@ -703,10 +750,10 @@ const DashboardTimelineTwo = () => {
                     unit="primaryHeader"
                     labelFormat="MMMM YYYY"
                     style={{
-                      background:   "#541212",
-                      color:        "#ffffff",
-                      fontWeight:   600,
-                      textAlign:    "center",
+                      background: "#541212",
+                      color: "#ffffff",
+                      fontWeight: 600,
+                      textAlign: "center",
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   />
@@ -715,13 +762,13 @@ const DashboardTimelineTwo = () => {
                     unit="day"
                     labelFormat="DD dd"
                     style={{
-                      background:  "#750811ff",
-                      color:       "#ffffff",
-                      textAlign:   "center",
-                      fontSize:    "11px",
-                      borderLeft:  "1px solid #e5e7eb",
+                      background: "#750811ff",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "11px",
+                      borderLeft: "1px solid #e5e7eb",
                       borderRight: "1px solid #e5e7eb",
-                      opacity:     0.9,
+                      opacity: 0.9,
                     }}
                   />
                 </TimelineHeaders>
@@ -729,12 +776,25 @@ const DashboardTimelineTwo = () => {
                 <TimelineMarkers>
                   <TodayMarker>
                     {({ styles }) => (
-                      <div style={{ ...styles, backgroundColor: "#ef4444", width: "3px" }} />
+                      <div
+                        style={{
+                          ...styles,
+                          backgroundColor: "#ef4444",
+                          width: "3px",
+                        }}
+                      />
                     )}
                   </TodayMarker>
                   <CursorMarker>
                     {({ styles }) => (
-                      <div style={{ ...styles, backgroundColor: "#3b82f6", width: "2px", opacity: 0.5 }} />
+                      <div
+                        style={{
+                          ...styles,
+                          backgroundColor: "#3b82f6",
+                          width: "2px",
+                          opacity: 0.5,
+                        }}
+                      />
                     )}
                   </CursorMarker>
                 </TimelineMarkers>
@@ -750,36 +810,123 @@ const DashboardTimelineTwo = () => {
         {/* ── Split Confirm Modal ──────────────────────────────────────────── */}
         {splitConfirm &&
           (() => {
-            const item       = items.find((i) => i.id === splitConfirm.itemId);
-            const splitDate  = moment(splitConfirm.time).startOf("day");
-            const part1Start = item ? moment(item.start_time).format("MMM D") : "";
-            const part1End   = splitDate.format("MMM D");
+            const item = items.find((i) => i.id === splitConfirm.itemId);
+            const splitDate = moment(splitConfirm.time).startOf("day");
+            const part1Start = item
+              ? moment(item.start_time).format("MMM D")
+              : "";
+            const part1End = splitDate.format("MMM D");
             const part2Start = splitDate.clone().add(1, "day").format("MMM D");
-            const part2End   = item ? moment(item.end_time).format("MMM D") : "";
+            const part2End = item ? moment(item.end_time).format("MMM D") : "";
 
             return (
               <div
-                style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 9999,
+                  background: "rgba(0,0,0,0.55)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onClick={() => setSplitConfirm(null)}
               >
                 <div
                   className="bg-white dark:bg-gray-800"
-                  style={{ borderRadius: 10, padding: "14px 16px", width: 280, boxShadow: "0 8px 32px rgba(0,0,0,0.28)" }}
+                  style={{
+                    borderRadius: 10,
+                    padding: "14px 16px",
+                    width: 280,
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <p className="text-gray-900 dark:text-gray-100" style={{ fontSize: 13, fontWeight: 750, margin: "0 0 10px" }}>
+                  <p
+                    className="text-gray-900 dark:text-gray-100"
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 750,
+                      margin: "0 0 10px",
+                    }}
+                  >
                     Split this task?
                   </p>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-                    <div className="dark:bg-red-950/40 dark:border-red-900/50" style={{ flex: 1, background: "#fdf2f2", border: "0.5px solid #f5c6c6", borderRadius: 6, padding: "7px 10px" }}>
-                      <div style={{ fontSize: 9, fontWeight: 600, color: "#750811", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>Part 1</div>
-                      <div className="text-gray-900 dark:text-gray-100" style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{part1Start} – {part1End}</div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      className="dark:bg-red-950/40 dark:border-red-900/50"
+                      style={{
+                        flex: 1,
+                        background: "#fdf2f2",
+                        border: "0.5px solid #f5c6c6",
+                        borderRadius: 6,
+                        padding: "7px 10px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 600,
+                          color: "#750811",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          marginBottom: 3,
+                        }}
+                      >
+                        Part 1
+                      </div>
+                      <div
+                        className="text-gray-900 dark:text-gray-100"
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {part1Start} – {part1End}
+                      </div>
                     </div>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>✂️</span>
-                    <div className="dark:bg-indigo-950/40 dark:border-indigo-900/50" style={{ flex: 1, background: "#f2f4fd", border: "0.5px solid #c6cef5", borderRadius: 6, padding: "7px 10px" }}>
-                      <div style={{ fontSize: 9, fontWeight: 600, color: "#3C467B", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>Part 2</div>
-                      <div className="text-gray-900 dark:text-gray-100" style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{part2Start} – {part2End}</div>
+                    <div
+                      className="dark:bg-indigo-950/40 dark:border-indigo-900/50"
+                      style={{
+                        flex: 1,
+                        background: "#f2f4fd",
+                        border: "0.5px solid #c6cef5",
+                        borderRadius: 6,
+                        padding: "7px 10px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 600,
+                          color: "#3C467B",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          marginBottom: 3,
+                        }}
+                      >
+                        Part 2
+                      </div>
+                      <div
+                        className="text-gray-900 dark:text-gray-100"
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {part2Start} – {part2End}
+                      </div>
                     </div>
                   </div>
 
@@ -787,13 +934,30 @@ const DashboardTimelineTwo = () => {
                     <button
                       onClick={() => setSplitConfirm(null)}
                       className="text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
-                      style={{ flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 12, border: "0.5px solid", cursor: "pointer" }}
+                      style={{
+                        flex: 1,
+                        padding: "6px 0",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        border: "0.5px solid",
+                        cursor: "pointer",
+                      }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={confirmSplit}
-                      style={{ flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 12, border: "none", background: "#750811", color: "#fff", cursor: "pointer", fontWeight: 500 }}
+                      style={{
+                        flex: 1,
+                        padding: "6px 0",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        border: "none",
+                        background: "#750811",
+                        color: "#fff",
+                        cursor: "pointer",
+                        fontWeight: 500,
+                      }}
                     >
                       Yes, split
                     </button>
@@ -806,13 +970,13 @@ const DashboardTimelineTwo = () => {
 
       {/* ── Project Notes Sheet ──────────────────────────────────────────── */}
       <ProjectNotesSheet
-             isOpen={notesOpen}
-             onClose={() => setNotesOpen(false)}
-             pId={pId}
-             contractors={allGroups}
-             defaultContractorTypeId={notesDefaultCtId}
-             initialMode={notesInitialMode}
-           />
+        isOpen={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        pId={pId}
+        contractors={allGroups}
+        defaultContractorTypeId={notesDefaultCtId}
+        initialMode={notesInitialMode}
+      />
     </>
   );
 };
