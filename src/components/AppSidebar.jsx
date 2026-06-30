@@ -28,6 +28,7 @@ import {
 import { NAV_ITEMS } from "@/lib/constants/nav-items";
 import { useTheme } from "@/components/theme-provider";
 import img from "@/assets/image2.png";
+import { IconBuildingSkyscraper } from "@tabler/icons-react";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
@@ -42,11 +43,12 @@ export default function AppSidebar() {
       <SidebarHeader className="h-14 flex flex-row items-center border-b border-border px-3">
         <div className="flex items-center gap-2 overflow-hidden">
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
-            <img src={img} alt="" className="w-5 h-5 object-contain invert" />
+            {/* <img src={img} alt="" className="w-5 h-5 object-contain invert" /> */}
+            <IconBuildingSkyscraper />
           </div>
           {!isCollapsed && (
-            <span className="font-display text-lg font-bold text-primary tracking-tight whitespace-nowrap">
-              Revinns
+            <span className="font-display text-lg font-bold text-emerald-600 tracking-tight whitespace-nowrap">
+              7Skies Riversoft
             </span>
           )}
         </div>
@@ -59,7 +61,7 @@ export default function AppSidebar() {
       <SidebarGroup className="px-0">
         {!isCollapsed && (
           <CollapsibleTrigger asChild>
-            <SidebarGroupLabel className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase px-4 mb-1 cursor-pointer hover:text-foreground transition-colors flex items-center justify-between">
+            <SidebarGroupLabel className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase px-3 cursor-pointer hover:text-foreground transition-colors flex items-center justify-between">
               {group.label}
               <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]/collapsible:rotate-180" />
             </SidebarGroupLabel>
@@ -81,12 +83,15 @@ export default function AppSidebar() {
                       isActive={isActive}
                       tooltip={isCollapsed ? linkItem.label : undefined}
                       className="
-                        h-auto rounded-lg px-4 py-2
+                        h-auto rounded-md px-2 py-2
                         text-[13px] font-medium
                         text-muted-foreground
                         hover:bg-accent hover:text-primary
-                        data-[active=true]:bg-primary/10
-                        data-[active=true]:text-primary
+                        data-[active=true]:bg-[#818CF8]
+                        data-[active=true]:text-[#F0F0F5]
+                        dark:data-[active=true]:bg-accent
+                        dark:data-[active=true]:text-primary
+                         
                       "
                     >
                       <NavLink to={linkItem.to} end={linkItem.to === "/dashboard"} className="flex items-center gap-4">

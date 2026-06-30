@@ -320,6 +320,21 @@
     font-size: 1rem;
   }
 
+
+  .text-display {
+  font-size: 4.5rem; /* 72px */
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+.text-headline {
+  font-size: 3.75rem; /* 60px */
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
   /* 16px */
 
   /* Mono — code, CLI, API keys */
@@ -365,5 +380,14 @@
   }
 }
 
+
+/* Genesis: Buttons Need Hover Transform (Vertical Lift) */
+.btn-lift {
+  transition: all 200ms ease;
+}
+
+.btn-lift:hover {
+  transform: translateY(-1px);
+}
 
 

@@ -37,6 +37,9 @@ import ContractorType from "./features/setting/contractor-type/contractor-type";
 import DashboardTimelineTwo from "./features/main-entry/pages/DashboardTimelineTwo";
 import StatementUpload from "./features/setting/pages/statement-upload";
 
+import ProjectPage from "./features/project-two/project-page";
+import { CreateProjectPage } from "./features/project-two/create-project-page";
+
 const ADMIN = ["Admin"];
 
 // ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
@@ -241,6 +244,8 @@ const App = () => {
               }
             />
 
+            <Route path="projects/create" element={<CreateProjectPage />} />
+
             <Route
               path="process"
               element={
@@ -257,6 +262,9 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* <Route path="project-process/:id" element={<ProcessPage />} /> */}
+            <Route path="projects" element={<ProjectPage />} />
           </Route>
         </Routes>
       </Router>

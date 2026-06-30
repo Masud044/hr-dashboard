@@ -64,7 +64,7 @@ export default function LoginFormV2() {
           <div className="flex items-center gap-3.5 text-white dark:text-foreground">
             <BrandLogo />
             <span className="font-display inline-block mt-5 font-medium tracking-[0.25em] text-lg uppercase">
-              REVINNS
+              7Skies Riversoft
             </span>
           </div>
 
@@ -93,7 +93,7 @@ export default function LoginFormV2() {
           <div className="flex lg:hidden items-center gap-3 mb-12 text-foreground">
             <BrandLogo />
             <span className="font-display font-medium tracking-[0.25em] text-xs uppercase">
-              REVINNS
+              7Skies Riversoft
             </span>
           </div>
 
