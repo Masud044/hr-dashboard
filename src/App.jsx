@@ -38,6 +38,7 @@ import DashboardTimelineTwo from "./features/main-entry/pages/DashboardTimelineT
 import StatementUpload from "./features/setting/pages/statement-upload";
 
 import ProjectPage from "./features/project-two/project-page";
+import { CreateProjectPage } from "./features/project-two/create-project-page";
 
 const ADMIN = ["Admin"];
 
@@ -242,6 +243,8 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="projects/create" element={<CreateProjectPage />} />
 
             <Route
               path="process"

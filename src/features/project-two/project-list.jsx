@@ -39,6 +39,7 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import { EditProjectSheet } from "./edit-project-sheet";
 import { CreateProjectSheet } from "./create-project-sheet";
 import { ProcessSheet } from "./create-process-page";
+import { useNavigate } from "react-router-dom";
 import { ProjectReportSheet } from "./project-report-sheet";
 
 
@@ -49,7 +50,7 @@ const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export function NewProjectTable() {
   
   const queryClient   = useQueryClient();
-
+const navigate = useNavigate();
   const [sorting, setSorting]                           = useState([]);
   const [columnFilters, setColumnFilters]               = useState([]);
   const [columnVisibility, setColumnVisibility]         = useState({
@@ -399,13 +400,13 @@ const [reportProject, setReportProject]       = useState(null); // { id, name }
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
-              onClick={() => setCreateSheetOpen(true)}
-              className="h-10 rounded-md gap-2"
-            >
-              <PlusIcon size={16} />
-              Add New Project
-            </Button>
+           <Button
+  onClick={() => navigate("/dashboard/projects/create")}  // ← CHANGE THIS
+  className="h-10 rounded-md gap-2"
+>
+  <PlusIcon size={16} />
+  Add New Project
+</Button>
           </div>
         </div>
 

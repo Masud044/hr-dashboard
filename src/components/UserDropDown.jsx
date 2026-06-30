@@ -46,62 +46,75 @@ export default function UserDropDown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-8 w-8 rounded-lg cursor-pointer">
+        <Avatar className="h-8 w-8 rounded-none cursor-pointer">
           <AvatarImage src={avatarSrc} alt={user.username} />
-          <AvatarFallback className="rounded-lg">
+          <AvatarFallback className="rounded-md bg-primary text-primary-foreground font-bold">
             {user.username?.slice(0, 2).toUpperCase() || "U"}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg z-200"
-        sideOffset={4}
-        align="end"
-      >
+
+    <DropdownMenuContent
+  className="w-56 rounded-md border-border shadow-lg p-0 overflow-hidden z-[200]"
+  sideOffset={4}
+  align="end"
+>
+        {/* ── Identity Header ── */}
         <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <Avatar className="size-8 rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-3">
+            <Avatar className="size-8 rounded-md shrink-0">
               <AvatarImage src={avatarSrc} alt={user.username} />
-              <AvatarFallback className="rounded-lg">
+              <AvatarFallback className="rounded-md bg-primary text-primary-foreground font-bold text-sm">
                 {user.username?.slice(0, 2).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{user.username}</span>
+            <div className="grid flex-1 text-left leading-tight">
+              <span className="truncate font-bold text-sm text-foreground">
+                {user.username}
+              </span>
               <span className="text-muted-foreground truncate text-xs">
                 Role: {user.roles} user
               </span>
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+
+        <DropdownMenuSeparator className="m-0" />
+
+        {/* ── Upgrade ── */}
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <SparklesIcon />
+          <DropdownMenuItem className="rounded-none px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-primary focus:bg-accent focus:text-primary cursor-pointer gap-2.5">
+            <SparklesIcon className="size-4" />
             Upgrade to Pro
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+
+        <DropdownMenuSeparator className="m-0" />
+
+        {/* ── Account group ── */}
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <BadgeCheckIcon />
+          <DropdownMenuItem className="rounded-none px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground cursor-pointer gap-2.5">
+            <BadgeCheckIcon className="size-4" />
             Account
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCardIcon />
+          <DropdownMenuItem className="rounded-none px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground cursor-pointer gap-2.5">
+            <CreditCardIcon className="size-4" />
             Billing
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <BellIcon />
+          <DropdownMenuItem className="rounded-none px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground cursor-pointer gap-2.5">
+            <BellIcon className="size-4" />
             Notifications
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+
+        <DropdownMenuSeparator className="m-0" />
+
+        {/* ── Logout ── */}
         <DropdownMenuItem
           onClick={handleLogout}
-          className="text-red-600 cursor-pointer focus:text-red-700"
+          className="rounded-none px-3 py-2 text-sm text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-2.5"
         >
-          <LogOutIcon className="text-destructive" />
+          <LogOutIcon className="size-4" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

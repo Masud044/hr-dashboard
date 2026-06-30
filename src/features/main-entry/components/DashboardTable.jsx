@@ -12,7 +12,7 @@ import {
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, LayoutDashboard, AlertTriangle, Search } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, LayoutDashboard, AlertTriangle, Search, ChartBarIcon } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -247,7 +247,7 @@ export function DashboardTable() {
                 title="Open timeline dashboard"
                 className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-xs font-medium border border-border bg-transparent text-foreground hover:bg-muted/50 transition-all"
               >
-                <LayoutDashboard size={13} />
+                <ChartBarIcon size={13} />
                 Dashboard
               </button>
             </Link>
