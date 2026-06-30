@@ -335,7 +335,7 @@ export function ProcessSheet({ isOpen, onClose, projectId }) {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-gray-100 text-gray-700 text-left">
-                  {["Project ID", "Contract Type", "Contractor", "Dependent", "Sort", "Cost"].map((h) => (
+                  {["Sort", "Contract Type", "Contractor", "Dependent", "Cost"].map((h) => (
                     <th key={h} className="px-3 py-2 border text-xs font-semibold uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -344,7 +344,16 @@ export function ProcessSheet({ isOpen, onClose, projectId }) {
                 {editableLines.length > 0 ? (
                   editableLines.map((line, index) => (
                     <tr key={line.ID || index} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 border w-[6%] text-gray-500">{line.PROCESS_ID}</td>
+                      {/* <td className="px-3 py-2 border w-[6%] text-gray-500">{line.PROCESS_ID}</td> */}
+
+                       <td className="px-3 py-2 border w-[7%] text-center">
+                        <input
+                          type="number"
+                          value={line.SORT_ID || ""}
+                          onChange={(e) => handleLineChange(index, "SORT_ID", e.target.value)}
+                          className="w-full border-none outline-none bg-transparent  text-sm"
+                        />
+                      </td>
                       <td className="px-3 py-2 border w-[20%]">
                         {contractorTypes.find((c) => c.ID === line.SUB_CONTRACT_ID)?.NAME || ""}
                       </td>
@@ -383,20 +392,13 @@ export function ProcessSheet({ isOpen, onClose, projectId }) {
                           ))}
                         </select>
                       </td>
-                      <td className="px-3 py-2 border w-[7%] text-center">
-                        <input
-                          type="number"
-                          value={line.SORT_ID || ""}
-                          onChange={(e) => handleLineChange(index, "SORT_ID", e.target.value)}
-                          className="w-full border-none outline-none bg-transparent text-center text-sm"
-                        />
-                      </td>
+                     
                       <td className="px-3 py-2 border w-[10%] text-center">
                         <input
                           type="number"
                           value={line.COST || ""}
                           onChange={(e) => handleLineChange(index, "COST", e.target.value)}
-                          className="w-full border-none outline-none bg-transparent text-center text-sm"
+                          className="w-full border-none outline-none bg-transparent  text-sm"
                         />
                       </td>
                     </tr>

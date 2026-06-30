@@ -1,904 +1,18 @@
-// import React, { useState, useMemo } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-// import {
-//   Upload,
-//   RotateCcw,
-//   Download,
-//   CheckCircle2,
-//   ArrowLeft,
-//   FileSpreadsheet,
-//   Search,
-//   Paperclip,
-//   ExternalLink,
-// } from "lucide-react";
-// import { toast } from "react-toastify";
-// import axios from "axios";
-
-// import { SectionContainer } from "@/components/SectionContainer";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import {
-//   Select,
-//   SelectTrigger,
-//   SelectValue,
-//   SelectContent,
-//   SelectItem,
-// } from "@/components/ui/select";
-
-// const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-// const CATEGORY_STYLES = {
-//   address: "bg-blue-100 text-blue-700",
-//   place: "bg-amber-100 text-amber-700",
-//   product: "bg-emerald-100 text-emerald-700",
-//   other: "bg-slate-100 text-slate-600",
-// };
-
-// const StatementUpload = () => {
-//   const navigate = useNavigate();
-//   const queryClient = useQueryClient();
-
-//   const [activeTab, setActiveTab] = useState("staging"); // "staging" | "approved"
-//   const [file, setFile] = useState(null);
-//   const [batchId, setBatchId] = useState(null);
-//   const [search, setSearch] = useState("");
-//   const [approvedSearch, setApprovedSearch] = useState("");
-//   const [activeCats, setActiveCats] = useState({
-//     address: true,
-//     place: true,
-//     product: true,
-//     other: true,
-//   });
-//   const [selectedIds, setSelectedIds] = useState([]);
-
-//   // ── last pending batch auto-fetch ──────────────────────────────────────
-//   useQuery({
-//     queryKey: ["statementLatestBatch"],
-//     queryFn: async () => {
-//       const res = await axios.get(`${url}/api/statement/latest-batch`);
-//       const latest = res.data?.batchId;
-//       if (latest) setBatchId(latest);
-//       return latest;
-//     },
-//     enabled: !batchId,
-//     refetchOnWindowFocus: false,
-//   });
-
-//   // ── CSV upload ──────────────────────────────────────────────────────────
-//   const uploadMutation = useMutation({
-//     mutationFn: async (selectedFile) => {
-//       const fd = new FormData();
-//       fd.append("file", selectedFile);
-//       return axios.post(`${url}/api/statement/upload`, fd, {
-//         headers: { "Content-Type": "multipart/form-data" },
-//       });
-//     },
-//     onSuccess: (res) => {
-//       const newBatchId = res.data?.batchId;
-//       const skipped = res.data?.skipped || 0;
-//       setBatchId(newBatchId);
-//       setSelectedIds([]);
-//       setActiveTab("staging");
-//       const msg =
-//         skipped > 0
-//           ? `${res.data?.message || "Processed."} (${skipped} duplicate row${skipped > 1 ? "s" : ""} skipped)`
-//           : res.data?.message || "CSV processed successfully!";
-//       toast.success(msg);
-//       queryClient.invalidateQueries(["statementStaging", newBatchId]);
-//     },
-//     onError: (err) =>
-//       toast.error(err.response?.data?.message || "Failed to process CSV."),
-//   });
-
-//   // ── Staging rows ────────────────────────────────────────────────────────
-//   const { data: rows = [], isLoading: rowsLoading } = useQuery({
-//     queryKey: ["statementStaging", batchId],
-//     queryFn: async () =>
-//       (await axios.get(`${url}/api/statement/staging/${batchId}`)).data?.data ||
-//       [],
-//     enabled: !!batchId,
-//   });
-
-//   // ── Approved (Main) rows ────────────────────────────────────────────────
-//   const { data: approvedRows = [], isLoading: approvedLoading } = useQuery({
-//     queryKey: ["statementMain"],
-//     queryFn: async () =>
-//       (await axios.get(`${url}/api/statement/main`)).data?.data || [],
-//     enabled: activeTab === "approved",
-//   });
-
-//   // ── Dropdowns ───────────────────────────────────────────────────────────
-//   const { data: projectOptions = [] } = useQuery({
-//     queryKey: ["statementProjects"],
-//     queryFn: async () =>
-//       (await axios.get(`${url}/api/statement/projects`)).data?.data || [],
-//   });
-
-//   const { data: contractorOptions = [] } = useQuery({
-//     queryKey: ["statementContractors"],
-//     queryFn: async () =>
-//       (await axios.get(`${url}/api/statement/contractors`)).data?.data || [],
-//   });
-
-//   // ── Row update mutations ────────────────────────────────────────────────
-//   const updateRowMutation = useMutation({
-//     mutationFn: async (payload) =>
-//       axios.put(`${url}/api/statement/staging/row`, payload),
-//     onSuccess: () =>
-//       queryClient.invalidateQueries(["statementStaging", batchId]),
-//     onError: (err) =>
-//       toast.error(err.response?.data?.message || "Failed to update row."),
-//   });
-
-//   const uploadInvoiceMutation = useMutation({
-//     mutationFn: async ({ stagingId, file }) => {
-//       const fd = new FormData();
-//       fd.append("invoiceFile", file);
-//       return axios.post(
-//         `${url}/api/statement/staging/${stagingId}/invoice`,
-//         fd,
-//         {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         },
-//       );
-//     },
-//     onSuccess: () => {
-//       toast.success("Invoice uploaded.");
-//       queryClient.invalidateQueries(["statementStaging", batchId]);
-//     },
-//     onError: (err) =>
-//       toast.error(err.response?.data?.message || "Failed to upload invoice."),
-//   });
-
-//   const approveMutation = useMutation({
-//     mutationFn: async (stagingIds) =>
-//       axios.post(`${url}/api/statement/approve`, { stagingIds }),
-//     onSuccess: (res) => {
-//       toast.success(res.data?.message || "Rows approved and moved to main!");
-//       setSelectedIds([]);
-//       queryClient.invalidateQueries(["statementStaging", batchId]);
-//       queryClient.invalidateQueries(["statementMain"]);
-//     },
-//     onError: (err) =>
-//       toast.error(err.response?.data?.message || "Failed to approve rows."),
-//   });
-
-//   // ── Handlers ────────────────────────────────────────────────────────────
-//   const handleProjectChange = (row, pId) => {
-//     const proj = projectOptions.find((p) => String(p.P_ID) === String(pId));
-//     updateRowMutation.mutate({
-//       stagingId: row.STAGING_ID,
-//       pId: pId || null,
-//       projectName: proj?.P_NAME || null,
-//     });
-//   };
-
-//   const handleContractorChange = (row, contractorId) => {
-//     const c = contractorOptions.find(
-//       (c) => String(c.CONTRATOR_ID) === String(contractorId),
-//     );
-//     updateRowMutation.mutate({
-//       stagingId: row.STAGING_ID,
-//       contractorId: contractorId || null,
-//       contractorName: c?.CONTRATOR_NAME || null,
-//     });
-//   };
-
-//   const handleInvoiceNoBlur = (row, value) => {
-//     if ((row.INVOICE_NO || "") === value) return;
-//     updateRowMutation.mutate({ stagingId: row.STAGING_ID, invoiceNo: value });
-//   };
-
-//   const handleInvoiceFileSelect = (row, fileList) => {
-//     const file = fileList?.[0];
-//     if (!file) return;
-//     if (file.size > 20 * 1024 * 1024) {
-//       toast.error(`"${file.name}" exceeds 20 MB limit.`);
-//       return;
-//     }
-//     uploadInvoiceMutation.mutate({ stagingId: row.STAGING_ID, file });
-//   };
-
-//   const handleFileSelect = (fileList) => {
-//     const selected = fileList?.[0];
-//     if (!selected) return;
-//     if (!selected.name.toLowerCase().endsWith(".csv")) {
-//       toast.error("Please select a CSV file.");
-//       return;
-//     }
-//     setFile(selected);
-//   };
-
-//   const handleLoad = () => {
-//     if (!file) {
-//       toast.error("Please choose a CSV file first.");
-//       return;
-//     }
-//     uploadMutation.mutate(file);
-//   };
-
-//   const handleReset = () => {
-//     setFile(null);
-//     setBatchId(null);
-//     setSearch("");
-//     setSelectedIds([]);
-//     setActiveCats({ address: true, place: true, product: true, other: true });
-//   };
-
-//   const toggleCategory = (cat) =>
-//     setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
-
-//   const toggleRow = (id) =>
-//     setSelectedIds((prev) =>
-//       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-//     );
-
-//   const toggleSelectAllVisible = () => {
-//     const visibleIds = filteredRows.map((r) => r.STAGING_ID);
-//     const allSelected = visibleIds.every((id) => selectedIds.includes(id));
-//     setSelectedIds(
-//       allSelected
-//         ? selectedIds.filter((id) => !visibleIds.includes(id))
-//         : [...new Set([...selectedIds, ...visibleIds])],
-//     );
-//   };
-
-//   const handleApprove = () => {
-//     if (selectedIds.length === 0) {
-//       toast.error("Select at least one row to approve.");
-//       return;
-//     }
-//     approveMutation.mutate(selectedIds);
-//   };
-
-//   // ── Derived ─────────────────────────────────────────────────────────────
-//   const stats = useMemo(() => {
-//     const s = { address: 0, place: 0, product: 0, other: 0 };
-//     rows.forEach((r) => {
-//       const c = (r.CATEGORY || "other").toLowerCase();
-//       if (s[c] !== undefined) s[c]++;
-//     });
-//     return s;
-//   }, [rows]);
-
-//   const filteredRows = useMemo(() => {
-//     const q = search.trim().toLowerCase();
-//     return rows.filter((r) => {
-//       const cat = (r.CATEGORY || "other").toLowerCase();
-//       if (!activeCats[cat]) return false;
-//       if (!q) return true;
-//       return (
-//         (r.DESCRIPTION || "").toLowerCase().includes(q) ||
-//         (r.MATCHED_ADDRESS || "").toLowerCase().includes(q)
-//       );
-//     });
-//   }, [rows, activeCats, search]);
-
-//   const filteredApproved = useMemo(() => {
-//     const q = approvedSearch.trim().toLowerCase();
-//     if (!q) return approvedRows;
-//     return approvedRows.filter(
-//       (r) =>
-//         (r.DESCRIPTION || "").toLowerCase().includes(q) ||
-//         (r.PROJECT_NAME || "").toLowerCase().includes(q) ||
-//         (r.CONTRACTOR_NAME || "").toLowerCase().includes(q) ||
-//         (r.INVOICE_NO || "").toLowerCase().includes(q),
-//     );
-//   }, [approvedRows, approvedSearch]);
-
-//   const fmtAmount = (amt) => {
-//     const n = Number(amt) || 0;
-//     const formatted = Math.abs(n).toLocaleString(undefined, {
-//       minimumFractionDigits: 2,
-//       maximumFractionDigits: 2,
-//     });
-//     return n < 0 ? `-$${formatted}` : `$${formatted}`;
-//   };
-
-//   const handleDownloadCsv = (dataRows, filename) => {
-//     if (dataRows.length === 0) {
-//       toast.error("No rows to download.");
-//       return;
-//     }
-//     const headers = [
-//       "Date",
-//       "Amount",
-//       "Description",
-//       "Balance",
-//       "Category",
-//       "Project",
-//       "Matched Address",
-//       "Contractor",
-//       "Invoice No",
-//     ];
-//     const csvRows = dataRows.map((r) => [
-//       r.TXN_DATE ? new Date(r.TXN_DATE).toLocaleDateString() : "",
-//       r.AMOUNT,
-//       `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
-//       r.BALANCE ?? "",
-//       r.CATEGORY,
-//       `"${(r.PROJECT_NAME || "").replace(/"/g, '""')}"`,
-//       `"${(r.MATCHED_ADDRESS || "").replace(/"/g, '""')}"`,
-//       `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
-//       `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,
-//     ]);
-//     const csvContent = [
-//       headers.join(","),
-//       ...csvRows.map((row) => row.join(",")),
-//     ].join("\n");
-//     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-//     const link = document.createElement("a");
-//     link.href = URL.createObjectURL(blob);
-//     link.download = filename;
-//     link.click();
-//   };
-
-//   // ── Tab button component ─────────────────────────────────────────────────
-//   const TabBtn = ({ id, label, count }) => (
-//     <button
-//       onClick={() => setActiveTab(id)}
-//       className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
-//         activeTab === id
-//           ? "bg-blue-600 text-white shadow"
-//           : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-//       }`}
-//     >
-//       {label}
-//       {count != null && (
-//         <span
-//           className={`ml-2 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-//             activeTab === id
-//               ? "bg-blue-500 text-white"
-//               : "bg-gray-200 text-gray-600"
-//           }`}
-//         >
-//           {count}
-//         </span>
-//       )}
-//     </button>
-//   );
-
-//   return (
-//     <SectionContainer>
-//       <div className="p-6 bg-white shadow rounded-lg mt-8">
-//         {/* Header */}
-//         <div className="flex items-center justify-between mb-6 pb-2 border-b">
-//           <h2 className="font-semibold text-sm text-gray-800 flex items-center gap-2">
-//             <FileSpreadsheet size={16} className="text-blue-600" />
-//             Statement Tool
-//             <span className="bg-blue-600 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
-//               CSV
-//             </span>
-//           </h2>
-//           <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-//             <ArrowLeft size={16} className="mr-1" /> Back
-//           </Button>
-//         </div>
-
-//         {/* File upload row */}
-//         <div className="flex flex-wrap items-center gap-3 mb-6">
-//           <div className="flex items-center gap-3 bg-white border rounded-full px-4 py-1.5 shadow-sm">
-//             <label
-//               htmlFor="statement-csv-input"
-//               className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
-//             >
-//               <Upload size={16} className="text-blue-600" /> Choose CSV
-//             </label>
-//             <span className="text-xs text-gray-500 max-w-[180px] truncate">
-//               {file ? file.name : "No file selected"}
-//             </span>
-//             <input
-//               id="statement-csv-input"
-//               type="file"
-//               accept=".csv"
-//               className="hidden"
-//               onChange={(e) => handleFileSelect(e.target.files)}
-//             />
-//           </div>
-//           <Button
-//             onClick={handleLoad}
-//             disabled={uploadMutation.isPending}
-//             className="rounded-full bg-emerald-600 hover:bg-emerald-700"
-//           >
-//             {uploadMutation.isPending ? "Loading..." : "Load"}
-//           </Button>
-//           <Button
-//             variant="outline"
-//             onClick={handleReset}
-//             className="rounded-full"
-//           >
-//             <RotateCcw size={14} className="mr-1" /> Reset
-//           </Button>
-//         </div>
-
-//         {/* ── TABS ── */}
-//         <div className="flex items-center gap-2 mb-5 border-b pb-3">
-//           <TabBtn
-//             id="staging"
-//             label="Staging (Pending)"
-//             count={batchId ? rows.length : null}
-//           />
-//           <TabBtn id="approved" label="Approved (Main)" count={null} />
-//         </div>
-
-//         {/* ══════════════════════════════════════════════════════
-//             TAB 1 — STAGING
-//         ══════════════════════════════════════════════════════ */}
-//         {activeTab === "staging" && (
-//           <>
-//             {batchId ? (
-//               <>
-//                 {/* Stats bar */}
-//                 <div className="flex flex-wrap items-center justify-between gap-4 bg-white border rounded-2xl shadow-sm px-6 py-4 mb-5">
-//                   <div className="flex flex-wrap items-center gap-6">
-//                     <div className="text-sm text-gray-600">
-//                       <strong className="text-gray-900 text-base font-semibold mr-1">
-//                         {rows.length}
-//                       </strong>{" "}
-//                       rows
-//                     </div>
-//                     {Object.entries(stats).map(([cat, count]) => (
-//                       <div
-//                         key={cat}
-//                         className="flex items-center gap-1.5 text-sm text-gray-600"
-//                       >
-//                         <span
-//                           className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${CATEGORY_STYLES[cat]}`}
-//                         >
-//                           {cat}
-//                         </span>
-//                         <strong className="text-gray-900">{count}</strong>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-
-//                 {/* Filters */}
-//                 <div className="flex flex-wrap items-center gap-4 bg-white border rounded-2xl shadow-sm px-6 py-3 mb-5">
-//                   <div className="flex flex-wrap items-center gap-4">
-//                     {["address", "place", "product", "other"].map((cat) => (
-//                       <label
-//                         key={cat}
-//                         className="flex items-center gap-1.5 text-sm font-medium text-gray-700 cursor-pointer capitalize"
-//                       >
-//                         <input
-//                           type="checkbox"
-//                           checked={activeCats[cat]}
-//                           onChange={() => toggleCategory(cat)}
-//                           className="accent-blue-600 w-4 h-4"
-//                         />
-//                         {cat}
-//                       </label>
-//                     ))}
-//                   </div>
-//                   <div className="flex items-center gap-2 ml-auto">
-//                     <Search size={14} className="text-gray-400" />
-//                     <Input
-//                       placeholder="Search description or address"
-//                       value={search}
-//                       onChange={(e) => setSearch(e.target.value)}
-//                       className="h-8 text-sm rounded-full min-w-[220px]"
-//                     />
-//                     <span className="text-xs text-gray-500 whitespace-nowrap">
-//                       {filteredRows.length} shown
-//                     </span>
-//                   </div>
-//                   <div className="flex items-center gap-2">
-//                     <Button
-//                       onClick={() =>
-//                         handleDownloadCsv(filteredRows, "statement_staging.csv")
-//                       }
-//                       variant="outline"
-//                       className="rounded-full text-sm"
-//                     >
-//                       <Download size={14} className="mr-1" /> Download CSV
-//                     </Button>
-//                     <Button
-//                       onClick={handleApprove}
-//                       disabled={
-//                         approveMutation.isPending || selectedIds.length === 0
-//                       }
-//                       className="rounded-full bg-violet-600 hover:bg-violet-700 text-sm"
-//                     >
-//                       <CheckCircle2 size={14} className="mr-1" />
-//                       {approveMutation.isPending
-//                         ? "Approving..."
-//                         : `Approve & Move to Main${selectedIds.length ? ` (${selectedIds.length})` : ""}`}
-//                     </Button>
-//                   </div>
-//                 </div>
-
-//                 {/* Staging Table */}
-//                 <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-//                   <div className="overflow-x-auto">
-//                     <table className="w-full text-sm min-w-[1400px]">
-//                       <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
-//                         <tr>
-//                           <th className="px-3 py-3 text-left">
-//                             <input
-//                               type="checkbox"
-//                               className="accent-blue-600 w-4 h-4"
-//                               checked={
-//                                 filteredRows.length > 0 &&
-//                                 filteredRows.every((r) =>
-//                                   selectedIds.includes(r.STAGING_ID),
-//                                 )
-//                               }
-//                               onChange={toggleSelectAllVisible}
-//                             />
-//                           </th>
-//                           <th className="px-4 py-3 text-left">Date</th>
-//                           <th className="px-4 py-3 text-right">Amount</th>
-//                           <th className="px-4 py-3 text-left">Description</th>
-//                           <th className="px-4 py-3 text-left">Category</th>
-//                           <th className="px-4 py-3 text-left">Project</th>
-//                           <th className="px-4 py-3 text-left">
-//                             Matched Address
-//                           </th>
-//                           <th className="px-4 py-3 text-left">Contractor</th>
-//                           <th className="px-4 py-3 text-left">Invoice No</th>
-//                           <th className="px-4 py-3 text-left">Invoice File</th>
-//                         </tr>
-//                       </thead>
-//                       <tbody>
-//                         {rowsLoading ? (
-//                           <tr>
-//                             <td
-//                               colSpan={10}
-//                               className="text-center py-10 text-gray-400"
-//                             >
-//                               Loading...
-//                             </td>
-//                           </tr>
-//                         ) : filteredRows.length === 0 ? (
-//                           <tr>
-//                             <td
-//                               colSpan={10}
-//                               className="text-center py-10 text-gray-400"
-//                             >
-//                               No rows match the current filters.
-//                             </td>
-//                           </tr>
-//                         ) : (
-//                           filteredRows.map((r) => {
-//                             const cat = (r.CATEGORY || "other").toLowerCase();
-//                             return (
-//                               <tr
-//                                 key={r.STAGING_ID}
-//                                 className="border-b last:border-0 hover:bg-gray-50"
-//                               >
-//                                 <td className="px-3 py-2.5">
-//                                   <input
-//                                     type="checkbox"
-//                                     className="accent-blue-600 w-4 h-4"
-//                                     checked={selectedIds.includes(r.STAGING_ID)}
-//                                     onChange={() => toggleRow(r.STAGING_ID)}
-//                                   />
-//                                 </td>
-//                                 <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
-//                                   {r.TXN_DATE
-//                                     ? new Date(r.TXN_DATE).toLocaleDateString(
-//                                         "en-GB",
-//                                       )
-//                                     : "—"}
-//                                 </td>
-//                                 <td
-//                                   className={`px-4 py-2.5 text-right font-semibold whitespace-nowrap ${Number(r.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}
-//                                 >
-//                                   {fmtAmount(r.AMOUNT)}
-//                                 </td>
-//                                 <td className="px-4 py-2.5 max-w-[320px] text-gray-700">
-//                                   {r.DESCRIPTION}
-//                                 </td>
-//                                 <td className="px-4 py-2.5">
-//                                   <span
-//                                     className={`text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[cat]}`}
-//                                   >
-//                                     {cat}
-//                                   </span>
-//                                 </td>
-//                                 <td className="px-4 py-2.5 text-gray-700 min-w-[170px]">
-//                                   <Select
-//                                     value={r.P_ID ? String(r.P_ID) : ""}
-//                                     onValueChange={(v) =>
-//                                       handleProjectChange(r, v)
-//                                     }
-//                                   >
-//                                     <SelectTrigger className="h-8 text-xs">
-//                                       <SelectValue placeholder="Select project">
-//                                         {r.PROJECT_NAME || "Select project"}
-//                                       </SelectValue>
-//                                     </SelectTrigger>
-//                                     <SelectContent>
-//                                       {projectOptions.map((p) => (
-//                                         <SelectItem
-//                                           key={p.P_ID}
-//                                           value={String(p.P_ID)}
-//                                         >
-//                                           {p.P_NAME}
-//                                         </SelectItem>
-//                                       ))}
-//                                     </SelectContent>
-//                                   </Select>
-//                                 </td>
-//                                 <td className="px-4 py-2.5 max-w-[200px] text-gray-700">
-//                                   {r.MATCHED_ADDRESS ? (
-//                                     <span className="text-blue-700 font-medium">
-//                                       {r.MATCHED_ADDRESS}
-//                                     </span>
-//                                   ) : (
-//                                     <span className="text-gray-400 italic">
-//                                       —
-//                                     </span>
-//                                   )}
-//                                 </td>
-//                                 <td className="px-4 py-2.5 text-gray-700 min-w-[170px]">
-//                                   <Select
-//                                     value={
-//                                       r.CONTRACTOR_ID
-//                                         ? String(r.CONTRACTOR_ID)
-//                                         : ""
-//                                     }
-//                                     onValueChange={(v) =>
-//                                       handleContractorChange(r, v)
-//                                     }
-//                                   >
-//                                     <SelectTrigger className="h-8 text-xs">
-//                                       <SelectValue placeholder="Select contractor">
-//                                         {r.CONTRACTOR_NAME ||
-//                                           "Select contractor"}
-//                                       </SelectValue>
-//                                     </SelectTrigger>
-//                                     <SelectContent>
-//                                       {contractorOptions.map((c) => (
-//                                         <SelectItem
-//                                           key={c.CONTRATOR_ID}
-//                                           value={String(c.CONTRATOR_ID)}
-//                                         >
-//                                           {c.CONTRATOR_NAME}
-//                                         </SelectItem>
-//                                       ))}
-//                                     </SelectContent>
-//                                   </Select>
-//                                 </td>
-//                                 <td className="px-4 py-2.5 min-w-[120px]">
-//                                   <Input
-//                                     defaultValue={r.INVOICE_NO || ""}
-//                                     placeholder="Invoice no."
-//                                     className="h-8 text-xs"
-//                                     onBlur={(e) =>
-//                                       handleInvoiceNoBlur(r, e.target.value)
-//                                     }
-//                                   />
-//                                 </td>
-//                                 <td className="px-4 py-2.5 min-w-[140px]">
-//                                   {r.INVOICE_FILE_NAME ? (
-//                                     <a
-//                                       href={`${url}/api/statement/staging/${r.STAGING_ID}/invoice`}
-//                                       target="_blank"
-//                                       rel="noreferrer"
-//                                       className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[130px]"
-//                                       title={r.INVOICE_FILE_NAME}
-//                                     >
-//                                       <ExternalLink
-//                                         size={12}
-//                                         className="shrink-0"
-//                                       />
-//                                       {r.INVOICE_FILE_NAME}
-//                                     </a>
-//                                   ) : (
-//                                     <label className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 cursor-pointer">
-//                                       <Paperclip size={12} /> Attach
-//                                       <input
-//                                         type="file"
-//                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-//                                         className="hidden"
-//                                         onChange={(e) =>
-//                                           handleInvoiceFileSelect(
-//                                             r,
-//                                             e.target.files,
-//                                           )
-//                                         }
-//                                       />
-//                                     </label>
-//                                   )}
-//                                 </td>
-//                               </tr>
-//                             );
-//                           })
-//                         )}
-//                       </tbody>
-//                     </table>
-//                   </div>
-//                 </div>
-//               </>
-//             ) : (
-//               <div className="text-center py-16 text-gray-400">
-//                 <FileSpreadsheet
-//                   size={48}
-//                   className="mx-auto mb-3 text-gray-300"
-//                 />
-//                 <p>Choose a CSV file and click Load to get started.</p>
-//               </div>
-//             )}
-//           </>
-//         )}
-
-//         {/* ══════════════════════════════════════════════════════
-//             TAB 2 — APPROVED (MAIN)
-//         ══════════════════════════════════════════════════════ */}
-//         {activeTab === "approved" && (
-//           <>
-//             {/* Search + Download */}
-//             <div className="flex flex-wrap items-center gap-3 mb-5">
-//               <div className="flex items-center gap-2">
-//                 <Search size={14} className="text-gray-400" />
-//                 <Input
-//                   placeholder="Search description, project, contractor, invoice..."
-//                   value={approvedSearch}
-//                   onChange={(e) => setApprovedSearch(e.target.value)}
-//                   className="h-8 text-sm rounded-full min-w-[280px]"
-//                 />
-//                 <span className="text-xs text-gray-500 whitespace-nowrap">
-//                   {filteredApproved.length} shown
-//                 </span>
-//               </div>
-//               <Button
-//                 onClick={() =>
-//                   handleDownloadCsv(filteredApproved, "statement_approved.csv")
-//                 }
-//                 variant="outline"
-//                 className="rounded-full text-sm ml-auto"
-//               >
-//                 <Download size={14} className="mr-1" /> Download CSV
-//               </Button>
-//             </div>
-
-//             {/* Approved Table */}
-//             <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-//               <div className="overflow-x-auto">
-//                 <table className="w-full text-sm min-w-[1200px]">
-//                   <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
-//                     <tr>
-//                       <th className="px-4 py-3 text-left">Date</th>
-//                       <th className="px-4 py-3 text-right">Amount</th>
-//                       <th className="px-4 py-3 text-left">Description</th>
-//                       <th className="px-4 py-3 text-left">Category</th>
-//                       <th className="px-4 py-3 text-left">Project</th>
-//                       <th className="px-4 py-3 text-left">Matched Address</th>
-//                       <th className="px-4 py-3 text-left">Contractor</th>
-//                       <th className="px-4 py-3 text-left">Invoice No</th>
-//                       <th className="px-4 py-3 text-left">Approved date</th>
-//                       <th className="px-4 py-3 text-left">Invoice File</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody>
-//                     {approvedLoading ? (
-//                       <tr>
-//                         <td
-//                           colSpan={10}
-//                           className="text-center py-10 text-gray-400"
-//                         >
-//                           Loading...
-//                         </td>
-//                       </tr>
-//                     ) : filteredApproved.length === 0 ? (
-//                       <tr>
-//                         <td
-//                           colSpan={10}
-//                           className="text-center py-10 text-gray-400"
-//                         >
-//                           No approved transactions yet.
-//                         </td>
-//                       </tr>
-//                     ) : (
-//                       filteredApproved.map((r) => {
-//                         const cat = (r.CATEGORY || "other").toLowerCase();
-//                         return (
-//                           <tr
-//                             key={r.TXN_ID}
-//                             className="border-b last:border-0 hover:bg-gray-50"
-//                           >
-//                             <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
-//                               {r.TXN_DATE
-//                                 ? new Date(r.TXN_DATE).toLocaleDateString(
-//                                     "en-GB",
-//                                   )
-//                                 : "—"}
-//                             </td>
-//                             <td
-//                               className={`px-4 py-2.5 text-right font-semibold whitespace-nowrap ${Number(r.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}
-//                             >
-//                               {fmtAmount(r.AMOUNT)}
-//                             </td>
-//                             <td className="px-4 py-2.5 max-w-[300px] text-gray-700">
-//                               {r.DESCRIPTION}
-//                             </td>
-//                             <td className="px-4 py-2.5">
-//                               <span
-//                                 className={`text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[cat] || CATEGORY_STYLES.other}`}
-//                               >
-//                                 {cat}
-//                               </span>
-//                             </td>
-//                             <td className="px-4 py-2.5 text-gray-700">
-//                               {r.PROJECT_NAME || (
-//                                 <span className="text-gray-400 italic">—</span>
-//                               )}
-//                             </td>
-//                             <td className="px-4 py-2.5 max-w-[180px] text-gray-700">
-//                               {r.MATCHED_ADDRESS ? (
-//                                 <span className="text-blue-700 font-medium">
-//                                   {r.MATCHED_ADDRESS}
-//                                 </span>
-//                               ) : (
-//                                 <span className="text-gray-400 italic">—</span>
-//                               )}
-//                             </td>
-//                             <td className="px-4 py-2.5 text-gray-700">
-//                               {r.CONTRACTOR_NAME || (
-//                                 <span className="text-gray-400 italic">—</span>
-//                               )}
-//                             </td>
-//                             <td className="px-4 py-2.5 text-gray-700">
-//                               {r.INVOICE_NO || (
-//                                 <span className="text-gray-400 italic">—</span>
-//                               )}
-//                             </td>
-
-//                             <td className="px-4 py-2.5 whitespace-nowrap text-gray-500 text-xs">
-//                               {r.APPROVED_DATE
-//                                 ? new Date(r.APPROVED_DATE).toLocaleDateString(
-//                                     "en-GB",
-//                                   )
-//                                 : "—"}
-//                             </td>
-
-//                             <td className="px-4 py-2.5 min-w-[140px]">
-//   {r.INVOICE_FILE_NAME ? (
-//     <a
-//       href={`${url}/api/statement/main/${r.TXN_ID}/invoice`}
-//       target="_blank"
-//       rel="noreferrer"
-//       download={r.INVOICE_FILE_NAME}
-//       className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[130px]"
-//       title={r.INVOICE_FILE_NAME}
-//     >
-//       <ExternalLink size={12} className="shrink-0" />
-//       {r.INVOICE_FILE_NAME}
-//     </a>
-//   ) : (
-//     <span className="text-gray-400 italic text-xs">—</span>
-//   )}
-// </td>
-//                           </tr>
-//                         );
-//                       })
-//                     )}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </div>
-//           </>
-//         )}
-//       </div>
-//     </SectionContainer>
-//   );
-// };
-
-// export default StatementUpload;
-
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo  } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Upload, RotateCcw, Download, CheckCircle2, ArrowLeft,
-  FileSpreadsheet, Search, Paperclip, ExternalLink, PlusCircle,
+  FileSpreadsheet, Paperclip, ExternalLink, PlusCircle,
+  Trash2, X, Filter, Loader2, Inbox, BadgeCheck,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
+
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parse, isValid } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import { Button } from "@/components/ui/button";
@@ -921,30 +35,224 @@ const STATUS_STYLES = {
   APPROVED: "bg-green-100 text-green-700",
 };
 
-// ── Non-banking entry form initial state ──
 const EMPTY_NB = {
-  txnDate: "", amount: "", description: "",
+  txnDate: "", amount: "", description: "", entryType: "DEBIT", category: "other",
   pId: "", projectName: "", contractorId: "", contractorName: "",
   invoiceNo: "", remarks: "",
 };
+
+const EMPTY_FILTERS = {
+  dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
+  invoiceNo: "", amount: "", description: "", category: "",
+};
+
+// ── plain function: table cell-এ date দেখানোর জন্য (Hook নেই) ──
+const fmtDate = (val) => {
+  if (!val) return "—";
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "—";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+/// ── dd/mm/yyyy দেখায়, কিন্তু click করলে native calendar picker খোলে ──
+// ── shadcn Calendar + Popover, display সবসময় dd/MM/yyyy ──
+const DateInput = ({ value, onChange, placeholder = "dd/mm/yyyy" }) => {
+  // internal value হলো yyyy-mm-dd string (ISO), Calendar-এর জন্য Date object দরকার
+  const selectedDate = value ? parse(value, "yyyy-MM-dd", new Date()) : undefined;
+  const displayText = value && isValid(selectedDate) ? format(selectedDate, "dd/MM/yyyy") : "";
+
+  const handleSelect = (date) => {
+    if (!date) { onChange(""); return; }
+    onChange(format(date, "yyyy-MM-dd"));
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="h-8 w-full text-xs flex items-center justify-between gap-2 px-3 rounded-md border border-input bg-white text-left hover:bg-gray-50"
+        >
+          <span className={displayText ? "text-gray-900" : "text-gray-400"}>
+            {displayText || placeholder}
+          </span>
+          <CalendarIcon size={13} className="text-gray-400 shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleSelect}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
+// ════════════════════════════════════════════════════════════
+// FilterBar — component function এর বাইরে define করা, যাতে
+// প্রতি parent re-render এ নতুন component instance তৈরি না হয়
+// (এটাই ছিল input থেকে cursor হারানোর মূল কারণ)
+// ════════════════════════════════════════════════════════════
+const FilterBar = ({ filters, onChange, onClear, projectOptions, contractorOptions, showStatus, showCategory }) => {
+  const hasActive = Object.values(filters).some((v) => v);
+  return (
+    <div className="bg-white border rounded-2xl shadow-sm px-5 py-4 mb-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Filter size={14} className="text-gray-400" />
+        <span className="text-xs font-semibold text-gray-600 uppercase">Filters</span>
+        {hasActive && (
+          <button onClick={onClear} className="ml-auto text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
+            <X size={12} /> Clear all
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+        {/* <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Date From</label>
+          <Input type="date" value={filters.dateFrom} onChange={(e) => onChange("dateFrom", e.target.value)} className="h-8 text-xs" />
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Date To</label>
+          <Input type="date" value={filters.dateTo} onChange={(e) => onChange("dateTo", e.target.value)} className="h-8 text-xs" />
+        </div> */}
+
+        <div>
+  <label className="text-[10px] text-gray-400 block mb-0.5">Date From</label>
+  <DateInput value={filters.dateFrom} onChange={(v) => onChange("dateFrom", v)} />
+</div>
+<div>
+  <label className="text-[10px] text-gray-400 block mb-0.5">Date To</label>
+  <DateInput value={filters.dateTo} onChange={(v) => onChange("dateTo", v)} />
+</div>
+        {showStatus && (
+          <div>
+            <label className="text-[10px] text-gray-400 block mb-0.5">Status</label>
+            <Select value={filters.status || "ALL"} onValueChange={(v) => onChange("status", v === "ALL" ? "" : v)}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All</SelectItem>
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Project</label>
+          <Select value={filters.pId || "ALL"} onValueChange={(v) => onChange("pId", v === "ALL" ? "" : v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All projects" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All projects</SelectItem>
+              {projectOptions.map((p) => <SelectItem key={p.P_ID} value={String(p.P_ID)}>{p.P_NAME}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Contractor</label>
+          <Select value={filters.contractorId || "ALL"} onValueChange={(v) => onChange("contractorId", v === "ALL" ? "" : v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All contractors" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All contractors</SelectItem>
+              {contractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Invoice No</label>
+          <Input placeholder="Invoice no." value={filters.invoiceNo} onChange={(e) => onChange("invoiceNo", e.target.value)} className="h-8 text-xs" />
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Amount</label>
+          <Input type="number" step="0.01" placeholder="Exact amount" value={filters.amount} onChange={(e) => onChange("amount", e.target.value)} className="h-8 text-xs" />
+        </div>
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Description</label>
+          <Input placeholder="Search description" value={filters.description} onChange={(e) => onChange("description", e.target.value)} className="h-8 text-xs" />
+        </div>
+        {showCategory && (
+          <div>
+            <label className="text-[10px] text-gray-400 block mb-0.5">Category</label>
+            <Select value={filters.category || "ALL"} onValueChange={(v) => onChange("category", v === "ALL" ? "" : v)}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All categories" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All categories</SelectItem>
+                <SelectItem value="address">Address</SelectItem>
+                <SelectItem value="place">Place</SelectItem>
+                <SelectItem value="product">Product</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════════════════════
+// MainTabBtn / SubTabBtn — component এর বাইরে, distinct design
+// ════════════════════════════════════════════════════════════
+const MainTabBtn = ({ id, label, icon: Icon, active, onClick, count }) => (
+  <button
+    onClick={() => onClick(id)}
+    className={`relative flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-all
+      ${active
+        ? "text-blue-700 bg-white border-x border-t border-gray-200 rounded-t-xl -mb-px"
+        : "text-gray-400 bg-gray-100 hover:bg-gray-50 hover:text-gray-600 border-x border-t border-transparent rounded-t-xl"
+      }`}
+    style={active ? { boxShadow: "0 -2px 0 0 #2563eb inset" } : {}}
+  >
+    {Icon && <Icon size={15} className={active ? "text-blue-600" : "text-gray-400"} />}
+    {label}
+    {count != null && (
+      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"}`}>
+        {count}
+      </span>
+    )}
+  </button>
+);
+
+const SubTabBtn = ({ id, label, active, onClick }) => (
+  <button
+    onClick={() => onClick(id)}
+    className={`px-4 py-2 text-xs font-semibold rounded-full border-2 transition-all ${
+      active
+        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200"
+        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+    }`}
+  >
+    {label}
+  </button>
+);
 
 const StatementUpload = () => {
   const navigate    = useNavigate();
   const queryClient = useQueryClient();
 
-  // top-level tabs
-  const [mainTab, setMainTab]   = useState("pending");   // "pending" | "approved"
-  // pending sub-tabs
-  const [subTab, setSubTab]     = useState("banking");   // "banking" | "nonbanking"
+  const [mainTab, setMainTab] = useState("pending");
+  const [subTab, setSubTab]   = useState("banking");
 
   const [file, setFile]               = useState(null);
   const [batchId, setBatchId]         = useState(null);
-  const [search, setSearch]           = useState("");
-  const [nbSearch, setNbSearch]       = useState("");
-  const [approvedSearch, setApprovedSearch] = useState("");
   const [activeCats, setActiveCats]   = useState({ address: true, place: true, product: true, other: true });
   const [selectedIds, setSelectedIds] = useState([]);
   const [nbForm, setNbForm]           = useState(EMPTY_NB);
+
+  const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
+  const [nbFilters, setNbFilters]             = useState(EMPTY_FILTERS);
+  const [approvedFilters, setApprovedFilters] = useState(EMPTY_FILTERS);
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // ── stable onChange handlers per filter group (useState setter ref stable, তাই ঠিক আছে) ──
+  const updateBankFilter = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
+  const updateNbFilter   = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
+  const updateApprovedFilter = (key, value) => setApprovedFilters((p) => ({ ...p, [key]: value }));
 
   // ── latest pending batch ────────────────────────────────────────────────
   useQuery({
@@ -966,38 +274,55 @@ const StatementUpload = () => {
       fd.append("file", f);
       return axios.post(`${url}/api/statement/upload`, fd, { headers: { "Content-Type": "multipart/form-data" } });
     },
-    onSuccess: (res) => {
-      setBatchId(res.data?.batchId);
+    onSuccess: async (res) => {
+      const newBatchId = res.data?.batchId;
+      setBatchId(newBatchId);
       setSelectedIds([]);
+      setFile(null);
       toast.success(res.data?.message || "CSV processed!");
-      queryClient.invalidateQueries(["statementStaging", res.data?.batchId]);
-      queryClient.invalidateQueries(["statementStagingAll"]);
+      await queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
+      await queryClient.invalidateQueries({ queryKey: ["statementStaging"], refetchType: "active" });
     },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to process CSV."),
   });
 
-  // ── Staging rows for active batch (Banking tab) ─────────────────────────
-  const { data: rows = [], isLoading: rowsLoading } = useQuery({
-    queryKey: ["statementStaging", batchId],
-    queryFn: async () =>
-      (await axios.get(`${url}/api/statement/staging/${batchId}`)).data?.data || [],
-    enabled: !!batchId && subTab === "banking" && mainTab === "pending",
+  // ── Staging rows: Banking sub-tab ───────────────────────────────────────
+  const bankQueryParams = useMemo(() => ({ sourceType: "BANKING", ...bankFilters }), [bankFilters]);
+  const { data: rows = [], isLoading: rowsLoading, isFetching: rowsFetching } = useQuery({
+    queryKey: ["statementStagingAll", "BANKING", bankQueryParams],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(bankQueryParams).forEach(([k, v]) => { if (v) params.append(k, v); });
+      return (await axios.get(`${url}/api/statement/staging/all?${params.toString()}`)).data?.data || [];
+    },
+    enabled: subTab === "banking" && mainTab === "pending",
+    refetchOnWindowFocus: false,
   });
 
-  // ── All staging rows for Non-banking tab ───────────────────────────────
-  const { data: nbRows = [], isLoading: nbLoading } = useQuery({
-    queryKey: ["statementStagingAll", "NON_BANKING"],
-    queryFn: async () =>
-      (await axios.get(`${url}/api/statement/staging/all?sourceType=NON_BANKING`)).data?.data || [],
+  // ── Non-banking rows ────────────────────────────────────────────────────
+  const nbQueryParams = useMemo(() => ({ sourceType: "NON_BANKING", ...nbFilters }), [nbFilters]);
+  const { data: nbRows = [], isLoading: nbLoading, isFetching: nbFetching } = useQuery({
+    queryKey: ["statementStagingAll", "NON_BANKING", nbQueryParams],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(nbQueryParams).forEach(([k, v]) => { if (v) params.append(k, v); });
+      return (await axios.get(`${url}/api/statement/staging/all?${params.toString()}`)).data?.data || [];
+    },
     enabled: subTab === "nonbanking" && mainTab === "pending",
+    refetchOnWindowFocus: false,
   });
 
   // ── Approved (Main) rows ────────────────────────────────────────────────
-  const { data: approvedRows = [], isLoading: approvedLoading } = useQuery({
-    queryKey: ["statementMain"],
-    queryFn: async () =>
-      (await axios.get(`${url}/api/statement/main`)).data?.data || [],
+  const approvedQueryParams = useMemo(() => ({ ...approvedFilters }), [approvedFilters]);
+  const { data: approvedRows = [], isLoading: approvedLoading, isFetching: approvedFetching } = useQuery({
+    queryKey: ["statementMain", approvedQueryParams],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(approvedQueryParams).forEach(([k, v]) => { if (v && k !== "status") params.append(k, v); });
+      return (await axios.get(`${url}/api/statement/main?${params.toString()}`)).data?.data || [];
+    },
     enabled: mainTab === "approved",
+    refetchOnWindowFocus: false,
   });
 
   // ── Dropdowns ───────────────────────────────────────────────────────────
@@ -1012,12 +337,13 @@ const StatementUpload = () => {
   });
 
   // ── Mutations ───────────────────────────────────────────────────────────
+  const invalidateStaging = () => {
+    queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
+  };
+
   const updateRowMutation = useMutation({
     mutationFn: async (payload) => axios.put(`${url}/api/statement/staging/row`, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["statementStaging", batchId]);
-      queryClient.invalidateQueries(["statementStagingAll", "NON_BANKING"]);
-    },
+    onSuccess: invalidateStaging,
     onError: (err) => toast.error(err.response?.data?.message || "Failed to update row."),
   });
 
@@ -1027,23 +353,27 @@ const StatementUpload = () => {
       fd.append("invoiceFile", file);
       return axios.post(`${url}/api/statement/staging/${stagingId}/invoice`, fd, { headers: { "Content-Type": "multipart/form-data" } });
     },
-    onSuccess: () => {
-      toast.success("Invoice uploaded.");
-      queryClient.invalidateQueries(["statementStaging", batchId]);
-      queryClient.invalidateQueries(["statementStagingAll", "NON_BANKING"]);
-    },
+    onSuccess: () => { toast.success("Invoice uploaded."); invalidateStaging(); },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to upload invoice."),
   });
 
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (stagingId) => axios.delete(`${url}/api/statement/staging/${stagingId}/invoice`),
+    onSuccess: () => {
+      toast.success("Invoice file deleted.");
+      setDeleteTarget(null);
+      invalidateStaging();
+    },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete invoice."),
+  });
+
   const approveMutation = useMutation({
-    mutationFn: async (stagingIds) =>
-      axios.post(`${url}/api/statement/approve`, { stagingIds }),
+    mutationFn: async (stagingIds) => axios.post(`${url}/api/statement/approve`, { stagingIds }),
     onSuccess: (res) => {
       toast.success(res.data?.message || "Rows approved!");
       setSelectedIds([]);
-      queryClient.invalidateQueries(["statementStaging", batchId]);
-      queryClient.invalidateQueries(["statementStagingAll", "NON_BANKING"]);
-      queryClient.invalidateQueries(["statementMain"]);
+      invalidateStaging();
+      queryClient.invalidateQueries({ queryKey: ["statementMain"], refetchType: "active" });
     },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to approve rows."),
   });
@@ -1053,7 +383,7 @@ const StatementUpload = () => {
     onSuccess: () => {
       toast.success("Entry added to staging.");
       setNbForm(EMPTY_NB);
-      queryClient.invalidateQueries(["statementStagingAll", "NON_BANKING"]);
+      invalidateStaging();
     },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to add entry."),
   });
@@ -1079,6 +409,10 @@ const StatementUpload = () => {
     updateRowMutation.mutate({ stagingId: row.STAGING_ID, remarks: value });
   };
 
+  const handleCategoryChange = (row, value) => {
+    updateRowMutation.mutate({ stagingId: row.STAGING_ID, category: value });
+  };
+
   const handleInvoiceFileSelect = (row, fileList) => {
     const f = fileList?.[0];
     if (!f) return;
@@ -1098,10 +432,7 @@ const StatementUpload = () => {
     uploadMutation.mutate(file);
   };
 
-  const handleReset = () => {
-    setFile(null); setBatchId(null); setSearch(""); setSelectedIds([]);
-    setActiveCats({ address: true, place: true, product: true, other: true });
-  };
+  const handleReset = () => { setFile(null); setBatchId(null); setSelectedIds([]); };
 
   const toggleCategory = (cat) => setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
 
@@ -1143,35 +474,8 @@ const StatementUpload = () => {
   }, [rows]);
 
   const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
-      const cat = (r.CATEGORY || "other").toLowerCase();
-      if (!activeCats[cat]) return false;
-      if (!q) return true;
-      return (r.DESCRIPTION || "").toLowerCase().includes(q) || (r.MATCHED_ADDRESS || "").toLowerCase().includes(q);
-    });
-  }, [rows, activeCats, search]);
-
-  const filteredNb = useMemo(() => {
-    const q = nbSearch.trim().toLowerCase();
-    if (!q) return nbRows;
-    return nbRows.filter((r) =>
-      (r.DESCRIPTION || "").toLowerCase().includes(q) ||
-      (r.PROJECT_NAME || "").toLowerCase().includes(q) ||
-      (r.CONTRACTOR_NAME || "").toLowerCase().includes(q)
-    );
-  }, [nbRows, nbSearch]);
-
-  const filteredApproved = useMemo(() => {
-    const q = approvedSearch.trim().toLowerCase();
-    if (!q) return approvedRows;
-    return approvedRows.filter((r) =>
-      (r.DESCRIPTION || "").toLowerCase().includes(q) ||
-      (r.PROJECT_NAME || "").toLowerCase().includes(q) ||
-      (r.CONTRACTOR_NAME || "").toLowerCase().includes(q) ||
-      (r.INVOICE_NO || "").toLowerCase().includes(q)
-    );
-  }, [approvedRows, approvedSearch]);
+    return rows.filter((r) => activeCats[(r.CATEGORY || "other").toLowerCase()]);
+  }, [rows, activeCats]);
 
   const fmtAmount = (amt) => {
     const n = Number(amt) || 0;
@@ -1181,12 +485,13 @@ const StatementUpload = () => {
 
   const handleDownloadCsv = (dataRows, filename) => {
     if (dataRows.length === 0) { toast.error("No rows to download."); return; }
-    const headers = ["Date", "Amount", "Description", "Balance", "Category", "Project", "Matched Address", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
+    const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Category", "Project", "Matched Address", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
     const csvRows = dataRows.map((r) => [
-      r.TXN_DATE ? new Date(r.TXN_DATE).toLocaleDateString() : "",
+      fmtDate(r.TXN_DATE),
       r.AMOUNT,
+      r.DEBIT ?? "",
+      r.CREDIT ?? "",
       `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
-      r.BALANCE ?? "",
       r.CATEGORY,
       `"${(r.PROJECT_NAME || "").replace(/"/g, '""')}"`,
       `"${(r.MATCHED_ADDRESS || "").replace(/"/g, '""')}"`,
@@ -1204,70 +509,81 @@ const StatementUpload = () => {
   };
 
   // ── Reusable staging table rows ─────────────────────────────────────────
-  const renderStagingRows = (dataRows, loading, colSpan = 12) => {
-    if (loading) return <tr><td colSpan={colSpan} className="text-center py-10 text-gray-400">Loading...</td></tr>;
-    if (dataRows.length === 0) return <tr><td colSpan={colSpan} className="text-center py-10 text-gray-400">No rows found.</td></tr>;
+  const renderStagingRows = (dataRows, loading) => {
+    if (loading) return <tr><td colSpan={12} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>;
+    if (dataRows.length === 0) return <tr><td colSpan={12} className="text-center py-10 text-gray-400">No rows found.</td></tr>;
     return dataRows.map((r) => {
       const cat      = (r.CATEGORY || "other").toLowerCase();
       const approved = r.STATUS === "APPROVED";
       return (
         <tr key={r.STAGING_ID} className={`border-b last:border-0 ${approved ? "bg-green-50 opacity-70" : "hover:bg-gray-50"}`}>
           <td className="px-3 py-2.5">
-            <input
-              type="checkbox"
-              className="accent-blue-600 w-4 h-4"
-              checked={selectedIds.includes(r.STAGING_ID)}
-              disabled={approved}
-              onChange={() => !approved && toggleRow(r.STAGING_ID)}
-            />
+            <input type="checkbox" className="accent-blue-600 w-4 h-4"
+              checked={selectedIds.includes(r.STAGING_ID)} disabled={approved}
+              onChange={() => !approved && toggleRow(r.STAGING_ID)} />
           </td>
           <td className="px-4 py-2.5">
-            {/* Status badge */}
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLES[r.STATUS] || STATUS_STYLES.PENDING}`}>
               {r.STATUS || "PENDING"}
             </span>
           </td>
           <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
-            {r.TXN_DATE ? new Date(r.TXN_DATE).toLocaleDateString("en-GB") : "—"}
+            {fmtDate(r.TXN_DATE)}
           </td>
           <td className={`px-4 py-2.5 text-right font-semibold whitespace-nowrap ${Number(r.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}>
             {fmtAmount(r.AMOUNT)}
           </td>
-          <td className="px-4 py-2.5 max-w-[260px] text-gray-700 text-xs">{r.DESCRIPTION}</td>
-          <td className="px-4 py-2.5">
-            <span className={`text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[cat]}`}>{cat}</span>
+          <td className="px-4 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">{r.DESCRIPTION}</td>
+          <td className="px-4 py-2.5 min-w-[110px]">
+            <Select value={cat} onValueChange={(v) => !approved && handleCategoryChange(r, v)} disabled={approved}>
+              <SelectTrigger className="h-7 text-xs">
+                <SelectValue><span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat]}`}>{cat}</span></SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="address">Address</SelectItem>
+                <SelectItem value="place">Place</SelectItem>
+                <SelectItem value="product">Product</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </td>
-          {/* Project dropdown */}
-          <td className="px-4 py-2.5 min-w-[160px]">
+          <td className="px-4 py-2.5 min-w-[150px]">
             <Select value={r.P_ID ? String(r.P_ID) : ""} onValueChange={(v) => !approved && handleProjectChange(r, v)} disabled={approved}>
               <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Project">{r.PROJECT_NAME || "Select project"}</SelectValue></SelectTrigger>
               <SelectContent>{projectOptions.map((p) => <SelectItem key={p.P_ID} value={String(p.P_ID)}>{p.P_NAME}</SelectItem>)}</SelectContent>
             </Select>
           </td>
-          <td className="px-4 py-2.5 max-w-[160px] text-xs text-gray-700">
+          <td className="px-4 py-2.5 max-w-[150px] text-xs text-gray-700">
             {r.MATCHED_ADDRESS ? <span className="text-blue-700 font-medium">{r.MATCHED_ADDRESS}</span> : <span className="text-gray-400 italic">—</span>}
           </td>
-          {/* Contractor dropdown */}
-          <td className="px-4 py-2.5 min-w-[160px]">
+          <td className="px-4 py-2.5 min-w-[150px]">
             <Select value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""} onValueChange={(v) => !approved && handleContractorChange(r, v)} disabled={approved}>
               <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Contractor">{r.CONTRACTOR_NAME || "Select contractor"}</SelectValue></SelectTrigger>
               <SelectContent>{contractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}</SelectContent>
             </Select>
           </td>
-          <td className="px-4 py-2.5 min-w-[110px]">
+          <td className="px-4 py-2.5 min-w-[100px]">
             <Input defaultValue={r.INVOICE_NO || ""} placeholder="Inv no." className="h-7 text-xs"
               disabled={approved} onBlur={(e) => !approved && handleInvoiceNoBlur(r, e.target.value)} />
           </td>
-          <td className="px-4 py-2.5 min-w-[130px]">
+          <td className="px-4 py-2.5 min-w-[120px]">
             <Input defaultValue={r.REMARKS || ""} placeholder="Remarks" className="h-7 text-xs"
               disabled={approved} onBlur={(e) => !approved && handleRemarksBlur(r, e.target.value)} />
           </td>
-          <td className="px-4 py-2.5 min-w-[130px]">
+          <td className="px-4 py-2.5 min-w-[140px]">
             {r.INVOICE_FILE_NAME ? (
-              <a href={`${url}/api/statement/staging/${r.STAGING_ID}/invoice`} target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[120px]" title={r.INVOICE_FILE_NAME}>
-                <ExternalLink size={12} className="shrink-0" />{r.INVOICE_FILE_NAME}
-              </a>
+              <div className="flex items-center gap-1.5">
+                <a href={`${url}/api/statement/staging/${r.STAGING_ID}/invoice`} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[90px]" title={r.INVOICE_FILE_NAME}>
+                  <ExternalLink size={12} className="shrink-0" />{r.INVOICE_FILE_NAME}
+                </a>
+                {!approved && (
+                  <button onClick={() => setDeleteTarget({ stagingId: r.STAGING_ID, fileName: r.INVOICE_FILE_NAME })}
+                    className="text-red-500 hover:text-red-700 shrink-0" title="Delete invoice">
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </div>
             ) : approved ? (
               <span className="text-gray-400 italic text-xs">—</span>
             ) : (
@@ -1283,7 +599,6 @@ const StatementUpload = () => {
     });
   };
 
-  // ── Staging table header ─────────────────────────────────────────────────
   const StagingThead = ({ rows: visibleRows }) => (
     <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
       <tr>
@@ -1308,25 +623,6 @@ const StatementUpload = () => {
     </thead>
   );
 
-  // ── Tab components ───────────────────────────────────────────────────────
-  const MainTabBtn = ({ id, label }) => (
-    <button onClick={() => setMainTab(id)}
-      className={`px-6 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all ${
-        mainTab === id ? "border-blue-600 text-blue-600 bg-white" : "border-transparent text-gray-500 hover:text-gray-700 bg-gray-50"
-      }`}>
-      {label}
-    </button>
-  );
-
-  const SubTabBtn = ({ id, label }) => (
-    <button onClick={() => setSubTab(id)}
-      className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
-        subTab === id ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-      }`}>
-      {label}
-    </button>
-  );
-
   return (
     <SectionContainer>
       <div className="p-6 bg-white shadow rounded-lg mt-8">
@@ -1343,27 +639,23 @@ const StatementUpload = () => {
           </Button>
         </div>
 
-        {/* ── MAIN TABS ── */}
-        <div className="flex border-b mb-6">
-          <MainTabBtn id="pending"  label="Pending Uploads" />
-          <MainTabBtn id="approved" label="Approved Records" />
+        {/* MAIN TABS — visually distinct active/inactive */}
+        <div className="flex gap-1 border-b border-gray-200 mb-6">
+          <MainTabBtn id="pending"  label="Pending Uploads"  icon={Inbox}      active={mainTab === "pending"}  onClick={setMainTab} />
+          <MainTabBtn id="approved" label="Approved Records" icon={BadgeCheck} active={mainTab === "approved"} onClick={setMainTab} />
         </div>
 
-        {/* ════════════════════════════════════════════
-            MAIN TAB 1 — PENDING UPLOADS
-        ════════════════════════════════════════════ */}
+        {/* ════════ PENDING ════════ */}
         {mainTab === "pending" && (
           <>
-            {/* Sub-tabs */}
             <div className="flex items-center gap-2 mb-5">
-              <SubTabBtn id="banking"    label="Banking (from CSV)" />
-              <SubTabBtn id="nonbanking" label="Non-banking (manual form)" />
+              <SubTabBtn id="banking"    label="Banking (from CSV)"        active={subTab === "banking"}    onClick={setSubTab} />
+              <SubTabBtn id="nonbanking" label="Non-banking (manual form)" active={subTab === "nonbanking"} onClick={setSubTab} />
             </div>
 
-            {/* ── SUB-TAB: BANKING ── */}
+            {/* BANKING */}
             {subTab === "banking" && (
               <>
-                {/* CSV upload row */}
                 <div className="flex flex-wrap items-center gap-3 mb-5">
                   <div className="flex items-center gap-3 bg-white border rounded-full px-4 py-1.5 shadow-sm">
                     <label htmlFor="statement-csv-input" className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
@@ -1373,78 +665,72 @@ const StatementUpload = () => {
                     <input id="statement-csv-input" type="file" accept=".csv" className="hidden" onChange={(e) => handleFileSelect(e.target.files)} />
                   </div>
                   <Button onClick={handleLoad} disabled={uploadMutation.isPending} className="rounded-full bg-emerald-600 hover:bg-emerald-700">
-                    {uploadMutation.isPending ? "Loading..." : "Load"}
+                    {uploadMutation.isPending ? <><Loader2 className="animate-spin mr-1" size={14} />Loading...</> : "Load"}
                   </Button>
                   <Button variant="outline" onClick={handleReset} className="rounded-full">
                     <RotateCcw size={14} className="mr-1" /> Reset
                   </Button>
+                  {rowsFetching && !rowsLoading && (
+                    <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="animate-spin" size={12} /> refreshing...</span>
+                  )}
                 </div>
 
-                {batchId ? (
-                  <>
-                    {/* Stats */}
-                    <div className="flex flex-wrap items-center gap-6 bg-white border rounded-2xl shadow-sm px-6 py-4 mb-5">
-                      <div className="text-sm text-gray-600">
-                        <strong className="text-gray-900 text-base font-semibold mr-1">{rows.length}</strong> rows
-                      </div>
-                      {Object.entries(stats).map(([cat, count]) => (
-                        <div key={cat} className="flex items-center gap-1.5 text-sm text-gray-600">
-                          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${CATEGORY_STYLES[cat]}`}>{cat}</span>
-                          <strong className="text-gray-900">{count}</strong>
-                        </div>
-                      ))}
-                    </div>
+                <FilterBar
+                  filters={bankFilters}
+                  onChange={updateBankFilter}
+                  onClear={() => setBankFilters(EMPTY_FILTERS)}
+                  projectOptions={projectOptions}
+                  contractorOptions={contractorOptions}
+                  showCategory
+                />
 
-                    {/* Filters + Actions */}
-                    <div className="flex flex-wrap items-center gap-4 bg-white border rounded-2xl shadow-sm px-6 py-3 mb-5">
-                      <div className="flex flex-wrap items-center gap-4">
-                        {["address", "place", "product", "other"].map((cat) => (
-                          <label key={cat} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 cursor-pointer capitalize">
-                            <input type="checkbox" checked={activeCats[cat]} onChange={() => toggleCategory(cat)} className="accent-blue-600 w-4 h-4" />
-                            {cat}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 ml-auto">
-                        <Search size={14} className="text-gray-400" />
-                        <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 text-sm rounded-full min-w-[200px]" />
-                        <span className="text-xs text-gray-500 whitespace-nowrap">{filteredRows.length} shown</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button onClick={() => handleDownloadCsv(filteredRows, "statement_banking.csv")} variant="outline" className="rounded-full text-sm">
-                          <Download size={14} className="mr-1" /> CSV
-                        </Button>
-                        <Button onClick={handleApprove} disabled={approveMutation.isPending || selectedIds.length === 0}
-                          className="rounded-full bg-violet-600 hover:bg-violet-700 text-sm">
-                          <CheckCircle2 size={14} className="mr-1" />
-                          {approveMutation.isPending ? "Approving..." : `Approve${selectedIds.length ? ` (${selectedIds.length})` : ""}`}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Banking Table */}
-                    <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm min-w-[1600px]">
-                          <StagingThead rows={filteredRows} />
-                          <tbody>{renderStagingRows(filteredRows, rowsLoading)}</tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-16 text-gray-400">
-                    <FileSpreadsheet size={48} className="mx-auto mb-3 text-gray-300" />
-                    <p>Choose a CSV file and click Load to get started.</p>
+                <div className="flex flex-wrap items-center gap-6 bg-white border rounded-2xl shadow-sm px-6 py-4 mb-5">
+                  <div className="text-sm text-gray-600">
+                    <strong className="text-gray-900 text-base font-semibold mr-1">{filteredRows.length}</strong> rows
                   </div>
-                )}
+                  {Object.entries(stats).map(([cat, count]) => (
+                    <div key={cat} className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${CATEGORY_STYLES[cat]}`}>{cat}</span>
+                      <strong className="text-gray-900">{count}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 bg-white border rounded-2xl shadow-sm px-6 py-3 mb-5">
+                  <div className="flex flex-wrap items-center gap-4">
+                    {["address", "place", "product", "other"].map((cat) => (
+                      <label key={cat} className="flex items-center gap-1.5 text-sm font-medium text-gray-700 cursor-pointer capitalize">
+                        <input type="checkbox" checked={activeCats[cat]} onChange={() => toggleCategory(cat)} className="accent-blue-600 w-4 h-4" />
+                        {cat}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button onClick={() => handleDownloadCsv(filteredRows, "statement_banking.csv")} variant="outline" className="rounded-full text-sm">
+                      <Download size={14} className="mr-1" /> CSV
+                    </Button>
+                    <Button onClick={handleApprove} disabled={approveMutation.isPending || selectedIds.length === 0}
+                      className="rounded-full bg-violet-600 hover:bg-violet-700 text-sm">
+                      <CheckCircle2 size={14} className="mr-1" />
+                      {approveMutation.isPending ? "Approving..." : `Approve${selectedIds.length ? ` (${selectedIds.length})` : ""}`}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[1600px]">
+                      <StagingThead rows={filteredRows} />
+                      <tbody>{renderStagingRows(filteredRows, rowsLoading)}</tbody>
+                    </table>
+                  </div>
+                </div>
               </>
             )}
 
-            {/* ── SUB-TAB: NON-BANKING ── */}
+            {/* NON-BANKING */}
             {subTab === "nonbanking" && (
               <>
-                {/* Manual entry form */}
                 <div className="bg-white border rounded-2xl shadow-sm px-6 py-5 mb-5">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                     <PlusCircle size={15} className="text-blue-600" /> Add Entry
@@ -1455,9 +741,36 @@ const StatementUpload = () => {
                       <Input type="date" value={nbForm.txnDate} onChange={(e) => setNbForm((p) => ({ ...p, txnDate: e.target.value }))} className="h-8 text-xs" />
                     </div>
                     <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Type *</label>
+                      <Select value={nbForm.entryType} onValueChange={(v) => setNbForm((p) => ({ ...p, entryType: v, amount: "" }))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="DEBIT">Debit</SelectItem>
+                          <SelectItem value="CREDIT">Credit</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
                       <label className="text-xs text-gray-500 mb-1 block">Amount *</label>
-                      <Input type="number" step="0.01" placeholder="e.g. -1500" value={nbForm.amount}
-                        onChange={(e) => setNbForm((p) => ({ ...p, amount: e.target.value }))} className="h-8 text-xs" />
+                      <Input type="number" step="0.01" min="0" placeholder="e.g. 1500"
+                        value={nbForm.amount}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "" || Number(v) >= 0) setNbForm((p) => ({ ...p, amount: v }));
+                        }}
+                        className="h-8 text-xs" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 mb-1 block">Category</label>
+                      <Select value={nbForm.category} onValueChange={(v) => setNbForm((p) => ({ ...p, category: v }))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="address">Address</SelectItem>
+                          <SelectItem value="place">Place</SelectItem>
+                          <SelectItem value="product">Product</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="col-span-2">
                       <label className="text-xs text-gray-500 mb-1 block">Description *</label>
@@ -1500,15 +813,22 @@ const StatementUpload = () => {
                   </div>
                 </div>
 
-                {/* Non-banking pending table */}
+                <FilterBar
+                  filters={nbFilters}
+                  onChange={updateNbFilter}
+                  onClear={() => setNbFilters(EMPTY_FILTERS)}
+                  projectOptions={projectOptions}
+                  contractorOptions={contractorOptions}
+                  showCategory
+                />
+
                 <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Search size={14} className="text-gray-400" />
-                    <Input placeholder="Search..." value={nbSearch} onChange={(e) => setNbSearch(e.target.value)} className="h-8 text-sm rounded-full min-w-[220px]" />
-                    <span className="text-xs text-gray-500">{filteredNb.length} shown</span>
-                  </div>
+                  <span className="text-xs text-gray-500">{nbRows.length} rows</span>
+                  {nbFetching && !nbLoading && (
+                    <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="animate-spin" size={12} /> refreshing...</span>
+                  )}
                   <div className="flex items-center gap-2 ml-auto">
-                    <Button onClick={() => handleDownloadCsv(filteredNb, "statement_nonbanking.csv")} variant="outline" className="rounded-full text-sm">
+                    <Button onClick={() => handleDownloadCsv(nbRows, "statement_nonbanking.csv")} variant="outline" className="rounded-full text-sm">
                       <Download size={14} className="mr-1" /> CSV
                     </Button>
                     <Button onClick={handleApprove} disabled={approveMutation.isPending || selectedIds.length === 0}
@@ -1522,8 +842,8 @@ const StatementUpload = () => {
                 <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1600px]">
-                      <StagingThead rows={filteredNb} />
-                      <tbody>{renderStagingRows(filteredNb, nbLoading)}</tbody>
+                      <StagingThead rows={nbRows} />
+                      <tbody>{renderStagingRows(nbRows, nbLoading)}</tbody>
                     </table>
                   </div>
                 </div>
@@ -1532,20 +852,23 @@ const StatementUpload = () => {
           </>
         )}
 
-        {/* ════════════════════════════════════════════
-            MAIN TAB 2 — APPROVED RECORDS
-        ════════════════════════════════════════════ */}
+        {/* ════════ APPROVED ════════ */}
         {mainTab === "approved" && (
           <>
+            <FilterBar
+              filters={approvedFilters}
+              onChange={updateApprovedFilter}
+              onClear={() => setApprovedFilters(EMPTY_FILTERS)}
+              projectOptions={projectOptions}
+              contractorOptions={contractorOptions}
+            />
+
             <div className="flex flex-wrap items-center gap-3 mb-5">
-              <div className="flex items-center gap-2">
-                <Search size={14} className="text-gray-400" />
-                <Input placeholder="Search description, project, contractor, invoice..."
-                  value={approvedSearch} onChange={(e) => setApprovedSearch(e.target.value)}
-                  className="h-8 text-sm rounded-full min-w-[280px]" />
-                <span className="text-xs text-gray-500 whitespace-nowrap">{filteredApproved.length} shown</span>
-              </div>
-              <Button onClick={() => handleDownloadCsv(filteredApproved, "statement_approved.csv")}
+              <span className="text-xs text-gray-500">{approvedRows.length} rows</span>
+              {approvedFetching && !approvedLoading && (
+                <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="animate-spin" size={12} /> refreshing...</span>
+              )}
+              <Button onClick={() => handleDownloadCsv(approvedRows, "statement_approved.csv")}
                 variant="outline" className="rounded-full text-sm ml-auto">
                 <Download size={14} className="mr-1" /> Download CSV
               </Button>
@@ -1553,11 +876,13 @@ const StatementUpload = () => {
 
             <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[1300px]">
+                <table className="w-full text-sm min-w-[1600px]">
                   <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
                     <tr>
                       <th className="px-4 py-3 text-left">Date</th>
                       <th className="px-4 py-3 text-right">Amount</th>
+                      <th className="px-4 py-3 text-right">Debit</th>
+                      <th className="px-4 py-3 text-right">Credit</th>
                       <th className="px-4 py-3 text-left">Description</th>
                       <th className="px-4 py-3 text-left">Category</th>
                       <th className="px-4 py-3 text-left">Source</th>
@@ -1572,21 +897,27 @@ const StatementUpload = () => {
                   </thead>
                   <tbody>
                     {approvedLoading ? (
-                      <tr><td colSpan={12} className="text-center py-10 text-gray-400">Loading...</td></tr>
-                    ) : filteredApproved.length === 0 ? (
-                      <tr><td colSpan={12} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
+                      <tr><td colSpan={14} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                    ) : approvedRows.length === 0 ? (
+                      <tr><td colSpan={14} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
                     ) : (
-                      filteredApproved.map((r) => {
+                      approvedRows.map((r) => {
                         const cat = (r.CATEGORY || "other").toLowerCase();
                         return (
                           <tr key={r.TXN_ID} className="border-b last:border-0 hover:bg-gray-50">
                             <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
-                              {r.TXN_DATE ? new Date(r.TXN_DATE).toLocaleDateString("en-GB") : "—"}
+                              {fmtDate(r.TXN_DATE)}
                             </td>
                             <td className={`px-4 py-2.5 text-right font-semibold whitespace-nowrap ${Number(r.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}>
                               {fmtAmount(r.AMOUNT)}
                             </td>
-                            <td className="px-4 py-2.5 max-w-[260px] text-gray-700 text-xs">{r.DESCRIPTION}</td>
+                            <td className="px-4 py-2.5 text-right font-semibold text-red-600 whitespace-nowrap">
+                              {r.DEBIT != null ? `$${Number(r.DEBIT).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                              {r.CREDIT != null ? `$${Number(r.CREDIT).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "—"}
+                            </td>
+                            <td className="px-4 py-2.5 max-w-[220px] text-gray-700 text-xs break-words">{r.DESCRIPTION}</td>
                             <td className="px-4 py-2.5">
                               <span className={`text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[cat] || CATEGORY_STYLES.other}`}>{cat}</span>
                             </td>
@@ -1596,14 +927,14 @@ const StatementUpload = () => {
                               </span>
                             </td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.PROJECT_NAME || <span className="text-gray-400 italic">—</span>}</td>
-                            <td className="px-4 py-2.5 max-w-[160px] text-xs">
+                            <td className="px-4 py-2.5 max-w-[150px] text-xs">
                               {r.MATCHED_ADDRESS ? <span className="text-blue-700 font-medium">{r.MATCHED_ADDRESS}</span> : <span className="text-gray-400 italic">—</span>}
                             </td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.CONTRACTOR_NAME || <span className="text-gray-400 italic">—</span>}</td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.INVOICE_NO || <span className="text-gray-400 italic">—</span>}</td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.REMARKS || <span className="text-gray-400 italic">—</span>}</td>
                             <td className="px-4 py-2.5 whitespace-nowrap text-gray-500 text-xs">
-                              {r.APPROVED_DATE ? new Date(r.APPROVED_DATE).toLocaleDateString("en-GB") : "—"}
+                              {fmtDate(r.APPROVED_DATE)}
                             </td>
                             <td className="px-4 py-2.5 min-w-[130px]">
                               {r.INVOICE_FILE_NAME ? (
@@ -1629,6 +960,33 @@ const StatementUpload = () => {
         )}
 
       </div>
+
+      {/* ── DELETE INVOICE CONFIRMATION MODAL ── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setDeleteTarget(null)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-3">
+              <Trash2 className="text-red-500" size={18} />
+              <h3 className="text-sm font-semibold text-gray-800">Delete Invoice File?</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">You're about to delete:</p>
+            <p className="text-sm font-medium text-gray-900 mb-4 truncate">{deleteTarget.fileName}</p>
+            <p className="text-xs text-gray-500 mb-5">You can upload a new file after deleting this one.</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} className="rounded-full text-sm">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => deleteInvoiceMutation.mutate(deleteTarget.stagingId)}
+                disabled={deleteInvoiceMutation.isPending}
+                className="rounded-full bg-red-600 hover:bg-red-700 text-sm"
+              >
+                {deleteInvoiceMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </SectionContainer>
   );
 };
