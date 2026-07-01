@@ -102,10 +102,9 @@ const navigate = useNavigate();
       toast.error(err?.response?.data?.message || "Failed to delete project."),
   });
 
-  const handleEdit = (projectId) => {
-    setSelectedProjectId(projectId);
-    setEditSheetOpen(true);
-  };
+ const handleEdit = (projectId) => {
+  navigate(`/dashboard/projects/${projectId}/edit`);
+};
 
   const handleDeleteClick = (projectId) => {
     setDeleteTargetId(projectId);

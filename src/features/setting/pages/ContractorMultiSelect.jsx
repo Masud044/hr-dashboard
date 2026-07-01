@@ -33,12 +33,15 @@ export function ContractorMultiSelect({
 
   return (
     <div ref={ref} className="relative w-full">
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full h-10 px-3 border rounded-md bg-white flex items-center justify-between"
+        className="w-full h-10 px-3 border border-border rounded-md 
+          bg-card hover:bg-muted/50 transition-colors
+          flex items-center justify-between"
       >
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-foreground">
           {selectedCount
             ? `${selectedCount} Contractor Selected`
             : placeholder}
@@ -46,27 +49,33 @@ export function ContractorMultiSelect({
 
         <ChevronDown
           size={16}
-          className={`transition-transform ${
+          className={`text-muted-foreground transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
       </button>
 
+      {/* Dropdown Menu */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg max-h-72 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full 
+          bg-card border border-border rounded-md shadow-lg 
+          max-h-72 overflow-y-auto">
           {contractors.map((c) => (
             <label
               key={c.id}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer"
+              className="flex items-center gap-3 px-4 py-3 
+                hover:bg-muted/50 cursor-pointer transition-colors"
             >
               <input
                 type="checkbox"
                 checked={value.includes(c.id)}
                 onChange={() => toggle(c.id)}
-                className="h-4 w-4"
+                className="h-4 w-4 rounded border-border 
+                  text-primary focus:ring-primary/20 
+                  dark:border-muted-foreground"
               />
 
-              <span className="text-base text-gray-800">
+              <span className="text-sm text-foreground">
                 {c.title}
               </span>
             </label>

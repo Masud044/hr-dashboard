@@ -7,18 +7,22 @@ export function useAuthV2() {
     data: user,
     isLoading,
     isError,
-    fetchStatus,           // ✅ যোগ করো
+    fetchStatus,
   } = useCurrentUserV2();
 
-  const loading = isLoading && fetchStatus !== "idle"; // ✅ সঠিক loading check
+  const loading = isLoading && fetchStatus !== "idle";
+
+  // ✅ Call each mutation hook ONCE and reuse the same instance.
+  const loginMutation = useLoginV2();
+  const logoutMutation = useLogoutV2();
 
   return {
     user,
-    isLoading: loading,    // ✅ এটা return করো
+    isLoading: loading,
     isAuthenticated: !!user && !isError,
-    login:      useLoginV2().mutateAsync,
-    logout:     useLogoutV2().mutate,
-    loginError: useLoginV2().error,
-    loginPending: useLoginV2().isPending,
+    login: loginMutation.mutateAsync,
+    logout: logoutMutation.mutate,
+    loginError: loginMutation.error,
+    loginPending: loginMutation.isPending,
   };
 }

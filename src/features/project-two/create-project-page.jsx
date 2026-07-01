@@ -202,190 +202,60 @@ export function CreateProjectPage() {
       : `${(b / 1048576).toFixed(1)} MB`;
 
   return (
-   <SectionContainer variant="dashboard" className="py-8">
-        {/* Main Form Container */}
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-          {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="font-display text-2xl font-bold text-foreground tracking-[-0.03em]">
-              Create New Project
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Fill in the details to create a new project
-            </p>
-            <div className="w-full h-px bg-border mt-6" />
-          </div>
+    <SectionContainer variant="dashboard">
+      {/* Main Form Container */}
+      <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="font-display text-2xl font-bold text-foreground tracking-[-0.03em]">
+            Create New Project
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Fill in the details to create a new project
+          </p>
+          <div className="w-full h-px bg-border mt-6" />
+        </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              {/* Basic Information Grid */}
-              <div className="space-y-4">
-                {/* Row 1: Project Name (Full Width) */}
-                <FormField
-                  control={form.control}
-                  name="P_NAME"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground">
-                        Project Name <Req />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Enter formal project title"
-                          className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Basic Information Grid */}
+            <div className="space-y-4">
+              {/* Row 1: Project Name (Full Width) */}
+              <FormField
+                control={form.control}
+                name="P_NAME"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Project Name <Req />
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Enter formal project title"
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                {/* Row 2: Project Code (50%) + Project Type (50%) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="P_CODE"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-foreground">
-                          Project Code
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="PRJ-000"
-                            className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="P_TYPE"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-foreground">
-                          Project Type <Req />
-                        </FormLabel>
-                        <FormControl>
-                          <Select
-                            value={field.value || ""}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className="h-10 px-3 py-2 text-sm border-border">
-                              <SelectValue placeholder="Select Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {projectTypes.map((pt) => (
-                                <SelectItem
-                                  key={pt.ID}
-                                  value={pt.ID.toString()}
-                                >
-                                  {pt.NAME}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Row 3: Insurance No (50%) + Start Date (25%) + End Date (25%) */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="INSURANCE_NO"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="text-sm font-medium text-foreground">
-                          Insurance No
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="INS-889900"
-                            className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="P_ENTATIVE_START_DATE"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-1">
-                        <FormLabel className="text-sm font-medium text-foreground">
-                          Start Date
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            value={field.value || ""}
-                            className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="P_TENTATIVE_END_DATE"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-1">
-                        <FormLabel className="text-sm font-medium text-foreground">
-                          End Date
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            value={field.value || ""}
-                            className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* ── Land Details ─────────────────────────────────────────── */}
-              <div className="flex items-center gap-4 mb-6 mt-8">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
-                  Land Details
-                </span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
+              {/* Row 2: Project Code (50%) + Project Type (50%) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="LOT"
+                  name="P_CODE"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-foreground">
-                        Lot Number
+                        Project Code
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter lot number"
-                          className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
+                          placeholder="PRJ-000"
+                          className="h-10 "
                         />
                       </FormControl>
                       <FormMessage />
@@ -395,88 +265,26 @@ export function CreateProjectPage() {
 
                 <FormField
                   control={form.control}
-                  name="DP"
+                  name="P_TYPE"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-foreground">
-                        DP Number
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Deposited plan number"
-                          className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="P_ADDRESS"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel className="text-sm font-medium text-foreground">
-                        Project Address <Req />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={2}
-                          {...field}
-                          placeholder="Full street address"
-                          className="px-3 py-2 text-sm border-border focus-visible:ring-primary/20 resize-none"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="SUBWRB"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground">
-                        Suburb
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Suburb"
-                          className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="STATE"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground">
-                        State
+                        Project Type <Req />
                       </FormLabel>
                       <FormControl>
                         <Select
                           value={field.value || ""}
                           onValueChange={field.onChange}
                         >
-                          <SelectTrigger className="h-10 px-3 py-2 text-sm border-border">
-                            <SelectValue placeholder="NSW" />
+                          <SelectTrigger size="lg" className=" w-full border-input-border">
+                            <SelectValue placeholder="Select Type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="NSW">NSW</SelectItem>
-                            <SelectItem value="VIC">VIC</SelectItem>
-                            <SelectItem value="QLD">QLD</SelectItem>
-                            <SelectItem value="WA">WA</SelectItem>
-                            <SelectItem value="SA">SA</SelectItem>
-                            <SelectItem value="TAS">TAS</SelectItem>
+                            {projectTypes.map((pt) => (
+                              <SelectItem key={pt.ID} value={pt.ID.toString()}>
+                                {pt.NAME}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -484,20 +292,23 @@ export function CreateProjectPage() {
                     </FormItem>
                   )}
                 />
+              </div>
 
+              {/* Row 3: Insurance No (50%) + Start Date (25%) + End Date (25%) */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
-                  name="POSTCODE"
+                  name="INSURANCE_NO"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="sm:col-span-2">
                       <FormLabel className="text-sm font-medium text-foreground">
-                        Postcode
+                        Insurance No
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="0000"
-                          className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20"
+                          placeholder="INS-889900"
+                          className="h-10 "
                         />
                       </FormControl>
                       <FormMessage />
@@ -507,18 +318,39 @@ export function CreateProjectPage() {
 
                 <FormField
                   control={form.control}
-                  name="DESCRIPTION"
+                  name="P_ENTATIVE_START_DATE"
                   render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
+                    <FormItem className="sm:col-span-1">
                       <FormLabel className="text-sm font-medium text-foreground">
-                        Project Description
+                        Start Date
                       </FormLabel>
                       <FormControl>
-                        <Textarea
-                          rows={3}
+                        <Input
+                          type="date"
                           {...field}
-                          placeholder="Brief summary of project scope"
-                          className="px-3 py-2 text-sm border-border focus-visible:ring-primary/20 resize-none"
+                          value={field.value || ""}
+                          className="h-10 "
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="P_TENTATIVE_END_DATE"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-1">
+                      <FormLabel className="text-sm font-medium text-foreground">
+                        End Date
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                          className="h-10 "
                         />
                       </FormControl>
                       <FormMessage />
@@ -526,202 +358,367 @@ export function CreateProjectPage() {
                   )}
                 />
               </div>
+            </div>
 
-              {/* ── Owners ──────────────────────────────────────────────── */}
-              <div className="flex items-center gap-4 mb-6 mt-8">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
-                  Owner Information
-                </span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
+            {/* ── Land Details ─────────────────────────────────────────── */}
+            <div className="flex items-center gap-4 mb-6 mt-8">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
+                Land Details
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
 
-              <OwnerRepeater owners={owners} onChange={setOwners} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="LOT"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Lot Number
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Enter lot number"
+                        className="h-10 "
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              {/* ── Mandatory Documents ──────────────────────────────────── */}
-              <div className="flex items-center gap-4 mb-6 mt-8">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
-                  Mandatory Documents
-                </span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
+              <FormField
+                control={form.control}
+                name="DP"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      DP Number
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Deposited plan number"
+                        className="h-10 "
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  addFiles(e.dataTransfer.files);
-                }}
-                className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
-                  ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/30"}`}
-                onClick={() =>
-                  document.getElementById("create-mandatory-file-input").click()
-                }
-              >
-                <Upload
-                  className={`mx-auto mb-3 transition-colors ${dragOver ? "text-primary" : "text-muted-foreground"}`}
-                  size={48}
-                />
-                <p className="text-sm text-foreground font-medium">
-                  Drop files here or click to browse
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PDF, JPG, PNG up to 20MB each
-                </p>
-                <input
-                  id="create-mandatory-file-input"
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  className="hidden"
-                  onChange={(e) => addFiles(e.target.files)}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="P_ADDRESS"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Project Address <Req />
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        rows={2}
+                        {...field}
+                        placeholder="Full street address"
+                        className=" resize-none"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              {mandatoryFiles.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                  {mandatoryFiles.map((file, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-3 bg-card border border-border rounded-md"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-primary shrink-0">
-                          <span className="text-lg">{fileIcon(file.type)}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {fmtBytes(file.size)}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(idx)}
-                        className="ml-3 text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1"
+              <FormField
+                control={form.control}
+                name="SUBWRB"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Suburb
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Suburb"
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="STATE"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      State
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
                       >
-                        <X size={16} />
-                      </button>
+                        <SelectTrigger size="lg" className="w-full border-input-border">
+                          <SelectValue placeholder="NSW" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="NSW">NSW</SelectItem>
+                          <SelectItem value="VIC">VIC</SelectItem>
+                          <SelectItem value="QLD">QLD</SelectItem>
+                          <SelectItem value="WA">WA</SelectItem>
+                          <SelectItem value="SA">SA</SelectItem>
+                          <SelectItem value="TAS">TAS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="POSTCODE"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Postcode
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="0000"
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="DESCRIPTION"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Project Description
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        rows={3}
+                        {...field}
+                        placeholder="Brief summary of project scope"
+                        className=" resize-none"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* ── Owners ──────────────────────────────────────────────── */}
+            <div className="flex items-center gap-4 mb-6 mt-8">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
+                Owner Information
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <OwnerRepeater owners={owners} onChange={setOwners} />
+
+            {/* ── Mandatory Documents ──────────────────────────────────── */}
+            <div className="flex items-center gap-4 mb-6 mt-8">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
+                Mandatory Documents
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                addFiles(e.dataTransfer.files);
+              }}
+              className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+                  ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/30"}`}
+              onClick={() =>
+                document.getElementById("create-mandatory-file-input").click()
+              }
+            >
+              <Upload
+                className={`mx-auto mb-3 transition-colors ${dragOver ? "text-primary" : "text-muted-foreground"}`}
+                size={48}
+              />
+              <p className="text-sm text-foreground font-medium">
+                Drop files here or click to browse
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                PDF, JPG, PNG up to 20MB each
+              </p>
+              <input
+                id="create-mandatory-file-input"
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                className="hidden"
+                onChange={(e) => addFiles(e.target.files)}
+              />
+            </div>
+
+            {mandatoryFiles.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {mandatoryFiles.map((file, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 bg-card border border-border rounded-md"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-primary shrink-0">
+                        <span className="text-lg">{fileIcon(file.type)}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {file.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {fmtBytes(file.size)}
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* ── Contractor Types ─────────────────────────────────────── */}
-              <div className="flex items-center gap-4 mb-6 mt-8">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
-                  Contractor Types
-                </span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Select Required Trades
-                </label>
-                <ContractorMultiSelect
-                  contractors={contractorTypes.map((ct) => ({
-                    id: ct.ID,
-                    title: ct.NAME,
-                  }))}
-                  value={selectedContractorTypes}
-                  onChange={setSelectedContractorTypes}
-                />
-              </div>
-
-              {/* Pending preview */}
-              {selectedContractorTypes.length > 0 && (
-                <>
-                  <div className="flex items-center gap-4 mb-6 mt-8">
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
-                      Certificate Status
-                    </span>
-                    <div className="flex-1 h-px bg-border" />
+                    <button
+                      type="button"
+                      onClick={() => removeFile(idx)}
+                      className="ml-3 text-muted-foreground hover:text-destructive transition-colors shrink-0 p-1"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
+                ))}
+              </div>
+            )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {selectedContractorTypes.map((ctId) => {
-                      const ct = contractorTypes.find((c) => c.ID === ctId);
-                      return (
-                        <div
-                          key={ctId}
-                          className="flex items-center gap-4 p-5 rounded-lg border transition-all
+            {/* ── Contractor Types ─────────────────────────────────────── */}
+            <div className="flex items-center gap-4 mb-6 mt-8">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
+                Contractor Types
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Select Required Trades
+              </label>
+              <ContractorMultiSelect
+                contractors={contractorTypes.map((ct) => ({
+                  id: ct.ID,
+                  title: ct.NAME,
+                }))}
+                value={selectedContractorTypes}
+                onChange={setSelectedContractorTypes}
+              />
+            </div>
+
+            {/* Pending preview */}
+            {selectedContractorTypes.length > 0 && (
+              <>
+                <div className="flex items-center gap-4 mb-6 mt-8">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-overline text-muted-foreground tracking-[0.08em] uppercase font-semibold">
+                    Certificate Status
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {selectedContractorTypes.map((ctId) => {
+                    const ct = contractorTypes.find((c) => c.ID === ctId);
+                    return (
+                      <div
+                        key={ctId}
+                        className="flex items-center gap-4 p-5 rounded-lg border transition-all
               bg-[#FFFBEB] border-[#FDE68A] 
               dark:bg-[#2A2515] dark:border-[#4A3F1A]
               hover:shadow-sm"
-                        >
-                          {/* Clock Icon */}
-                          <div className="shrink-0">
-                            <div
-                              className="w-10 h-10 rounded-full flex items-center justify-center
+                      >
+                        {/* Clock Icon */}
+                        <div className="shrink-0">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center
                 bg-[#FEF3C7] dark:bg-[#3D3618]"
-                            >
-                              <Clock
-                                size={18}
-                                className="text-[#B45309] dark:text-[#D4A84F]"
-                              />
-                            </div>
+                          >
+                            <Clock
+                              size={18}
+                              className="text-[#B45309] dark:text-[#D4A84F]"
+                            />
                           </div>
+                        </div>
 
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-[#92400E] dark:text-[#E5C05A] truncate">
-                              {ct?.NAME}
-                            </p>
-                            <p className="text-xs text-[#B45309] dark:text-[#A89A4F] mt-0.5">
-                              Certificate Required
-                            </p>
-                          </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-[#92400E] dark:text-[#E5C05A] truncate">
+                            {ct?.NAME}
+                          </p>
+                          <p className="text-xs text-[#B45309] dark:text-[#A89A4F] mt-0.5">
+                            Certificate Required
+                          </p>
+                        </div>
 
-                          {/* PENDING Badge */}
-                          <span
-                            className="px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase rounded-md border
+                        {/* PENDING Badge */}
+                        <span
+                          className="px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase rounded-md border
               bg-white/70 text-[#92400E] border-[#FDE68A]
               dark:bg-[#3D3618] dark:text-[#D4A84F] dark:border-[#4A3F1A]"
-                          >
-                            PENDING
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+                        >
+                          PENDING
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
-              {/* ── Submit ───────────────────────────────────────────────── */}
-              <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-border">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(-1)}
-                  className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={mutation.isPending}
-                  className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white  hover:shadow-lg transition-all"
-                >
-                  <Save size={16} className="mr-2" />
-                  {mutation.isPending ? "Creating..." : "Create Project"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-     </SectionContainer>
+            {/* ── Submit ───────────────────────────────────────────────── */}
+            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(-1)}
+                className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={mutation.isPending}
+                className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white  hover:shadow-lg transition-all"
+              >
+                <Save size={16} className="mr-2" />
+                {mutation.isPending ? "Creating..." : "Create Project"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </SectionContainer>
   );
 }
 

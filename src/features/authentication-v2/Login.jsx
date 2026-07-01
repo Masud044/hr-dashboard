@@ -2,7 +2,8 @@
 
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { z } from "zod";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,30 +27,75 @@ const BrandLogo = ({ className }) => (
   </svg>
 );
 
+const loginSchema = z.object({
+  username: z.string().trim().min(1, "Username is required"),
+  password: z.string().trim().min(1, "Password is required"),
+});
+
+function getErrorMessage(err) {
+  if (!err) return null;
+  if (typeof err === "string") return err;
+
+  const rawMessage = err.message || "";
+  if (
+    err instanceof TypeError ||
+    /failed to fetch|networkerror|load failed/i.test(rawMessage)
+  ) {
+    return "Unable to reach the server. Please check your connection and try again.";
+  }
+
+  const data = err.response?.data ?? err.data ?? err;
+
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.error) return data.error;
+  if (err.message) return err.message;
+
+  return "Something went wrong. Please try again.";
+}
+
 export default function LoginFormV2() {
   const id = useId();
   const navigate = useNavigate();
   const { login, loginError, loginPending } = useAuthV2();
   const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [formError, setFormError] = useState(null);
+
+  const errorMessage = formError ?? getErrorMessage(loginError);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const username = e.target.username.value.trim();
-    const password = e.target.password.value.trim();
+
+    const username = e.target.username.value;
+    const password = e.target.password.value;
+
+    const result = loginSchema.safeParse({ username, password });
+
+    if (!result.success) {
+      const errors = {};
+      for (const issue of result.error.issues) {
+        errors[issue.path[0]] = issue.message;
+      }
+      setFieldErrors(errors);
+      setFormError(Object.values(errors)[0]);
+      return;
+    }
+
+    setFieldErrors({});
+    setFormError(null);
+
     try {
-      await login({ username, password });
+      await login(result.data);
       navigate("/dashboard");
-      // eslint-disable-next-line no-empty, no-unused-vars
     } catch (_) {}
   };
 
   return (
     <div className="min-h-screen flex bg-background text-foreground selection:bg-primary/10">
       
-      {/* ── Left panel (Quietly Confident Editorial Space) ── */}
+      {/* ── Left panel ── */}
       <div className="hidden lg:flex lg:w-[42%] flex-col justify-center p-16 relative overflow-hidden bg-[#0A0A0A] dark:bg-card border-r border-border/10">
-        
-        {/* Structural Dot Grid using system colors */}
         <div
           className="absolute inset-0 pointer-events-none text-white/5 dark:text-foreground/5 opacity-80"
           style={{
@@ -58,9 +104,7 @@ export default function LoginFormV2() {
           }}
         />
 
-        {/* Content Grouped with Balanced Breathing Room */}
         <div className="relative z-10 flex flex-col gap-10 max-w-sm">
-          {/* Logo Brand Container */}
           <div className="flex items-center gap-3.5 text-white dark:text-foreground">
             <BrandLogo />
             <span className="font-display inline-block mt-5 font-medium tracking-[0.25em] text-lg uppercase">
@@ -68,7 +112,6 @@ export default function LoginFormV2() {
             </span>
           </div>
 
-          {/* Core Typography Message */}
           <div>
             <h1 className="font-display text-white dark:text-foreground text-4xl font-bold leading-[1.12] tracking-tighter">
               Manage your projects with precision
@@ -81,15 +124,14 @@ export default function LoginFormV2() {
           </div>
         </div>
 
-        {/* Smooth layout masking blend */}
         <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none bg-gradient-to-t from-[#0A0A0A] dark:from-card to-transparent" />
       </div>
 
-      {/* ── Right panel (Framed Interface Space) ── */}
+      {/* ── Right panel ── */}
       <div className="flex-1 flex items-center justify-center px-8 py-12 bg-background">
         <div className="w-full max-w-[350px]">
           
-          {/* Responsive Mobile Header */}
+          {/* Mobile Header */}
           <div className="flex lg:hidden items-center gap-3 mb-12 text-foreground">
             <BrandLogo />
             <span className="font-display font-medium tracking-[0.25em] text-xs uppercase">
@@ -97,19 +139,19 @@ export default function LoginFormV2() {
             </span>
           </div>
 
-          {/* Form Architectural Heading */}
+          {/* Form Heading */}
           <div className="mb-8">
             <h2 className="font-display text-3xl font-bold tracking-tight text-foreground mb-2">
               Welcome back
             </h2>
             <p className="font-sans text-[15px] text-muted-foreground">
-              Sign in to your account
+              Log in to your account
             </p>
           </div>
 
-          {/* Functional Layout Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Username Input Field */}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {/* Username Input */}
             <div className="space-y-1.5">
               <Label
                 htmlFor={`${id}-username`}
@@ -123,13 +165,24 @@ export default function LoginFormV2() {
                 type="text"
                 placeholder="Enter your username"
                 autoComplete="username"
-                required
                 disabled={loginPending}
-                className="h-10 px-3.5 bg-card border-border text-foreground placeholder:text-muted-foreground/40 rounded-[var(--radius)] shadow-2xs transition-colors duration-150 focus-visible:border-primary"
+                aria-invalid={!!fieldErrors.username}
+                onChange={() => {
+                  if (fieldErrors.username || formError) {
+                    setFieldErrors((prev) => ({ ...prev, username: undefined }));
+                    setFormError(null);
+                  }
+                }}
+                className="h-10 px-3.5 placeholder:text-muted-foreground/60 shadow-2xs disabled:opacity-60"
               />
+              {fieldErrors.username && (
+                <p className="font-sans text-[12px] font-medium text-destructive">
+                  {fieldErrors.username}
+                </p>
+              )}
             </div>
 
-            {/* Password Input Field */}
+            {/* Password Input */}
             <div className="space-y-1.5">
               <Label
                 htmlFor={`${id}-password`}
@@ -144,51 +197,71 @@ export default function LoginFormV2() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   autoComplete="current-password"
-                  required
                   disabled={loginPending}
-                  className="h-10 pl-3.5 pr-10 bg-card border-border text-foreground placeholder:text-muted-foreground/40 rounded-[var(--radius)] shadow-2xs transition-colors duration-150 focus-visible:border-primary"
+                  aria-invalid={!!fieldErrors.password}
+                  onChange={() => {
+                    if (fieldErrors.password || formError) {
+                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                      setFormError(null);
+                    }
+                  }}
+                  className="h-10 pl-3.5 pr-10 placeholder:text-muted-foreground/60 shadow-2xs disabled:opacity-60"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors focus:outline-none"
+                  disabled={loginPending}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="font-sans text-[12px] font-medium text-destructive">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
-            {/* Error Message Space */}
-            {loginError && (
-              <p className="font-sans text-[13px] font-medium text-destructive animate-in fade-in-50 duration-200">
-                {loginError.message}
-              </p>
+            {/* Error Message */}
+            {!fieldErrors.username && !fieldErrors.password && errorMessage && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-[var(--radius)] border border-destructive/20 bg-destructive/10 px-3.5 py-2.5 animate-in fade-in-50 duration-200"
+              >
+                <AlertCircle
+                  size={15}
+                  className="text-destructive shrink-0 mt-0.5"
+                />
+                <p className="font-sans text-[13px] font-medium text-destructive leading-snug">
+                  {errorMessage}
+                </p>
+              </div>
             )}
 
-            {/* Precision Submit CTA */}
+            {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-10 font-sans font-medium text-sm bg-primary text-primary-foreground rounded-[var(--radius)] shadow-xs transition-all duration-200 hover:bg-primary/90 hover:-translate-y-[1px] hover:shadow-xl active:translate-y-0"
+              className="w-full h-10 font-sans font-medium text-sm bg-primary text-primary-foreground rounded-[var(--radius)] shadow-xs transition-all duration-200 hover:bg-primary/90 hover:-translate-y-[1px] hover:shadow-xl active:translate-y-0 disabled:opacity-70 disabled:pointer-events-none disabled:translate-y-0 disabled:shadow-xs"
               disabled={loginPending}
+              aria-busy={loginPending}
             >
-              {loginPending ? "Signing in…" : "Sign in"}
+              {loginPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={15} className="animate-spin" />
+                  Signing in…
+                </span>
+              ) : (
+                "Log in"
+              )}
             </Button>
 
-            {/* Inline Password Reset Link */}
-            <div className="text-center pt-1.5">
-              <a
-                href="#"
-                className="font-sans text-[13px] font-medium text-primary hover:text-primary/90 transition-colors inline-block relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-0 hover:after:w-full after:bg-primary/50 after:transition-all"
-              >
-                Forgot password?
-              </a>
-            </div>
+            
           </form>
         </div>
       </div>
-
     </div>
   );
 }

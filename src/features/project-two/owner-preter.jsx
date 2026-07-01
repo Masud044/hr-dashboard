@@ -3,16 +3,6 @@ import { Plus, Trash2, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-/**
- * OwnerRepeater
- * ------------------------------------------------------------------
- * Manages a list of owner rows (PM_OWNER_INFO) for a project.
- * Pure controlled component — parent (Create/Edit sheet) owns the state.
- *
- * owners: [{ ID?, O_NAME, ADDRESS, SUBURB, POSTCODE, STATE, EMAIL, PHONE }]
- * onChange: (newOwnersArray) => void
- */
-
 export const EMPTY_OWNER = {
   O_NAME: "",
   ADDRESS: "",
@@ -30,7 +20,6 @@ export function OwnerRepeater({ owners, onChange }) {
   };
 
   const addOwner = () => onChange([...owners, { ...EMPTY_OWNER }]);
-
   const removeOwner = (idx) => onChange(owners.filter((_, i) => i !== idx));
 
   return (
@@ -68,44 +57,44 @@ export function OwnerRepeater({ owners, onChange }) {
               placeholder="Owner name *"
               value={owner.O_NAME}
               onChange={(e) => updateField(idx, "O_NAME", e.target.value)}
-              className="sm:col-span-2 h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="sm:col-span-2 h-10" // ✅ Cleaned
             />
             <Input
               placeholder="Address"
               value={owner.ADDRESS}
               onChange={(e) => updateField(idx, "ADDRESS", e.target.value)}
-              className="sm:col-span-2 h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="sm:col-span-2 h-10" // ✅ Cleaned
             />
             <Input
               placeholder="Suburb"
               value={owner.SUBURB}
               onChange={(e) => updateField(idx, "SUBURB", e.target.value)}
-              className="h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="h-10" // ✅ Cleaned
             />
             <Input
               placeholder="Postcode"
               value={owner.POSTCODE}
               onChange={(e) => updateField(idx, "POSTCODE", e.target.value)}
-              className="h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="h-10" // ✅ Cleaned
             />
             <Input
               placeholder="State"
               value={owner.STATE}
               onChange={(e) => updateField(idx, "STATE", e.target.value)}
-              className="h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="h-10" // ✅ Cleaned
             />
             <Input
               placeholder="Email"
               type="email"
               value={owner.EMAIL}
               onChange={(e) => updateField(idx, "EMAIL", e.target.value)}
-              className="h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="h-10" // ✅ Cleaned
             />
             <Input
               placeholder="Phone"
               value={owner.PHONE}
               onChange={(e) => updateField(idx, "PHONE", e.target.value)}
-              className="h-10 px-3 py-2 text-sm border-border bg-card focus-visible:ring-primary/20"
+              className="h-10" // ✅ Cleaned
             />
           </div>
         </div>

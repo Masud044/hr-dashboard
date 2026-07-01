@@ -39,6 +39,7 @@ import StatementUpload from "./features/setting/pages/statement-upload";
 
 import ProjectPage from "./features/project-two/project-page";
 import { CreateProjectPage } from "./features/project-two/create-project-page";
+import { EditProjectPage } from "./features/project-two/edit-project-page";
 
 const ADMIN = ["Admin"];
 
@@ -245,6 +246,7 @@ const App = () => {
             />
 
             <Route path="projects/create" element={<CreateProjectPage />} />
+            <Route path="projects/:id/edit" element={<EditProjectPage />} />
 
             <Route
               path="process"
