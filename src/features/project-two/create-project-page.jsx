@@ -30,13 +30,16 @@ import { ContractorMultiSelect } from "../setting/pages/ContractorMultiSelect";
 import { OwnerRepeater, EMPTY_OWNER } from "./owner-preter";
 import { SectionContainer } from "@/components/SectionContainer";
 
+// ── Only P_NAME is required, everything else optional ──────────────────────
 const projectSchema = z.object({
   P_NAME: z.string().min(1, "Project name is required"),
-  P_TYPE: z.string().min(1, "Project type is required"),
-  P_ADDRESS: z.string().min(1, "Address is required"),
-  SUBWRB: z.string().min(1, "Suburb is required"),
-  POSTCODE: z.string().min(1, "Postcode is required"),
-  STATE: z.string().min(1, "State is required"),
+  P_TYPE: z.string().optional().nullable(),
+  ADDRESS: z.string().optional().nullable(),
+  STREET: z.string().optional().nullable(),
+  P_ADDRESS: z.string().optional().nullable(),
+  SUBWRB: z.string().optional().nullable(),
+  POSTCODE: z.string().optional().nullable(),
+  STATE: z.string().optional().nullable(),
   USER_ID: z.coerce.number().default(105),
   USER_BY: z.coerce.number().default(105),
   UPDATED_BY: z.coerce.number().default(105),
@@ -62,10 +65,12 @@ const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 const DEFAULT_VALUES = {
   P_NAME: "",
   P_TYPE: "",
+  ADDRESS: "",
+  STREET: "",
   P_ADDRESS: "",
   SUBWRB: "",
   POSTCODE: "",
-  STATE: "",
+  STATE: "NSW", // default value
   USER_ID: 105,
   USER_BY: 105,
   UPDATED_BY: 105,
@@ -99,6 +104,31 @@ export function CreateProjectPage() {
     setMandatoryFiles([]);
     setOwners([{ ...EMPTY_OWNER }]);
   }, []);
+
+  // ── Auto-generate P_ADDRESS from Address + Street + Suburb + State + Postcode ──
+  const watchedAddress = form.watch("ADDRESS");
+  const watchedStreet = form.watch("STREET");
+  const watchedSuburb = form.watch("SUBWRB");
+  const watchedState = form.watch("STATE");
+  const watchedPostcode = form.watch("POSTCODE");
+
+  useEffect(() => {
+    const combined = [
+      watchedAddress,
+      watchedStreet,
+      watchedSuburb,
+      watchedState,
+      watchedPostcode,
+    ]
+      .filter((v) => v && v.trim() !== "")
+      .join(" ")
+      .trim();
+
+    form.setValue("P_ADDRESS", combined, {
+      shouldValidate: false,
+      shouldDirty: true,
+    });
+  }, [watchedAddress, watchedStreet, watchedSuburb, watchedState, watchedPostcode]);
 
   const { data: projectTypes = [] } = useQuery({
     queryKey: ["projectTypes"],
@@ -177,13 +207,8 @@ export function CreateProjectPage() {
         }
       }
 
-      if (newProjectId) {
-        toast.success("Project created! Redirecting to process page...");
-        setTimeout(() => navigate(`/dashboard/process/${newProjectId}`), 800);
-      } else {
-        toast.success("Project created!");
-        setTimeout(() => navigate("/dashboard/projects"), 800);
-      }
+      toast.success("Project created successfully!");
+      setTimeout(() => navigate("/dashboard/projects"), 800);
     },
     onError: () => toast.error("Failed to save project. Please try again."),
   });
@@ -269,7 +294,7 @@ export function CreateProjectPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-foreground">
-                        Project Type <Req />
+                        Project Type
                       </FormLabel>
                       <FormControl>
                         <Select
@@ -410,26 +435,48 @@ export function CreateProjectPage() {
                 )}
               />
 
+              {/* Address + Street — feed into auto-generated P_ADDRESS below */}
               <FormField
                 control={form.control}
-                name="P_ADDRESS"
+                name="ADDRESS"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem>
                     <FormLabel className="text-sm font-medium text-foreground">
-                      Project Address <Req />
+                      Address
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        rows={2}
+                      <Input
                         {...field}
-                        placeholder="Full street address"
-                        className=" resize-none"
+                        placeholder="e.g. 1"
+                        className="h-10"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="STREET"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Street
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g. Pembroke Street"
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+             
 
               <FormField
                 control={form.control}
@@ -451,6 +498,7 @@ export function CreateProjectPage() {
                 )}
               />
 
+              {/* State — plain input, default NSW */}
               <FormField
                 control={form.control}
                 name="STATE"
@@ -460,22 +508,12 @@ export function CreateProjectPage() {
                       State
                     </FormLabel>
                     <FormControl>
-                      <Select
-                        value={field.value || ""}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger size="lg" className="w-full border-input-border">
-                          <SelectValue placeholder="NSW" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="NSW">NSW</SelectItem>
-                          <SelectItem value="VIC">VIC</SelectItem>
-                          <SelectItem value="QLD">QLD</SelectItem>
-                          <SelectItem value="WA">WA</SelectItem>
-                          <SelectItem value="SA">SA</SelectItem>
-                          <SelectItem value="TAS">TAS</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        {...field}
+                        value={field.value || "NSW"}
+                        placeholder="NSW"
+                        className="h-10"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -502,11 +540,34 @@ export function CreateProjectPage() {
                 )}
               />
 
+               {/* Project Address — auto-generated, read-only */}
+              <FormField
+                control={form.control}
+                name="P_ADDRESS"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Project Address
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        rows={2}
+                        {...field}
+                      
+                        placeholder=" Auto generate from Address, Street, Suburb, State, postcode"
+                        // className="resize-none bg-muted/40 cursor-not-allowed"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="DESCRIPTION"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem className="">
                     <FormLabel className="text-sm font-medium text-foreground">
                       Project Description
                     </FormLabel>
@@ -522,6 +583,26 @@ export function CreateProjectPage() {
                   </FormItem>
                 )}
               />
+
+                {/* ── Submit ───────────────────────────────────────────────── */}
+            <div className="flex justify-end gap-3 pt-6 mt-8  border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(-1)}
+                className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={mutation.isPending}
+                className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white  hover:shadow-lg transition-all"
+              >
+                <Save size={16} className="mr-2" />
+                {mutation.isPending ? "Creating..." : "Create Project"}
+              </Button>
+            </div>
             </div>
 
             {/* ── Owners ──────────────────────────────────────────────── */}
@@ -534,6 +615,9 @@ export function CreateProjectPage() {
             </div>
 
             <OwnerRepeater owners={owners} onChange={setOwners} />
+
+
+            <div className="flex justify-between gap-2"></div>
 
             {/* ── Mandatory Documents ──────────────────────────────────── */}
             <div className="flex items-center gap-4 mb-6 mt-8">
@@ -695,26 +779,19 @@ export function CreateProjectPage() {
                 </div>
               </>
             )}
-
-            {/* ── Submit ───────────────────────────────────────────────── */}
-            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-border">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(-1)}
-                className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
-              >
-                Cancel
-              </Button>
+             <div className="flex justify-end gap-3 pt-6   border-border">
+              
               <Button
                 type="submit"
                 disabled={mutation.isPending}
                 className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white  hover:shadow-lg transition-all"
               >
                 <Save size={16} className="mr-2" />
-                {mutation.isPending ? "Creating..." : "Create Project"}
+                {mutation.isPending ? "upload..." : "upload"}
               </Button>
             </div>
+
+          
           </form>
         </Form>
       </div>

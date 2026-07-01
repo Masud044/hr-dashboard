@@ -23,13 +23,16 @@ import { ContractorMultiSelect } from "../setting/pages/ContractorMultiSelect";
 import { OwnerRepeater, EMPTY_OWNER } from "./owner-preter";
 import { SectionContainer } from "@/components/SectionContainer";
 
+// ── Only P_NAME is required, everything else optional ──────────────────────
 const projectSchema = z.object({
   P_NAME:                z.string().min(1, "Project name is required"),
-  P_TYPE:                z.string().min(1, "Project type is required"),
-  P_ADDRESS:             z.string().min(1, "Address is required"),
-  SUBWRB:                z.string().min(1, "Suburb is required"),
-  POSTCODE:              z.string().min(1, "Postcode is required"),
-  STATE:                 z.string().min(1, "State is required"),
+  P_TYPE:                z.string().optional().nullable(),
+  ADDRESS:               z.string().optional().nullable(),
+  STREET:                z.string().optional().nullable(),
+  P_ADDRESS:             z.string().optional().nullable(),
+  SUBWRB:                z.string().optional().nullable(),
+  POSTCODE:              z.string().optional().nullable(),
+  STATE:                 z.string().optional().nullable(),
   USER_ID:               z.coerce.number().default(105),
   USER_BY:               z.coerce.number().default(105),
   UPDATED_BY:            z.coerce.number().default(105),
@@ -66,13 +69,38 @@ export function EditProjectPage() {
   const form = useForm({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      P_NAME: "", P_TYPE: "", P_ADDRESS: "", SUBWRB: "", POSTCODE: "",
-      STATE: "", USER_ID: 105, USER_BY: 105, UPDATED_BY: 105,
+      P_NAME: "", P_TYPE: "", ADDRESS: "", STREET: "", P_ADDRESS: "", SUBWRB: "", POSTCODE: "",
+      STATE: "NSW", USER_ID: 105, USER_BY: 105, UPDATED_BY: 105,
       LOT: "", DP: "", INSURANCE_NO: "",
       P_ENTATIVE_START_DATE: "", P_TENTATIVE_END_DATE: "",
       P_CODE: "", DESCRIPTION: "",
     },
   });
+
+  // ── Auto-generate P_ADDRESS from Address + Street + Suburb + State + Postcode ──
+  const watchedAddress = form.watch("ADDRESS");
+  const watchedStreet = form.watch("STREET");
+  const watchedSuburb = form.watch("SUBWRB");
+  const watchedState = form.watch("STATE");
+  const watchedPostcode = form.watch("POSTCODE");
+
+  useEffect(() => {
+    const combined = [
+      watchedAddress,
+      watchedStreet,
+      watchedSuburb,
+      watchedState,
+      watchedPostcode,
+    ]
+      .filter((v) => v && v.trim() !== "")
+      .join(" ")
+      .trim();
+
+    form.setValue("P_ADDRESS", combined, {
+      shouldValidate: false,
+      shouldDirty: true,
+    });
+  }, [watchedAddress, watchedStreet, watchedSuburb, watchedState, watchedPostcode]);
 
   // ── queries ──────────────────────────────────────────────────────────────
   const { data: projectTypes = EMPTY_ARRAY } = useQuery({
@@ -118,10 +146,12 @@ export function EditProjectPage() {
       form.reset({
         P_NAME:                existingProject.P_NAME || "",
         P_TYPE:                existingProject.P_TYPE?.toString() || "",
+        ADDRESS:               existingProject.ADDRESS || "",
+        STREET:                existingProject.STREET || "",
         P_ADDRESS:             existingProject.P_ADDRESS || "",
         SUBWRB:                existingProject.SUBWRB || "",
         POSTCODE:              existingProject.POSTCODE || "",
-        STATE:                 existingProject.STATE || "",
+        STATE:                 existingProject.STATE || "NSW",
         USER_ID:               existingProject.USER_ID || 105,
         USER_BY:               existingProject.USER_BY || 105,
         UPDATED_BY:            existingProject.UPDATED_BY || 105,
@@ -280,7 +310,7 @@ export function EditProjectPage() {
       setNewMandatoryFiles([]);
       setRemovedOwnerIds([]);
       toast.success("Project updated successfully!");
-      navigate(-1);
+      navigate("/dashboard/projects");
     },
     onError: () => toast.error("Failed to update project."),
   });
@@ -352,15 +382,15 @@ export function EditProjectPage() {
                 <FormField control={form.control} name="P_TYPE" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-foreground">
-                      Project Type <Req />
+                      Project Type
                     </FormLabel>
                     <Select key={field.value} value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="h-10 px-3 py-2 text-sm border-border">
+                        <SelectTrigger size="lg" className=" w-full border-input-border" >
                           <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent >
                         {projectTypes.map((pt) => (
                           <SelectItem key={pt.ID} value={pt.ID.toString()}>{pt.NAME}</SelectItem>
                         ))}
@@ -439,14 +469,39 @@ export function EditProjectPage() {
                 </FormItem>
               )} />
 
+              {/* Address + Street — feed into auto-generated P_ADDRESS below */}
+              <FormField control={form.control} name="ADDRESS" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-foreground">Address</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. 1"
+                      className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="STREET" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-foreground">Street</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. Pembroke Street"
+                      className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Project Address — auto-generated, read-only */}
               <FormField control={form.control} name="P_ADDRESS" render={({ field }) => (
-                <FormItem className="sm:col-span-2">
+                <FormItem className="">
                   <FormLabel className="text-sm font-medium text-foreground">
-                    Project Address <Req />
+                    Project Address
                   </FormLabel>
                   <FormControl>
-                    <Textarea rows={2} {...field} placeholder="Full street address"
-                      className="px-3 py-2 text-sm border-border focus-visible:ring-primary/20 resize-none" />
+                    <Textarea rows={2} {...field} 
+                      placeholder=" Auto generate from Address, Street, Suburb, State, postcode"
+                        />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -463,23 +518,13 @@ export function EditProjectPage() {
                 </FormItem>
               )} />
 
+              {/* State — plain input, default NSW */}
               <FormField control={form.control} name="STATE" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-foreground">State</FormLabel>
                   <FormControl>
-                    <Select value={field.value || ""} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-10 px-3 py-2 text-sm border-border">
-                        <SelectValue placeholder="NSW" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="NSW">NSW</SelectItem>
-                        <SelectItem value="VIC">VIC</SelectItem>
-                        <SelectItem value="QLD">QLD</SelectItem>
-                        <SelectItem value="WA">WA</SelectItem>
-                        <SelectItem value="SA">SA</SelectItem>
-                        <SelectItem value="TAS">TAS</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input {...field} value={field.value || "NSW"} placeholder="NSW"
+                      className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -497,7 +542,7 @@ export function EditProjectPage() {
               )} />
 
               <FormField control={form.control} name="DESCRIPTION" render={({ field }) => (
-                <FormItem className="sm:col-span-2">
+                <FormItem className="">
                   <FormLabel className="text-sm font-medium text-foreground">Project Description</FormLabel>
                   <FormControl>
                     <Textarea rows={3} {...field} placeholder="Brief summary of project scope"
@@ -506,6 +551,26 @@ export function EditProjectPage() {
                   <FormMessage />
                 </FormItem>
               )} />
+
+               {/* ══ Submit ═════════════════════════════════════════════════ */}
+            <div className="flex justify-end gap-3 pt-6 mt-8  border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(-1)}
+                className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white hover:shadow-lg transition-all"
+              >
+                <Save size={16} className="mr-2" />
+                {updateMutation.isPending ? "Updating..." : "Update Project"}
+              </Button>
+            </div>
             </div>
 
             {/* ══ Owners ═════════════════════════════════════════════════ */}
@@ -735,25 +800,19 @@ export function EditProjectPage() {
               </>
             )}
 
-            {/* ══ Submit ═════════════════════════════════════════════════ */}
-            <div className="flex justify-end gap-3 pt-6 mt-8 border-t border-border">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(-1)}
-                className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
-              >
-                Cancel
-              </Button>
+            <div className="flex justify-end gap-3 pt-6   border-border">
+              
               <Button
                 type="submit"
                 disabled={updateMutation.isPending}
                 className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white hover:shadow-lg transition-all"
               >
                 <Save size={16} className="mr-2" />
-                {updateMutation.isPending ? "Updating..." : "Update Project"}
+                {updateMutation.isPending ? "Upload..." : "Upload"}
               </Button>
             </div>
+
+           
           </form>
         </Form>
       </div>
