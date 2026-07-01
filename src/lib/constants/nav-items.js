@@ -43,9 +43,9 @@ export const NAV_ITEMS = [
       
       // { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },
      
-      { to: "/dashboard/project", label: "Project", Icon: IconBuildingSkyscraper },
+      // { to: "/dashboard/project", label: "Project", Icon: IconBuildingSkyscraper },
       { to: "/dashboard/contractor", label: "Contractor", Icon: IconUserHexagon },
-      { to: "/dashboard/owner-info", label: "Owner Info", Icon: IconUserHexagon },
+      // { to: "/dashboard/owner-info", label: "Owner Info", Icon: IconUserHexagon },
       // { to: "/dashboard/contractor-type-info", label: "Contractor info", Icon: IconUserHexagon },
        { to: "/dashboard/calendar", label: "Calender", Icon: IconUserHexagon },
         { to: "/dashboard/project-type", label: "Project Type", Icon: IconUserHexagon },

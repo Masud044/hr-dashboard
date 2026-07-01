@@ -1,4 +1,5 @@
-import React, { useState, useMemo  } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,8 +10,6 @@ import {
 import { toast } from "react-toastify";
 import axios from "axios";
 
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parse, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
@@ -41,12 +40,12 @@ const EMPTY_NB = {
   invoiceNo: "", remarks: "",
 };
 
+// ── matchedAddress সরিয়ে দেওয়া হলো ──
 const EMPTY_FILTERS = {
   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
-  invoiceNo: "", amount: "", description: "", category: "",
+  invoiceNo: "", amountMin: "", amountMax: "", description: "", category: "",
 };
 
-// ── plain function: table cell-এ date দেখানোর জন্য (Hook নেই) ──
 const fmtDate = (val) => {
   if (!val) return "—";
   const d = new Date(val);
@@ -57,46 +56,123 @@ const fmtDate = (val) => {
   return `${dd}/${mm}/${yyyy}`;
 };
 
-/// ── dd/mm/yyyy দেখায়, কিন্তু click করলে native calendar picker খোলে ──
-// ── shadcn Calendar + Popover, display সবসময় dd/MM/yyyy ──
-const DateInput = ({ value, onChange, placeholder = "dd/mm/yyyy" }) => {
-  // internal value হলো yyyy-mm-dd string (ISO), Calendar-এর জন্য Date object দরকার
-  const selectedDate = value ? parse(value, "yyyy-MM-dd", new Date()) : undefined;
-  const displayText = value && isValid(selectedDate) ? format(selectedDate, "dd/MM/yyyy") : "";
+// ════════════════════════════════════════════════════════════
+// DateInput — type করে dd/mm/yyyy বসানো যায়, calendar picker নেই।
+// internal value ISO (yyyy-MM-dd) হিসেবে parent-কে পাঠায়।
+// ════════════════════════════════════════════════════════════
+// const DateInput = ({ value, onChange, placeholder = "dd/mm/yyyy" }) => {
+//   const [text, setText] = useState(() => {
+//     if (!value) return "";
+//     const d = parse(value, "yyyy-MM-dd", new Date());
+//     return isValid(d) ? format(d, "dd/MM/yyyy") : "";
+//   });
 
-  const handleSelect = (date) => {
-    if (!date) { onChange(""); return; }
-    onChange(format(date, "yyyy-MM-dd"));
+//   useEffect(() => {
+//     if (!value) { setText(""); return; }
+//     const d = parse(value, "yyyy-MM-dd", new Date());
+//     if (isValid(d)) setText(format(d, "dd/MM/yyyy"));
+//   }, [value]);
+
+//   const handleChange = (e) => {
+//     const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+//     let formatted = digits;
+//     if (digits.length > 4) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+//     else if (digits.length > 2) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+
+//     setText(formatted);
+
+//     if (digits.length === 8) {
+//       const parsed = parse(formatted, "dd/MM/yyyy", new Date());
+//       if (isValid(parsed)) { onChange(format(parsed, "yyyy-MM-dd")); return; }
+//     }
+//     if (digits.length === 0) onChange("");
+//   };
+
+//   const handleBlur = () => {
+//     if (text.length > 0 && text.length < 10) { setText(""); onChange(""); }
+//   };
+
+//   return (
+//     <div className="relative">
+//       <input
+//         type="text"
+//         inputMode="numeric"
+//         value={text}
+//         onChange={handleChange}
+//         onBlur={handleBlur}
+//         placeholder={placeholder}
+//         maxLength={10}
+//         className="h-8 w-full text-xs px-3 pr-7 rounded-md border border-input bg-white outline-none focus:ring-1 focus:ring-blue-500"
+//       />
+//       <CalendarIcon size={13} className="text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+//     </div>
+//   );
+// };
+// ════════════════════════════════════════════════════════════
+// DateInput — dd / mm / yyyy তিনটা আলাদা segment box, তাই
+// leading zero ছাড়া (যেমন 1/7/2026) টাইপ করলেও কোনো ambiguity
+// থাকে না। একটা segment পূরণ হলেই পরের segment-এ auto-focus যায়।
+// ════════════════════════════════════════════════════════════
+const DateInput = ({ value, onChange }) => {
+  const dayRef   = useRef(null);
+  const monthRef = useRef(null);
+  const yearRef  = useRef(null);
+
+  const initial = useMemo(() => {
+    if (!value) return { d: "", m: "", y: "" };
+    const dt = parse(value, "yyyy-MM-dd", new Date());
+    if (!isValid(dt)) return { d: "", m: "", y: "" };
+    return { d: format(dt, "dd"), m: format(dt, "MM"), y: format(dt, "yyyy") };
+  }, [value]);
+
+  const [d, setD] = useState(initial.d);
+  const [m, setM] = useState(initial.m);
+  const [y, setY] = useState(initial.y);
+
+  // parent থেকে value পাল্টালে (যেমন "Clear all") local segment গুলোও sync করো
+  useEffect(() => { setD(initial.d); setM(initial.m); setY(initial.y); }, [initial.d, initial.m, initial.y]);
+
+  // তিনটা segment-ই পূরণ হলে তবেই parent-কে ISO date পাঠায়, নাহলে খালি রাখে
+  const emit = (dd, mm, yy) => {
+    if (dd.length === 2 && mm.length === 2 && yy.length === 4) {
+      const parsed = parse(`${dd}/${mm}/${yy}`, "dd/MM/yyyy", new Date());
+      if (isValid(parsed)) { onChange(format(parsed, "yyyy-MM-dd")); return; }
+    }
+    onChange("");
+  };
+
+  const handleD = (e) => {
+    const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setD(v); emit(v, m, y);
+    if (v.length === 2) monthRef.current?.focus();
+  };
+  const handleM = (e) => {
+    const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setM(v); emit(d, v, y);
+    if (v.length === 2) yearRef.current?.focus();
+  };
+  const handleY = (e) => {
+    const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setY(v); emit(d, m, v);
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="h-8 w-full text-xs flex items-center justify-between gap-2 px-3 rounded-md border border-input bg-white text-left hover:bg-gray-50"
-        >
-          <span className={displayText ? "text-gray-900" : "text-gray-400"}>
-            {displayText || placeholder}
-          </span>
-          <CalendarIcon size={13} className="text-gray-400 shrink-0" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={handleSelect}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
+    <div className="flex items-center gap-1 h-8 px-2 rounded-md border border-input bg-white focus-within:ring-1 focus-within:ring-blue-500">
+      <input ref={dayRef} value={d} onChange={handleD} placeholder="dd" maxLength={2}
+        inputMode="numeric" className="w-5 text-xs outline-none text-center" />
+      <span className="text-gray-300 text-xs">/</span>
+      <input ref={monthRef} value={m} onChange={handleM} placeholder="mm" maxLength={2}
+        inputMode="numeric" className="w-5 text-xs outline-none text-center" />
+      <span className="text-gray-300 text-xs">/</span>
+      <input ref={yearRef} value={y} onChange={handleY} placeholder="yyyy" maxLength={4}
+        inputMode="numeric" className="w-9 text-xs outline-none text-center" />
+      <CalendarIcon size={13} className="text-gray-400 ml-auto shrink-0" />
+    </div>
   );
 };
+
 // ════════════════════════════════════════════════════════════
-// FilterBar — component function এর বাইরে define করা, যাতে
-// প্রতি parent re-render এ নতুন component instance তৈরি না হয়
-// (এটাই ছিল input থেকে cursor হারানোর মূল কারণ)
+// FilterBar
 // ════════════════════════════════════════════════════════════
 const FilterBar = ({ filters, onChange, onClear, projectOptions, contractorOptions, showStatus, showCategory }) => {
   const hasActive = Object.values(filters).some((v) => v);
@@ -112,23 +188,14 @@ const FilterBar = ({ filters, onChange, onClear, projectOptions, contractorOptio
         )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
-        {/* <div>
+        <div>
           <label className="text-[10px] text-gray-400 block mb-0.5">Date From</label>
-          <Input type="date" value={filters.dateFrom} onChange={(e) => onChange("dateFrom", e.target.value)} className="h-8 text-xs" />
+          <DateInput value={filters.dateFrom} onChange={(v) => onChange("dateFrom", v)} />
         </div>
         <div>
           <label className="text-[10px] text-gray-400 block mb-0.5">Date To</label>
-          <Input type="date" value={filters.dateTo} onChange={(e) => onChange("dateTo", e.target.value)} className="h-8 text-xs" />
-        </div> */}
-
-        <div>
-  <label className="text-[10px] text-gray-400 block mb-0.5">Date From</label>
-  <DateInput value={filters.dateFrom} onChange={(v) => onChange("dateFrom", v)} />
-</div>
-<div>
-  <label className="text-[10px] text-gray-400 block mb-0.5">Date To</label>
-  <DateInput value={filters.dateTo} onChange={(v) => onChange("dateTo", v)} />
-</div>
+          <DateInput value={filters.dateTo} onChange={(v) => onChange("dateTo", v)} />
+        </div>
         {showStatus && (
           <div>
             <label className="text-[10px] text-gray-400 block mb-0.5">Status</label>
@@ -166,14 +233,22 @@ const FilterBar = ({ filters, onChange, onClear, projectOptions, contractorOptio
           <label className="text-[10px] text-gray-400 block mb-0.5">Invoice No</label>
           <Input placeholder="Invoice no." value={filters.invoiceNo} onChange={(e) => onChange("invoiceNo", e.target.value)} className="h-8 text-xs" />
         </div>
+
+        {/* ── step=1, তাই spinner এ decimal আসবে না ── */}
         <div>
-          <label className="text-[10px] text-gray-400 block mb-0.5">Amount</label>
-          <Input type="number" step="0.01" placeholder="Exact amount" value={filters.amount} onChange={(e) => onChange("amount", e.target.value)} className="h-8 text-xs" />
+          <label className="text-[10px] text-gray-400 block mb-0.5">Amount Min</label>
+          <Input type="number" step="1" placeholder="Min" value={filters.amountMin} onChange={(e) => onChange("amountMin", e.target.value)} className="h-8 text-xs" />
         </div>
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">Amount Max</label>
+          <Input type="number" step="1" placeholder="Max" value={filters.amountMax} onChange={(e) => onChange("amountMax", e.target.value)} className="h-8 text-xs" />
+        </div>
+
         <div>
           <label className="text-[10px] text-gray-400 block mb-0.5">Description</label>
           <Input placeholder="Search description" value={filters.description} onChange={(e) => onChange("description", e.target.value)} className="h-8 text-xs" />
         </div>
+
         {showCategory && (
           <div>
             <label className="text-[10px] text-gray-400 block mb-0.5">Category</label>
@@ -194,9 +269,6 @@ const FilterBar = ({ filters, onChange, onClear, projectOptions, contractorOptio
   );
 };
 
-// ════════════════════════════════════════════════════════════
-// MainTabBtn / SubTabBtn — component এর বাইরে, distinct design
-// ════════════════════════════════════════════════════════════
 const MainTabBtn = ({ id, label, icon: Icon, active, onClick, count }) => (
   <button
     onClick={() => onClick(id)}
@@ -237,24 +309,24 @@ const StatementUpload = () => {
   const [mainTab, setMainTab] = useState("pending");
   const [subTab, setSubTab]   = useState("banking");
 
-  const [file, setFile]               = useState(null);
-  const [batchId, setBatchId]         = useState(null);
-  const [activeCats, setActiveCats]   = useState({ address: true, place: true, product: true, other: true });
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [nbForm, setNbForm]           = useState(EMPTY_NB);
+  const [file, setFile]       = useState(null);
+  const [batchId, setBatchId] = useState(null);
+  const [activeCats, setActiveCats] = useState({ address: true, place: true, product: true, other: true });
+  const [nbForm, setNbForm]   = useState(EMPTY_NB);
 
   const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
   const [nbFilters, setNbFilters]             = useState(EMPTY_FILTERS);
   const [approvedFilters, setApprovedFilters] = useState(EMPTY_FILTERS);
 
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget]   = useState(null);
+  // ── row-wise approve confirmation + isolated per-row loading ──
+  const [approveTarget, setApproveTarget] = useState(null); // পুরো row object রাখি, modal-এ preview দেখানোর জন্য
+  const [approvingRowId, setApprovingRowId] = useState(null);
 
-  // ── stable onChange handlers per filter group (useState setter ref stable, তাই ঠিক আছে) ──
-  const updateBankFilter = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
-  const updateNbFilter   = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
+  const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
+  const updateNbFilter       = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
   const updateApprovedFilter = (key, value) => setApprovedFilters((p) => ({ ...p, [key]: value }));
 
-  // ── latest pending batch ────────────────────────────────────────────────
   useQuery({
     queryKey: ["statementLatestBatch"],
     queryFn: async () => {
@@ -267,7 +339,6 @@ const StatementUpload = () => {
     refetchOnWindowFocus: false,
   });
 
-  // ── CSV upload ──────────────────────────────────────────────────────────
   const uploadMutation = useMutation({
     mutationFn: async (f) => {
       const fd = new FormData();
@@ -277,7 +348,6 @@ const StatementUpload = () => {
     onSuccess: async (res) => {
       const newBatchId = res.data?.batchId;
       setBatchId(newBatchId);
-      setSelectedIds([]);
       setFile(null);
       toast.success(res.data?.message || "CSV processed!");
       await queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
@@ -286,7 +356,6 @@ const StatementUpload = () => {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to process CSV."),
   });
 
-  // ── Staging rows: Banking sub-tab ───────────────────────────────────────
   const bankQueryParams = useMemo(() => ({ sourceType: "BANKING", ...bankFilters }), [bankFilters]);
   const { data: rows = [], isLoading: rowsLoading, isFetching: rowsFetching } = useQuery({
     queryKey: ["statementStagingAll", "BANKING", bankQueryParams],
@@ -299,7 +368,6 @@ const StatementUpload = () => {
     refetchOnWindowFocus: false,
   });
 
-  // ── Non-banking rows ────────────────────────────────────────────────────
   const nbQueryParams = useMemo(() => ({ sourceType: "NON_BANKING", ...nbFilters }), [nbFilters]);
   const { data: nbRows = [], isLoading: nbLoading, isFetching: nbFetching } = useQuery({
     queryKey: ["statementStagingAll", "NON_BANKING", nbQueryParams],
@@ -312,7 +380,6 @@ const StatementUpload = () => {
     refetchOnWindowFocus: false,
   });
 
-  // ── Approved (Main) rows ────────────────────────────────────────────────
   const approvedQueryParams = useMemo(() => ({ ...approvedFilters }), [approvedFilters]);
   const { data: approvedRows = [], isLoading: approvedLoading, isFetching: approvedFetching } = useQuery({
     queryKey: ["statementMain", approvedQueryParams],
@@ -325,7 +392,6 @@ const StatementUpload = () => {
     refetchOnWindowFocus: false,
   });
 
-  // ── Dropdowns ───────────────────────────────────────────────────────────
   const { data: projectOptions = [] } = useQuery({
     queryKey: ["statementProjects"],
     queryFn: async () => (await axios.get(`${url}/api/statement/projects`)).data?.data || [],
@@ -336,7 +402,6 @@ const StatementUpload = () => {
     queryFn: async () => (await axios.get(`${url}/api/statement/contractors`)).data?.data || [],
   });
 
-  // ── Mutations ───────────────────────────────────────────────────────────
   const invalidateStaging = () => {
     queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
   };
@@ -367,15 +432,19 @@ const StatementUpload = () => {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to delete invoice."),
   });
 
+  // ── row-wise approve: প্রতিবার শুধু ১টা stagingId পাঠায়, onMutate দিয়ে
+  //    ঠিক কোন row-টা approve হচ্ছে সেটা track করি — বাকি row গুলো unaffected থাকে ──
   const approveMutation = useMutation({
-    mutationFn: async (stagingIds) => axios.post(`${url}/api/statement/approve`, { stagingIds }),
+    mutationFn: async (stagingId) => axios.post(`${url}/api/statement/approve`, { stagingIds: [stagingId] }),
+    onMutate: (stagingId) => setApprovingRowId(stagingId),
     onSuccess: (res) => {
-      toast.success(res.data?.message || "Rows approved!");
-      setSelectedIds([]);
+      toast.success(res.data?.message || "Row approved!");
+      setApproveTarget(null);
       invalidateStaging();
       queryClient.invalidateQueries({ queryKey: ["statementMain"], refetchType: "active" });
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to approve rows."),
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to approve row."),
+    onSettled: () => setApprovingRowId(null),
   });
 
   const addNonBankingMutation = useMutation({
@@ -388,7 +457,6 @@ const StatementUpload = () => {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to add entry."),
   });
 
-  // ── Handlers ────────────────────────────────────────────────────────────
   const handleProjectChange = (row, pId) => {
     const proj = projectOptions.find((p) => String(p.P_ID) === String(pId));
     updateRowMutation.mutate({ stagingId: row.STAGING_ID, pId: pId || null, projectName: proj?.P_NAME || null });
@@ -432,41 +500,30 @@ const StatementUpload = () => {
     uploadMutation.mutate(file);
   };
 
-  const handleReset = () => { setFile(null); setBatchId(null); setSelectedIds([]); };
+  const handleReset = () => { setFile(null); setBatchId(null); };
 
   const toggleCategory = (cat) => setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
 
-  const toggleRow = (id) =>
-    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-
-  const toggleSelectAllVisible = (visibleRows) => {
-    const visibleIds = visibleRows.filter((r) => r.STATUS === "PENDING").map((r) => r.STAGING_ID);
-    const allSelected = visibleIds.every((id) => selectedIds.includes(id));
-    setSelectedIds(allSelected
-      ? selectedIds.filter((id) => !visibleIds.includes(id))
-      : [...new Set([...selectedIds, ...visibleIds])]);
-  };
-
-  const handleApprove = () => {
-    if (selectedIds.length === 0) { toast.error("Select at least one row to approve."); return; }
-    approveMutation.mutate(selectedIds);
-  };
+  // ── row-wise approve: বাটনে ক্লিক করলে শুধু modal ওপেন হয়, approve সাথে সাথে হয় না ──
+  const handleApproveClick = (row) => setApproveTarget(row);
+  const confirmApprove = () => { if (approveTarget) approveMutation.mutate(approveTarget.STAGING_ID); };
 
   const handleNbSubmit = () => {
-    if (!nbForm.txnDate || !nbForm.amount || !nbForm.description) {
-      toast.error("Date, Amount and Description are required.");
+    if (!nbForm.txnDate || !nbForm.amount) {
+      toast.error("Date and Amount  are required.");
       return;
     }
     const proj = projectOptions.find((p) => String(p.P_ID) === String(nbForm.pId));
     const cont = contractorOptions.find((c) => String(c.CONTRATOR_ID) === String(nbForm.contractorId));
     addNonBankingMutation.mutate({
       ...nbForm,
+      pId:            nbForm.pId || null,
+      contractorId:   nbForm.contractorId || null,
       projectName:    proj?.P_NAME    || null,
       contractorName: cont?.CONTRATOR_NAME || null,
     });
   };
 
-  // ── Derived ─────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const s = { address: 0, place: 0, product: 0, other: 0 };
     rows.forEach((r) => { const c = (r.CATEGORY || "other").toLowerCase(); if (s[c] !== undefined) s[c]++; });
@@ -483,9 +540,10 @@ const StatementUpload = () => {
     return n < 0 ? `-$${f}` : `$${f}`;
   };
 
+  // ── CSV export থেকেও Matched Address সরিয়ে দেওয়া হলো ──
   const handleDownloadCsv = (dataRows, filename) => {
     if (dataRows.length === 0) { toast.error("No rows to download."); return; }
-    const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Category", "Project", "Matched Address", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
+    const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Category", "Project", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
     const csvRows = dataRows.map((r) => [
       fmtDate(r.TXN_DATE),
       r.AMOUNT,
@@ -494,7 +552,6 @@ const StatementUpload = () => {
       `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
       r.CATEGORY,
       `"${(r.PROJECT_NAME || "").replace(/"/g, '""')}"`,
-      `"${(r.MATCHED_ADDRESS || "").replace(/"/g, '""')}"`,
       `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
       `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,
       r.SOURCE_TYPE || "",
@@ -508,20 +565,16 @@ const StatementUpload = () => {
     link.click();
   };
 
-  // ── Reusable staging table rows ─────────────────────────────────────────
+  // ── Reusable staging table rows — checkbox column ও Matched Address column বাদ ──
   const renderStagingRows = (dataRows, loading) => {
-    if (loading) return <tr><td colSpan={12} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>;
-    if (dataRows.length === 0) return <tr><td colSpan={12} className="text-center py-10 text-gray-400">No rows found.</td></tr>;
+    if (loading) return <tr><td colSpan={11} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>;
+    if (dataRows.length === 0) return <tr><td colSpan={11} className="text-center py-10 text-gray-400">No rows found.</td></tr>;
     return dataRows.map((r) => {
       const cat      = (r.CATEGORY || "other").toLowerCase();
       const approved = r.STATUS === "APPROVED";
+      const isApprovingThisRow = approvingRowId === r.STAGING_ID;
       return (
         <tr key={r.STAGING_ID} className={`border-b last:border-0 ${approved ? "bg-green-50 opacity-70" : "hover:bg-gray-50"}`}>
-          <td className="px-3 py-2.5">
-            <input type="checkbox" className="accent-blue-600 w-4 h-4"
-              checked={selectedIds.includes(r.STAGING_ID)} disabled={approved}
-              onChange={() => !approved && toggleRow(r.STAGING_ID)} />
-          </td>
           <td className="px-4 py-2.5">
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLES[r.STATUS] || STATUS_STYLES.PENDING}`}>
               {r.STATUS || "PENDING"}
@@ -552,9 +605,6 @@ const StatementUpload = () => {
               <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Project">{r.PROJECT_NAME || "Select project"}</SelectValue></SelectTrigger>
               <SelectContent>{projectOptions.map((p) => <SelectItem key={p.P_ID} value={String(p.P_ID)}>{p.P_NAME}</SelectItem>)}</SelectContent>
             </Select>
-          </td>
-          <td className="px-4 py-2.5 max-w-[150px] text-xs text-gray-700">
-            {r.MATCHED_ADDRESS ? <span className="text-blue-700 font-medium">{r.MATCHED_ADDRESS}</span> : <span className="text-gray-400 italic">—</span>}
           </td>
           <td className="px-4 py-2.5 min-w-[150px]">
             <Select value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""} onValueChange={(v) => !approved && handleContractorChange(r, v)} disabled={approved}>
@@ -594,31 +644,45 @@ const StatementUpload = () => {
               </label>
             )}
           </td>
+          {/* ── row-wise Approve: শুধু এই row-এর জন্য isolated loading state ── */}
+          <td className="px-4 py-2.5 min-w-[110px]">
+            {!approved ? (
+              <Button
+                size="sm"
+                onClick={() => handleApproveClick(r)}
+                disabled={isApprovingThisRow}
+                className="h-7 px-2.5 text-xs rounded-full bg-violet-600 hover:bg-violet-700"
+              >
+                {isApprovingThisRow ? (
+                  <><Loader2 size={12} className="mr-1 animate-spin" /> Approving...</>
+                ) : (
+                  <><CheckCircle2 size={12} className="mr-1" /> Approve</>
+                )}
+              </Button>
+            ) : (
+              <span className="text-[10px] text-green-600 font-semibold">Approved</span>
+            )}
+          </td>
         </tr>
       );
     });
   };
 
-  const StagingThead = ({ rows: visibleRows }) => (
+  // ── checkbox column ও Matched Address column বাদ ──
+  const StagingThead = () => (
     <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
       <tr>
-        <th className="px-3 py-3">
-          <input type="checkbox" className="accent-blue-600 w-4 h-4"
-            checked={visibleRows.filter(r => r.STATUS === "PENDING").length > 0 &&
-              visibleRows.filter(r => r.STATUS === "PENDING").every((r) => selectedIds.includes(r.STAGING_ID))}
-            onChange={() => toggleSelectAllVisible(visibleRows)} />
-        </th>
         <th className="px-4 py-3 text-left">Status</th>
         <th className="px-4 py-3 text-left">Date</th>
         <th className="px-4 py-3 text-right">Amount</th>
         <th className="px-4 py-3 text-left">Description</th>
         <th className="px-4 py-3 text-left">Category</th>
         <th className="px-4 py-3 text-left">Project</th>
-        <th className="px-4 py-3 text-left">Matched Address</th>
         <th className="px-4 py-3 text-left">Contractor</th>
         <th className="px-4 py-3 text-left">Invoice No</th>
         <th className="px-4 py-3 text-left">Remarks</th>
         <th className="px-4 py-3 text-left">Invoice File</th>
+        <th className="px-4 py-3 text-left">Action</th>
       </tr>
     </thead>
   );
@@ -627,7 +691,6 @@ const StatementUpload = () => {
     <SectionContainer>
       <div className="p-6 bg-white shadow rounded-lg mt-8">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-2 border-b">
           <h2 className="font-semibold text-sm text-gray-800 flex items-center gap-2">
             <FileSpreadsheet size={16} className="text-blue-600" />
@@ -639,7 +702,6 @@ const StatementUpload = () => {
           </Button>
         </div>
 
-        {/* MAIN TABS — visually distinct active/inactive */}
         <div className="flex gap-1 border-b border-gray-200 mb-6">
           <MainTabBtn id="pending"  label="Pending Uploads"  icon={Inbox}      active={mainTab === "pending"}  onClick={setMainTab} />
           <MainTabBtn id="approved" label="Approved Records" icon={BadgeCheck} active={mainTab === "approved"} onClick={setMainTab} />
@@ -705,22 +767,18 @@ const StatementUpload = () => {
                       </label>
                     ))}
                   </div>
+                  {/* ── উপরের bulk Approve বাটন সরিয়ে শুধু CSV রাখা হলো ── */}
                   <div className="flex items-center gap-2 ml-auto">
                     <Button onClick={() => handleDownloadCsv(filteredRows, "statement_banking.csv")} variant="outline" className="rounded-full text-sm">
                       <Download size={14} className="mr-1" /> CSV
-                    </Button>
-                    <Button onClick={handleApprove} disabled={approveMutation.isPending || selectedIds.length === 0}
-                      className="rounded-full bg-violet-600 hover:bg-violet-700 text-sm">
-                      <CheckCircle2 size={14} className="mr-1" />
-                      {approveMutation.isPending ? "Approving..." : `Approve${selectedIds.length ? ` (${selectedIds.length})` : ""}`}
                     </Button>
                   </div>
                 </div>
 
                 <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[1600px]">
-                      <StagingThead rows={filteredRows} />
+                    <table className="w-full text-sm min-w-[1400px]">
+                      <StagingThead />
                       <tbody>{renderStagingRows(filteredRows, rowsLoading)}</tbody>
                     </table>
                   </div>
@@ -738,15 +796,16 @@ const StatementUpload = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Date *</label>
-                      <Input type="date" value={nbForm.txnDate} onChange={(e) => setNbForm((p) => ({ ...p, txnDate: e.target.value }))} className="h-8 text-xs" />
+                      {/* ── type করে dd/mm/yyyy বসানো যায় ── */}
+                      <DateInput value={nbForm.txnDate} onChange={(v) => setNbForm((p) => ({ ...p, txnDate: v }))} />
                     </div>
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Type *</label>
-                      <Select value={nbForm.entryType} onValueChange={(v) => setNbForm((p) => ({ ...p, entryType: v, amount: "" }))}>
+                      <Select value={nbForm.entryType} onValueChange={(v) => setNbForm((p) => ({ ...p, entryType: v }))}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="DEBIT">Debit</SelectItem>
-                          <SelectItem value="CREDIT">Credit</SelectItem>
+                          <SelectItem value="DEBIT">Receive</SelectItem>
+                          <SelectItem value="CREDIT">Payment</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -779,16 +838,22 @@ const StatementUpload = () => {
                     </div>
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Project</label>
-                      <Select value={nbForm.pId} onValueChange={(v) => setNbForm((p) => ({ ...p, pId: v }))}>
+                      <Select value={nbForm.pId || "NONE"} onValueChange={(v) => setNbForm((p) => ({ ...p, pId: v === "NONE" ? "" : v }))}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select project" /></SelectTrigger>
-                        <SelectContent>{projectOptions.map((p) => <SelectItem key={p.P_ID} value={String(p.P_ID)}>{p.P_NAME}</SelectItem>)}</SelectContent>
+                        <SelectContent>
+                          <SelectItem value="NONE">None</SelectItem>
+                          {projectOptions.map((p) => <SelectItem key={p.P_ID} value={String(p.P_ID)}>{p.P_NAME}</SelectItem>)}
+                        </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Contractor</label>
-                      <Select value={nbForm.contractorId} onValueChange={(v) => setNbForm((p) => ({ ...p, contractorId: v }))}>
+                      <Select value={nbForm.contractorId || "NONE"} onValueChange={(v) => setNbForm((p) => ({ ...p, contractorId: v === "NONE" ? "" : v }))}>
                         <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select contractor" /></SelectTrigger>
-                        <SelectContent>{contractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}</SelectContent>
+                        <SelectContent>
+                          <SelectItem value="NONE">None</SelectItem>
+                          {contractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}
+                        </SelectContent>
                       </Select>
                     </div>
                     <div>
@@ -831,18 +896,13 @@ const StatementUpload = () => {
                     <Button onClick={() => handleDownloadCsv(nbRows, "statement_nonbanking.csv")} variant="outline" className="rounded-full text-sm">
                       <Download size={14} className="mr-1" /> CSV
                     </Button>
-                    <Button onClick={handleApprove} disabled={approveMutation.isPending || selectedIds.length === 0}
-                      className="rounded-full bg-violet-600 hover:bg-violet-700 text-sm">
-                      <CheckCircle2 size={14} className="mr-1" />
-                      {approveMutation.isPending ? "Approving..." : `Approve${selectedIds.length ? ` (${selectedIds.length})` : ""}`}
-                    </Button>
                   </div>
                 </div>
 
                 <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[1600px]">
-                      <StagingThead rows={nbRows} />
+                    <table className="w-full text-sm min-w-[1400px]">
+                      <StagingThead />
                       <tbody>{renderStagingRows(nbRows, nbLoading)}</tbody>
                     </table>
                   </div>
@@ -876,18 +936,17 @@ const StatementUpload = () => {
 
             <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[1600px]">
+                <table className="w-full text-sm min-w-[1500px]">
                   <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
                     <tr>
                       <th className="px-4 py-3 text-left">Date</th>
                       <th className="px-4 py-3 text-right">Amount</th>
-                      <th className="px-4 py-3 text-right">Debit</th>
-                      <th className="px-4 py-3 text-right">Credit</th>
+                      <th className="px-4 py-3 text-right">Receive</th>
+                      <th className="px-4 py-3 text-right">Payment</th>
                       <th className="px-4 py-3 text-left">Description</th>
                       <th className="px-4 py-3 text-left">Category</th>
                       <th className="px-4 py-3 text-left">Source</th>
                       <th className="px-4 py-3 text-left">Project</th>
-                      <th className="px-4 py-3 text-left">Matched Address</th>
                       <th className="px-4 py-3 text-left">Contractor</th>
                       <th className="px-4 py-3 text-left">Invoice No</th>
                       <th className="px-4 py-3 text-left">Remarks</th>
@@ -897,9 +956,9 @@ const StatementUpload = () => {
                   </thead>
                   <tbody>
                     {approvedLoading ? (
-                      <tr><td colSpan={14} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                      <tr><td colSpan={13} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
                     ) : approvedRows.length === 0 ? (
-                      <tr><td colSpan={14} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
+                      <tr><td colSpan={13} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
                     ) : (
                       approvedRows.map((r) => {
                         const cat = (r.CATEGORY || "other").toLowerCase();
@@ -927,9 +986,6 @@ const StatementUpload = () => {
                               </span>
                             </td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.PROJECT_NAME || <span className="text-gray-400 italic">—</span>}</td>
-                            <td className="px-4 py-2.5 max-w-[150px] text-xs">
-                              {r.MATCHED_ADDRESS ? <span className="text-blue-700 font-medium">{r.MATCHED_ADDRESS}</span> : <span className="text-gray-400 italic">—</span>}
-                            </td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.CONTRACTOR_NAME || <span className="text-gray-400 italic">—</span>}</td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.INVOICE_NO || <span className="text-gray-400 italic">—</span>}</td>
                             <td className="px-4 py-2.5 text-gray-700 text-xs">{r.REMARKS || <span className="text-gray-400 italic">—</span>}</td>
@@ -982,6 +1038,36 @@ const StatementUpload = () => {
                 className="rounded-full bg-red-600 hover:bg-red-700 text-sm"
               >
                 {deleteInvoiceMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── APPROVE CONFIRMATION MODAL (row-wise) ── */}
+      {approveTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => !approveMutation.isPending && setApproveTarget(null)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2 className="text-violet-600" size={18} />
+              <h3 className="text-sm font-semibold text-gray-800">Approve this transaction?</h3>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 text-xs text-gray-600 space-y-1">
+              <div><span className="text-gray-400">Date:</span> {fmtDate(approveTarget.TXN_DATE)}</div>
+              <div><span className="text-gray-400">Amount:</span> {fmtAmount(approveTarget.AMOUNT)}</div>
+              <div className="break-words"><span className="text-gray-400">Description:</span> {approveTarget.DESCRIPTION}</div>
+            </div>
+            <p className="text-xs text-gray-500 mb-5">Once approved, this row will move to Approved Records.</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setApproveTarget(null)} disabled={approveMutation.isPending} className="rounded-full text-sm">
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmApprove}
+                disabled={approveMutation.isPending}
+                className="rounded-full bg-violet-600 hover:bg-violet-700 text-sm"
+              >
+                {approveMutation.isPending ? "Approving..." : "Approve"}
               </Button>
             </div>
           </div>

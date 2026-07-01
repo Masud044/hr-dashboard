@@ -77,9 +77,19 @@ const getAvatarColor = (name) => {
 export function ContractorTable() {
   const queryClient = useQueryClient();
 
-  const [sorting, setSorting]                       = useState([]);
+  // ── Default sort: most recently updated/created contractor first ────────
+  // UPDATE_DATE is set to SYSDATE on both insert and update in the backend,
+  // so newly added AND newly edited contractors both float to the top.
+  const [sorting, setSorting]                       = useState([
+    { id: "UPDATE_DATE", desc: true },
+  ]);
   const [columnFilters, setColumnFilters]           = useState([]);
-  const [columnVisibility, setColumnVisibility]     = useState({});
+  // ENTRY_DATE and UPDATE_DATE stay in the table (so sorting works) but are
+  // hidden from the UI by default.
+  const [columnVisibility, setColumnVisibility]     = useState({
+    ENTRY_DATE: false,
+    UPDATE_DATE: false,
+  });
   const [rowSelection, setRowSelection]             = useState({});
   const [editSheetOpen, setEditSheetOpen]           = useState(false);
   const [createSheetOpen, setCreateSheetOpen]       = useState(false);
@@ -188,6 +198,7 @@ export function ContractorTable() {
     );
   },
 },
+    // ── Hidden by default, kept only so ENTRY_DATE/UPDATE_DATE sorting works ──
     {
       accessorKey: "ENTRY_DATE",
       header: ({ column }) => (
@@ -202,6 +213,23 @@ export function ContractorTable() {
       cell: ({ row }) => (
         <div className="text-sm text-muted-foreground">
           {row.getValue("ENTRY_DATE") || "—"}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "UPDATE_DATE",
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-overline text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Updated
+          <ArrowUpDown className="h-3 w-3" />
+        </button>
+      ),
+      cell: ({ row }) => (
+        <div className="text-sm text-muted-foreground">
+          {row.getValue("UPDATE_DATE") || "—"}
         </div>
       ),
     },
