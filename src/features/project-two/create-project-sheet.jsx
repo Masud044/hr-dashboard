@@ -675,6 +675,8 @@ export function CreateProjectSheet({ isOpen, onClose }) {
             <SectionLabel label="Owner Information" />
             <OwnerRepeater owners={owners} onChange={setOwners} />
 
+            <div className="flex justify-between gap-2"></div>
+
             {/* ── Mandatory Documents ──────────────────────────────────── */}
             <SectionLabel label="Mandatory Documents" />
             <div

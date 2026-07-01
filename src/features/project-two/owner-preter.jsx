@@ -97,6 +97,19 @@ export function OwnerRepeater({ owners, onChange }) {
               className="h-10" // ✅ Cleaned
             />
           </div>
+ <div className="flex justify-end gap-3 pt-6   border-border">
+            
+              <Button
+                type="submit"
+                // disabled={mutation.isPending}
+                className="h-9 px-4 text-sm font-medium bg-primary hover:bg-primary/90 text-white  hover:shadow-lg transition-all"
+              >
+                {/* <Save size={16} className="mr-2" /> */}
+                {/* { "Add..." : "Add Owner"} */}
+                Add owner
+              </Button>
+            </div>
+
         </div>
       ))}
 
