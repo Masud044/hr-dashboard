@@ -33,43 +33,40 @@ import {
 import { useContractorTypes } from "@/hooks/use-contractor-type";
 
 // ── Dynamic contractor types hook ─────────────────────────────────────────────
-
 // ↑ Adjust the import path to wherever you place useContractorTypes.js
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 // ── Zod schema ────────────────────────────────────────────────────────────────
+// Only CONTRATOR_NAME is required. Everything else is optional and accepts
+// null (from API) or empty string (from empty inputs).
 const contractorTypeSchema = z.object({
-  CONTRATOR_TYPE: z.coerce
-    .number({ required_error: "Please select a type" })
-    .min(1, "Please select a type"),
+  CONTRATOR_TYPE: z.union([z.coerce.number(), z.literal("")]).optional(),
 });
 
 const contractorSchema = z.object({
   CONTRATOR_NAME:  z.string().min(1, "Contractor name is required"),
   ENTRY_BY:        z.coerce.number().default(500),
-  ABN:             z.string().min(1, "ABN is required"),
-  LIEC_NO:         z.string().min(1, "License number is required"),
-  SUBURB:          z.string().min(1, "Suburb is required"),
-  POSTCODE:        z.string().min(1, "Postcode is required"),
-  STATE:           z.string().min(1, "State is required"),
-  ADDRESS:         z.string().min(1, "Address is required"),
-  CONTACT_PERSON:  z.string().min(1, "Contact person is required"),
-  PHONE:           z.string().min(1, "Phone is required"),
-  EMAIL:           z.string().email("Invalid email address"),
-  MOBILE:          z.string().min(1, "Mobile is required"),
-  DUE:             z.string().optional(),
-  REMARKS:         z.string().optional(),
-  FAX:             z.string().optional(),
-  CUSTOMER_TYPE:   z.coerce.number().optional(),
-  BANK_ACC_NAME:   z.string().optional(),
-  BSB:             z.string().optional(),
-  AC_NO:           z.string().optional(),
-  INSURER:         z.string().optional(),
-  POLICY_NUMBER:   z.string().optional(),
-  contractorTypes: z
-    .array(contractorTypeSchema)
-    .min(1, "Add at least one contractor type"),
+  ABN:             z.string().nullable().optional(),
+  LIEC_NO:         z.string().nullable().optional(),
+  SUBURB:          z.string().nullable().optional(),
+  POSTCODE:        z.string().nullable().optional(),
+  STATE:           z.string().nullable().optional(),
+  ADDRESS:         z.string().nullable().optional(),
+  CONTACT_PERSON:  z.string().nullable().optional(),
+  PHONE:           z.string().nullable().optional(),
+  EMAIL:           z.union([z.string().email("Invalid email address"), z.literal(""), z.null()]).optional(),
+  MOBILE:          z.string().nullable().optional(),
+  DUE:             z.string().nullable().optional(),
+  REMARKS:         z.string().nullable().optional(),
+  FAX:             z.string().nullable().optional(),
+  CUSTOMER_TYPE:   z.coerce.number().nullable().optional(),
+  BANK_ACC_NAME:   z.string().nullable().optional(),
+  BSB:             z.string().nullable().optional(),
+  AC_NO:           z.string().nullable().optional(),
+  INSURER:         z.string().nullable().optional(),
+  POLICY_NUMBER:   z.string().nullable().optional(),
+  contractorTypes: z.array(contractorTypeSchema).optional(),
 });
 
 const defaultValues = {
@@ -130,13 +127,17 @@ export function CreateContractorSheet({ isOpen, onClose }) {
     mutationFn: async (formData) => {
       const { contractorTypes, ...contractorFields } = formData;
 
+      const validTypes = (contractorTypes || [])
+        .map((t) => Number(t.CONTRATOR_TYPE))
+        .filter((v) => !isNaN(v) && v > 0);
+
       const payload = {
         contractor: {
           ...contractorFields,
           ENTRY_BY:  Number(contractorFields.ENTRY_BY) || 500,
           UPDATE_BY: Number(contractorFields.ENTRY_BY) || 500,
         },
-        contractorTypes: contractorTypes.map((t) => Number(t.CONTRATOR_TYPE)),
+        contractorTypes: validTypes,
       };
 
       return axios.post(`${url}/api/contractor`, payload);
@@ -200,9 +201,9 @@ export function CreateContractorSheet({ isOpen, onClose }) {
               name="ADDRESS"
               render={({ field }) => (
                 <FormItem >
-                  <FormLabel>Address <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Textarea rows={2} {...field} placeholder="Enter address" />
+                    <Textarea rows={2} {...field} value={field.value ?? ""} placeholder="Enter address" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -213,32 +214,32 @@ export function CreateContractorSheet({ isOpen, onClose }) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 gap-x-3 gap-y-2 px-1 pb-6">
              <FormField control={form.control} name="ABN" render={({ field }) => (
               <FormItem>
-                <FormLabel>ABN <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="ABN number" /></FormControl>
+                <FormLabel>ABN</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="ABN number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="LIEC_NO" render={({ field }) => (
               <FormItem>
-                <FormLabel>License No <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="License number" /></FormControl>
+                <FormLabel>License No</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="License number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="SUBURB" render={({ field }) => (
               <FormItem>
-                <FormLabel>Suburb <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="Suburb" /></FormControl>
+                <FormLabel>Suburb</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Suburb" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="POSTCODE" render={({ field }) => (
               <FormItem>
-                <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="Postcode" /></FormControl>
+                <FormLabel>Postcode</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Postcode" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -248,8 +249,8 @@ export function CreateContractorSheet({ isOpen, onClose }) {
            <div className="grid grid-cols-1 md:grid-cols-2 x-3 gap-y-2 px-1 pb-6">
              <FormField control={form.control} name="STATE" render={({ field }) => (
               <FormItem>
-                <FormLabel>State <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="State" /></FormControl>
+                <FormLabel>State</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="State" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -257,7 +258,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="FAX" render={({ field }) => (
               <FormItem>
                 <FormLabel>Fax</FormLabel>
-                <FormControl><Input {...field} placeholder="Fax number" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Fax number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -270,32 +271,32 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <div className="grid grid-cols-1 md:grid-cols-4 mt-3 gap-4 gap-x-3 gap-y-2 px-1 pb-6">
                <FormField control={form.control} name="CONTACT_PERSON" render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Person <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="Contact person name" /></FormControl>
+                <FormLabel>Contact Person</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Contact person name" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="PHONE" render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="Phone number" /></FormControl>
+                <FormLabel>Phone</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Phone number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="MOBILE" render={({ field }) => (
               <FormItem>
-                <FormLabel>Mobile <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input {...field} placeholder="Mobile number" /></FormControl>
+                <FormLabel>Mobile</FormLabel>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Mobile number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="EMAIL" render={({ field }) => (
               <FormItem>
-                <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
-                <FormControl><Input type="email" {...field} placeholder="Email address" /></FormControl>
+                <FormLabel>Email</FormLabel>
+                <FormControl><Input type="email" {...field} value={field.value ?? ""} placeholder="Email address" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -309,7 +310,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="BANK_ACC_NAME" render={({ field }) => (
               <FormItem>
                 <FormLabel>Bank Account Name</FormLabel>
-                <FormControl><Input {...field} placeholder="Account name" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Account name" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -317,7 +318,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="BSB" render={({ field }) => (
               <FormItem>
                 <FormLabel>BSB</FormLabel>
-                <FormControl><Input {...field} placeholder="BSB number" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="BSB number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -325,7 +326,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="AC_NO" render={({ field }) => (
               <FormItem>
                 <FormLabel>Account No</FormLabel>
-                <FormControl><Input {...field} placeholder="Account number" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Account number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -333,7 +334,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="INSURER" render={({ field }) => (
               <FormItem>
                 <FormLabel>Insurer</FormLabel>
-                <FormControl><Input {...field} placeholder="Insurer name" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Insurer name" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -343,7 +344,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
              <FormField control={form.control} name="POLICY_NUMBER" render={({ field }) => (
               <FormItem>
                 <FormLabel>Policy Number</FormLabel>
-                <FormControl><Input {...field} placeholder="Policy number" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Policy number" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -351,7 +352,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="DUE" render={({ field }) => (
               <FormItem>
                 <FormLabel>Due</FormLabel>
-                <FormControl><Input {...field} placeholder="Due amount" /></FormControl>
+                <FormControl><Input {...field} value={field.value ?? ""} placeholder="Due amount" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -359,7 +360,7 @@ export function CreateContractorSheet({ isOpen, onClose }) {
             <FormField control={form.control} name="REMARKS" render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Remarks</FormLabel>
-                <FormControl><Textarea rows={2} {...field} placeholder="Additional remarks" /></FormControl>
+                <FormControl><Textarea rows={2} {...field} value={field.value ?? ""} placeholder="Additional remarks" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -376,7 +377,6 @@ export function CreateContractorSheet({ isOpen, onClose }) {
                     Contractor Types
                   </span>
                   {/* <div className="flex-1 h-px bg-border w-24" /> */}
-                  <span className="text-red-500 text-xs">*</span>
                 </div>
                 <Button
                   type="button"
