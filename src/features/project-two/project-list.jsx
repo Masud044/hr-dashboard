@@ -10,7 +10,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import axios from "axios";
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon, Search, Cog } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon, Search, Cog, FileText } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ import { EditProjectSheet } from "./edit-project-sheet";
 import { CreateProjectSheet } from "./create-project-sheet";
 import { ProcessSheet } from "./create-process-page";
 import { useNavigate } from "react-router-dom";
+import { ProjectReportSheet } from "./project-report-sheet";
 
 
 
@@ -63,6 +64,8 @@ const navigate = useNavigate();
   const [selectedProjectId, setSelectedProjectId]       = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen]         = useState(false);
   const [deleteTargetId, setDeleteTargetId]             = useState(null);
+  const [reportSheetOpen, setReportSheetOpen]   = useState(false);
+const [reportProject, setReportProject]       = useState(null); // { id, name }
 
   // ── ProcessSheet state ───────────────────────────────────────────────────
   const [processSheetOpen, setProcessSheetOpen]         = useState(false);
@@ -110,6 +113,11 @@ const navigate = useNavigate();
     setDeleteTargetId(projectId);
     setDeleteDialogOpen(true);
   };
+
+  const handleOpenReport = (item) => {
+  setReportProject({ id: item.P_ID, name: item.P_NAME });
+  setReportSheetOpen(true);
+};
 
   const handleDeleteConfirm = () => {
     if (deleteTargetId) deleteMutation.mutate(deleteTargetId);
@@ -297,6 +305,7 @@ const navigate = useNavigate();
             >
               <Pencil size={15} />
             </button>
+
             {/* Create Process — এখন Sheet খোলে, navigate করে না */}
             <button
               onClick={() => handleCreateProcess(item.P_ID)}
@@ -305,6 +314,14 @@ const navigate = useNavigate();
             >
               <Cog size={15} />
             </button>
+
+            <button
+  onClick={() => handleOpenReport(item)}
+  title="View Project Report"
+  className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
+>
+  <FileText size={15} />
+</button>
             {/* Delete */}
             <button
               onClick={() => handleDeleteClick(item.P_ID)}
@@ -465,6 +482,13 @@ const navigate = useNavigate();
         onClose={() => { setProcessSheetOpen(false); setSelectedProjectId(null); }}
         projectId={selectedProjectId}
       />
+
+      <ProjectReportSheet
+  isOpen={reportSheetOpen}
+  onClose={() => { setReportSheetOpen(false); setReportProject(null); }}
+  projectId={reportProject?.id}
+  projectName={reportProject?.name}
+/>
 
       {/* ── Delete Dialog ─────────────────────────────────────────────── */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
