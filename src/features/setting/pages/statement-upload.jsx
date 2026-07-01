@@ -41,11 +41,17 @@ const EMPTY_NB = {
 };
 
 // ── matchedAddress সরিয়ে দেওয়া হলো ──
+// const EMPTY_FILTERS = {
+//   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
+//   invoiceNo: "", amountMin: "", amountMax: "", description: "", category: "",
+// };
+
 const EMPTY_FILTERS = {
   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
   invoiceNo: "", amountMin: "", amountMax: "", description: "", category: "",
 };
 
+const PAGE_SIZE = 50; // একসাথে সর্বোচ্চ ৫০টা row render হবে, বাকি pagination দিয়ে
 const fmtDate = (val) => {
   if (!val) return "—";
   const d = new Date(val);
@@ -269,6 +275,31 @@ const FilterBar = ({ filters, onChange, onClear, projectOptions, contractorOptio
   );
 };
 
+const Pagination = ({ page, totalRows, onPageChange }) => {
+  const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE));
+  if (totalRows === 0) return null;
+
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, totalRows);
+
+  const goTo = (p) => onPageChange(Math.min(Math.max(1, p), totalPages));
+
+  return (
+    <div className="flex items-center justify-between px-2 py-3 text-xs text-gray-500">
+      <span>Showing {from}–{to} of {totalRows}</span>
+      <div className="flex items-center gap-1">
+        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={page <= 1} onClick={() => goTo(page - 1)}>
+          Prev
+        </Button>
+        <span className="px-2">{page} / {totalPages}</span>
+        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={page >= totalPages} onClick={() => goTo(page + 1)}>
+          Next
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const MainTabBtn = ({ id, label, icon: Icon, active, onClick, count }) => (
   <button
     onClick={() => onClick(id)}
@@ -314,18 +345,30 @@ const StatementUpload = () => {
   const [activeCats, setActiveCats] = useState({ address: true, place: true, product: true, other: true });
   const [nbForm, setNbForm]   = useState(EMPTY_NB);
 
+  // const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
+  // const [nbFilters, setNbFilters]             = useState(EMPTY_FILTERS);
+  // const [approvedFilters, setApprovedFilters] = useState(EMPTY_FILTERS);
+
   const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
   const [nbFilters, setNbFilters]             = useState(EMPTY_FILTERS);
   const [approvedFilters, setApprovedFilters] = useState(EMPTY_FILTERS);
+
+  // ── ৩০০০+ row একসাথে render হয়ে browser freeze হওয়া ঠেকাতে pagination ──
+  const [bankPage, setBankPage]         = useState(1);
+  const [nbPage, setNbPage]             = useState(1);
+  const [approvedPage, setApprovedPage] = useState(1);
 
   const [deleteTarget, setDeleteTarget]   = useState(null);
   // ── row-wise approve confirmation + isolated per-row loading ──
   const [approveTarget, setApproveTarget] = useState(null); // পুরো row object রাখি, modal-এ preview দেখানোর জন্য
   const [approvingRowId, setApprovingRowId] = useState(null);
 
-  const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
-  const updateNbFilter       = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
-  const updateApprovedFilter = (key, value) => setApprovedFilters((p) => ({ ...p, [key]: value }));
+  // const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
+  // const updateNbFilter       = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
+  // const updateApprovedFilter = (key, value) => setApprovedFilters((p) => ({ ...p, [key]: value }));
+  const updateBankFilter     = (key, value) => { setBankFilters((p) => ({ ...p, [key]: value })); setBankPage(1); };
+  const updateNbFilter       = (key, value) => { setNbFilters((p) => ({ ...p, [key]: value })); setNbPage(1); };
+  const updateApprovedFilter = (key, value) => { setApprovedFilters((p) => ({ ...p, [key]: value })); setApprovedPage(1); };
 
   useQuery({
     queryKey: ["statementLatestBatch"],
@@ -502,7 +545,8 @@ const StatementUpload = () => {
 
   const handleReset = () => { setFile(null); setBatchId(null); };
 
-  const toggleCategory = (cat) => setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  // const toggleCategory = (cat) => setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  const toggleCategory = (cat) => { setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] })); setBankPage(1); };
 
   // ── row-wise approve: বাটনে ক্লিক করলে শুধু modal ওপেন হয়, approve সাথে সাথে হয় না ──
   const handleApproveClick = (row) => setApproveTarget(row);
@@ -530,9 +574,18 @@ const StatementUpload = () => {
     return s;
   }, [rows]);
 
+  // const filteredRows = useMemo(() => {
+  //   return rows.filter((r) => activeCats[(r.CATEGORY || "other").toLowerCase()]);
+  // }, [rows, activeCats]);
+
   const filteredRows = useMemo(() => {
     return rows.filter((r) => activeCats[(r.CATEGORY || "other").toLowerCase()]);
   }, [rows, activeCats]);
+
+  // ── শুধু current page-এর row গুলোই DOM-এ render হবে, বাকি সব memory-তে থাকবে কিন্তু render হবে না ──
+  const bankPageRows     = useMemo(() => filteredRows.slice((bankPage - 1) * PAGE_SIZE, bankPage * PAGE_SIZE), [filteredRows, bankPage]);
+  const nbPageRows       = useMemo(() => nbRows.slice((nbPage - 1) * PAGE_SIZE, nbPage * PAGE_SIZE), [nbRows, nbPage]);
+  const approvedPageRows = useMemo(() => approvedRows.slice((approvedPage - 1) * PAGE_SIZE, approvedPage * PAGE_SIZE), [approvedRows, approvedPage]);
 
   const fmtAmount = (amt) => {
     const n = Number(amt) || 0;
@@ -775,7 +828,7 @@ const StatementUpload = () => {
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                {/* <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1400px]">
                       <StagingThead />
@@ -784,7 +837,20 @@ const StatementUpload = () => {
                   </div>
                 </div>
               </>
+            )} */}
+            <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[1400px]">
+                      <StagingThead />
+                      <tbody>{renderStagingRows(bankPageRows, rowsLoading)}</tbody>
+                    </table>
+                  </div>
+                  <Pagination page={bankPage} totalRows={filteredRows.length} onPageChange={setBankPage} />
+                </div>
+              </>
             )}
+
+            {/* NON-BANKING */}
 
             {/* NON-BANKING */}
             {subTab === "nonbanking" && (
@@ -899,13 +965,27 @@ const StatementUpload = () => {
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                {/* <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1400px]">
                       <StagingThead />
                       <tbody>{renderStagingRows(nbRows, nbLoading)}</tbody>
                     </table>
                   </div>
+                </div>
+              </>
+            )}
+          </>
+        )} */}
+
+        <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[1400px]">
+                      <StagingThead />
+                      <tbody>{renderStagingRows(nbPageRows, nbLoading)}</tbody>
+                    </table>
+                  </div>
+                  <Pagination page={nbPage} totalRows={nbRows.length} onPageChange={setNbPage} />
                 </div>
               </>
             )}
@@ -955,12 +1035,18 @@ const StatementUpload = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {approvedLoading ? (
+                    {/* {approvedLoading ? (
                       <tr><td colSpan={13} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
                     ) : approvedRows.length === 0 ? (
                       <tr><td colSpan={13} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
                     ) : (
-                      approvedRows.map((r) => {
+                      approvedRows.map((r) => { */}
+                      {approvedLoading ? (
+                      <tr><td colSpan={13} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                    ) : approvedRows.length === 0 ? (
+                      <tr><td colSpan={13} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
+                    ) : (
+                      approvedPageRows.map((r) => {
                         const cat = (r.CATEGORY || "other").toLowerCase();
                         return (
                           <tr key={r.TXN_ID} className="border-b last:border-0 hover:bg-gray-50">
@@ -1011,6 +1097,7 @@ const StatementUpload = () => {
                   </tbody>
                 </table>
               </div>
+               <Pagination page={approvedPage} totalRows={approvedRows.length} onPageChange={setApprovedPage} />s
             </div>
           </>
         )}
