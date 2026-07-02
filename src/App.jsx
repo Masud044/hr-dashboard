@@ -47,7 +47,7 @@ const ADMIN = ["Admin"];
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   if (isLoading) return null;
-  if (user?.roles?.includes("Admin")) return <WelcomePage />;
+  if (user?.roles?.includes("Admin")) return  <Dashboard />;
   return <Navigate to="/login" replace />;
 };
 
@@ -264,9 +264,17 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+             <Route
+              path="projects"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                <ProjectPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* <Route path="project-process/:id" element={<ProcessPage />} /> */}
-            <Route path="projects" element={<ProjectPage />} />
+           
           </Route>
         </Routes>
       </Router>
