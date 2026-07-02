@@ -40,6 +40,8 @@ import StatementUpload from "./features/setting/pages/statement-upload";
 import ProjectPage from "./features/project-two/project-page";
 import { CreateProjectPage } from "./features/project-two/create-project-page";
 import { EditProjectPage } from "./features/project-two/edit-project-page";
+import { CreateContractorPage } from "./features/setting/pages/CreateContractorPage";
+import { EditContractorPage } from "./features/setting/pages/EditContractorPage";
 
 const ADMIN = ["Admin"];
 
@@ -179,6 +181,8 @@ const App = () => {
                 </ProtectedRoute>
               }
             /> */}
+            <Route path="contractor/create" element={<CreateContractorPage />} />
+            <Route path="contractor/:id/edit" element={<EditContractorPage />} />
 
            <Route
                 path="calendar"
