@@ -43,6 +43,7 @@ import {
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { EditContractorSheet } from "../pages/EditContractorSheet";
 import { CreateContractorSheet } from "../pages/CreateContractorSheet";
+import { useNavigate } from "react-router-dom";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -76,6 +77,7 @@ const getAvatarColor = (name) => {
 
 export function ContractorTable() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // ── Default sort: most recently updated/created contractor first ────────
   // UPDATE_DATE is set to SYSDATE on both insert and update in the backend,
@@ -123,11 +125,14 @@ export function ContractorTable() {
     },
   });
 
-  const handleEdit = (contractorId) => {
-    setSelectedContractorId(contractorId);
-    setEditSheetOpen(true);
-  };
+  // const handleEdit = (contractorId) => {
+  //   setSelectedContractorId(contractorId);
+  //   setEditSheetOpen(true);
+  // };
 
+  const handleEdit = (contractorId) => {
+  navigate(`/dashboard/contractor/${contractorId}/edit`);
+};
   const handleDeleteClick = (contractorId) => {
     setDeleteTargetId(contractorId);
     setDeleteDialogOpen(true);
@@ -381,13 +386,13 @@ export function ContractorTable() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button 
-              onClick={() => setCreateSheetOpen(true)}
-              className="h-10 rounded-md gap-2"
-            >
-              <PlusIcon size={16} />
-              Add New Contractor
-            </Button>
+           <Button 
+  onClick={() => navigate("/dashboard/contractor/create")}
+  className="h-10 rounded-md gap-2"
+>
+  <PlusIcon size={16} />
+  Add New Contractor
+</Button>
           </div>
         </div>
 

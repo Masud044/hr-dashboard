@@ -41,6 +41,7 @@ import { CreateProjectSheet } from "./create-project-sheet";
 import { ProcessSheet } from "./create-process-page";
 import { useNavigate } from "react-router-dom";
 import { ProjectReportSheet } from "./project-report-sheet";
+import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 
 
 
@@ -460,7 +461,7 @@ const [reportProject, setReportProject]       = useState(null); // { id, name }
         </div>
 
         <div className="border-t border-border">
-          <DataTablePagination table={table} />
+          <DataTablePaginationTwo table={table} tableKey="projects" />
         </div>
       </div>
 
