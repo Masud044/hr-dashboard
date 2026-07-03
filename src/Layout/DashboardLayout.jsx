@@ -1,3 +1,4 @@
+// src\Layout\DashboardLayout.jsx
 import { Outlet } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import Navbar from "@/components/Navbar";

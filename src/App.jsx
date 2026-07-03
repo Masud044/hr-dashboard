@@ -1,3 +1,5 @@
+
+// src\App.jsx
 import {
   BrowserRouter as Router,
   Routes,
@@ -44,14 +46,14 @@ import { CreateContractorPage } from "./features/setting/pages/CreateContractorP
 import { EditContractorPage } from "./features/setting/pages/EditContractorPage";
 import { ProjectReportPage } from "./features/project-two/project-report-page";
 import StatementUploadTwo from "./features/setting/pages/state-upload-two";
-
+import Overview from "./features/overview/pages/Overview"; 
 const ADMIN = ["Admin"];
 
 // ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   if (isLoading) return null;
-  if (user?.roles?.includes("Admin")) return  <Dashboard />;
+   if (user?.roles?.includes("Admin")) return <Overview />; 
   return <Navigate to="/login" replace />;
 };
 

@@ -23,9 +23,10 @@ export const NAV_ITEMS = [
     ItemIcon: IconDashboard,
     roles: ["Admin"],   
     links: [
+     { to: "/dashboard", label: "Overview", Icon: LayoutDashboard },
+      
      
-      { to: "/dashboard/dashboard-schedule", label: "Dashboard", Icon: LayoutDashboard },
-     
+      { to: "/dashboard/dashboard-schedule", label: "Schedule Dashboard", Icon: LayoutDashboard },
     ],
   },
 
