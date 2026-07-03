@@ -43,18 +43,12 @@ const EMPTY_NB = {
   invoiceNo: "", remarks: "",
 };
 
-// ── matchedAddress সরিয়ে দেওয়া হলো ──
-// const EMPTY_FILTERS = {
-//   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
-//   invoiceNo: "", amountMin: "", amountMax: "", description: "", category: "",
-// };
-
 const EMPTY_FILTERS = {
   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
   invoiceNo: "", amountMin: "", amountMax: "", description: "", category: "",
 };
 
-const PAGE_SIZE = 50; // একসাথে সর্বোচ্চ ৫০টা row render হবে, বাকি pagination দিয়ে
+const PAGE_SIZE = 50;
 const fmtDate = (val) => {
   if (!val) return "—";
   const d = new Date(val);
@@ -65,126 +59,6 @@ const fmtDate = (val) => {
   return `${dd}/${mm}/${yyyy}`;
 };
 
-// ════════════════════════════════════════════════════════════
-// DateInput — type করে dd/mm/yyyy বসানো যায়, calendar picker নেই।
-// internal value ISO (yyyy-MM-dd) হিসেবে parent-কে পাঠায়।
-// ════════════════════════════════════════════════════════════
-// const DateInput = ({ value, onChange, placeholder = "dd/mm/yyyy" }) => {
-//   const [text, setText] = useState(() => {
-//     if (!value) return "";
-//     const d = parse(value, "yyyy-MM-dd", new Date());
-//     return isValid(d) ? format(d, "dd/MM/yyyy") : "";
-//   });
-
-//   useEffect(() => {
-//     if (!value) { setText(""); return; }
-//     const d = parse(value, "yyyy-MM-dd", new Date());
-//     if (isValid(d)) setText(format(d, "dd/MM/yyyy"));
-//   }, [value]);
-
-//   const handleChange = (e) => {
-//     const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
-//     let formatted = digits;
-//     if (digits.length > 4) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
-//     else if (digits.length > 2) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
-
-//     setText(formatted);
-
-//     if (digits.length === 8) {
-//       const parsed = parse(formatted, "dd/MM/yyyy", new Date());
-//       if (isValid(parsed)) { onChange(format(parsed, "yyyy-MM-dd")); return; }
-//     }
-//     if (digits.length === 0) onChange("");
-//   };
-
-//   const handleBlur = () => {
-//     if (text.length > 0 && text.length < 10) { setText(""); onChange(""); }
-//   };
-
-//   return (
-//     <div className="relative">
-//       <input
-//         type="text"
-//         inputMode="numeric"
-//         value={text}
-//         onChange={handleChange}
-//         onBlur={handleBlur}
-//         placeholder={placeholder}
-//         maxLength={10}
-//         className="h-8 w-full text-xs px-3 pr-7 rounded-md border border-input bg-white outline-none focus:ring-1 focus:ring-blue-500"
-//       />
-//       <CalendarIcon size={13} className="text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-//     </div>
-//   );
-// };
-// ════════════════════════════════════════════════════════════
-// DateInput — dd / mm / yyyy তিনটা আলাদা segment box, তাই
-// leading zero ছাড়া (যেমন 1/7/2026) টাইপ করলেও কোনো ambiguity
-// থাকে না। একটা segment পূরণ হলেই পরের segment-এ auto-focus যায়।
-// ════════════════════════════════════════════════════════════
-// const DateInput = ({ value, onChange }) => {
-//   const dayRef   = useRef(null);
-//   const monthRef = useRef(null);
-//   const yearRef  = useRef(null);
-
-//   const initial = useMemo(() => {
-//     if (!value) return { d: "", m: "", y: "" };
-//     const dt = parse(value, "yyyy-MM-dd", new Date());
-//     if (!isValid(dt)) return { d: "", m: "", y: "" };
-//     return { d: format(dt, "dd"), m: format(dt, "MM"), y: format(dt, "yyyy") };
-//   }, [value]);
-
-//   const [d, setD] = useState(initial.d);
-//   const [m, setM] = useState(initial.m);
-//   const [y, setY] = useState(initial.y);
-
-//   // parent থেকে value পাল্টালে (যেমন "Clear all") local segment গুলোও sync করো
-//   useEffect(() => { setD(initial.d); setM(initial.m); setY(initial.y); }, [initial.d, initial.m, initial.y]);
-
-//   // তিনটা segment-ই পূরণ হলে তবেই parent-কে ISO date পাঠায়, নাহলে খালি রাখে
-//   const emit = (dd, mm, yy) => {
-//     if (dd.length === 2 && mm.length === 2 && yy.length === 4) {
-//       const parsed = parse(`${dd}/${mm}/${yy}`, "dd/MM/yyyy", new Date());
-//       if (isValid(parsed)) { onChange(format(parsed, "yyyy-MM-dd")); return; }
-//     }
-//     onChange("");
-//   };
-
-//   const handleD = (e) => {
-//     const v = e.target.value.replace(/\D/g, "").slice(0, 2);
-//     setD(v); emit(v, m, y);
-//     if (v.length === 2) monthRef.current?.focus();
-//   };
-//   const handleM = (e) => {
-//     const v = e.target.value.replace(/\D/g, "").slice(0, 2);
-//     setM(v); emit(d, v, y);
-//     if (v.length === 2) yearRef.current?.focus();
-//   };
-//   const handleY = (e) => {
-//     const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-//     setY(v); emit(d, m, v);
-//   };
-
-//   return (
-//     <div className="flex items-center gap-1 h-8 px-2 rounded-md border border-input bg-white focus-within:ring-1 focus-within:ring-blue-500">
-//       <input ref={dayRef} value={d} onChange={handleD} placeholder="dd" maxLength={2}
-//         inputMode="numeric" className="w-5 text-xs outline-none text-center" />
-//       <span className="text-gray-300 text-xs">/</span>
-//       <input ref={monthRef} value={m} onChange={handleM} placeholder="mm" maxLength={2}
-//         inputMode="numeric" className="w-5 text-xs outline-none text-center" />
-//       <span className="text-gray-300 text-xs">/</span>
-//       <input ref={yearRef} value={y} onChange={handleY} placeholder="yyyy" maxLength={4}
-//         inputMode="numeric" className="w-9 text-xs outline-none text-center" />
-//       <CalendarIcon size={13} className="text-gray-400 ml-auto shrink-0" />
-//     </div>
-//   );
-// };
-
-// ════════════════════════════════════════════════════════════
-// DateInput — dd / mm / yyyy তিনটা আলাদা segment box (টাইপ করে বসানো যায়),
-// পাশাপাশি calendar icon click করলে popover calendar-ও খোলে।
-// দুটো পথই একই ISO value (yyyy-MM-dd) parent-কে পাঠায়।
-// ════════════════════════════════════════════════════════════
 const DateInput = ({ value, onChange }) => {
   const dayRef   = useRef(null);
   const monthRef = useRef(null);
@@ -202,10 +76,8 @@ const DateInput = ({ value, onChange }) => {
   const [m, setM] = useState(initial.m);
   const [y, setY] = useState(initial.y);
 
-  // parent থেকে value পাল্টালে (যেমন "Clear all") local segment গুলোও sync করো
   useEffect(() => { setD(initial.d); setM(initial.m); setY(initial.y); }, [initial.d, initial.m, initial.y]);
 
-  // তিনটা segment-ই পূরণ হলে তবেই parent-কে ISO date পাঠায়, নাহলে খালি রাখে
   const emit = (dd, mm, yy) => {
     if (dd.length === 2 && mm.length === 2 && yy.length === 4) {
       const parsed = parse(`${dd}/${mm}/${yy}`, "dd/MM/yyyy", new Date());
@@ -229,7 +101,6 @@ const DateInput = ({ value, onChange }) => {
     setY(v); emit(d, m, v);
   };
 
-  // calendar থেকে date select করলে — তিনটা segment-ই ভরে দাও এবং parent-কে emit করো
   const handleCalendarSelect = (date) => {
     if (!date) return;
     const dd = format(date, "dd");
@@ -240,7 +111,6 @@ const DateInput = ({ value, onChange }) => {
     setCalendarOpen(false);
   };
 
-  // Calendar-কে highlight করার জন্য বর্তমান selected date বের করা
   const selectedDate = useMemo(() => {
     if (!(d.length === 2 && m.length === 2 && y.length === 4)) return undefined;
     const parsed = parse(`${d}/${m}/${y}`, "dd/MM/yyyy", new Date());
@@ -276,112 +146,6 @@ const DateInput = ({ value, onChange }) => {
     </div>
   );
 };
-// ════════════════════════════════════════════════════════════
-// FilterBar
-// ════════════════════════════════════════════════════════════
-// const FilterBar = ({ filters, appliedFilters, onChange, onClear, onSearch, projectOptions, contractorOptions, showStatus, showCategory }) => {
-//   const hasActive = Object.values(filters).some((v) => v);
-//   const hasPendingChanges = JSON.stringify(filters) !== JSON.stringify(appliedFilters);
-//   return (
-//     <div className="bg-white border rounded-2xl shadow-sm px-5 py-4 mb-4">
-//       <div className="flex items-center gap-2 mb-3">
-//         <Filter size={14} className="text-gray-400" />
-//         <span className="text-xs font-semibold text-gray-600 uppercase">Filters</span>
-//        {hasActive && (
-//           <button onClick={onClear} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
-//             <X size={12} /> Clear all
-//           </button>
-//         )}
-//         <Button
-//           size="sm"
-//           onClick={onSearch}
-//           disabled={!hasPendingChanges}
-//           className="ml-auto h-7 px-3 text-xs rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40"
-//         >
-//           <Search size={12} className="mr-1" /> Search
-//         </Button>
-//       </div>
-//       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Date From</label>
-//           <DateInput value={filters.dateFrom} onChange={(v) => onChange("dateFrom", v)} />
-//         </div>
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Date To</label>
-//           <DateInput value={filters.dateTo} onChange={(v) => onChange("dateTo", v)} />
-//         </div>
-//         {showStatus && (
-//           <div>
-//             <label className="text-[10px] text-gray-400 block mb-0.5">Status</label>
-//             <Select value={filters.status || "ALL"} onValueChange={(v) => onChange("status", v === "ALL" ? "" : v)}>
-//               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All" /></SelectTrigger>
-//               <SelectContent>
-//                 <SelectItem value="ALL">All</SelectItem>
-//                 <SelectItem value="PENDING">Pending</SelectItem>
-//                 <SelectItem value="APPROVED">Approved</SelectItem>
-//               </SelectContent>
-//             </Select>
-//           </div>
-//         )}
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Project</label>
-//           <Select value={filters.pId || "ALL"} onValueChange={(v) => onChange("pId", v === "ALL" ? "" : v)}>
-//             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All projects" /></SelectTrigger>
-//             <SelectContent>
-//               <SelectItem value="ALL">All projects</SelectItem>
-//               {projectOptions.map((p) => <SelectItem key={p.P_ID} value={String(p.P_ID)}>{p.P_NAME}</SelectItem>)}
-//             </SelectContent>
-//           </Select>
-//         </div>
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Contractor</label>
-//           <Select value={filters.contractorId || "ALL"} onValueChange={(v) => onChange("contractorId", v === "ALL" ? "" : v)}>
-//             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All contractors" /></SelectTrigger>
-//             <SelectContent>
-//               <SelectItem value="ALL">All contractors</SelectItem>
-//               {contractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}
-//             </SelectContent>
-//           </Select>
-//         </div>
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Invoice No</label>
-//           <Input placeholder="Invoice no." value={filters.invoiceNo} onChange={(e) => onChange("invoiceNo", e.target.value)} className="h-8 text-xs" />
-//         </div>
-
-//         {/* ── step=1, তাই spinner এ decimal আসবে না ── */}
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Amount Min</label>
-//           <Input type="number" step="1" placeholder="Min" value={filters.amountMin} onChange={(e) => onChange("amountMin", e.target.value)} className="h-8 text-xs" />
-//         </div>
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Amount Max</label>
-//           <Input type="number" step="1" placeholder="Max" value={filters.amountMax} onChange={(e) => onChange("amountMax", e.target.value)} className="h-8 text-xs" />
-//         </div>
-
-//         <div>
-//           <label className="text-[10px] text-gray-400 block mb-0.5">Description</label>
-//           <Input placeholder="Search description" value={filters.description} onChange={(e) => onChange("description", e.target.value)} className="h-8 text-xs" />
-//         </div>
-
-//         {showCategory && (
-//           <div>
-//             <label className="text-[10px] text-gray-400 block mb-0.5">Category</label>
-//             <Select value={filters.category || "ALL"} onValueChange={(v) => onChange("category", v === "ALL" ? "" : v)}>
-//               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All categories" /></SelectTrigger>
-//               <SelectContent>
-//                 <SelectItem value="ALL">All categories</SelectItem>
-//                 <SelectItem value="address">Address</SelectItem>
-//                 <SelectItem value="place">Place</SelectItem>
-//                 <SelectItem value="product">Product</SelectItem>
-//                 <SelectItem value="other">Other</SelectItem>
-//               </SelectContent>
-//             </Select>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
 
 const FilterBar = ({ filters, appliedFilters, onChange, onClear, onSearch, projectOptions, contractorOptions, showStatus, showCategory }) => {
   const hasActive = Object.values(filters).some((v) => v);
@@ -391,11 +155,6 @@ const FilterBar = ({ filters, appliedFilters, onChange, onClear, onSearch, proje
       <div className="flex items-center gap-2 mb-3">
         <Filter size={14} className="text-gray-400" />
         <span className="text-xs font-semibold text-gray-600 uppercase">Filters</span>
-        {/* {hasActive && (
-          <button onClick={onClear} className="ml-auto text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
-            <X size={12} /> Clear all
-          </button>
-        )} */}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
         <div>
@@ -561,7 +320,7 @@ const SubTabBtn = ({ id, label, active, onClick }) => (
   </button>
 );
 
-const StatementUpload = () => {
+const StatementUploadTwo = () => {
   const navigate    = useNavigate();
   const queryClient = useQueryClient();
 
@@ -573,10 +332,6 @@ const StatementUpload = () => {
   const [activeCats, setActiveCats] = useState({ address: true, place: true, product: true, other: true });
   const [nbForm, setNbForm]   = useState(EMPTY_NB);
 
-  // const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
-  // const [nbFilters, setNbFilters]             = useState(EMPTY_FILTERS);
-  // const [approvedFilters, setApprovedFilters] = useState(EMPTY_FILTERS);
-
   const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
   const [nbFilters, setNbFilters]             = useState(EMPTY_FILTERS);
   const [approvedFilters, setApprovedFilters] = useState(EMPTY_FILTERS);
@@ -584,20 +339,18 @@ const StatementUpload = () => {
   const [appliedNbFilters, setAppliedNbFilters]             = useState(EMPTY_FILTERS);
   const [appliedApprovedFilters, setAppliedApprovedFilters] = useState(EMPTY_FILTERS);
 
-  // ── ৩০০০+ row একসাথে render হয়ে browser freeze হওয়া ঠেকাতে pagination ──
   const [bankPage, setBankPage]         = useState(1);
   const [nbPage, setNbPage]             = useState(1);
   const [approvedPage, setApprovedPage] = useState(1);
 
   const [deleteTarget, setDeleteTarget]   = useState(null);
-  // ── row-wise approve confirmation + isolated per-row loading ──
-  const [approveTarget, setApproveTarget] = useState(null); // পুরো row object রাখি, modal-এ preview দেখানোর জন্য
+  const [approveTarget, setApproveTarget] = useState(null);
   const [approvingRowId, setApprovingRowId] = useState(null);
+  
+  // ── NEW: State for Disapprove Target ──
+  const [disapproveTarget, setDisapproveTarget] = useState(null);
 
-  // const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
-  // const updateNbFilter       = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
-  // const updateApprovedFilter = (key, value) => setApprovedFilters((p) => ({ ...p, [key]: value }));
-const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
+  const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key]: value }));
   const updateNbFilter       = (key, value) => setNbFilters((p) => ({ ...p, [key]: value }));
   const updateApprovedFilter = (key, value) => setApprovedFilters((p) => ({ ...p, [key]: value }));
 
@@ -710,8 +463,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
     onError: (err) => toast.error(err.response?.data?.message || "Failed to delete invoice."),
   });
 
-  // ── row-wise approve: প্রতিবার শুধু ১টা stagingId পাঠায়, onMutate দিয়ে
-  //    ঠিক কোন row-টা approve হচ্ছে সেটা track করি — বাকি row গুলো unaffected থাকে ──
   const approveMutation = useMutation({
     mutationFn: async (stagingId) => axios.post(`${url}/api/statement/approve`, { stagingIds: [stagingId] }),
     onMutate: (stagingId) => setApprovingRowId(stagingId),
@@ -723,6 +474,18 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
     },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to approve row."),
     onSettled: () => setApprovingRowId(null),
+  });
+
+  // ── NEW: Disapprove Mutation ──
+  const disapproveMutation = useMutation({
+    mutationFn: async (txnId) => axios.post(`${url}/api/statement/disapprove`, { txnId }),
+    onSuccess: (res) => {
+      toast.success(res.data?.message || "Transaction disapproved and moved back to staging.");
+      setDisapproveTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["statementMain"], refetchType: "active" });
+      queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
+    },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to disapprove transaction."),
   });
 
   const addNonBankingMutation = useMutation({
@@ -780,10 +543,8 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
 
   const handleReset = () => { setFile(null); setBatchId(null); };
 
-  // const toggleCategory = (cat) => setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
   const toggleCategory = (cat) => { setActiveCats((prev) => ({ ...prev, [cat]: !prev[cat] })); setBankPage(1); };
 
-  // ── row-wise approve: বাটনে ক্লিক করলে শুধু modal ওপেন হয়, approve সাথে সাথে হয় না ──
   const handleApproveClick = (row) => setApproveTarget(row);
   const confirmApprove = () => { if (approveTarget) approveMutation.mutate(approveTarget.STAGING_ID); };
 
@@ -809,15 +570,10 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
     return s;
   }, [rows]);
 
-  // const filteredRows = useMemo(() => {
-  //   return rows.filter((r) => activeCats[(r.CATEGORY || "other").toLowerCase()]);
-  // }, [rows, activeCats]);
-
   const filteredRows = useMemo(() => {
     return rows.filter((r) => activeCats[(r.CATEGORY || "other").toLowerCase()]);
   }, [rows, activeCats]);
 
-  // ── শুধু current page-এর row গুলোই DOM-এ render হবে, বাকি সব memory-তে থাকবে কিন্তু render হবে না ──
   const bankPageRows     = useMemo(() => filteredRows.slice((bankPage - 1) * PAGE_SIZE, bankPage * PAGE_SIZE), [filteredRows, bankPage]);
   const nbPageRows       = useMemo(() => nbRows.slice((nbPage - 1) * PAGE_SIZE, nbPage * PAGE_SIZE), [nbRows, nbPage]);
   const approvedPageRows = useMemo(() => approvedRows.slice((approvedPage - 1) * PAGE_SIZE, approvedPage * PAGE_SIZE), [approvedRows, approvedPage]);
@@ -828,7 +584,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
     return n < 0 ? `-$${f}` : `$${f}`;
   };
 
-  // ── CSV export থেকেও Matched Address সরিয়ে দেওয়া হলো ──
   const handleDownloadCsv = (dataRows, filename) => {
     if (dataRows.length === 0) { toast.error("No rows to download."); return; }
     const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Category", "Project", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
@@ -853,7 +608,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
     link.click();
   };
 
-  // ── Reusable staging table rows — checkbox column ও Matched Address column বাদ ──
   const renderStagingRows = (dataRows, loading) => {
     if (loading) return <tr><td colSpan={11} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>;
     if (dataRows.length === 0) return <tr><td colSpan={11} className="text-center py-10 text-gray-400">No rows found.</td></tr>;
@@ -932,7 +686,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
               </label>
             )}
           </td>
-          {/* ── row-wise Approve: শুধু এই row-এর জন্য isolated loading state ── */}
           <td className="px-4 py-2.5 min-w-[110px]">
             {!approved ? (
               <Button
@@ -956,7 +709,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
     });
   };
 
-  // ── checkbox column ও Matched Address column বাদ ──
   const StagingThead = () => (
     <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
       <tr>
@@ -995,7 +747,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
           <MainTabBtn id="approved" label="Approved Records" icon={BadgeCheck} active={mainTab === "approved"} onClick={setMainTab} />
         </div>
 
-        {/* ════════ PENDING ════════ */}
         {mainTab === "pending" && (
           <>
             <div className="flex items-center gap-2 mb-5">
@@ -1003,7 +754,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
               <SubTabBtn id="nonbanking" label="Non-banking (manual form)" active={subTab === "nonbanking"} onClick={setSubTab} />
             </div>
 
-            {/* BANKING */}
             {subTab === "banking" && (
               <>
                 <div className="flex flex-wrap items-center gap-3 mb-5">
@@ -1057,7 +807,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                       </label>
                     ))}
                   </div>
-                  {/* ── উপরের bulk Approve বাটন সরিয়ে শুধু CSV রাখা হলো ── */}
                   <div className="flex items-center gap-2 ml-auto">
                     <Button onClick={() => handleDownloadCsv(filteredRows, "statement_banking.csv")} variant="outline" className="rounded-full text-sm">
                       <Download size={14} className="mr-1" /> CSV
@@ -1065,17 +814,7 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                   </div>
                 </div>
 
-                {/* <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[1400px]">
-                      <StagingThead />
-                      <tbody>{renderStagingRows(filteredRows, rowsLoading)}</tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )} */}
-            <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1400px]">
                       <StagingThead />
@@ -1087,9 +826,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
               </>
             )}
 
-            {/* NON-BANKING */}
-
-            {/* NON-BANKING */}
             {subTab === "nonbanking" && (
               <>
                 <div className="bg-white border rounded-2xl shadow-sm px-6 py-5 mb-5">
@@ -1099,7 +835,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Date *</label>
-                      {/* ── type করে dd/mm/yyyy বসানো যায় ── */}
                       <DateInput value={nbForm.txnDate} onChange={(v) => setNbForm((p) => ({ ...p, txnDate: v }))} />
                     </div>
                     <div>
@@ -1180,7 +915,7 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                     </Button>
                   </div>
                 </div>
-<FilterBar
+                <FilterBar
                   filters={nbFilters}
                   appliedFilters={appliedNbFilters}
                   onChange={updateNbFilter}
@@ -1202,20 +937,7 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                   </div>
                 </div>
 
-                {/* <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[1400px]">
-                      <StagingThead />
-                      <tbody>{renderStagingRows(nbRows, nbLoading)}</tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )}
-          </>
-        )} */}
-
-        <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1400px]">
                       <StagingThead />
@@ -1229,7 +951,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
           </>
         )}
 
-        {/* ════════ APPROVED ════════ */}
         {mainTab === "approved" && (
           <>
            <FilterBar
@@ -1270,19 +991,15 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                       <th className="px-4 py-3 text-left">Remarks</th>
                       <th className="px-4 py-3 text-left">Approved Date</th>
                       <th className="px-4 py-3 text-left">Invoice File</th>
+                      {/* ── NEW: Action Column Header ── */}
+                      <th className="px-4 py-3 text-left">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {/* {approvedLoading ? (
-                      <tr><td colSpan={13} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
-                    ) : approvedRows.length === 0 ? (
-                      <tr><td colSpan={13} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
-                    ) : (
-                      approvedRows.map((r) => { */}
                       {approvedLoading ? (
-                      <tr><td colSpan={13} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                      <tr><td colSpan={14} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
                     ) : approvedRows.length === 0 ? (
-                      <tr><td colSpan={13} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
+                      <tr><td colSpan={14} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
                     ) : (
                       approvedPageRows.map((r) => {
                         const cat = (r.CATEGORY || "other").toLowerCase();
@@ -1328,6 +1045,18 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                                 <span className="text-gray-400 italic text-xs">—</span>
                               )}
                             </td>
+                            {/* ── NEW: Action Column Cell ── */}
+                            <td className="px-4 py-2.5 min-w-[110px]">
+                              <Button
+                                size="sm"
+                                onClick={() => setDisapproveTarget(r)}
+                                disabled={!r.STAGING_ID}
+                                className="h-7 px-2.5 text-xs rounded-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                                title={!r.STAGING_ID ? "Legacy records cannot be disapproved" : ""}
+                              >
+                                <RotateCcw size={12} className="mr-1" /> Disapprove
+                              </Button>
+                            </td>
                           </tr>
                         );
                       })
@@ -1335,14 +1064,13 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
                   </tbody>
                 </table>
               </div>
-               <Pagination page={approvedPage} totalRows={approvedRows.length} onPageChange={setApprovedPage} />s
+               <Pagination page={approvedPage} totalRows={approvedRows.length} onPageChange={setApprovedPage} />
             </div>
           </>
         )}
 
       </div>
 
-      {/* ── DELETE INVOICE CONFIRMATION MODAL ── */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setDeleteTarget(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
@@ -1369,7 +1097,6 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
         </div>
       )}
 
-      {/* ── APPROVE CONFIRMATION MODAL (row-wise) ── */}
       {approveTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => !approveMutation.isPending && setApproveTarget(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
@@ -1398,8 +1125,38 @@ const updateBankFilter     = (key, value) => setBankFilters((p) => ({ ...p, [key
           </div>
         </div>
       )}
+
+      {/* ── NEW: DISAPPROVE CONFIRMATION MODAL ── */}
+      {disapproveTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => !disapproveMutation.isPending && setDisapproveTarget(null)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-3">
+              <RotateCcw className="text-red-600" size={18} />
+              <h3 className="text-sm font-semibold text-gray-800">Disapprove this transaction?</h3>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 text-xs text-gray-600 space-y-1">
+              <div><span className="text-gray-400">Date:</span> {fmtDate(disapproveTarget.TXN_DATE)}</div>
+              <div><span className="text-gray-400">Amount:</span> {fmtAmount(disapproveTarget.AMOUNT)}</div>
+              <div className="break-words"><span className="text-gray-400">Description:</span> {disapproveTarget.DESCRIPTION}</div>
+            </div>
+            <p className="text-xs text-gray-500 mb-5">This will move the transaction back to Pending Uploads.</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDisapproveTarget(null)} disabled={disapproveMutation.isPending} className="rounded-full text-sm">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => disapproveMutation.mutate(disapproveTarget.TXN_ID)}
+                disabled={disapproveMutation.isPending || !disapproveTarget.STAGING_ID}
+                className="rounded-full bg-red-600 hover:bg-red-700 text-sm"
+              >
+                {disapproveMutation.isPending ? "Disapproving..." : "Disapprove"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </SectionContainer>
   );
 };
 
-export default StatementUpload;
+export default StatementUploadTwo;
