@@ -10,7 +10,15 @@ import {
 } from "@tanstack/react-table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Pencil, Trash2, ArrowUpDown, ChevronUp, ChevronDown, PlusIcon, Search } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+  PlusIcon,
+  Search,
+} from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -76,6 +84,69 @@ const getAvatarColor = (name) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
+function ReorderCell({
+  item,
+  itemId,
+  apiData,
+  moveMutation,
+  reorderMutation,
+  handleMove,
+  handleReorderInput,
+}) {
+  const [localValue, setLocalValue] = React.useState(
+    String(item.SORT_ORDER ?? ""),
+  );
+
+  React.useEffect(() => {
+    setLocalValue(String(item.SORT_ORDER ?? ""));
+  }, [item.SORT_ORDER]);
+
+  const totalCount = apiData.length;
+  const isFirst = Number(item.SORT_ORDER) <= 1;
+  const isLast = Number(item.SORT_ORDER) >= totalCount;
+
+  return (
+    <div className="flex items-center gap-1 justify-center">
+      <div className="flex flex-col">
+        <button
+          onClick={() => handleMove(itemId, "up")}
+          title="Move up"
+          disabled={moveMutation.isPending || reorderMutation.isPending || isFirst}
+          className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ChevronUp size={14} />
+        </button>
+        <button
+          onClick={() => handleMove(itemId, "down")}
+          title="Move down"
+          disabled={moveMutation.isPending || reorderMutation.isPending || isLast}
+          className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ChevronDown size={14} />
+        </button>
+      </div>
+      <Input
+        type="text"
+        inputMode="numeric"
+        value={localValue}
+        disabled={moveMutation.isPending || reorderMutation.isPending}
+        onChange={(e) => setLocalValue(e.target.value.replace(/[^0-9]/g, ""))}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.currentTarget.blur();
+          }
+        }}
+        onBlur={() => {
+          if (localValue !== String(item.SORT_ORDER ?? "")) {
+            handleReorderInput(itemId, localValue);
+          }
+        }}
+        className="h-7 w-14 text-center text-sm px-1 disabled:opacity-50"
+      />
+    </div>
+  );
+}
+
 export function ContractorTable() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -127,44 +198,51 @@ export function ContractorTable() {
   });
 
   const showMoveToast = (newPosition) => {
-  if (!newPosition) return;
-  const pageSize = table.getState().pagination.pageSize;
-  const destinationPage = Math.ceil(newPosition / pageSize);
-  const currentPage = table.getState().pagination.pageIndex + 1;
+    if (!newPosition) return;
+    const pageSize = table.getState().pagination.pageSize;
+    const destinationPage = Math.ceil(newPosition / pageSize);
+    const currentPage = table.getState().pagination.pageIndex + 1;
 
-  if (destinationPage !== currentPage) {
-    toast.success(`Moved to position ${newPosition} — now on page ${destinationPage}`);
-  } else {
-    toast.success(`Moved to position ${newPosition}`);
-  }
-};
-const moveMutation = useMutation({
-  mutationFn: async ({ id, direction }) => {
-    return axios.patch(`${url}/api/contractor/${id}/move`, { direction });
-  },
-  onSuccess: (res) => {
-    queryClient.invalidateQueries(["contrators"]);
-    showMoveToast(res?.data?.data?.newPosition);
-  },
-  onError: (err) => {
-    console.error("Move error:", err);
-    toast.error(err?.response?.data?.message || "Failed to move contractor.");
-  },
-});
+    if (destinationPage !== currentPage) {
+      table.setPageIndex(destinationPage - 1); // follow the item
+      toast.success(
+        `Moved to position ${newPosition} — now on page ${destinationPage}`,
+      );
+    } else {
+      toast.success(`Moved to position ${newPosition}`);
+    }
+  };
+  const moveMutation = useMutation({
+    mutationFn: async ({ id, direction }) => {
+      return axios.patch(`${url}/api/contractor/${id}/move`, { direction });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries(["contrators"]);
+      showMoveToast(res?.data?.data?.newPosition);
+    },
+    onError: (err) => {
+      console.error("Move error:", err);
+      toast.error(err?.response?.data?.message || "Failed to move contractor.");
+    },
+  });
 
-const reorderMutation = useMutation({
-  mutationFn: async ({ id, newPosition }) => {
-    return axios.patch(`${url}/api/contractor/${id}/reorder`, { newPosition });
-  },
-  onSuccess: (res) => {
-    queryClient.invalidateQueries(["contrators"]);
-    showMoveToast(res?.data?.data?.newPosition);
-  },
-  onError: (err) => {
-    console.error("Reorder error:", err);
-    toast.error(err?.response?.data?.message || "Failed to reorder contractor.");
-  },
-});
+  const reorderMutation = useMutation({
+    mutationFn: async ({ id, newPosition }) => {
+      return axios.patch(`${url}/api/contractor/${id}/reorder`, {
+        newPosition,
+      });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries(["contrators"]);
+      showMoveToast(res?.data?.data?.newPosition);
+    },
+    onError: (err) => {
+      console.error("Reorder error:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to reorder contractor.",
+      );
+    },
+  });
 
   const handleMove = (id, direction) => {
     moveMutation.mutate({ id, direction });
@@ -367,68 +445,27 @@ const reorderMutation = useMutation({
       ),
     },
 
-  {
-  id: "reorder",
-  enableHiding: false,
-  enableSorting: false,
-  header: () => (
-    <div className="text-overline text-muted-foreground text-center">
-      Order
-    </div>
-  ),
-  cell: ({ row }) => {
-    const item = row.original;
-    const [localValue, setLocalValue] = React.useState(String(item.SORT_ORDER ?? ""));
-
-    React.useEffect(() => {
-      setLocalValue(String(item.SORT_ORDER ?? ""));
-    }, [item.SORT_ORDER]);
-
-    const totalCount = apiData.length;
-    const isFirst = Number(item.SORT_ORDER) <= 1;
-    const isLast = Number(item.SORT_ORDER) >= totalCount;
-
-    return (
-      <div className="flex items-center gap-1 justify-center">
-        <div className="flex flex-col">
-          <button
-            onClick={() => handleMove(item.CONTRATOR_ID, "up")}
-            title="Move up"
-            disabled={moveMutation.isPending || isFirst}
-            className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
-          >
-            <ChevronUp size={14} />
-          </button>
-          <button
-            onClick={() => handleMove(item.CONTRATOR_ID, "down")}
-            title="Move down"
-            disabled={moveMutation.isPending || isLast}
-            className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
-          >
-            <ChevronDown size={14} />
-          </button>
+    {
+      id: "reorder",
+      enableHiding: false,
+      enableSorting: false,
+      header: () => (
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
+          Order
         </div>
-        <Input
-          type="text"
-          inputMode="numeric"
-          value={localValue}
-          onChange={(e) => setLocalValue(e.target.value.replace(/[^0-9]/g, ""))}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.currentTarget.blur();
-            }
-          }}
-          onBlur={() => {
-            if (localValue !== String(item.SORT_ORDER ?? "")) {
-              handleReorderInput(item.CONTRATOR_ID, localValue);
-            }
-          }}
-          className="h-7 w-14 text-center text-sm px-1"
+      ),
+      cell: ({ row }) => (
+        <ReorderCell
+          item={row.original}
+          itemId={row.original.CONTRATOR_ID} // P_ID in project-list.jsx
+          apiData={apiData}
+          moveMutation={moveMutation}
+          reorderMutation={reorderMutation}
+          handleMove={handleMove}
+          handleReorderInput={handleReorderInput}
         />
-      </div>
-    );
-  },
-},
+      ),
+    },
     {
       id: "actions",
       enableHiding: false,
@@ -473,6 +510,7 @@ const reorderMutation = useMutation({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    autoResetPageIndex: false, // ← add this line
     state: { sorting, columnFilters, columnVisibility, rowSelection },
   });
 

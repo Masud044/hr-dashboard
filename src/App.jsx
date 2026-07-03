@@ -42,6 +42,8 @@ import { CreateProjectPage } from "./features/project-two/create-project-page";
 import { EditProjectPage } from "./features/project-two/edit-project-page";
 import { CreateContractorPage } from "./features/setting/pages/CreateContractorPage";
 import { EditContractorPage } from "./features/setting/pages/EditContractorPage";
+import { ProjectReportPage } from "./features/project-two/project-report-page";
+import StatementUploadTwo from "./features/setting/pages/state-upload-two";
 
 const ADMIN = ["Admin"];
 
@@ -152,7 +154,7 @@ const App = () => {
               path="statement"
               element={
                 <ProtectedRoute anyRole={ADMIN}>
-                  <StatementUpload />
+                  <StatementUploadTwo />
                 </ProtectedRoute>
               }
             />
@@ -251,6 +253,7 @@ const App = () => {
 
             <Route path="projects/create" element={<CreateProjectPage />} />
             <Route path="projects/:id/edit" element={<EditProjectPage />} />
+            <Route path="projects/:id/report" element={<ProjectReportPage />} />
 
             <Route
               path="process"
