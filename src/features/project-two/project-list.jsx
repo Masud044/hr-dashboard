@@ -24,12 +24,14 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -234,6 +236,21 @@ export function NewProjectTable() {
     },
   });
 
+    const statusMutation = useMutation({
+    mutationFn: async ({ id, status }) => {
+      return axios.patch(`${url}/api/project/${id}/status`, { 
+        PROJECT_STATUS: status 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["projects"]);
+      toast.success("Project status updated!");
+    },
+    onError: () => {
+      toast.error("Failed to update status.");
+    },
+  });
+
   const handleMove = (id, direction) => {
     moveMutation.mutate({ id, direction });
   };
@@ -344,6 +361,58 @@ const handleOpenReport = (item) => {
             "—"}
         </div>
       ),
+    },
+       {
+      accessorKey: "PROJECT_STATUS",
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+        >
+          Status <ArrowUpDown className="h-3 w-3" />
+        </button>
+      ),
+      cell: ({ row }) => {
+        const item = row.original;
+        const status = item.PROJECT_STATUS || "RUNNING";
+        
+        let className = "capitalize border-0 cursor-pointer hover:opacity-80 transition-opacity ";
+        if (status === "RUNNING") className += "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+        else if (status === "COMPLETED") className += "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
+        else if (status === "ON_HOLD") className += "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+        else if (status === "CANCELLED") className += "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
+        else className += "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+
+        const handleStatusChange = (newStatus) => {
+          if (newStatus !== status) {
+            statusMutation.mutate({ id: item.P_ID, status: newStatus });
+          }
+        };
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Badge variant="secondary" className={className}>
+                {status.toLowerCase().replace(/_/g, " ")}
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-border w-44">
+              <DropdownMenuItem onClick={() => handleStatusChange("RUNNING")} className="cursor-pointer flex items-center">
+                <Badge className="bg-emerald-100 text-emerald-800 border-0 mr-2 text-[10px]">running</Badge> Running
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange("COMPLETED")} className="cursor-pointer flex items-center">
+                <Badge className="bg-blue-100 text-blue-800 border-0 mr-2 text-[10px]">completed</Badge> Completed
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange("ON_HOLD")} className="cursor-pointer flex items-center">
+                <Badge className="bg-amber-100 text-amber-800 border-0 mr-2 text-[10px]">on hold</Badge> On Hold
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange("CANCELLED")} className="cursor-pointer flex items-center">
+                <Badge className="bg-red-100 text-red-800 border-0 mr-2 text-[10px]">cancelled</Badge> Cancelled
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
     {
       accessorKey: "SUBWRB",
