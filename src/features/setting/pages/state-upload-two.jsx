@@ -1,7 +1,8 @@
+// src\features\setting\pages\state-upload-two.jsx
 import React, { useState, useMemo, useEffect, useRef } from "react";
 
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   Upload, RotateCcw, Download, CheckCircle2, ArrowLeft,
   FileSpreadsheet, Paperclip, ExternalLink, PlusCircle,
@@ -330,6 +331,13 @@ const StatementUploadTwo = () => {
   const [file, setFile]       = useState(null);
   const [batchId, setBatchId] = useState(null);
   const [activeCats, setActiveCats] = useState({ address: true, place: true, product: true, other: true });
+  const selectedCatKeys = useMemo(
+    () => Object.entries(activeCats).filter(([, v]) => v).map(([k]) => k),
+    [activeCats]
+  );
+  // ── all 4 selected = no server filter needed; some selected = comma list; none selected = show nothing ──
+  const categoriesParam = selectedCatKeys.length === 4 ? "" : selectedCatKeys.join(",");
+  const noCategoriesSelected = selectedCatKeys.length === 0;
   const [nbForm, setNbForm]   = useState(EMPTY_NB);
 
   const [bankFilters, setBankFilters]         = useState(EMPTY_FILTERS);
@@ -387,41 +395,85 @@ const StatementUploadTwo = () => {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to process CSV."),
   });
 
-  const bankQueryParams = useMemo(() => ({ sourceType: "BANKING", ...appliedBankFilters }), [appliedBankFilters]);
-  const { data: rows = [], isLoading: rowsLoading, isFetching: rowsFetching } = useQuery({
+ const bankQueryParams = useMemo(() => ({
+    sourceType: "BANKING",
+    ...appliedBankFilters,
+    categories: categoriesParam,
+    page: bankPage,
+    pageSize: PAGE_SIZE,
+  }), [appliedBankFilters, categoriesParam, bankPage]);
+
+  const { data: bankResult, isLoading: rowsLoading, isFetching: rowsFetching } = useQuery({
     queryKey: ["statementStagingAll", "BANKING", bankQueryParams],
     queryFn: async () => {
       const params = new URLSearchParams();
-      Object.entries(bankQueryParams).forEach(([k, v]) => { if (v) params.append(k, v); });
-      return (await axios.get(`${url}/api/statement/staging/all?${params.toString()}`)).data?.data || [];
+      Object.entries(bankQueryParams).forEach(([k, v]) => { if (v !== "" && v != null) params.append(k, v); });
+      const res = await axios.get(`${url}/api/statement/staging/all?${params.toString()}`);
+      return { rows: res.data?.data || [], totalCount: res.data?.totalCount ?? (res.data?.data?.length || 0) };
+    },
+    enabled: subTab === "banking" && mainTab === "pending" && !noCategoriesSelected,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
+  });
+  const rows = noCategoriesSelected ? [] : (bankResult?.rows || []);
+  const bankTotalCount = noCategoriesSelected ? 0 : (bankResult?.totalCount || 0);
+
+  // ── category breakdown stats, independent of page/categories checkboxes ──
+  const statsQueryParams = useMemo(() => ({ sourceType: "BANKING", ...appliedBankFilters }), [appliedBankFilters]);
+  const { data: categoryStats = { address: 0, place: 0, product: 0, other: 0 } } = useQuery({
+    queryKey: ["statementStagingStats", statsQueryParams],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(statsQueryParams).forEach(([k, v]) => { if (v) params.append(k, v); });
+      return (await axios.get(`${url}/api/statement/staging/stats?${params.toString()}`)).data?.data
+        || { address: 0, place: 0, product: 0, other: 0 };
     },
     enabled: subTab === "banking" && mainTab === "pending",
     refetchOnWindowFocus: false,
   });
 
-  const nbQueryParams = useMemo(() => ({ sourceType: "NON_BANKING", ...appliedNbFilters }), [appliedNbFilters]);
-  const { data: nbRows = [], isLoading: nbLoading, isFetching: nbFetching } = useQuery({
+  const nbQueryParams = useMemo(() => ({
+    sourceType: "NON_BANKING",
+    ...appliedNbFilters,
+    page: nbPage,
+    pageSize: PAGE_SIZE,
+  }), [appliedNbFilters, nbPage]);
+
+  const { data: nbResult, isLoading: nbLoading, isFetching: nbFetching } = useQuery({
     queryKey: ["statementStagingAll", "NON_BANKING", nbQueryParams],
     queryFn: async () => {
       const params = new URLSearchParams();
-      Object.entries(nbQueryParams).forEach(([k, v]) => { if (v) params.append(k, v); });
-      return (await axios.get(`${url}/api/statement/staging/all?${params.toString()}`)).data?.data || [];
+      Object.entries(nbQueryParams).forEach(([k, v]) => { if (v !== "" && v != null) params.append(k, v); });
+      const res = await axios.get(`${url}/api/statement/staging/all?${params.toString()}`);
+      return { rows: res.data?.data || [], totalCount: res.data?.totalCount ?? (res.data?.data?.length || 0) };
     },
     enabled: subTab === "nonbanking" && mainTab === "pending",
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
+  const nbRows = nbResult?.rows || [];
+  const nbTotalCount = nbResult?.totalCount || 0;
 
-  const approvedQueryParams = useMemo(() => ({ ...appliedApprovedFilters }), [appliedApprovedFilters]);
-  const { data: approvedRows = [], isLoading: approvedLoading, isFetching: approvedFetching } = useQuery({
+const approvedQueryParams = useMemo(() => ({
+    ...appliedApprovedFilters,
+    page: approvedPage,
+    pageSize: PAGE_SIZE,
+  }), [appliedApprovedFilters, approvedPage]);
+
+  const { data: approvedResult, isLoading: approvedLoading, isFetching: approvedFetching } = useQuery({
     queryKey: ["statementMain", approvedQueryParams],
     queryFn: async () => {
       const params = new URLSearchParams();
-      Object.entries(approvedQueryParams).forEach(([k, v]) => { if (v && k !== "status") params.append(k, v); });
-      return (await axios.get(`${url}/api/statement/main?${params.toString()}`)).data?.data || [];
+      Object.entries(approvedQueryParams).forEach(([k, v]) => { if (v !== "" && v != null && k !== "status") params.append(k, v); });
+      const res = await axios.get(`${url}/api/statement/main?${params.toString()}`);
+      return { rows: res.data?.data || [], totalCount: res.data?.totalCount ?? (res.data?.data?.length || 0) };
     },
     enabled: mainTab === "approved",
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
+  const approvedRows = approvedResult?.rows || [];
+  const approvedTotalCount = approvedResult?.totalCount || 0;
 
   const { data: projectOptions = [] } = useQuery({
     queryKey: ["statementProjects"],
@@ -433,10 +485,10 @@ const StatementUploadTwo = () => {
     queryFn: async () => (await axios.get(`${url}/api/statement/contractors`)).data?.data || [],
   });
 
-  const invalidateStaging = () => {
+const invalidateStaging = () => {
     queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
+    queryClient.invalidateQueries({ queryKey: ["statementStagingStats"], refetchType: "active" });
   };
-
   const updateRowMutation = useMutation({
     mutationFn: async (payload) => axios.put(`${url}/api/statement/staging/row`, payload),
     onSuccess: invalidateStaging,
@@ -484,6 +536,7 @@ const StatementUploadTwo = () => {
       setDisapproveTarget(null);
       queryClient.invalidateQueries({ queryKey: ["statementMain"], refetchType: "active" });
       queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
+       queryClient.invalidateQueries({ queryKey: ["statementStagingStats"], refetchType: "active" });
     },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to disapprove transaction."),
   });
@@ -564,19 +617,7 @@ const StatementUploadTwo = () => {
     });
   };
 
-  const stats = useMemo(() => {
-    const s = { address: 0, place: 0, product: 0, other: 0 };
-    rows.forEach((r) => { const c = (r.CATEGORY || "other").toLowerCase(); if (s[c] !== undefined) s[c]++; });
-    return s;
-  }, [rows]);
 
-  const filteredRows = useMemo(() => {
-    return rows.filter((r) => activeCats[(r.CATEGORY || "other").toLowerCase()]);
-  }, [rows, activeCats]);
-
-  const bankPageRows     = useMemo(() => filteredRows.slice((bankPage - 1) * PAGE_SIZE, bankPage * PAGE_SIZE), [filteredRows, bankPage]);
-  const nbPageRows       = useMemo(() => nbRows.slice((nbPage - 1) * PAGE_SIZE, nbPage * PAGE_SIZE), [nbRows, nbPage]);
-  const approvedPageRows = useMemo(() => approvedRows.slice((approvedPage - 1) * PAGE_SIZE, approvedPage * PAGE_SIZE), [approvedRows, approvedPage]);
 
   const fmtAmount = (amt) => {
     const n = Number(amt) || 0;
@@ -584,7 +625,7 @@ const StatementUploadTwo = () => {
     return n < 0 ? `-$${f}` : `$${f}`;
   };
 
-  const handleDownloadCsv = (dataRows, filename) => {
+const buildAndDownloadCsv = (dataRows, filename) => {
     if (dataRows.length === 0) { toast.error("No rows to download."); return; }
     const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Category", "Project", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
     const csvRows = dataRows.map((r) => [
@@ -606,6 +647,54 @@ const StatementUploadTwo = () => {
     link.href = URL.createObjectURL(blob);
     link.download = filename;
     link.click();
+  };
+
+  const [exportingBank, setExportingBank] = useState(false);
+  const [exportingNb, setExportingNb] = useState(false);
+  const [exportingApproved, setExportingApproved] = useState(false);
+
+  const handleExportBankCsv = async () => {
+    setExportingBank(true);
+    try {
+      const params = new URLSearchParams();
+      const p = { sourceType: "BANKING", ...appliedBankFilters, categories: categoriesParam };
+      Object.entries(p).forEach(([k, v]) => { if (v) params.append(k, v); });
+      const res = await axios.get(`${url}/api/statement/staging/all?${params.toString()}`);
+      buildAndDownloadCsv(res.data?.data || [], "statement_banking.csv");
+    } catch {
+      toast.error("Failed to export CSV.");
+    } finally {
+      setExportingBank(false);
+    }
+  };
+
+  const handleExportNbCsv = async () => {
+    setExportingNb(true);
+    try {
+      const params = new URLSearchParams();
+      const p = { sourceType: "NON_BANKING", ...appliedNbFilters };
+      Object.entries(p).forEach(([k, v]) => { if (v) params.append(k, v); });
+      const res = await axios.get(`${url}/api/statement/staging/all?${params.toString()}`);
+      buildAndDownloadCsv(res.data?.data || [], "statement_nonbanking.csv");
+    } catch {
+      toast.error("Failed to export CSV.");
+    } finally {
+      setExportingNb(false);
+    }
+  };
+
+  const handleExportApprovedCsv = async () => {
+    setExportingApproved(true);
+    try {
+      const params = new URLSearchParams();
+      Object.entries(appliedApprovedFilters).forEach(([k, v]) => { if (v && k !== "status") params.append(k, v); });
+      const res = await axios.get(`${url}/api/statement/main?${params.toString()}`);
+      buildAndDownloadCsv(res.data?.data || [], "statement_approved.csv");
+    } catch {
+      toast.error("Failed to export CSV.");
+    } finally {
+      setExportingApproved(false);
+    }
   };
 
   const renderStagingRows = (dataRows, loading) => {
@@ -788,9 +877,9 @@ const StatementUploadTwo = () => {
 
                 <div className="flex flex-wrap items-center gap-6 bg-white border rounded-2xl shadow-sm px-6 py-4 mb-5">
                   <div className="text-sm text-gray-600">
-                    <strong className="text-gray-900 text-base font-semibold mr-1">{filteredRows.length}</strong> rows
+                    <strong className="text-gray-900 text-base font-semibold mr-1">{bankTotalCount}</strong> rows
                   </div>
-                  {Object.entries(stats).map(([cat, count]) => (
+                  {Object.entries(categoryStats).map(([cat, count]) => (
                     <div key={cat} className="flex items-center gap-1.5 text-sm text-gray-600">
                       <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${CATEGORY_STYLES[cat]}`}>{cat}</span>
                       <strong className="text-gray-900">{count}</strong>
@@ -808,8 +897,8 @@ const StatementUploadTwo = () => {
                     ))}
                   </div>
                   <div className="flex items-center gap-2 ml-auto">
-                    <Button onClick={() => handleDownloadCsv(filteredRows, "statement_banking.csv")} variant="outline" className="rounded-full text-sm">
-                      <Download size={14} className="mr-1" /> CSV
+                  <Button onClick={handleExportBankCsv} disabled={exportingBank} variant="outline" className="rounded-full text-sm">
+                      {exportingBank ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Download size={14} className="mr-1" />} CSV
                     </Button>
                   </div>
                 </div>
@@ -817,11 +906,11 @@ const StatementUploadTwo = () => {
                 <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1400px]">
-                      <StagingThead />
-                      <tbody>{renderStagingRows(bankPageRows, rowsLoading)}</tbody>
+                     <StagingThead />
+                      <tbody>{renderStagingRows(rows, rowsLoading)}</tbody>
                     </table>
                   </div>
-                  <Pagination page={bankPage} totalRows={filteredRows.length} onPageChange={setBankPage} />
+                  <Pagination page={bankPage} totalRows={bankTotalCount} onPageChange={setBankPage} />
                 </div>
               </>
             )}
@@ -926,13 +1015,13 @@ const StatementUploadTwo = () => {
                   showCategory
                 />
                 <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className="text-xs text-gray-500">{nbRows.length} rows</span>
+                  <span className="text-xs text-gray-500">{nbTotalCount} rows</span>
                   {nbFetching && !nbLoading && (
                     <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="animate-spin" size={12} /> refreshing...</span>
                   )}
                   <div className="flex items-center gap-2 ml-auto">
-                    <Button onClick={() => handleDownloadCsv(nbRows, "statement_nonbanking.csv")} variant="outline" className="rounded-full text-sm">
-                      <Download size={14} className="mr-1" /> CSV
+                   <Button onClick={handleExportNbCsv} disabled={exportingNb} variant="outline" className="rounded-full text-sm">
+                      {exportingNb ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Download size={14} className="mr-1" />} CSV
                     </Button>
                   </div>
                 </div>
@@ -940,11 +1029,11 @@ const StatementUploadTwo = () => {
                 <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[1400px]">
-                      <StagingThead />
-                      <tbody>{renderStagingRows(nbPageRows, nbLoading)}</tbody>
+                     <StagingThead />
+                      <tbody>{renderStagingRows(nbRows, nbLoading)}</tbody>
                     </table>
                   </div>
-                  <Pagination page={nbPage} totalRows={nbRows.length} onPageChange={setNbPage} />
+                  <Pagination page={nbPage} totalRows={nbTotalCount} onPageChange={setNbPage} />
                 </div>
               </>
             )}
@@ -963,13 +1052,13 @@ const StatementUploadTwo = () => {
               contractorOptions={contractorOptions}
             />
             <div className="flex flex-wrap items-center gap-3 mb-5">
-              <span className="text-xs text-gray-500">{approvedRows.length} rows</span>
+              <span className="text-xs text-gray-500">{approvedTotalCount} rows</span>
               {approvedFetching && !approvedLoading && (
                 <span className="text-xs text-blue-500 flex items-center gap-1"><Loader2 className="animate-spin" size={12} /> refreshing...</span>
               )}
-              <Button onClick={() => handleDownloadCsv(approvedRows, "statement_approved.csv")}
+             <Button onClick={handleExportApprovedCsv} disabled={exportingApproved}
                 variant="outline" className="rounded-full text-sm ml-auto">
-                <Download size={14} className="mr-1" /> Download CSV
+                {exportingApproved ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Download size={14} className="mr-1" />} Download CSV
               </Button>
             </div>
 
@@ -1001,7 +1090,7 @@ const StatementUploadTwo = () => {
                     ) : approvedRows.length === 0 ? (
                       <tr><td colSpan={14} className="text-center py-10 text-gray-400">No approved transactions yet.</td></tr>
                     ) : (
-                      approvedPageRows.map((r) => {
+                      approvedRows.map((r) => {
                         const cat = (r.CATEGORY || "other").toLowerCase();
                         return (
                           <tr key={r.TXN_ID} className="border-b last:border-0 hover:bg-gray-50">
@@ -1063,12 +1152,11 @@ const StatementUploadTwo = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
-               <Pagination page={approvedPage} totalRows={approvedRows.length} onPageChange={setApprovedPage} />
+             </div>
+              <Pagination page={approvedPage} totalRows={approvedTotalCount} onPageChange={setApprovedPage} />
             </div>
           </>
         )}
-
       </div>
 
       {deleteTarget && (
