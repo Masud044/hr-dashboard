@@ -47,6 +47,7 @@ import { EditContractorPage } from "./features/setting/pages/EditContractorPage"
 import { ProjectReportPage } from "./features/project-two/project-report-page";
 import StatementUploadTwo from "./features/setting/pages/state-upload-two";
 import Overview from "./features/overview/pages/Overview"; 
+import StatementUploadThree from "./features/setting/pages/statement-upload-three";
 const ADMIN = ["Admin"];
 
 // ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
@@ -156,7 +157,8 @@ const App = () => {
               path="statement"
               element={
                 <ProtectedRoute anyRole={ADMIN}>
-                  <StatementUploadTwo />
+                  {/* <StatementUploadTwo /> */}
+                  <StatementUploadThree />
                 </ProtectedRoute>
               }
             />
