@@ -1,3 +1,4 @@
+// src\hooks\use-persisted-page-size.js
 import { useCallback, useState } from "react";
 
 const STORAGE_PREFIX = "dataTablePageSize";

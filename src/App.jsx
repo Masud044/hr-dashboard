@@ -1,4 +1,3 @@
-
 // src\App.jsx
 import {
   BrowserRouter as Router,
@@ -46,15 +45,20 @@ import { CreateContractorPage } from "./features/setting/pages/CreateContractorP
 import { EditContractorPage } from "./features/setting/pages/EditContractorPage";
 import { ProjectReportPage } from "./features/project-two/project-report-page";
 import StatementUploadTwo from "./features/setting/pages/state-upload-two";
-import Overview from "./features/overview/pages/Overview"; 
+import Overview from "./features/overview/pages/Overview";
 import StatementUploadThree from "./features/setting/pages/statement-upload-three";
+
+import { WorkerList } from "./features/worker/worker-list";
+import { WorkerFormPage } from "./features/worker/worker-form-page";
+import { AttendanceList } from "./features/worker-attendance/attendance-list";
+import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
 const ADMIN = ["Admin"];
 
 // ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   if (isLoading) return null;
-   if (user?.roles?.includes("Admin")) return <Overview />; 
+  if (user?.roles?.includes("Admin")) return <Overview />;
   return <Navigate to="/login" replace />;
 };
 
@@ -62,28 +66,28 @@ const App = () => {
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-       <NuqsAdapter>
-      <Router>
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginV2 />} />
-          <Route path="/register" element={<RegisterV2 />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <NuqsAdapter>
+        <Router>
+          <Routes>
+            {/* Public */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginV2 />} />
+            <Route path="/register" element={<RegisterV2 />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Protected Layout — Admin only */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute anyRole={ADMIN}>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }
-          >
-            {/* Index */}
-            <Route index element={<DashboardIndex />} />
+            {/* Protected Layout — Admin only */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* Index */}
+              <Route index element={<DashboardIndex />} />
 
-             <Route
+              <Route
                 path="user-management"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -125,61 +129,58 @@ const App = () => {
                 }
               />
 
+              <Route
+                path="supplier"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Supplier />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="supplier/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Supplier />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="supplier"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Supplier />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="supplier/:id"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Supplier />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="project"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Project />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="statement"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    {/* <StatementUploadTwo /> */}
+                    <StatementUploadThree />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="project/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Project />
+                  </ProtectedRoute>
+                }
+              />
 
-           
-           
-            <Route
-              path="project"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Project />
-                </ProtectedRoute>
-              }
-            />
-             <Route
-              path="statement"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  {/* <StatementUploadTwo /> */}
-                  <StatementUploadThree />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="project/:id"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Project />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="contractor"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Contractor />
-                </ProtectedRoute>
-              }
-            />
-            {/* <Route
+              <Route
+                path="contractor"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Contractor />
+                  </ProtectedRoute>
+                }
+              />
+              {/* <Route
               path="contractor/:id"
               element={
                 <ProtectedRoute anyRole={ADMIN}>
@@ -187,10 +188,64 @@ const App = () => {
                 </ProtectedRoute>
               }
             /> */}
-            <Route path="contractor/create" element={<CreateContractorPage />} />
-            <Route path="contractor/:id/edit" element={<EditContractorPage />} />
+              <Route
+                path="contractor/create"
+                element={<CreateContractorPage />}
+              />
+              <Route
+                path="contractor/:id/edit"
+                element={<EditContractorPage />}
+              />
 
-           <Route
+              <Route
+                path="worker"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <WorkerList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="worker/create"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <WorkerFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="worker/:workerId/edit"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <WorkerFormPage />
+                  </ProtectedRoute>
+                }
+              />
+             <Route
+  path="worker-attendance"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <AttendanceList />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="worker-attendance/create"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <AttendanceFormPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="worker-attendance/:attendanceId/edit"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <AttendanceFormPage />
+    </ProtectedRoute>
+  }
+/>
+              <Route
                 path="calendar"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -215,82 +270,86 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-           <Route path="owner-info" element={<OwnerInfo />} />
+              <Route path="owner-info" element={<OwnerInfo />} />
 
-           <Route path="contractor-type-info" element={<ContractorTypeInfo />} />
+              <Route
+                path="contractor-type-info"
+                element={<ContractorTypeInfo />}
+              />
 
-            <Route
-              path="dashboard-schedule"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="dashboard-schedule/:id"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="dashboard-schedule"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="dashboard-schedule/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="timeline"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  {/* <DashboardTimeline /> */}
-                  <DashboardTimelineTwo />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="timeline/:H_ID"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  {/* <DashboardTimeline /> */}
-                  <DashboardTimelineTwo />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="timeline"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    {/* <DashboardTimeline /> */}
+                    <DashboardTimelineTwo />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="timeline/:H_ID"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    {/* <DashboardTimeline /> */}
+                    <DashboardTimelineTwo />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="projects/create" element={<CreateProjectPage />} />
-            <Route path="projects/:id/edit" element={<EditProjectPage />} />
-            <Route path="projects/:id/report" element={<ProjectReportPage />} />
+              <Route path="projects/create" element={<CreateProjectPage />} />
+              <Route path="projects/:id/edit" element={<EditProjectPage />} />
+              <Route
+                path="projects/:id/report"
+                element={<ProjectReportPage />}
+              />
 
-            <Route
-              path="process"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <EditProject />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="process/:id"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                  <EditProject />
-                </ProtectedRoute>
-              }
-            />
-             <Route
-              path="projects"
-              element={
-                <ProtectedRoute anyRole={ADMIN}>
-                <ProjectPage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="process"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <EditProject />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="process/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <EditProject />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="projects"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <ProjectPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* <Route path="project-process/:id" element={<ProcessPage />} /> */}
-           
-          </Route>
-        </Routes>
-      </Router>
-       </NuqsAdapter>
-
+              {/* <Route path="project-process/:id" element={<ProcessPage />} /> */}
+            </Route>
+          </Routes>
+        </Router>
+      </NuqsAdapter>
     </>
   );
 };

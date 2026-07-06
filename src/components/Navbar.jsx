@@ -4,7 +4,7 @@ import UserDropDown from "./UserDropDown";
 
 export default function Navbar() {
   return (
-    <header className="w-full flex items-center justify-between bg-card/80 backdrop-blur-md border-b border-border px-4 h-14 sticky top-0 z-[102]">
+    <header className="w-full flex items-center justify-between bg-card/80 backdrop-blur-md border-b border-border px-4 h-14 sticky top-0 z-10">
 
       {/* Left — sidebar trigger */}
       <SidebarTrigger className="text-muted-foreground hover:text-primary hover:bg-accent" />
