@@ -75,6 +75,7 @@ export const NAV_ITEMS = [
       // { to: "/dashboard/process", label: "process", Icon: IconUserHexagon },
       { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon },
 { to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList },
+{ to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon },
     ],
   },
 
