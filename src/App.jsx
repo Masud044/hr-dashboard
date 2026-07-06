@@ -47,6 +47,9 @@ import { ProjectReportPage } from "./features/project-two/project-report-page";
 import StatementUploadTwo from "./features/setting/pages/state-upload-two";
 import Overview from "./features/overview/pages/Overview";
 import StatementUploadThree from "./features/setting/pages/statement-upload-three";
+import { InvoiceListPage } from "./features/invoice/invoice-list";
+import { InvoiceCreatePage } from "./features/invoice/invoice-create-page";
+import { InvoiceEditPage } from "./features/invoice/invoice-edit-page";
 
 import { WorkerList } from "./features/worker/worker-list";
 import { WorkerFormPage } from "./features/worker/worker-form-page";
@@ -341,6 +344,31 @@ const App = () => {
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
                     <ProjectPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="invoices"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <InvoiceListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="invoices/create"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <InvoiceCreatePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="invoices/:id/edit"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <InvoiceEditPage />
                   </ProtectedRoute>
                 }
               />
