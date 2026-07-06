@@ -1,5 +1,14 @@
-
-import { IconBuildingSkyscraper, IconDashboard, IconDatabaseEdit, IconSettings, IconTruckDelivery, IconUserHexagon, IconUsers, IconUserShield } from "@tabler/icons-react";
+// src\lib\constants\nav-items.js
+import {
+  IconBuildingSkyscraper,
+  IconDashboard,
+  IconDatabaseEdit,
+  IconSettings,
+  IconTruckDelivery,
+  IconUserHexagon,
+  IconUsers,
+  IconUserShield,
+} from "@tabler/icons-react";
 import {
   Home,
   FileText,
@@ -14,57 +23,71 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
-
-
-
 export const NAV_ITEMS = [
   {
     label: "Main Entry",
     ItemIcon: IconDashboard,
-    roles: ["Admin"],   
+    roles: ["Admin"],
     links: [
-     { to: "/dashboard", label: "Overview", Icon: LayoutDashboard },
-      
-     
-      { to: "/dashboard/dashboard-schedule", label: "Schedule Dashboard", Icon: LayoutDashboard },
+      { to: "/dashboard", label: "Overview", Icon: LayoutDashboard },
+
+      {
+        to: "/dashboard/dashboard-schedule",
+        label: "Schedule Dashboard",
+        Icon: LayoutDashboard,
+      },
     ],
   },
-
- 
-   
-
-
- 
 
   {
     label: "Settings",
     ItemIcon: IconSettings,
-     roles: ["Admin"],   
+    roles: ["Admin"],
     links: [
-      
       // { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },
-     
+
       // { to: "/dashboard/project", label: "Project", Icon: IconBuildingSkyscraper },
-       { to: "/dashboard/projects", label: "Project", Icon: IconUserHexagon },
-       { to: "/dashboard/statement", label: "Project Statement", Icon: IconUserHexagon },
-      { to: "/dashboard/contractor", label: "Contractor", Icon: IconUserHexagon },
+      { to: "/dashboard/projects", label: "Project", Icon: IconUserHexagon },
+      {
+        to: "/dashboard/statement",
+        label: "Project Statement",
+        Icon: IconUserHexagon,
+      },
+      {
+        to: "/dashboard/contractor",
+        label: "Contractor",
+        Icon: IconUserHexagon,
+      },
       // { to: "/dashboard/owner-info", label: "Owner Info", Icon: IconUserHexagon },
       // { to: "/dashboard/contractor-type-info", label: "Contractor info", Icon: IconUserHexagon },
-       { to: "/dashboard/calendar", label: "Calender", Icon: IconUserHexagon },
-        { to: "/dashboard/project-type", label: "Project Type", Icon: IconUserHexagon },
-         { to: "/dashboard/contractor-type", label: "Contractor Type", Icon: IconUserHexagon },
-          
-         
-          // { to: "/dashboard/process", label: "process", Icon: IconUserHexagon },
+      { to: "/dashboard/calendar", label: "Calender", Icon: IconUserHexagon },
+      {
+        to: "/dashboard/project-type",
+        label: "Project Type",
+        Icon: IconUserHexagon,
+      },
+      {
+        to: "/dashboard/contractor-type",
+        label: "Contractor Type",
+        Icon: IconUserHexagon,
+      },
+
+      // { to: "/dashboard/process", label: "process", Icon: IconUserHexagon },
+      { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon },
+{ to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList },
     ],
   },
 
   {
     label: "User Management",
     ItemIcon: IconUsers,
-    roles: ["Admin"],                  // শুধু Admin
+    roles: ["Admin"], // শুধু Admin
     links: [
-      { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
+      {
+        to: "/dashboard/user-management",
+        label: "User Management",
+        Icon: ClipboardList,
+      },
       { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
       { to: "/dashboard/role", label: "Role", Icon: FileText },
       { to: "/dashboard/permission", label: "Permission", Icon: FileText },
