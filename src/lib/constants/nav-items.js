@@ -42,7 +42,7 @@ export const NAV_ITEMS = [
   {
     label: "Settings",
     ItemIcon: IconSettings,
-    roles: ["Admin"],
+    roles: ["Admin", "DataEntry"],
     links: [
       // { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },
 
@@ -73,9 +73,9 @@ export const NAV_ITEMS = [
       },
 
       // { to: "/dashboard/process", label: "process", Icon: IconUserHexagon },
-      { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon },
-{ to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList },
-{ to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon },
+      { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon,  roles: ["Admin", "DataEntry"] },
+{ to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList, roles: ["Admin", "DataEntry"] },
+{ to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon, roles: ["Admin", "DataEntry"] },
     ],
   },
 
