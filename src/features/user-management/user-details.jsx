@@ -248,6 +248,7 @@ export default function UserDetailsPage() {
   } = useUserById(id);
 
   const { data: allRoles = [] } = useRoles();
+  console.log("user data", user)
 
   const roleIds = useMemo(
     () => (user?.roles ?? []).map((r) => r.ID),
@@ -291,7 +292,7 @@ export default function UserDetailsPage() {
   const assignedRoleIds = new Set(user?.roles?.map((r) => r.ID));
   // const availableRoles = allRoles.filter((r) => !assignedRoleIds.has(r.ID));
 
-  const ALLOWED_ROLES = ["Admin"];
+  const ALLOWED_ROLES = ["Admin", "DataEntry"];
 
 const availableRoles = allRoles.filter(
   (r) => ALLOWED_ROLES.includes(r.ROLE_NAME) && !assignedRoleIds.has(r.ID)

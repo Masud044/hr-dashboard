@@ -56,15 +56,24 @@ import { WorkerFormPage } from "./features/worker/worker-form-page";
 import { AttendanceList } from "./features/worker-attendance/attendance-list";
 import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
 const ADMIN = ["Admin"];
+const DataEntryUser = ["Admin", "DataEntry"];
 
 // ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
+// const DashboardIndex = () => {
+//   const { user, isLoading } = useAuthV2();
+//   if (isLoading) return null;
+//   if (user?.roles?.includes("Admin")) return <Overview />;
+//   return <Navigate to="/login" replace />;
+// };
+
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   if (isLoading) return null;
   if (user?.roles?.includes("Admin")) return <Overview />;
+  if (user?.roles?.includes("DataEntry"))
+    return <Navigate to="/dashboard/worker-attendance" replace />;
   return <Navigate to="/login" replace />;
 };
-
 const App = () => {
   return (
     <>
@@ -82,7 +91,7 @@ const App = () => {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute anyRole={ADMIN}>
+                <ProtectedRoute anyRole={DataEntryUser}>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
@@ -203,7 +212,7 @@ const App = () => {
               <Route
                 path="worker"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                <ProtectedRoute anyRole={DataEntryUser}>
                     <WorkerList />
                   </ProtectedRoute>
                 }
@@ -211,7 +220,7 @@ const App = () => {
               <Route
                 path="worker/create"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={DataEntryUser}>
                     <WorkerFormPage />
                   </ProtectedRoute>
                 }
@@ -219,7 +228,7 @@ const App = () => {
               <Route
                 path="worker/:workerId/edit"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={DataEntryUser}>
                     <WorkerFormPage />
                   </ProtectedRoute>
                 }
@@ -227,7 +236,7 @@ const App = () => {
              <Route
   path="worker-attendance"
   element={
-    <ProtectedRoute anyRole={ADMIN}>
+    <ProtectedRoute anyRole={DataEntryUser}>
       <AttendanceList />
     </ProtectedRoute>
   }
@@ -235,7 +244,7 @@ const App = () => {
 <Route
   path="worker-attendance/create"
   element={
-    <ProtectedRoute anyRole={ADMIN}>
+    <ProtectedRoute anyRole={DataEntryUser}>
       <AttendanceFormPage />
     </ProtectedRoute>
   }
@@ -243,7 +252,7 @@ const App = () => {
 <Route
   path="worker-attendance/:attendanceId/edit"
   element={
-    <ProtectedRoute anyRole={ADMIN}>
+    <ProtectedRoute anyRole={DataEntryUser}>
       <AttendanceFormPage />
     </ProtectedRoute>
   }
@@ -351,7 +360,7 @@ const App = () => {
               <Route
                 path="invoices"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={DataEntryUser}>
                     <InvoiceListPage />
                   </ProtectedRoute>
                 }
@@ -359,7 +368,7 @@ const App = () => {
               <Route
                 path="invoices/create"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={DataEntryUser}>
                     <InvoiceCreatePage />
                   </ProtectedRoute>
                 }
@@ -367,7 +376,7 @@ const App = () => {
               <Route
                 path="invoices/:id/edit"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={DataEntryUser}>
                     <InvoiceEditPage />
                   </ProtectedRoute>
                 }
