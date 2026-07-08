@@ -1,4 +1,4 @@
-// src\lib\constants\nav-items.js
+// src/lib/constants/nav-items.js
 import {
   IconBuildingSkyscraper,
   IconDashboard,
@@ -74,8 +74,9 @@ export const NAV_ITEMS = [
 
       // { to: "/dashboard/process", label: "process", Icon: IconUserHexagon },
       { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon,  roles: ["Admin", "DataEntry"] },
-{ to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList, roles: ["Admin", "DataEntry"] },
-{ to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon, roles: ["Admin", "DataEntry"] },
+      { to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList, roles: ["Admin", "DataEntry"] },
+      { to: "/dashboard/attendance-report", label: "Attendance Report", Icon: FileText, roles: ["Admin", "DataEntry"] },
+      { to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon, roles: ["Admin", "DataEntry"] },
     ],
   },
 

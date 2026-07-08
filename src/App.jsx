@@ -55,6 +55,7 @@ import { WorkerList } from "./features/worker/worker-list";
 import { WorkerFormPage } from "./features/worker/worker-form-page";
 import { AttendanceList } from "./features/worker-attendance/attendance-list";
 import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
+import { AttendanceReport } from "./features/worker-attendance/attendance-report";
 const ADMIN = ["Admin"];
 const DataEntryUser = ["Admin", "DataEntry"];
 
@@ -212,7 +213,7 @@ const App = () => {
               <Route
                 path="worker"
                 element={
-                <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={DataEntryUser}>
                     <WorkerList />
                   </ProtectedRoute>
                 }
@@ -233,27 +234,35 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-             <Route
-  path="worker-attendance"
+              <Route
+                path="worker-attendance"
+                element={
+                  <ProtectedRoute anyRole={DataEntryUser}>
+                    <AttendanceList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="worker-attendance/create"
+                element={
+                  <ProtectedRoute anyRole={DataEntryUser}>
+                    <AttendanceFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="worker-attendance/:attendanceId/edit"
+                element={
+                  <ProtectedRoute anyRole={DataEntryUser}>
+                    <AttendanceFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+  path="attendance-report"
   element={
     <ProtectedRoute anyRole={DataEntryUser}>
-      <AttendanceList />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="worker-attendance/create"
-  element={
-    <ProtectedRoute anyRole={DataEntryUser}>
-      <AttendanceFormPage />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="worker-attendance/:attendanceId/edit"
-  element={
-    <ProtectedRoute anyRole={DataEntryUser}>
-      <AttendanceFormPage />
+      <AttendanceReport />
     </ProtectedRoute>
   }
 />
