@@ -22,7 +22,12 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { useContractors, useInvoiceById, useProjects, useUpdateInvoice } from "./queries";
+import {
+  useContractors,
+  useInvoiceById,
+  useProjects,
+  useUpdateInvoice,
+} from "./queries";
 
 const initialState = {
   PROJECT_ID: "",
@@ -36,18 +41,6 @@ const initialState = {
   PAYMENT_REF: "",
 };
 
-// const projectOptions = [
-//   { label: "Project 101", value: "101" },
-//   { label: "Project 202", value: "202" },
-//   { label: "Project 303", value: "303" },
-// ];
-
-// const contractorOptions = [
-//   { label: "Contractor A", value: "1" },
-//   { label: "Contractor B", value: "2" },
-//   { label: "Contractor C", value: "3" },
-// ];
-
 export function InvoiceEditPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -58,24 +51,45 @@ export function InvoiceEditPage() {
   const [errors, setErrors] = useState({});
   const [receiptError, setReceiptError] = useState("");
 
-  const { data: projects = [] } = useProjects();
-const { data: contractors = [] } = useContractors();
+  const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
+  const { data: contractors = [], isLoading: isContractorsLoading } = useContractors();
 
-const projectOptions = projects.map((p) => ({ label: p.P_NAME, value: String(p.P_ID) }));
-const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, value: String(c.CONTRATOR_ID) }));
+  const invoiceDetail = data?.data || data || null;
+  const existingReceiptFilename =
+    invoiceDetail?.RECEIPT_FILENAME || invoiceDetail?.RECEIPT_FILE_NAME || null;
+
+  const projectOptions = projects.map((p) => ({
+    label: p.P_NAME,
+    value: String(p.P_ID),
+  }));
+  const contractorOptions = contractors.map((c) => ({
+    label: c.CONTRATOR_NAME,
+    value: String(c.CONTRATOR_ID),
+  }));
 
   const isContractorPurchase = form.PURCHASED_BY === "CONTRACTOR";
-  const invoiceDetail = data?.data || data || null;
-  const existingReceiptFilename = invoiceDetail?.RECEIPT_FILENAME || invoiceDetail?.RECEIPT_FILE_NAME || null;
+
+  const isReady =
+    !isLoading &&
+    !isProjectsLoading &&
+    !isContractorsLoading &&
+    !!invoiceDetail &&
+    projectOptions.length > 0;
 
   useEffect(() => {
     if (invoiceDetail) {
       setForm({
-        PROJECT_ID: invoiceDetail.PROJECT_ID || invoiceDetail.PROJECTID || invoiceDetail.PROJECT || "",
+        PROJECT_ID:
+          invoiceDetail.PROJECT_ID != null
+            ? String(invoiceDetail.PROJECT_ID)
+            : "",
         AREA_TYPE: invoiceDetail.AREA_TYPE || "",
         AMOUNT: invoiceDetail.AMOUNT ?? "",
         PURCHASED_BY: invoiceDetail.PURCHASED_BY || "",
-        CONTRACTOR_ID: invoiceDetail.CONTRACTOR_ID || "",
+        CONTRACTOR_ID:
+          invoiceDetail.CONTRACTOR_ID != null
+            ? String(invoiceDetail.CONTRACTOR_ID)
+            : "",
         MATERIAL_TYPE: invoiceDetail.MATERIAL_TYPE || "",
         MATERIAL_OTHER: invoiceDetail.MATERIAL_OTHER || "",
         PAYMENT_METHOD: invoiceDetail.PAYMENT_METHOD || "",
@@ -95,8 +109,10 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
     if (!form.PROJECT_ID) nextErrors.PROJECT_ID = "Project is required.";
     if (!form.AREA_TYPE) nextErrors.AREA_TYPE = "Area type is required.";
     if (!form.AMOUNT) nextErrors.AMOUNT = "Amount is required.";
-    if (!form.PURCHASED_BY) nextErrors.PURCHASED_BY = "Purchased by is required.";
-    if (!form.PAYMENT_METHOD) nextErrors.PAYMENT_METHOD = "Payment method is required.";
+    if (!form.PURCHASED_BY)
+      nextErrors.PURCHASED_BY = "Purchased by is required.";
+    if (!form.PAYMENT_METHOD)
+      nextErrors.PAYMENT_METHOD = "Payment method is required.";
 
     if (receiptFile) {
       const maxSize = 1024 * 1024;
@@ -163,40 +179,56 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
 
   const selectedProject = useMemo(
     () => projectOptions.find((option) => option.value === form.PROJECT_ID),
-    [form.PROJECT_ID],
+    [form.PROJECT_ID, projectOptions],
   );
 
   const selectedContractor = useMemo(
-    () => contractorOptions.find((option) => option.value === form.CONTRACTOR_ID),
-    [form.CONTRACTOR_ID],
+    () =>
+      contractorOptions.find((option) => option.value === form.CONTRACTOR_ID),
+    [form.CONTRACTOR_ID, contractorOptions],
   );
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
-        <Button type="button" variant="outline" size="icon" onClick={() => navigate("/dashboard/invoices")}>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => navigate("/dashboard/invoices")}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Edit Invoice</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Update invoice details and receipt.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Edit Invoice
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Update invoice details and receipt.
+          </p>
         </div>
       </div>
 
-      {isLoading ? (
+      {!isReady ? (
         <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           Loading invoice...
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm"
+        >
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="project">Project</Label>
               <Combobox
+                key={selectedProject?.value || "empty"}
                 items={projectOptions.map((option) => option.label)}
                 value={selectedProject?.label || ""}
                 onValueChange={(label) => {
-                  const option = projectOptions.find((item) => item.label === label);
+                  const option = projectOptions.find(
+                    (item) => item.label === label,
+                  );
                   updateField("PROJECT_ID", option?.value || "");
                 }}
               >
@@ -212,7 +244,9 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
-              {errors.PROJECT_ID ? <p className="text-sm text-destructive">{errors.PROJECT_ID}</p> : null}
+              {errors.PROJECT_ID ? (
+                <p className="text-sm text-destructive">{errors.PROJECT_ID}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -220,10 +254,14 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
               <Input
                 id="areaType"
                 value={form.AREA_TYPE}
-                onChange={(event) => updateField("AREA_TYPE", event.target.value)}
+                onChange={(event) =>
+                  updateField("AREA_TYPE", event.target.value)
+                }
                 className={errors.AREA_TYPE ? "border-destructive" : ""}
               />
-              {errors.AREA_TYPE ? <p className="text-sm text-destructive">{errors.AREA_TYPE}</p> : null}
+              {errors.AREA_TYPE ? (
+                <p className="text-sm text-destructive">{errors.AREA_TYPE}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -236,22 +274,27 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
                 onChange={(event) => updateField("AMOUNT", event.target.value)}
                 className={errors.AMOUNT ? "border-destructive" : ""}
               />
-              {errors.AMOUNT ? <p className="text-sm text-destructive">{errors.AMOUNT}</p> : null}
+              {errors.AMOUNT ? (
+                <p className="text-sm text-destructive">{errors.AMOUNT}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="purchasedBy">Purchased By</Label>
-              {/* <Select value={form.PURCHASED_BY} onValueChange={(value) => updateField("PURCHASED_BY", value)}> */}
               <Select
-  value={form.PURCHASED_BY}
-  onValueChange={(value) => {
-    updateField("PURCHASED_BY", value);
-    if (value !== "CONTRACTOR") {
-      updateField("CONTRACTOR_ID", "");
-    }
-  }}
->
-                <SelectTrigger id="purchasedBy" className={errors.PURCHASED_BY ? "border-destructive" : ""}>
+                key={form.PURCHASED_BY || "empty"}
+                value={form.PURCHASED_BY}
+                onValueChange={(value) => {
+                  updateField("PURCHASED_BY", value);
+                  if (value !== "CONTRACTOR") {
+                    updateField("CONTRACTOR_ID", "");
+                  }
+                }}
+              >
+                <SelectTrigger
+                  id="purchasedBy"
+                  className={errors.PURCHASED_BY ? "border-destructive" : ""}
+                >
                   <SelectValue placeholder="Select buyer" />
                 </SelectTrigger>
                 <SelectContent>
@@ -259,17 +302,24 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
                   <SelectItem value="CONTRACTOR">Contractor</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.PURCHASED_BY ? <p className="text-sm text-destructive">{errors.PURCHASED_BY}</p> : null}
+              {errors.PURCHASED_BY ? (
+                <p className="text-sm text-destructive">
+                  {errors.PURCHASED_BY}
+                </p>
+              ) : null}
             </div>
 
             {isContractorPurchase ? (
               <div className="space-y-2">
                 <Label htmlFor="contractor">Contractor</Label>
                 <Combobox
+                  key={selectedContractor?.value || "empty"}
                   items={contractorOptions.map((option) => option.label)}
                   value={selectedContractor?.label || ""}
                   onValueChange={(label) => {
-                    const option = contractorOptions.find((item) => item.label === label);
+                    const option = contractorOptions.find(
+                      (item) => item.label === label,
+                    );
                     updateField("CONTRACTOR_ID", option?.value || "");
                   }}
                 >
@@ -293,7 +343,9 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
               <Input
                 id="materialType"
                 value={form.MATERIAL_TYPE}
-                onChange={(event) => updateField("MATERIAL_TYPE", event.target.value)}
+                onChange={(event) =>
+                  updateField("MATERIAL_TYPE", event.target.value)
+                }
               />
             </div>
 
@@ -302,14 +354,23 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
               <Input
                 id="materialOther"
                 value={form.MATERIAL_OTHER}
-                onChange={(event) => updateField("MATERIAL_OTHER", event.target.value)}
+                onChange={(event) =>
+                  updateField("MATERIAL_OTHER", event.target.value)
+                }
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">Payment Method</Label>
-              <Select value={form.PAYMENT_METHOD} onValueChange={(value) => updateField("PAYMENT_METHOD", value)}>
-                <SelectTrigger id="paymentMethod" className={errors.PAYMENT_METHOD ? "border-destructive" : ""}>
+              <Select
+                key={form.PAYMENT_METHOD || "empty"}
+                value={form.PAYMENT_METHOD}
+                onValueChange={(value) => updateField("PAYMENT_METHOD", value)}
+              >
+                <SelectTrigger
+                  id="paymentMethod"
+                  className={errors.PAYMENT_METHOD ? "border-destructive" : ""}
+                >
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +378,11 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
                   <SelectItem value="TRANSACTION">Transaction</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.PAYMENT_METHOD ? <p className="text-sm text-destructive">{errors.PAYMENT_METHOD}</p> : null}
+              {errors.PAYMENT_METHOD ? (
+                <p className="text-sm text-destructive">
+                  {errors.PAYMENT_METHOD}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -325,7 +390,9 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
               <Input
                 id="paymentRef"
                 value={form.PAYMENT_REF}
-                onChange={(event) => updateField("PAYMENT_REF", event.target.value)}
+                onChange={(event) =>
+                  updateField("PAYMENT_REF", event.target.value)
+                }
               />
             </div>
           </div>
@@ -339,14 +406,30 @@ const contractorOptions = contractors.map((c) => ({ label: c.CONTRATOR_NAME, val
             ) : null}
             <div className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-background/40 p-4">
               <Upload className="h-5 w-5 text-muted-foreground" />
-              <Input id="receipt" type="file" accept="image/jpeg,image/png,application/pdf" onChange={handleFileChange} className="border-0 p-0 shadow-none" />
+              <Input
+                id="receipt"
+                type="file"
+                accept="image/jpeg,image/png,application/pdf"
+                onChange={handleFileChange}
+                className="border-0 p-0 shadow-none"
+              />
             </div>
-            {receiptError ? <p className="text-sm text-destructive">{receiptError}</p> : null}
-            {receiptFile ? <p className="text-sm text-muted-foreground">Selected: {receiptFile.name}</p> : null}
+            {receiptError ? (
+              <p className="text-sm text-destructive">{receiptError}</p>
+            ) : null}
+            {receiptFile ? (
+              <p className="text-sm text-muted-foreground">
+                Selected: {receiptFile.name}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => navigate("/dashboard/invoices")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/dashboard/invoices")}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={updateInvoice.isPending}>

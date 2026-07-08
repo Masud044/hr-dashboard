@@ -1,6 +1,9 @@
 // src/features/worker/worker-rate-history-dialog.jsx
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { Trash2 } from "lucide-react";
 
 import {
   Dialog,
@@ -17,10 +20,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
+  const queryClient = useQueryClient();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   const { data: history = [], isLoading } = useQuery({
     queryKey: ["worker-rate-history", workerId],
     queryFn: async () => {
@@ -31,6 +48,27 @@ export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
     },
     enabled: !!workerId && isOpen,
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return axios.delete(`${url}/api/worker-rate/current`, {
+        params: { worker_id: workerId },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["worker-rate-history", workerId]);
+      queryClient.invalidateQueries(["worker-rate-current", workerId]);
+      toast.success("Current rate deleted.");
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to delete current rate.");
+    },
+  });
+
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate();
+    setConfirmDeleteOpen(false);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -60,6 +98,7 @@ export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
                   <TableHead className="text-right">Rate / Hour</TableHead>
                   <TableHead className="text-right">Rate / Day</TableHead>
                   <TableHead>Remarks</TableHead>
+                  <TableHead className="w-[40px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -91,6 +130,20 @@ export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
                     >
                       {row.REMARKS || "—"}
                     </TableCell>
+                    <TableCell>
+                      {!row.EFFECTIVE_TO && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-red-500 hover:text-red-600"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => setConfirmDeleteOpen(true)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -98,6 +151,26 @@ export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
           )}
         </div>
       </DialogContent>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent className="bg-card border-border rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Delete Current Rate?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              The previous rate (if any) will become active again. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

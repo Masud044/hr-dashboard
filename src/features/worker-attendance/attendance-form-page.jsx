@@ -22,12 +22,14 @@ const attendanceSchema = z
     WORKER_ID: z.coerce.number().min(1, "Worker is required"),
     PROJECT_ID: z.coerce.number().min(1, "Project is required"),
     CALC_BASIS: z.enum(["HOUR", "DAY"], { required_error: "Calc basis is required" }),
-    ENTRY_MODE: z.string().optional(),
-    START_TIME: z.string().optional(),
-    END_TIME: z.string().optional(),
+    // ENTRY_MODE: z.string().optional(),
+    ENTRY_MODE: z.string().nullable().optional(),
+   START_TIME: z.string().nullable().optional(),
+END_TIME: z.string().nullable().optional(),
     HOURS_WORKED: z.any().optional(),
     DAYS_WORKED: z.any().optional(),
-    REMARKS: z.string().optional(),
+    // REMARKS: z.string().optional(),
+    REMARKS: z.string().nullable().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.CALC_BASIS === "DAY") {
@@ -118,18 +120,32 @@ export function AttendanceFormPage() {
     enabled: isEdit,
   });
 
+  // useEffect(() => {
+  //   if (fetchedData) {
+  //     form.reset({
+  //       ...defaultValues,
+  //       ...fetchedData,
+  //       WORKER_ID: fetchedData.WORKER_ID ? String(fetchedData.WORKER_ID) : "",
+  //       PROJECT_ID: fetchedData.PROJECT_ID ? String(fetchedData.PROJECT_ID) : "",
+  //     });
+  //   } else if (!isEdit) {
+  //     form.reset(defaultValues);
+  //   }
+  // }, [isEdit, fetchedData, form]);
+
   useEffect(() => {
-    if (fetchedData) {
-      form.reset({
-        ...defaultValues,
-        ...fetchedData,
-        WORKER_ID: fetchedData.WORKER_ID ? String(fetchedData.WORKER_ID) : "",
-        PROJECT_ID: fetchedData.PROJECT_ID ? String(fetchedData.PROJECT_ID) : "",
-      });
-    } else if (!isEdit) {
-      form.reset(defaultValues);
-    }
-  }, [isEdit, fetchedData, form]);
+  if (fetchedData) {
+    form.reset({
+      ...defaultValues,
+      ...fetchedData,
+      WORKER_ID: fetchedData.WORKER_ID ? String(fetchedData.WORKER_ID) : "",
+      PROJECT_ID: fetchedData.PROJECT_ID ? String(fetchedData.PROJECT_ID) : "",
+      REMARKS: fetchedData.REMARKS ?? "",
+    });
+  } else if (!isEdit) {
+    form.reset(defaultValues);
+  }
+}, [isEdit, fetchedData, form]);
 
   const mutation = useMutation({
     mutationFn: async (formData) => {
@@ -168,6 +184,7 @@ export function AttendanceFormPage() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
+        
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
             <FormField
               control={form.control}
