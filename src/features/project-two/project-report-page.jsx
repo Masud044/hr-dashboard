@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -30,11 +30,22 @@ const fmtAmount = (amt) => {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+const fmtHours = (val) => {
+  if (val == null) return "—";
+  const n = Number(val) || 0;
+  return (Math.round(n * 100) / 100).toString();
+};
+
 export function ProjectReportPage() {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("transactions"); // "transactions" | "workers"
+const [activeTab, setActiveTab] = useState("transactions"); // "transactions" | "byContractor"
+const workerSectionRef = useRef(null);
+
+const scrollToWorkerSection = () => {
+  workerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 
   const { data: report, isLoading } = useQuery({
     queryKey: ["projectReport", projectId],
@@ -58,6 +69,39 @@ export function ProjectReportPage() {
     const workerCost = Number(workerTotals.totalAmount) || 0;
     return { debit, credit, workerCost, net: debit - credit - workerCost };
   }, [rows, workerTotals]);
+
+  const groupedByContractor = useMemo(() => {
+  const map = new Map();
+
+  for (const r of rows) {
+    const key = r.CONTRACTOR_ID != null ? r.CONTRACTOR_ID : "none";
+    if (!map.has(key)) {
+      map.set(key, {
+        contractorId: r.CONTRACTOR_ID ?? null,
+        contractorName: r.CONTRACTOR_NAME || "No Contractor",
+        rows: [],
+      });
+    }
+    map.get(key).rows.push(r);
+  }
+
+  // rows arrive already ordered by SORT_ORDER (contractor) then TXN_DATE DESC,
+  // so first-seen insertion order into the Map already respects contractor sort order.
+  return Array.from(map.values()).map((group) => {
+    const sortedRows = [...group.rows].sort(
+      (a, b) => new Date(a.TXN_DATE) - new Date(b.TXN_DATE)
+    );
+    const totalReceived = sortedRows.reduce((s, r) => s + (Number(r.DEBIT) || 0), 0);
+    const totalPayment = sortedRows.reduce((s, r) => s + (Number(r.CREDIT) || 0), 0);
+    return {
+      ...group,
+      rows: sortedRows,
+      totalReceived,
+      totalPayment,
+      net: totalReceived - totalPayment,
+    };
+  });
+}, [rows]);
 
   const handleDownloadCsv = () => {
     if (rows.length === 0 && workerLogs.length === 0) {
@@ -220,15 +264,23 @@ export function ProjectReportPage() {
             Transactions ({rows.length})
           </button>
           <button
-            onClick={() => setActiveTab("workers")}
+            onClick={() => setActiveTab("byContractor")}
             className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "workers"
+              activeTab === "byContractor"
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Worker Hours & Costing ({workerLogs.length})
+            Group by Contractor ({groupedByContractor.length})
           </button>
+          {activeTab === "byContractor" && workerLogs.length > 0 && (
+            <button
+              onClick={scrollToWorkerSection}
+              className="ml-auto text-xs font-medium text-primary hover:underline"
+            >
+              Jump to Worker ↓
+            </button>
+          )}
         </div>
 
         {/* Transactions Tab */}
@@ -365,71 +417,191 @@ export function ProjectReportPage() {
           </div>
         )}
 
-        {/* Worker Hours Tab */}
-        {activeTab === "workers" && (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[800px]">
-                <thead className="bg-muted/30 border-b border-border text-xs text-muted-foreground uppercase">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium">Worker</th>
-                    <th className="px-4 py-3 text-left font-medium">Date</th>
-                    <th className="px-4 py-3 text-left font-medium">Basis</th>
-                    <th className="px-4 py-3 text-right font-medium">Hours</th>
-                    <th className="px-4 py-3 text-right font-medium">Days</th>
-                    <th className="px-4 py-3 text-right font-medium">Rate</th>
-                    <th className="px-4 py-3 text-right font-medium">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-12 text-muted-foreground">
-                        <Loader2 className="inline animate-spin mr-2" size={16} />
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : workerLogs.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-12 text-muted-foreground">
-                        No worker attendance records for this project.
-                      </td>
-                    </tr>
-                  ) : (
-                    workerLogs.map((w) => (
-                      <tr key={w.ATTENDANCE_ID} className="border-b border-border last:border-0 hover:bg-muted/30">
-                        <td className="px-4 py-2.5 text-foreground text-xs">{w.WORKER_NAME}</td>
-                        <td className="px-4 py-2.5 whitespace-nowrap text-xs">{fmtDate(w.ATTENDANCE_DATE)}</td>
-                        <td className="px-4 py-2.5 text-xs">{w.CALC_BASIS}</td>
-                        <td className="px-4 py-2.5 text-right text-xs">{w.HOURS_WORKED ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-right text-xs">{w.DAYS_WORKED ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-right text-xs">
-                          {fmtAmount(w.CALC_BASIS === "HOUR" ? w.RATE_PER_HOUR : w.RATE_PER_DAY)}
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-xs font-semibold">
-                          {w.AMOUNT != null ? (
-                            fmtAmount(w.AMOUNT)
-                          ) : (
-                            <span className="text-red-500 italic">rate missing</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-                {workerLogs.length > 0 && (
-                  <tfoot>
-                    <tr className="bg-muted/30 font-semibold">
-                      <td className="px-4 py-2.5 text-xs" colSpan={3}>Total</td>
-                      <td className="px-4 py-2.5 text-right text-xs">{workerTotals.totalHours}</td>
-                      <td className="px-4 py-2.5 text-right text-xs">{workerTotals.totalDays}</td>
-                      <td className="px-4 py-2.5 text-right text-xs"></td>
-                      <td className="px-4 py-2.5 text-right text-xs">{fmtAmount(workerTotals.totalAmount)}</td>
-                    </tr>
-                  </tfoot>
+        {/* Group by Contractor Tab */}
+        {activeTab === "byContractor" && (
+          <div className="space-y-6">
+            {isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Loader2 className="inline animate-spin mr-2" size={16} />
+                Loading...
+              </div>
+            ) : groupedByContractor.length === 0 && workerLogs.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground border border-border rounded-lg">
+                No approved transactions for this project.
+              </div>
+            ) : (
+              <>
+                {groupedByContractor.map((group) => (
+                  <div
+                    key={group.contractorId ?? "none"}
+                    className="border border-border rounded-lg overflow-hidden"
+                  >
+                    {/* Contractor header + mini totals bar */}
+                    <div className="flex items-center justify-between px-4 py-3 bg-muted/40 border-b border-border">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {group.contractorName}
+                      </h3>
+                      <div className="flex items-center gap-5 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Received: </span>
+                          <strong className="text-green-500">{fmtAmount(group.totalReceived)}</strong>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Payment: </span>
+                          <strong className="text-destructive">{fmtAmount(group.totalPayment)}</strong>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Total: </span>
+                          <strong className={group.net >= 0 ? "text-green-500" : "text-destructive"}>
+                            {fmtAmount(group.net)}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contractor's transactions */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm min-w-[1000px]">
+                        <thead className="bg-muted/20 border-b border-border text-xs text-muted-foreground uppercase">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left font-medium">Date</th>
+                            <th className="px-4 py-2.5 text-right font-medium">Received</th>
+                            <th className="px-4 py-2.5 text-right font-medium">Payment</th>
+                            <th className="px-4 py-2.5 text-left font-medium">Description</th>
+                            <th className="px-4 py-2.5 text-left font-medium">Category</th>
+                            <th className="px-4 py-2.5 text-left font-medium">Matched Address</th>
+                            <th className="px-4 py-2.5 text-left font-medium">Invoice No</th>
+                            <th className="px-4 py-2.5 text-left font-medium">Invoice File</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.rows.map((r) => {
+                            const cat = (r.CATEGORY || "other").toLowerCase();
+                            return (
+                              <tr
+                                key={r.TXN_ID}
+                                className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                              >
+                                <td className="px-4 py-2.5 whitespace-nowrap font-medium text-foreground">
+                                  {fmtDate(r.TXN_DATE)}
+                                </td>
+                                <td className="px-4 py-2.5 text-right font-semibold text-green-500 whitespace-nowrap">
+                                  {r.DEBIT != null ? fmtAmount(r.DEBIT) : "—"}
+                                </td>
+                                <td className="px-4 py-2.5 text-right font-semibold text-destructive whitespace-nowrap">
+                                  {r.CREDIT != null ? fmtAmount(r.CREDIT) : "—"}
+                                </td>
+                                <td className="px-4 py-2.5 max-w-[220px] text-foreground text-xs break-words">
+                                  {r.DESCRIPTION}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span
+                                    className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat] || CATEGORY_STYLES.other}`}
+                                  >
+                                    {cat}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 max-w-[150px] text-xs">
+                                  {r.MATCHED_ADDRESS ? (
+                                    <span className="text-primary font-medium">{r.MATCHED_ADDRESS}</span>
+                                  ) : (
+                                    <span className="text-muted-foreground italic">—</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-2.5 text-foreground text-xs">
+                                  {r.INVOICE_NO || <span className="text-muted-foreground italic">—</span>}
+                                </td>
+                                <td className="px-4 py-2.5 min-w-[130px]">
+                                  {r.INVOICE_FILE_NAME ? (
+                                    <a
+                                      href={`${url}/api/statement/main/${r.TXN_ID}/invoice`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      download={r.INVOICE_FILE_NAME}
+                                      className="flex items-center gap-1 text-primary hover:text-primary/80 text-xs font-medium truncate max-w-[120px]"
+                                      title={r.INVOICE_FILE_NAME}
+                                    >
+                                      <ExternalLink size={12} className="shrink-0" />
+                                      {r.INVOICE_FILE_NAME}
+                                    </a>
+                                  ) : (
+                                    <span className="text-muted-foreground italic text-xs">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Worker Hours & Costing — combined, shown under contractor groups */}
+{workerLogs.length > 0 && (
+  <div ref={workerSectionRef} className="scroll-mt-16 border border-border rounded-lg overflow-hidden">
+    <div className="flex items-center justify-between px-4 py-3 bg-muted/40 border-b border-border">
+      <h3 className="text-sm font-semibold text-foreground">Worker</h3>
+      <div className="flex items-center gap-5 text-xs">
+        <div>
+          <span className="text-muted-foreground">Total Hours: </span>
+          <strong className="text-foreground">{fmtHours(workerTotals.totalHours)}</strong>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Total Cost: </span>
+          <strong className="text-destructive">{fmtAmount(workerTotals.totalAmount)}</strong>
+        </div>
+      </div>
+    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm min-w-[800px]">
+        <thead className="bg-muted/20 border-b border-border text-xs text-muted-foreground uppercase">
+          <tr>
+            <th className="px-4 py-2.5 text-left font-medium">Worker</th>
+            <th className="px-4 py-2.5 text-left font-medium">Date</th>
+            <th className="px-4 py-2.5 text-left font-medium">Basis</th>
+            <th className="px-4 py-2.5 text-right font-medium">Hours</th>
+            <th className="px-4 py-2.5 text-right font-medium">Days</th>
+            <th className="px-4 py-2.5 text-right font-medium">Rate</th>
+            <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {workerLogs.map((w) => (
+            <tr key={w.ATTENDANCE_ID} className="border-b border-border last:border-0 hover:bg-muted/30">
+              <td className="px-4 py-2.5 text-foreground text-xs">{w.WORKER_NAME}</td>
+              <td className="px-4 py-2.5 whitespace-nowrap text-xs">{fmtDate(w.ATTENDANCE_DATE)}</td>
+              <td className="px-4 py-2.5 text-xs">{w.CALC_BASIS}</td>
+              <td className="px-4 py-2.5 text-right text-xs">{fmtHours(w.HOURS_WORKED)}</td>
+              <td className="px-4 py-2.5 text-right text-xs">{w.DAYS_WORKED ?? "—"}</td>
+              <td className="px-4 py-2.5 text-right text-xs">
+                {fmtAmount(w.CALC_BASIS === "HOUR" ? w.RATE_PER_HOUR : w.RATE_PER_DAY)}
+              </td>
+              <td className="px-4 py-2.5 text-right text-xs font-semibold">
+                {w.AMOUNT != null ? (
+                  fmtAmount(w.AMOUNT)
+                ) : (
+                  <span className="text-red-500 italic">rate missing</span>
                 )}
-              </table>
-            </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        {/* <tfoot>
+          <tr className="bg-muted/30 font-semibold">
+            <td className="px-4 py-2.5 text-xs" colSpan={3}>Total</td>
+            <td className="px-4 py-2.5 text-right text-xs">{fmtHours(workerTotals.totalHours)}</td>
+            <td className="px-4 py-2.5 text-right text-xs">{workerTotals.totalDays}</td>
+            <td className="px-4 py-2.5 text-right text-xs"></td>
+            <td className="px-4 py-2.5 text-right text-xs">{fmtAmount(workerTotals.totalAmount)}</td>
+          </tr>
+        </tfoot> */}
+      </table>
+    </div>
+  </div>
+)}
+              </>
+            )}
           </div>
         )}
       </div>
