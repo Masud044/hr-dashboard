@@ -37,6 +37,28 @@ export function useStatementMutations() {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to delete invoice."),
   });
 
+  const updateMainRowMutation = useMutation({
+    mutationFn: async (payload) => axios.put(`${url}/api/statement/main/row`, payload),
+    onSuccess: invalidateMain,
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to update row."),
+  });
+
+  const uploadMainInvoiceMutation = useMutation({
+    mutationFn: async ({ txnId, file }) => {
+      const fd = new FormData();
+      fd.append("invoiceFile", file);
+      return axios.post(`${url}/api/statement/main/${txnId}/invoice`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+    },
+    onSuccess: () => { toast.success("Invoice uploaded."); invalidateMain(); },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to upload invoice."),
+  });
+
+  const deleteMainInvoiceMutation = useMutation({
+    mutationFn: async (txnId) => axios.delete(`${url}/api/statement/main/${txnId}/invoice`),
+    onSuccess: () => { toast.success("Invoice file deleted."); invalidateMain(); },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete invoice."),
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (stagingId) => axios.post(`${url}/api/statement/approve`, { stagingIds: [stagingId] }),
     onSuccess: (res) => {
@@ -63,8 +85,9 @@ export function useStatementMutations() {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to add entry."),
   });
 
-  return {
+ return {
     updateRowMutation, uploadInvoiceMutation, deleteInvoiceMutation,
     approveMutation, disapproveMutation, addNonBankingMutation,
+    updateMainRowMutation, uploadMainInvoiceMutation, deleteMainInvoiceMutation, // ADDED
   };
 }

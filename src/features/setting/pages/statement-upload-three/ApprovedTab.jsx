@@ -1,22 +1,54 @@
 // src/features/setting/pages/statement-upload-three/ApprovedTab.jsx
 import React, { useState, useMemo } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Download, ExternalLink, Loader2, RotateCcw } from "lucide-react";
+import { CheckCircle2, Download, ExternalLink, Loader2, Paperclip, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import Combobox from "./Combobox";
 import FilterBar from "./FilterBar";
 import Pagination from "./Pagination";
 import DisapproveModal from "./modals/DisapproveModal";
+import DeleteInvoiceModal from "./modals/DeleteInvoiceModal";
 import { url, EMPTY_FILTERS, PAGE_SIZE, CATEGORY_STYLES, fmtDate, fmtAmount, downloadCsv } from "./constants";
 
 export default function ApprovedTab({ projectOptions, contractorOptions, mutations }) {
-  const { disapproveMutation } = mutations;
+  const { disapproveMutation, updateMainRowMutation, uploadMainInvoiceMutation, deleteMainInvoiceMutation } = mutations;
 
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
   const [disapproveTarget, setDisapproveTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  const projectOpts = useMemo(
+    () => projectOptions.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
+    [projectOptions]
+  );
+  const contractorOpts = useMemo(
+    () => contractorOptions.map((c) => ({ value: String(c.CONTRATOR_ID), label: c.CONTRATOR_NAME })),
+    [contractorOptions]
+  );
+
+const handleProjectChange = (txnId, pId, projectName) =>
+    updateMainRowMutation.mutate({ txnId, pId: pId || null, projectName: projectName || null });
+  const handleContractorChange = (txnId, contractorId, contractorName) =>
+    updateMainRowMutation.mutate({ txnId, contractorId: contractorId || null, contractorName: contractorName || null });
+  const handleInvoiceNoBlur = (txnId, value) => updateMainRowMutation.mutate({ txnId, invoiceNo: value });
+  const handleRemarksBlur = (txnId, value) => updateMainRowMutation.mutate({ txnId, remarks: value });
+  const handleCategoryChange = (txnId, value) => updateMainRowMutation.mutate({ txnId, category: value });
+  const handleInvoiceFileSelect = (txnId, fileList) => {
+    const f = fileList?.[0];
+    if (!f) return;
+    if (f.size > 20 * 1024 * 1024) { toast.error(`"${f.name}" exceeds 20 MB limit.`); return; }
+    uploadMainInvoiceMutation.mutate({ txnId, file: f });
+  };
+  const handleDeleteInvoiceClick = (txnId, fileName) => setDeleteTarget({ stagingId: txnId, fileName });
+  const confirmDeleteInvoice = (txnId) => {
+    deleteMainInvoiceMutation.mutate(txnId, { onSuccess: () => setDeleteTarget(null) });
+  };
 
   const queryParams = useMemo(() => ({
     ...appliedFilters, page, pageSize: PAGE_SIZE,
@@ -112,29 +144,77 @@ export default function ApprovedTab({ projectOptions, contractorOptions, mutatio
                         {r.CREDIT != null ? `$${Number(r.CREDIT).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "—"}
                       </td>
                       <td className="px-4 py-2.5 max-w-[220px] text-gray-700 text-xs break-words">{r.DESCRIPTION}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[cat] || CATEGORY_STYLES.other}`}>{cat}</span>
+                      <td className="px-4 py-2.5 min-w-[110px]">
+                        <Select value={cat} onValueChange={(v) => handleCategoryChange(r.TXN_ID, v)}>
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue><span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat]}`}>{cat}</span></SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="address">Address</SelectItem>
+                            <SelectItem value="place">Place</SelectItem>
+                            <SelectItem value="product">Product</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="px-4 py-2.5">
                         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.SOURCE_TYPE === "NON_BANKING" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
                           {r.SOURCE_TYPE === "NON_BANKING" ? "Non-Banking" : "Banking"}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700 text-xs">{r.PROJECT_NAME || <span className="text-gray-400 italic">—</span>}</td>
-                      <td className="px-4 py-2.5 text-gray-700 text-xs">{r.CONTRACTOR_NAME || <span className="text-gray-400 italic">—</span>}</td>
-                      <td className="px-4 py-2.5 text-gray-700 text-xs">{r.INVOICE_NO || <span className="text-gray-400 italic">—</span>}</td>
-                      <td className="px-4 py-2.5 text-gray-700 text-xs">{r.REMARKS || <span className="text-gray-400 italic">—</span>}</td>
+                      <td className="px-4 py-2.5 min-w-[170px]">
+                        <Combobox
+                          options={projectOpts}
+                          value={r.P_ID ? String(r.P_ID) : ""}
+                          onChange={(pId) => {
+                            const proj = projectOpts.find((p) => p.value === pId);
+                            handleProjectChange(r.TXN_ID, pId || null, proj?.label || null);
+                          }}
+                          placeholder="Select project"
+                          searchPlaceholder="Search projects..."
+                        />
+                      </td>
+                      <td className="px-4 py-2.5 min-w-[170px]">
+                        <Combobox
+                          options={contractorOpts}
+                          value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
+                          onChange={(cId) => {
+                            const c = contractorOpts.find((x) => x.value === cId);
+                            handleContractorChange(r.TXN_ID, cId || null, c?.label || null);
+                          }}
+                          placeholder="Select contractor"
+                          searchPlaceholder="Search contractors..."
+                        />
+                      </td>
+                      <td className="px-4 py-2.5 min-w-[100px]">
+                        <Input defaultValue={r.INVOICE_NO || ""} placeholder="Inv no." className="h-7 text-xs"
+                          onBlur={(e) => handleInvoiceNoBlur(r.TXN_ID, e.target.value)} />
+                      </td>
+                      <td className="px-4 py-2.5 min-w-[120px]">
+                        <Input defaultValue={r.REMARKS || ""} placeholder="Remarks" className="h-7 text-xs"
+                          onBlur={(e) => handleRemarksBlur(r.TXN_ID, e.target.value)} />
+                      </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-gray-500 text-xs">{fmtDate(r.APPROVED_DATE)}</td>
-                      <td className="px-4 py-2.5 min-w-[130px]">
+                     <td className="px-4 py-2.5 min-w-[140px]">
                         {r.INVOICE_FILE_NAME ? (
-                          <a href={`${url}/api/statement/main/${r.TXN_ID}/invoice`} target="_blank" rel="noreferrer"
-                            download={r.INVOICE_FILE_NAME}
-                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[120px]"
-                            title={r.INVOICE_FILE_NAME}>
-                            <ExternalLink size={12} className="shrink-0" />{r.INVOICE_FILE_NAME}
-                          </a>
+                          <div className="flex items-center gap-1.5">
+                            <a href={`${url}/api/statement/main/${r.TXN_ID}/invoice`} target="_blank" rel="noreferrer"
+                              download={r.INVOICE_FILE_NAME}
+                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[90px]"
+                              title={r.INVOICE_FILE_NAME}>
+                              <ExternalLink size={12} className="shrink-0" />{r.INVOICE_FILE_NAME}
+                            </a>
+                            <button onClick={() => handleDeleteInvoiceClick(r.TXN_ID, r.INVOICE_FILE_NAME)}
+                              className="text-red-500 hover:text-red-700 shrink-0" title="Delete invoice">
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         ) : (
-                          <span className="text-gray-400 italic text-xs">—</span>
+                          <label className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 cursor-pointer">
+                            <Paperclip size={12} /> Attach
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden"
+                              onChange={(e) => handleInvoiceFileSelect(r.TXN_ID, e.target.files)} />
+                          </label>
                         )}
                       </td>
                       <td className="px-4 py-2.5 min-w-[110px]">
@@ -164,6 +244,7 @@ export default function ApprovedTab({ projectOptions, contractorOptions, mutatio
         onConfirm={(txnId) => { disapproveMutation.mutate(txnId); setDisapproveTarget(null); }}
         isPending={disapproveMutation.isPending}
       />
+      <DeleteInvoiceModal target={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteInvoice} isPending={deleteMainInvoiceMutation.isPending} />
     </>
   );
 }
