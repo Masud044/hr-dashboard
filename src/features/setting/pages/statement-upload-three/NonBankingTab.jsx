@@ -15,6 +15,7 @@ import StagingRow from "./StagingRow";
 import DeleteInvoiceModal from "./modals/DeleteInvoiceModal";
 import ApproveModal from "./modals/ApproveModal";
 import { url, EMPTY_FILTERS, EMPTY_NB, PAGE_SIZE, downloadCsv } from "./constants";
+import { toSortedOpts } from "@/lib/utils";
 
 export default function NonBankingTab({ projectOptions, contractorOptions, projectOpts, contractorOpts, mutations }) {
   const { updateRowMutation, uploadInvoiceMutation, deleteInvoiceMutation, approveMutation, addNonBankingMutation } = mutations;
@@ -30,6 +31,10 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
   const queryParams = useMemo(() => ({
     sourceType: "NON_BANKING", ...appliedFilters, page, pageSize: PAGE_SIZE,
   }), [appliedFilters, page]);
+   const sortedContractorOptions = useMemo(
+    () => [...contractorOptions].sort((a, b) => a.CONTRATOR_NAME.localeCompare(b.CONTRATOR_NAME)),
+    [contractorOptions]
+  );
 
   const { data: result, isLoading, isFetching } = useQuery({
     queryKey: ["statementStagingAll", "NON_BANKING", queryParams],
@@ -128,7 +133,7 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
               }}
               className="h-8 text-xs" />
           </div>
-          <div>
+          {/* <div>
             <label className="text-xs text-gray-500 mb-1 block">Category</label>
             <Select value={nbForm.category} onValueChange={(v) => setNbForm((p) => ({ ...p, category: v }))}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -139,7 +144,7 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
           <div className="col-span-2">
             <label className="text-xs text-gray-500 mb-1 block">Description *</label>
             <Input placeholder="Description" value={nbForm.description}
@@ -161,7 +166,7 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select contractor" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="NONE">None</SelectItem>
-                {contractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}
+                {sortedContractorOptions.map((c) => <SelectItem key={c.CONTRATOR_ID} value={String(c.CONTRATOR_ID)}>{c.CONTRATOR_NAME}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -193,7 +198,7 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
         onClear={() => { setAppliedFilters(EMPTY_FILTERS); setPage(1); }}
         projectOptions={projectOptions}
         contractorOptions={contractorOptions}
-        showCategory
+        // showCategory
       />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -214,9 +219,9 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
             <StagingThead />
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={11} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                <tr><td colSpan={10} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={11} className="text-center py-10 text-gray-400">No rows found.</td></tr>
+                <tr><td colSpan={10} className="text-center py-10 text-gray-400">No rows found.</td></tr>
               ) : (
                 rows.map((r) => (
                   <StagingRow

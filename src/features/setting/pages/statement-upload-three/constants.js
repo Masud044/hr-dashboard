@@ -1,4 +1,8 @@
+
+
 // src/features/setting/pages/statement-upload-three/constants.js
+
+import { format, isValid } from "date-fns";
 export const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export const CATEGORY_STYLES = {
@@ -26,16 +30,22 @@ export const EMPTY_FILTERS = {
 
 export const PAGE_SIZE = 50;
 
+// export const fmtDate = (val) => {
+//   if (!val) return "—";
+//   const d = new Date(val);
+//   if (isNaN(d.getTime())) return "—";
+//   const dd = String(d.getDate()).padStart(2, "0");
+//   const mm = String(d.getMonth() + 1).padStart(2, "0");
+//   const yyyy = d.getFullYear();
+//   return `${dd}/${mm}/${yyyy}`;
+// };
+
 export const fmtDate = (val) => {
   if (!val) return "—";
   const d = new Date(val);
-  if (isNaN(d.getTime())) return "—";
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  if (!isValid(d)) return "—";
+  return format(d, "dd-MM-yyyy EEE");
 };
-
 export const fmtAmount = (amt) => {
   const n = Number(amt) || 0;
   const f = Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -43,14 +53,14 @@ export const fmtAmount = (amt) => {
 };
 
 function buildCsv(dataRows) {
-  const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Category", "Project", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
+  const headers = ["Date", "Amount", "Debit", "Credit", "Description", /* "Category", */ "Project", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
   const csvRows = dataRows.map((r) => [
     fmtDate(r.TXN_DATE),
     r.AMOUNT,
     r.DEBIT ?? "",
     r.CREDIT ?? "",
     `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
-    r.CATEGORY,
+    // r.CATEGORY,
     `"${(r.PROJECT_NAME || "").replace(/"/g, '""')}"`,
     `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
     `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,

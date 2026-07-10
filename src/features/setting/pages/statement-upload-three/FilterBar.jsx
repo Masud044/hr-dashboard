@@ -7,6 +7,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import DateInput from "./DateInput";
 import Combobox from "./Combobox";
 import { EMPTY_FILTERS } from "./constants";
+import { toSortedOpts } from "@/lib/utils";
 
 const FilterBar = React.memo(function FilterBar({
   initialFilters, onApply, onClear, projectOptions, contractorOptions, showStatus, showCategory,
@@ -28,10 +29,10 @@ const FilterBar = React.memo(function FilterBar({
     () => projectOptions.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
     [projectOptions]
   );
-  const contractorOpts = useMemo(
-    () => contractorOptions.map((c) => ({ value: String(c.CONTRATOR_ID), label: c.CONTRATOR_NAME })),
-    [contractorOptions]
-  );
+ const contractorOpts = useMemo(
+  () => toSortedOpts(contractorOptions, "CONTRATOR_ID", "CONTRATOR_NAME"),
+  [contractorOptions]
+);
 
   const handleSearch = () => onApply(draft);
   const handleClear = () => { setDraft(EMPTY_FILTERS); onClear(); };

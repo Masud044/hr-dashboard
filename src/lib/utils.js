@@ -1,5 +1,7 @@
+// src\lib\utils.js
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge"
+import { format, parseISO, isValid } from "date-fns";
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -42,4 +44,26 @@ export function getPageNumbers(currentPage, totalPages) {
   }
 
   return rangeWithDots
+}
+
+
+
+
+// Sort a list alphabetically by name field and map to {value, label} select options
+export function toSortedOpts(list, idField, nameField) {
+  return [...list]
+    .sort((a, b) => a[nameField].localeCompare(b[nameField]))
+    .map((item) => ({ value: String(item[idField]), label: item[nameField] }));
+}
+
+
+
+// Format a date as dd-mm-yyyy Day(Ddd), e.g. "01-12-2025 Mon"
+export function formatDateWithDay(dateInput) {
+  if (!dateInput) return "—";
+
+  const d = typeof dateInput === "string" ? parseISO(dateInput) : new Date(dateInput);
+  if (!isValid(d)) return "—";
+
+  return format(d, "dd-MM-yyyy EEE");
 }

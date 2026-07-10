@@ -13,7 +13,7 @@ const StagingRow = React.memo(function StagingRow({
   onCategoryChange, onInvoiceFileSelect, onDeleteInvoiceClick, onApproveClick,
 }) {
   const r = row;
-  const cat = (r.CATEGORY || "other").toLowerCase();
+  // const cat = (r.CATEGORY || "other").toLowerCase();
   const approved = r.STATUS === "APPROVED";
 
   return (
@@ -28,7 +28,7 @@ const StagingRow = React.memo(function StagingRow({
         {fmtAmount(r.AMOUNT)}
       </td>
       <td className="px-4 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">{r.DESCRIPTION}</td>
-      <td className="px-4 py-2.5 min-w-[110px]">
+      {/* <td className="px-4 py-2.5 min-w-[110px]">
         <Select value={cat} onValueChange={(v) => !approved && onCategoryChange(r.STAGING_ID, v)} disabled={approved}>
           <SelectTrigger className="h-7 text-xs">
             <SelectValue><span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat]}`}>{cat}</span></SelectValue>
@@ -40,7 +40,7 @@ const StagingRow = React.memo(function StagingRow({
             <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
-      </td>
+      </td> */}
       <td className="px-4 py-2.5 min-w-[170px]">
         <Combobox
           options={projectOpts}

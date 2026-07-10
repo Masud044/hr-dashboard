@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { format, parseISO } from "date-fns";
 import {
   flexRender,
   getCoreRowModel,
@@ -155,9 +156,11 @@ export function CalendarTable() {
           DATE <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       ),
-      cell: ({ row }) => (
-        <div className="ml-3 font-medium tabular-nums">{row.getValue("DAY")}</div>
-      ),
+     cell: ({ row }) => (
+  <div className="ml-3 font-medium tabular-nums">
+    {format(parseISO(row.getValue("DAY")), "dd-MM-yyyy")}
+  </div>
+),
     },
     {
       accessorKey: "DAY_NAME",
