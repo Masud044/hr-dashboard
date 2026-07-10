@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import Combobox from "./Combobox";
 import { CATEGORY_STYLES, STATUS_STYLES, fmtDate, fmtAmount, url } from "./constants";
+import { useStagingSelectionStore } from "./useStagingSelectionStore";
 
 const StagingRow = React.memo(function StagingRow({
   row, projectOpts, contractorOpts, isApproving,
@@ -16,8 +17,21 @@ const StagingRow = React.memo(function StagingRow({
   // const cat = (r.CATEGORY || "other").toLowerCase();
   const approved = r.STATUS === "APPROVED";
 
+  const selectedStagingId = useStagingSelectionStore((s) => s.selectedStagingId);
+  const setSelectedStagingId = useStagingSelectionStore((s) => s.setSelectedStagingId);
+  const isSelected = selectedStagingId === r.STAGING_ID;
+
+  const rowClass = approved
+    ? `bg-green-50 opacity-70 ${isSelected ? "border-l-4 border-l-yellow-700" : ""}`
+    : isSelected
+      ? "bg-yellow-200/60 border-l-4 border-l-blue-500"
+      : "hover:bg-gray-50";
+
   return (
-    <tr className={`border-b last:border-0 ${approved ? "bg-green-50 opacity-70" : "hover:bg-gray-50"}`}>
+    <tr
+      onClick={() => setSelectedStagingId(r.STAGING_ID)}
+      className={`border-b last:border-0 cursor-pointer ${rowClass}`}
+    >
       <td className="px-4 py-2.5">
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLES[r.STATUS] || STATUS_STYLES.PENDING}`}>
           {r.STATUS || "PENDING"}

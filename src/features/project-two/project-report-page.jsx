@@ -461,16 +461,18 @@ const scrollToWorkerSection = () => {
 
                     {/* Contractor's transactions */}
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm min-w-[1000px]">
+                      <table className="w-full text-sm min-w-[1200px]">
                         <thead className="bg-muted/20 border-b border-border text-xs text-muted-foreground uppercase">
                           <tr>
                             <th className="px-4 py-2.5 text-left font-medium">Date</th>
                             <th className="px-4 py-2.5 text-right font-medium">Received</th>
                             <th className="px-4 py-2.5 text-right font-medium">Payment</th>
                             <th className="px-4 py-2.5 text-left font-medium">Description</th>
-                            <th className="px-4 py-2.5 text-left font-medium">Category</th>
-                            <th className="px-4 py-2.5 text-left font-medium">Matched Address</th>
+                            
                             <th className="px-4 py-2.5 text-left font-medium">Invoice No</th>
+                            <th className="px-4 py-2.5 text-left font-medium">Source</th>
+<th className="px-4 py-2.5 text-left font-medium">Remarks</th>
+<th className="px-4 py-2.5 text-left font-medium">Approved Date</th>
                             <th className="px-4 py-2.5 text-left font-medium">Invoice File</th>
                           </tr>
                         </thead>
@@ -494,23 +496,31 @@ const scrollToWorkerSection = () => {
                                 <td className="px-4 py-2.5 max-w-[220px] text-foreground text-xs break-words">
                                   {r.DESCRIPTION}
                                 </td>
-                                <td className="px-4 py-2.5">
-                                  <span
-                                    className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat] || CATEGORY_STYLES.other}`}
-                                  >
-                                    {cat}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-2.5 max-w-[150px] text-xs">
-                                  {r.MATCHED_ADDRESS ? (
-                                    <span className="text-primary font-medium">{r.MATCHED_ADDRESS}</span>
-                                  ) : (
-                                    <span className="text-muted-foreground italic">—</span>
-                                  )}
-                                </td>
+                                
+                              
                                 <td className="px-4 py-2.5 text-foreground text-xs">
                                   {r.INVOICE_NO || <span className="text-muted-foreground italic">—</span>}
                                 </td>
+
+                                   
+                                <td className="px-4 py-2.5">
+                                  <span
+                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                      r.SOURCE_TYPE === "NON_BANKING"
+                                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                                        : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                    }`}
+                                  >
+                                    {r.SOURCE_TYPE === "NON_BANKING" ? "Non-Banking" : "Banking"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-foreground text-xs">
+                                  {r.REMARKS || <span className="text-muted-foreground italic">—</span>}
+                                </td>
+                                <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground text-xs">
+                                  {fmtDate(r.APPROVED_DATE)}
+                                </td>
+                                
                                 <td className="px-4 py-2.5 min-w-[130px]">
                                   {r.INVOICE_FILE_NAME ? (
                                     <a
