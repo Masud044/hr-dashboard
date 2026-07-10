@@ -11,6 +11,7 @@ import NonBankingTab from "./NonBankingTab";
 import ApprovedTab from "./ApprovedTab";
 import { useStatementMutations } from "./useStatementMutations";
 import { url } from "./constants";
+import { toSortedOpts } from "@/lib/utils";
 
 const MainTabBtn = React.memo(function MainTabBtn({ id, label, icon: Icon, active, onClick }) {
   return (
@@ -67,11 +68,15 @@ export default function StatementUploadThree() {
     () => projectOptions.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
     [projectOptions]
   );
-  const contractorOpts = useMemo(
-    () => contractorOptions.map((c) => ({ value: String(c.CONTRATOR_ID), label: c.CONTRATOR_NAME })),
-    [contractorOptions]
-  );
+  // const contractorOpts = useMemo(
+  //   () => contractorOptions.map((c) => ({ value: String(c.CONTRATOR_ID), label: c.CONTRATOR_NAME })),
+  //   [contractorOptions]
+  // );
 
+  const contractorOpts = useMemo(
+  () => toSortedOpts(contractorOptions, "CONTRATOR_ID", "CONTRATOR_NAME"),
+  [contractorOptions]
+);
   return (
     <SectionContainer>
       <div className="p-6 bg-white shadow rounded-lg mt-8">

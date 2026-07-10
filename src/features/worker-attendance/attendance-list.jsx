@@ -23,6 +23,7 @@ import {
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import { AttendanceFormSheet } from "./attendance-form-sheet";
 import { useNavigate } from "react-router-dom";
+import { formatDateWithDay } from "@/lib/utils";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -127,6 +128,13 @@ const handleEdit = (row) => {
 
   const columns = [
     {
+  accessorKey: "ATTENDANCE_DATE",
+  header: "Date",
+  cell: ({ row }) => (
+    <div className="text-sm">{formatDateWithDay(row.getValue("ATTENDANCE_DATE"))}</div>
+  ),
+},
+    {
       accessorKey: "WORKER_ID",
       header: "Worker",
       cell: ({ row }) => (
@@ -144,11 +152,7 @@ const handleEdit = (row) => {
         </div>
       ),
     },
-    {
-      accessorKey: "ATTENDANCE_DATE",
-      header: "Date",
-      cell: ({ row }) => <div className="text-sm">{row.getValue("ATTENDANCE_DATE") || "—"}</div>,
-    },
+   
     {
       accessorKey: "CALC_BASIS",
       header: "Calc Basis",
