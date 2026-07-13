@@ -12,9 +12,9 @@ const StagingThead = React.memo(function StagingThead() {
         {/* <th className="px-4 py-3 text-left">Category</th> */}
         <th className="px-4 py-3 text-left">Project</th>
         <th className="px-4 py-3 text-left">Contractor</th>
-        <th className="px-4 py-3 text-left">Invoice No</th>
-        <th className="px-4 py-3 text-left">Remarks</th>
-        <th className="px-4 py-3 text-left">Invoice File</th>
+  <th className="px-4 py-3 text-left">Remarks</th>
+<th className="px-4 py-3 text-left">Invoice</th>
+        {/* <th className="px-4 py-3 text-left">Invoice File</th> */}
         <th className="px-4 py-3 text-left">Action</th>
       </tr>
     </thead>

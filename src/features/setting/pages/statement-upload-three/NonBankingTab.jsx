@@ -219,9 +219,9 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
             <StagingThead />
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={10} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                <tr><td colSpan={9} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={10} className="text-center py-10 text-gray-400">No rows found.</td></tr>
+                <tr><td colSpan={9} className="text-center py-10 text-gray-400">No rows found.</td></tr>
               ) : (
                 rows.map((r) => (
                   <StagingRow
