@@ -36,6 +36,15 @@ import {
   downloadCsv,
 } from "./constants";
 import { useStagingSelectionStore } from "./useStagingSelectionStore";
+import InvoiceCell from "./InvoiceCell";
+
+// ── ADD THIS BLOCK HERE, before the component definition ──
+const INTERACTIVE_SELECTOR =
+  'input, textarea, button, a, select, [role="combobox"], [role="button"], [data-radix-popper-content-wrapper], [cmdk-root]';
+
+function isInteractiveClick(e) {
+  return !!e.target.closest(INTERACTIVE_SELECTOR);
+}
 export default function ApprovedTab({
   projectOptions,
   contractorOptions,
@@ -47,8 +56,12 @@ export default function ApprovedTab({
     uploadMainInvoiceMutation,
     deleteMainInvoiceMutation,
   } = mutations;
-  const selectedStagingId = useStagingSelectionStore((s) => s.selectedStagingId);
-const setSelectedStagingId = useStagingSelectionStore((s) => s.setSelectedStagingId);
+  const selectedStagingId = useStagingSelectionStore(
+    (s) => s.selectedStagingId,
+  );
+  const setSelectedStagingId = useStagingSelectionStore(
+    (s) => s.setSelectedStagingId,
+  );
 
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -210,24 +223,25 @@ const setSelectedStagingId = useStagingSelectionStore((s) => s.setSelectedStagin
                 <th className="px-4 py-3 text-left">Source</th>
                 <th className="px-4 py-3 text-left">Project</th>
                 <th className="px-4 py-3 text-left">Contractor</th>
-                <th className="px-4 py-3 text-left">Invoice No</th>
+                {/* <th className="px-4 py-3 text-left">Invoice No</th> */}
                 <th className="px-4 py-3 text-left">Remarks</th>
                 <th className="px-4 py-3 text-left">Approved Date</th>
-                <th className="px-4 py-3 text-left">Invoice File</th>
+                {/* <th className="px-4 py-3 text-left">Invoice File</th> */}
+                <th className="px-4 py-3 text-left">Invoice</th>
                 <th className="px-4 py-3 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={13} className="text-center py-10 text-gray-400">
+                  <td colSpan={11} className="text-center py-10 text-gray-400">
                     <Loader2 className="inline animate-spin mr-2" size={16} />
                     Loading...
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="text-center py-10 text-gray-400">
+                  <td colSpan={11} className="text-center py-10 text-gray-400">
                     No approved transactions yet.
                   </td>
                 </tr>
@@ -237,10 +251,13 @@ const setSelectedStagingId = useStagingSelectionStore((s) => s.setSelectedStagin
                   const isSelected = selectedStagingId === r.TXN_ID;
                   return (
                     <tr
-  key={r.TXN_ID}
-  onClick={() => setSelectedStagingId(r.TXN_ID)}
-  className={`border-b last:border-0 cursor-pointer ${isSelected ? "bg-yellow-200/60 border-l-4 border-l-yellow-700" : "hover:bg-gray-50"}`}
->
+                      key={r.TXN_ID}
+                      onClick={(e) => {
+        if (isInteractiveClick(e)) return;
+        setSelectedStagingId(r.TXN_ID);
+      }}
+                      className={`border-b last:border-0 cursor-pointer ${isSelected ? "bg-yellow-200/60 border-l-4 border-l-yellow-700" : "hover:bg-gray-50"}`}
+                    >
                       <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
                         {fmtDate(r.TXN_DATE)}
                       </td>
@@ -331,7 +348,7 @@ const setSelectedStagingId = useStagingSelectionStore((s) => s.setSelectedStagin
                           searchPlaceholder="Search contractors..."
                         />
                       </td>
-                      <td className="px-4 py-2.5 min-w-[100px]">
+                      {/* <td className="px-4 py-2.5 min-w-[100px]">
                         <Input
                           defaultValue={r.INVOICE_NO || ""}
                           placeholder="Inv no."
@@ -397,6 +414,23 @@ const setSelectedStagingId = useStagingSelectionStore((s) => s.setSelectedStagin
                             />
                           </label>
                         )}
+                      </td> */}
+
+                      <td className="px-4 py-2.5 min-w-[120px]">
+                        <Input
+                          defaultValue={r.REMARKS || ""}
+                          placeholder="Remarks"
+                          className="h-7 text-xs"
+                          onBlur={(e) =>
+                            handleRemarksBlur(r.TXN_ID, e.target.value)
+                          }
+                        />
+                      </td>
+                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-500 text-xs">
+                        {fmtDate(r.APPROVED_DATE)}
+                      </td>
+                      <td className="px-4 py-2.5 min-w-[160px]">
+                        <InvoiceCell parentType="main" parentId={r.TXN_ID} />
                       </td>
                       <td className="px-4 py-2.5 min-w-[110px]">
                         <Button

@@ -7,6 +7,18 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import Combobox from "./Combobox";
 import { CATEGORY_STYLES, STATUS_STYLES, fmtDate, fmtAmount, url } from "./constants";
 import { useStagingSelectionStore } from "./useStagingSelectionStore";
+import InvoiceCell from "./InvoiceCell";
+
+// A click on any of these (or their descendants) is "interacting with a
+// control", not "selecting the row" — skip the row toggle in that case.
+// Using closest() means this covers every current AND future editable
+// cell without needing per-cell stopPropagation calls.
+const INTERACTIVE_SELECTOR =
+  'input, textarea, button, a, select, [role="combobox"], [role="button"], [data-radix-popper-content-wrapper], [cmdk-root]';
+
+function isInteractiveClick(e) {
+  return !!e.target.closest(INTERACTIVE_SELECTOR);
+}
 
 const StagingRow = React.memo(function StagingRow({
   row, projectOpts, contractorOpts, isApproving,
@@ -29,7 +41,10 @@ const StagingRow = React.memo(function StagingRow({
 
   return (
     <tr
-      onClick={() => setSelectedStagingId(r.STAGING_ID)}
+      onClick={(e) => {
+        if (isInteractiveClick(e)) return;
+        setSelectedStagingId(r.STAGING_ID);
+      }}
       className={`border-b last:border-0 cursor-pointer ${rowClass}`}
     >
       <td className="px-4 py-2.5">
@@ -42,19 +57,6 @@ const StagingRow = React.memo(function StagingRow({
         {fmtAmount(r.AMOUNT)}
       </td>
       <td className="px-4 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">{r.DESCRIPTION}</td>
-      {/* <td className="px-4 py-2.5 min-w-[110px]">
-        <Select value={cat} onValueChange={(v) => !approved && onCategoryChange(r.STAGING_ID, v)} disabled={approved}>
-          <SelectTrigger className="h-7 text-xs">
-            <SelectValue><span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat]}`}>{cat}</span></SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="address">Address</SelectItem>
-            <SelectItem value="place">Place</SelectItem>
-            <SelectItem value="product">Product</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </td> */}
       <td className="px-4 py-2.5 min-w-[170px]">
         <Combobox
           options={projectOpts}
@@ -81,37 +83,12 @@ const StagingRow = React.memo(function StagingRow({
           disabled={approved}
         />
       </td>
-      <td className="px-4 py-2.5 min-w-[100px]">
-        <Input defaultValue={r.INVOICE_NO || ""} placeholder="Inv no." className="h-7 text-xs"
-          disabled={approved} onBlur={(e) => !approved && onInvoiceNoBlur(r.STAGING_ID, e.target.value)} />
-      </td>
       <td className="px-4 py-2.5 min-w-[120px]">
         <Input defaultValue={r.REMARKS || ""} placeholder="Remarks" className="h-7 text-xs"
           disabled={approved} onBlur={(e) => !approved && onRemarksBlur(r.STAGING_ID, e.target.value)} />
       </td>
-      <td className="px-4 py-2.5 min-w-[140px]">
-        {r.INVOICE_FILE_NAME ? (
-          <div className="flex items-center gap-1.5">
-            <a href={`${url}/api/statement/staging/${r.STAGING_ID}/invoice`} target="_blank" rel="noreferrer"
-              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium truncate max-w-[90px]" title={r.INVOICE_FILE_NAME}>
-              <ExternalLink size={12} className="shrink-0" />{r.INVOICE_FILE_NAME}
-            </a>
-            {!approved && (
-              <button onClick={() => onDeleteInvoiceClick(r.STAGING_ID, r.INVOICE_FILE_NAME)}
-                className="text-red-500 hover:text-red-700 shrink-0" title="Delete invoice">
-                <Trash2 size={12} />
-              </button>
-            )}
-          </div>
-        ) : approved ? (
-          <span className="text-gray-400 italic text-xs">—</span>
-        ) : (
-          <label className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 cursor-pointer">
-            <Paperclip size={12} /> Attach
-            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden"
-              onChange={(e) => onInvoiceFileSelect(r.STAGING_ID, e.target.files)} />
-          </label>
-        )}
+      <td className="px-4 py-2.5 min-w-[160px]">
+        <InvoiceCell parentType="staging" parentId={r.STAGING_ID} />
       </td>
       <td className="px-4 py-2.5 min-w-[110px]">
         {!approved ? (
