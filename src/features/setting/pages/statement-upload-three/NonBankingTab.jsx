@@ -17,7 +17,7 @@ import ApproveModal from "./modals/ApproveModal";
 import { url, EMPTY_FILTERS, EMPTY_NB, PAGE_SIZE, downloadCsv } from "./constants";
 import { toSortedOpts } from "@/lib/utils";
 
-export default function NonBankingTab({ projectOptions, contractorOptions, projectOpts, contractorOpts, mutations }) {
+export default function NonBankingTab({ projectOptions, contractorOptions, projectOpts, contractorOpts, mutations, sortBy = "txnDate" }) {
   const { updateRowMutation, uploadInvoiceMutation, deleteInvoiceMutation, approveMutation, addNonBankingMutation } = mutations;
 
   const [nbForm, setNbForm] = useState(EMPTY_NB);
@@ -29,8 +29,8 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
   const [exporting, setExporting] = useState(false);
 
   const queryParams = useMemo(() => ({
-    sourceType: "NON_BANKING", ...appliedFilters, page, pageSize: PAGE_SIZE,
-  }), [appliedFilters, page]);
+    sourceType: "NON_BANKING", ...appliedFilters, status: sortBy === "recent" ? "PENDING" : appliedFilters.status, page,sortBy, pageSize: PAGE_SIZE,
+  }), [appliedFilters,sortBy, page]);
    const sortedContractorOptions = useMemo(
     () => [...contractorOptions].sort((a, b) => a.CONTRATOR_NAME.localeCompare(b.CONTRATOR_NAME)),
     [contractorOptions]

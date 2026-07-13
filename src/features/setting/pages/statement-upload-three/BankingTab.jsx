@@ -30,6 +30,7 @@ export default function BankingTab({
   projectOpts,
   contractorOpts,
   mutations,
+  sortBy = "txnDate" 
 }) {
   const queryClient = useQueryClient();
   const {
@@ -99,12 +100,15 @@ export default function BankingTab({
       sourceType: "BANKING",
       ...appliedFilters,
       // categories: categoriesParam,
+      status: sortBy === "recent" ? "PENDING" : appliedFilters.status,
+      sortBy,
       page,
       pageSize: PAGE_SIZE,
     }),
     [
       appliedFilters,
       //  categoriesParam,
+      sortBy,
       page,
     ],
   );
