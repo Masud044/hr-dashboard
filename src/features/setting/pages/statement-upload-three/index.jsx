@@ -49,6 +49,7 @@ export default function StatementUploadThree() {
   const navigate = useNavigate();
   const [mainTab, setMainTab] = useState("pending");
   const [subTab, setSubTab] = useState("banking");
+  const [unapprovedSubTab, setUnapprovedSubTab] = useState("banking");
 
   const mutations = useStatementMutations();
 
@@ -91,10 +92,17 @@ export default function StatementUploadThree() {
           </Button>
         </div>
 
-        <div className="flex gap-1 border-b border-gray-200 mb-6">
+        {/* <div className="flex gap-1 border-b border-gray-200 mb-6">
           <MainTabBtn id="pending" label="Pending Uploads" icon={Inbox} active={mainTab === "pending"} onClick={setMainTab} />
+          <MainTabBtn id="unapproved" label="Unapproved" icon={Inbox} active={mainTab==="unapproved"} onClick={setMainTab} />
           <MainTabBtn id="approved" label="Approved Records" icon={BadgeCheck} active={mainTab === "approved"} onClick={setMainTab} />
-        </div>
+        </div> */}
+
+        <div className="flex gap-1 border-b border-gray-200 mb-6">
+  <MainTabBtn id="pending" label="Pending Uploads" icon={Inbox} active={mainTab === "pending"} onClick={setMainTab} />
+  <MainTabBtn id="unapproved" label="Unapproved" icon={Inbox} active={mainTab === "unapproved"} onClick={setMainTab} />
+  <MainTabBtn id="approved" label="Approved Records" icon={BadgeCheck} active={mainTab === "approved"} onClick={setMainTab} />
+</div>
 
         {mainTab === "pending" && (
           <>
@@ -123,6 +131,36 @@ export default function StatementUploadThree() {
             )}
           </>
         )}
+
+        {mainTab === "unapproved" && (
+  <>
+    <div className="flex items-center gap-2 mb-5">
+      <SubTabBtn id="banking" label="Banking (from CSV)" active={unapprovedSubTab === "banking"} onClick={setUnapprovedSubTab} />
+      <SubTabBtn id="nonbanking" label="Non-banking (manual form)" active={unapprovedSubTab === "nonbanking"} onClick={setUnapprovedSubTab} />
+    </div>
+
+    {unapprovedSubTab === "banking" && (
+      <BankingTab
+        projectOptions={projectOptions}
+        contractorOptions={contractorOptions}
+        projectOpts={projectOpts}
+        contractorOpts={contractorOpts}
+        mutations={mutations}
+        sortBy="recent"
+      />
+    )}
+    {unapprovedSubTab === "nonbanking" && (
+      <NonBankingTab
+        projectOptions={projectOptions}
+        contractorOptions={contractorOptions}
+        projectOpts={projectOpts}
+        contractorOpts={contractorOpts}
+        mutations={mutations}
+        sortBy="recent"
+      />
+    )}
+  </>
+)}
 
         {mainTab === "approved" && (
           <ApprovedTab
