@@ -2,14 +2,31 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Pencil, Trash2, PlusIcon } from "lucide-react";
+import { Pencil, Trash2, PlusIcon, Search } from "lucide-react";
 import { toast } from "react-toastify";
-import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +48,17 @@ export function AttendanceList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-  const [filters, setFilters] = useState({ WORKER_ID: "", PROJECT_ID: "", FROM_DATE: "", TO_DATE: "" });
+  // const [filters, setFilters] = useState({ WORKER_ID: "", PROJECT_ID: "", FROM_DATE: "", TO_DATE: "" });
+  const emptyFilters = {
+    WORKER_ID: "",
+    WORKER_NAME: "",
+    PROJECT_ID: "",
+    FROM_DATE: "",
+    TO_DATE: "",
+  };
+
+  const [draftFilters, setDraftFilters] = useState(emptyFilters);
+  const [filters, setFilters] = useState(emptyFilters);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedAttendanceId, setSelectedAttendanceId] = useState(null);
@@ -57,8 +84,14 @@ export function AttendanceList() {
     },
   });
 
-  const workerMap = useMemo(() => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])), [workers]);
-  const projectMap = useMemo(() => Object.fromEntries(projects.map((p) => [p.P_ID, p.P_NAME])), [projects]);
+  const workerMap = useMemo(
+    () => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])),
+    [workers],
+  );
+  const projectMap = useMemo(
+    () => Object.fromEntries(projects.map((p) => [p.P_ID, p.P_NAME])),
+    [projects],
+  );
 
   // Fetch attendance data with server-side pagination and filtering
   const { data: apiData, isLoading } = useQuery({
@@ -66,52 +99,59 @@ export function AttendanceList() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.WORKER_ID) params.append("WORKER_ID", filters.WORKER_ID);
+      if (filters.WORKER_NAME)
+        params.append("WORKER_NAME", filters.WORKER_NAME); // ADD THIS LINE
       if (filters.PROJECT_ID) params.append("PROJECT_ID", filters.PROJECT_ID);
       if (filters.FROM_DATE) params.append("FROM_DATE", filters.FROM_DATE);
       if (filters.TO_DATE) params.append("TO_DATE", filters.TO_DATE);
       params.append("page", pagination.pageIndex + 1);
       params.append("limit", pagination.pageSize);
-      
-      const res = await axios.get(`${url}/api/worker-attendance?${params.toString()}`);
+
+      const res = await axios.get(
+        `${url}/api/worker-attendance?${params.toString()}`,
+      );
       return res.data;
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => axios.delete(`${url}/api/worker-attendance/${id}`),
+    mutationFn: async (id) =>
+      axios.delete(`${url}/api/worker-attendance/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries(["worker-attendance"]);
       toast.success("Attendance deleted successfully!");
     },
-    onError: (err) => toast.error(err?.response?.data?.message || "Failed to delete attendance."),
+    onError: (err) =>
+      toast.error(
+        err?.response?.data?.message || "Failed to delete attendance.",
+      ),
   });
 
   // Reset pagination to first page when filters change
-  useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [filters]);
+  // useEffect(() => {
+  //   setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  // }, [filters]);
 
-//   const handleCreate = () => {
-//     setSelectedAttendanceId(null);
-//     setInitialData(null);
-//     setSheetOpen(true);
-//   };
+  //   const handleCreate = () => {
+  //     setSelectedAttendanceId(null);
+  //     setInitialData(null);
+  //     setSheetOpen(true);
+  //   };
 
-//   const handleEdit = (row) => {
-//     setSelectedAttendanceId(row.ID || row.ATTENDANCE_ID);
-//     setInitialData(row);
-//     setSheetOpen(true);
-//   };
+  //   const handleEdit = (row) => {
+  //     setSelectedAttendanceId(row.ID || row.ATTENDANCE_ID);
+  //     setInitialData(row);
+  //     setSheetOpen(true);
+  //   };
 
+  const handleCreate = () => {
+    navigate("/dashboard/worker-attendance/create");
+  };
 
-const handleCreate = () => {
-  navigate("/dashboard/worker-attendance/create");
-};
-
-const handleEdit = (row) => {
-  const id = row.ID || row.ATTENDANCE_ID;
-  navigate(`/dashboard/worker-attendance/${id}/edit`);
-};
+  const handleEdit = (row) => {
+    const id = row.ID || row.ATTENDANCE_ID;
+    navigate(`/dashboard/worker-attendance/${id}/edit`);
+  };
 
   const handleDeleteClick = (id) => {
     setDeleteTargetId(id);
@@ -124,22 +164,47 @@ const handleEdit = (row) => {
     setDeleteTargetId(null);
   };
 
+  const isDateRangeInvalid =
+    draftFilters.FROM_DATE &&
+    draftFilters.TO_DATE &&
+    draftFilters.TO_DATE < draftFilters.FROM_DATE;
 
+  const hasActiveDraftFilter = Object.values(draftFilters).some(
+    (v) => v !== "",
+  );
+
+  const handleSearch = () => {
+    if (isDateRangeInvalid) {
+      toast.error("To Date cannot be earlier than From Date.");
+      return;
+    }
+    setFilters(draftFilters);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleClear = () => {
+    setDraftFilters(emptyFilters);
+    setFilters(emptyFilters);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const columns = [
     {
-  accessorKey: "ATTENDANCE_DATE",
-  header: "Date",
-  cell: ({ row }) => (
-    <div className="text-sm">{formatDateWithDay(row.getValue("ATTENDANCE_DATE"))}</div>
-  ),
-},
+      accessorKey: "ATTENDANCE_DATE",
+      header: "Date",
+      cell: ({ row }) => (
+        <div className="text-sm">
+          {formatDateWithDay(row.getValue("ATTENDANCE_DATE"))}
+        </div>
+      ),
+    },
     {
       accessorKey: "WORKER_ID",
       header: "Worker",
       cell: ({ row }) => (
         <div className="text-sm font-medium">
-          {workerMap[row.getValue("WORKER_ID")] || `ID: ${row.getValue("WORKER_ID")}`}
+          {workerMap[row.getValue("WORKER_ID")] ||
+            `ID: ${row.getValue("WORKER_ID")}`}
         </div>
       ),
     },
@@ -148,15 +213,18 @@ const handleEdit = (row) => {
       header: "Project",
       cell: ({ row }) => (
         <div className="text-sm">
-          {projectMap[row.getValue("PROJECT_ID")] || `ID: ${row.getValue("PROJECT_ID")}`}
+          {projectMap[row.getValue("PROJECT_ID")] ||
+            `ID: ${row.getValue("PROJECT_ID")}`}
         </div>
       ),
     },
-   
+
     {
       accessorKey: "CALC_BASIS",
       header: "Calc Basis",
-      cell: ({ row }) => <div className="text-sm">{row.getValue("CALC_BASIS") || "—"}</div>,
+      cell: ({ row }) => (
+        <div className="text-sm">{row.getValue("CALC_BASIS") || "—"}</div>
+      ),
     },
     {
       id: "worked",
@@ -164,11 +232,23 @@ const handleEdit = (row) => {
       cell: ({ row }) => {
         const original = row.original;
         if (original.CALC_BASIS === "DAY") {
-          return <div className="text-sm">{original.DAYS_WORKED ?? "—"} Days</div>;
+          return (
+            <div className="text-sm">{original.DAYS_WORKED ?? "—"} Days</div>
+          );
         }
         if (original.CALC_BASIS === "HOUR") {
-          if (original.ENTRY_MODE === "HOURS") return <div className="text-sm">{original.HOURS_WORKED ?? "—"} Hours</div>;
-          if (original.ENTRY_MODE === "TIME") return <div className="text-sm">{original.START_TIME} - {original.END_TIME}</div>;
+          if (original.ENTRY_MODE === "HOURS")
+            return (
+              <div className="text-sm">
+                {original.HOURS_WORKED ?? "—"} Hours
+              </div>
+            );
+          if (original.ENTRY_MODE === "TIME")
+            return (
+              <div className="text-sm">
+                {original.START_TIME} - {original.END_TIME}
+              </div>
+            );
         }
         return <div className="text-sm">—</div>;
       },
@@ -177,7 +257,10 @@ const handleEdit = (row) => {
       accessorKey: "REMARKS",
       header: "Remarks",
       cell: ({ row }) => (
-        <div className="text-sm max-w-[150px] truncate" title={row.getValue("REMARKS")}>
+        <div
+          className="text-sm max-w-[150px] truncate"
+          title={row.getValue("REMARKS")}
+        >
           {row.getValue("REMARKS") || "—"}
         </div>
       ),
@@ -227,72 +310,122 @@ const handleEdit = (row) => {
 
   return (
     <>
-      <div className="mt-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
-          <div className="flex flex-wrap items-center gap-3 flex-1">
-            <Select
-              value={filters.WORKER_ID}
-              onValueChange={(v) => setFilters((f) => ({ ...f, WORKER_ID: v === "all" ? "" : v }))}
-            >
-              <SelectTrigger className="w-[180px] h-10">
-                <SelectValue placeholder="All Workers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Workers</SelectItem>
-                {workers.map((w) => (
-                  <SelectItem key={w.WORKER_ID} value={String(w.WORKER_ID)}>
-                    {w.WORKER_NAME}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="mt-6 px-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5">
+        <div className="flex flex-wrap items-center gap-3  flex-1">
+          <Select
+            value={draftFilters.WORKER_ID}
+            onValueChange={(v) =>
+              setDraftFilters((f) => ({
+                ...f,
+                WORKER_ID: v === "all" ? "" : v,
+              }))
+            }
+          >
+            <SelectTrigger className="w-[180px] h-10">
+              <SelectValue placeholder="All Workers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Workers</SelectItem>
+              {workers.map((w) => (
+                <SelectItem key={w.WORKER_ID} value={String(w.WORKER_ID)}>
+                  {w.WORKER_NAME}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Select
-              value={filters.PROJECT_ID}
-              onValueChange={(v) => setFilters((f) => ({ ...f, PROJECT_ID: v === "all" ? "" : v }))}
-            >
-              <SelectTrigger className="w-[180px] h-10">
-                <SelectValue placeholder="All Projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {projects.map((p) => (
-                  <SelectItem key={p.P_ID} value={String(p.P_ID)}>
-                    {p.P_NAME}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Select
+            value={draftFilters.PROJECT_ID}
+            onValueChange={(v) =>
+              setDraftFilters((f) => ({
+                ...f,
+                PROJECT_ID: v === "all" ? "" : v,
+              }))
+            }
+          >
+            <SelectTrigger className="w-[180px] h-10">
+              <SelectValue placeholder="All Projects" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Projects</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.P_ID} value={String(p.P_ID)}>
+                  {p.P_NAME}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
+          <Input
+            type="date"
+            value={draftFilters.FROM_DATE}
+            onChange={(e) =>
+              setDraftFilters((f) => ({ ...f, FROM_DATE: e.target.value }))
+            }
+            className="w-[160px] h-10"
+          />
+          <Input
+            type="date"
+            value={draftFilters.TO_DATE}
+            onChange={(e) =>
+              setDraftFilters((f) => ({ ...f, TO_DATE: e.target.value }))
+            }
+            className="w-[160px] h-10"
+          />
+
+          <div className="relative w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              type="date"
-              value={filters.FROM_DATE}
-              onChange={(e) => setFilters((f) => ({ ...f, FROM_DATE: e.target.value }))}
-              className="w-[160px] h-10"
-              placeholder="From Date"
-            />
-            <Input
-              type="date"
-              value={filters.TO_DATE}
-              onChange={(e) => setFilters((f) => ({ ...f, TO_DATE: e.target.value }))}
-              className="w-[160px] h-10"
-              placeholder="To Date"
+              type="text"
+              placeholder="Search by worker"
+              value={draftFilters.WORKER_NAME}
+              onChange={(e) =>
+                setDraftFilters((f) => ({ ...f, WORKER_NAME: e.target.value }))
+              }
+              className="w-full h-10 pl-9"
             />
           </div>
-          <Button onClick={handleCreate} className="h-10 rounded-md gap-2">
-            <PlusIcon size={16} />
-            Add Attendance
+
+          <Button
+            onClick={handleSearch}
+            disabled={!hasActiveDraftFilter || isDateRangeInvalid}
+            className="h-10"
+          >
+            Search
           </Button>
+
+          {hasActiveDraftFilter && (
+            <Button variant="outline" onClick={handleClear} className="h-10">
+              Clear
+            </Button>
+          )}
+        </div>
+         <Button onClick={handleCreate} className="h-10 rounded-md gap-2">
+    <PlusIcon size={16} />
+    Add Attendance
+  </Button>
         </div>
 
         <div className="rounded-lg border border-border overflow-hidden bg-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((group) => (
-                <TableRow key={group.id} className="border-b border-border bg-muted/20">
+                <TableRow
+                  key={group.id}
+                  className="border-b border-border bg-muted/20"
+                >
                   {group.headers.map((header) => (
-                    <TableHead key={header.id} className="px-4 py-3 font-medium">
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    <TableHead
+                      key={header.id}
+                      className="px-4 py-3 font-medium"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -301,30 +434,43 @@ const handleEdit = (row) => {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center h-24 text-sm text-muted-foreground"
+                  >
                     Loading...
                   </TableCell>
                 </TableRow>
               )}
-              {!isLoading && table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="px-4 py-3 align-middle">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              {!isLoading && table.getRowModel().rows?.length
+                ? table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className="border-b border-border hover:bg-muted/30 transition-colors"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className="px-4 py-3 align-middle"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : !isLoading && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="text-center h-24 text-sm text-muted-foreground"
+                      >
+                        No records found.
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                !isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
-                      No records found.
-                    </TableCell>
-                  </TableRow>
-                )
-              )}
+                    </TableRow>
+                  )}
             </TableBody>
           </Table>
         </div>
@@ -350,12 +496,18 @@ const handleEdit = (row) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Attendance?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this attendance record. This action cannot be undone.
+              This will permanently delete this attendance record. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteTargetId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={handleDeleteConfirm}>
+            <AlertDialogCancel onClick={() => setDeleteTargetId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={handleDeleteConfirm}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
