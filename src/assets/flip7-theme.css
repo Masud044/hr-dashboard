@@ -1,0 +1,516 @@
+/* flip7-theme.css */
+/* ============================================================
+   FLIP7 DESIGN SYSTEM — theme.css
+   Retro-playful teal / coral / gold system for the Flip7
+   card-game scoring mini-program.
+
+   Units:  rpx (WeChat Mini Program responsive px)
+   Fonts:  system stack only — no external @import, per platform
+           constraints on remote font loading in mini-programs.
+
+   NOTE — a few tokens are not spelled out in DESIGN.md and were
+   derived to keep the system usable (marked "assumption" below):
+     - secondary/muted text colors, border color
+     - dark mode palette (DESIGN.md only documents light mode)
+   Adjust these freely if you already have exact values in mind.
+   ============================================================ */
+
+/* ============================================================
+   ROOT TOKENS — LIGHT MODE (default)
+   ============================================================ */
+:root {
+  /* ── Primary — Teal ── */
+  --color-primary: #2BA8A2;
+  --color-primary-light: #3CC4BD;
+  --color-primary-dark: #1E8C86;
+  --color-primary-bg: #E8F6F5;
+
+  /* ── Accent — Gold ── */
+  --color-accent: #FFD23F;
+  --color-accent-light: #FFE47A;
+  --color-accent-dark: #E6B800;
+
+  /* ── Coral ── */
+  --color-coral: #EF6C4A;
+  --color-coral-light: #FF8A6A;
+  --color-coral-dark: #D45233;
+
+  /* ── Supporting hues ── */
+  --color-cream: #FFF8E7;
+  --color-cream-dark: #F2E4C4; /* assumption — for ribbon tail fold */
+  --color-sky-blue: #5DADE2;
+
+  /* ── Surfaces ── */
+  --color-surface-base: #EFF8F7;
+  --color-surface-card: #FFFFFF;
+
+  /* ── Semantic ── */
+  --color-success: #27AE60;
+  --color-error: #E74C3C;
+
+  /* ── Text (assumption — not explicit in spec) ── */
+  --color-text-primary: var(--color-primary-dark);
+  --color-text-secondary: #6B7A79;
+  --color-text-muted: #9AAFAE;
+  --color-text-on-color: #FFFFFF;
+
+  /* ── Border (assumption) ── */
+  --color-border: #D8ECEA;
+
+  /* ── Fonts — system stack only ── */
+  --font-family-base: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+
+  /* ── Type scale (rpx) ── */
+  --font-size-display: 72rpx;
+  --font-size-h1: 48rpx;
+  --font-size-h2: 36rpx;
+  --font-size-h3: 32rpx;
+  --font-size-body: 28rpx;
+  --font-size-sm: 24rpx;
+  --font-size-xs: 20rpx;
+
+  --font-weight-display: 800;
+  --font-weight-h1: 800;
+  --font-weight-h2: 800;
+  --font-weight-h3: 700;
+  --font-weight-body: 500;
+
+  --tracking-headline: 5rpx; /* spec range: 4–6rpx */
+
+  /* ── Spacing — base unit 8rpx ── */
+  --space-xs: 8rpx;
+  --space-sm: 16rpx;
+  --space-md: 24rpx;
+  --space-lg: 32rpx;
+  --space-xl: 48rpx;
+
+  /* ── Radius ── */
+  --radius-sm: 8rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 24rpx;
+  --radius-xl: 32rpx;
+  --radius-round: 999rpx;
+
+  /* ── Shadows — colored glow system (never plain black on interactive) ── */
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.16);
+  --shadow-card: 0 4rpx 20rpx rgba(43, 168, 162, 0.10);
+  --shadow-coral-glow: 0 4rpx 20rpx rgba(239, 108, 74, 0.35);
+  --shadow-teal-glow: 0 4rpx 20rpx rgba(43, 168, 162, 0.30);
+  --shadow-accent-glow: 0 4rpx 20rpx rgba(255, 210, 63, 0.40);
+  --shadow-sky-glow: 0 4rpx 16rpx rgba(93, 173, 226, 0.30);
+  --shadow-focus: 0 0 0 4rpx rgba(43, 168, 162, 0.15);
+
+  /* ── Motion ── */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-tap: 150ms;
+  --duration-micro: 300ms; /* all micro-interactions stay under 500ms */
+}
+
+/* ============================================================
+   DARK MODE — extrapolated (DESIGN.md only defines light mode)
+   Preserves the teal / coral / gold identity on a deep surface.
+   Replace with exact values if/when they're specified.
+   ============================================================ */
+.dark {
+  --color-primary: #3CC4BD;
+  --color-primary-light: #5DD9D2;
+  --color-primary-dark: #2BA8A2;
+  --color-primary-bg: #16302E;
+
+  --color-accent: #FFD23F;
+  --color-accent-light: #FFDE6E;
+  --color-accent-dark: #E6B800;
+
+  --color-coral: #FF8A6A;
+  --color-coral-light: #FFAA90;
+  --color-coral-dark: #EF6C4A;
+
+  --color-cream: #2A241A;
+  --color-cream-dark: #221D15;
+  --color-sky-blue: #74BDE8;
+
+  --color-surface-base: #12201F;
+  --color-surface-card: #1B2C2A;
+
+  --color-success: #34C77E;
+  --color-error: #F16456;
+
+  --color-text-primary: #EAF6F5;
+  --color-text-secondary: #9CB8B5;
+  --color-text-muted: #6E8886;
+  --color-text-on-color: #0D1A19;
+
+  --color-border: #294240;
+
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.40);
+  --shadow-card: 0 4rpx 20rpx rgba(0, 0, 0, 0.30);
+  --shadow-coral-glow: 0 4rpx 20rpx rgba(255, 138, 106, 0.45);
+  --shadow-teal-glow: 0 4rpx 20rpx rgba(60, 196, 189, 0.40);
+  --shadow-accent-glow: 0 4rpx 20rpx rgba(255, 210, 63, 0.45);
+  --shadow-sky-glow: 0 4rpx 16rpx rgba(116, 189, 232, 0.35);
+  --shadow-focus: 0 0 0 4rpx rgba(60, 196, 189, 0.25);
+}
+
+/* ============================================================
+   BASE LAYER
+   ============================================================ */
+page,
+body {
+  background: var(--color-surface-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  line-height: 1.5;
+}
+
+.text-display { font-size: var(--font-size-display); font-weight: var(--font-weight-display); letter-spacing: var(--tracking-headline); }
+.text-h1 { font-size: var(--font-size-h1); font-weight: var(--font-weight-h1); letter-spacing: var(--tracking-headline); }
+.text-h2 { font-size: var(--font-size-h2); font-weight: var(--font-weight-h2); letter-spacing: var(--tracking-headline); }
+.text-h3 { font-size: var(--font-size-h3); font-weight: var(--font-weight-h3); }
+.text-body { font-size: var(--font-size-body); font-weight: var(--font-weight-body); }
+.text-sm { font-size: var(--font-size-sm); font-weight: var(--font-weight-body); }
+.text-xs { font-size: var(--font-size-xs); font-weight: var(--font-weight-body); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+
+/* ============================================================
+   BUTTONS — pill shape, min 72rpx touch target, bounce curve
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72rpx;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-round);
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  border: none;
+  transition: transform var(--duration-tap) var(--ease-bounce),
+              box-shadow var(--duration-micro) ease;
+}
+.btn:active { transform: scale(0.95); }
+
+/* Primary — teal fill (general UI primary action) */
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-on-color);
+  box-shadow: var(--shadow-teal-glow);
+}
+
+/* Secondary — text-only, teal */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  box-shadow: none;
+  padding: 0 var(--space-sm);
+}
+
+/* Outlined — teal border, transparent fill */
+.btn-outlined {
+  background: var(--color-surface-card);
+  color: var(--color-primary);
+  border: 2rpx solid var(--color-primary);
+}
+
+/* Inverted — coral fill (destructive / high-energy action) */
+.btn-inverted {
+  background: var(--color-coral);
+  color: var(--color-text-on-color);
+  box-shadow: var(--shadow-coral-glow);
+}
+
+/* Primary CTA — gold gradient + gloss overlay (hero call-to-action) */
+.btn-cta {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--color-accent-light) 0%, var(--color-accent) 60%, var(--color-accent-dark) 100%);
+  color: var(--color-primary-dark);
+  box-shadow: var(--shadow-accent-glow);
+}
+.btn-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+}
+
+/* Icon buttons — rounded square (nav, theme toggle, tag, delete, edit) */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-text-on-color);
+  border: none;
+}
+.btn-icon--ghost { background: var(--color-primary-bg); color: var(--color-primary); }
+.btn-icon--danger { background: var(--color-error); color: var(--color-text-on-color); }
+
+/* Counter buttons +/- */
+.btn-counter {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-h2);
+  font-weight: 800;
+  border: none;
+}
+.btn-counter--minus { background: var(--color-coral-light); color: var(--color-coral-dark); }
+.btn-counter--plus { background: var(--color-primary-light); color: var(--color-primary-dark); }
+
+/* BOOM button */
+.btn-boom {
+  border-radius: var(--radius-round);
+  min-height: 72rpx;
+  padding: 0 var(--space-lg);
+  background: var(--color-surface-card);
+  color: var(--color-coral-dark);
+  border: 2rpx solid var(--color-coral-light);
+}
+.btn-boom.is-active {
+  background: var(--color-coral);
+  color: var(--color-text-on-color);
+  box-shadow: var(--shadow-coral-glow);
+  animation: boom-pulse 2s infinite;
+}
+
+/* Flip7 bonus button */
+.btn-flip7 {
+  border-radius: var(--radius-round);
+  min-height: 72rpx;
+  padding: 0 var(--space-lg);
+  background: var(--color-surface-card);
+  color: var(--color-sky-blue);
+  border: 2rpx solid var(--color-sky-blue);
+}
+.btn-flip7.is-active {
+  background: var(--color-sky-blue);
+  color: var(--color-text-on-color);
+  box-shadow: var(--shadow-sky-glow);
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.input {
+  background: var(--color-cream);
+  border: 2rpx solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+.input::placeholder { color: var(--color-text-muted); }
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+/* ============================================================
+   CARDS — scoring items
+   ============================================================ */
+.card {
+  background: var(--color-surface-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border-left: 6rpx solid var(--color-primary-light);
+  padding: var(--space-md);
+}
+.card--highlighted {
+  border-left-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-surface-card) 60%);
+  box-shadow: var(--shadow-accent-glow);
+}
+.card--boom {
+  border-left-color: var(--color-coral);
+  background: linear-gradient(135deg, var(--color-coral-light) 0%, var(--color-surface-card) 60%);
+  animation: boom-pulse 2s infinite;
+}
+
+/* ============================================================
+   VICTORY RANKINGS — podium tiers
+   ============================================================ */
+.rank-item { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); }
+.rank-item--silver { border-left: 8rpx solid #C0C0C8; }
+.rank-item--bronze { border-left: 8rpx solid var(--color-coral); }
+
+.rank-avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-round);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.rank-avatar--silver {
+  width: 64rpx;
+  height: 64rpx;
+  background: linear-gradient(135deg, #E8E8EC 0%, #C0C0C8 100%);
+}
+.rank-avatar--bronze {
+  width: 60rpx;
+  height: 60rpx;
+  background: linear-gradient(135deg, var(--color-coral-light) 0%, var(--color-coral-dark) 100%);
+}
+
+.rank-score--silver { font-size: var(--font-size-h1); }
+.rank-score--bronze { font-size: var(--font-size-h2); color: var(--color-coral-dark); }
+
+/* ============================================================
+   SECTION TITLES — dashed divider, emoji in a view container
+   ============================================================ */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 3rpx dashed var(--color-border);
+  font-size: var(--font-size-h3);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.section-title__icon {
+  display: inline-flex; /* use <view>, not <text>, for the emoji in WXML */
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-h3);
+}
+
+/* ============================================================
+   LOGO — Setup Page Header
+   Expected markup:
+   <view class="flip7-logo">
+     <view class="flip7-logo__fan">
+       <view class="flip7-logo__fan-card"></view>  ×5, in DOM order
+     </view>
+     <view class="flip7-logo__wordmark">
+       <text class="flip7-logo__flip">FLIP</text>
+       <text class="flip7-logo__seven">7</text>
+     </view>
+     <view class="flip7-logo__ribbon"><text>...</text></view>
+   </view>
+   ============================================================ */
+.flip7-logo { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+
+.flip7-logo__fan { position: relative; height: 160rpx; }
+.flip7-logo__fan-card {
+  position: absolute;
+  width: 96rpx;
+  height: 132rpx;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-card);
+  border: 2rpx solid var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+  transform-origin: bottom center;
+}
+/* rotation angles per card: -24, -12, 0, 12, 24 degrees */
+.flip7-logo__fan-card:nth-child(1) { transform: rotate(-24deg); background: var(--color-coral-light); }
+.flip7-logo__fan-card:nth-child(2) { transform: rotate(-12deg); background: var(--color-accent-light); }
+.flip7-logo__fan-card:nth-child(3) { transform: rotate(0deg); background: var(--color-primary-light); }
+.flip7-logo__fan-card:nth-child(4) { transform: rotate(12deg); background: var(--color-sky-blue); }
+.flip7-logo__fan-card:nth-child(5) { transform: rotate(24deg); background: var(--color-accent); }
+
+.flip7-logo__wordmark {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-lg);
+  background: var(--color-cream);
+  border: 3rpx solid var(--color-primary-dark);
+  transform: rotate(-3deg) skewX(-6deg);
+}
+.flip7-logo__flip {
+  display: inline-block;
+  transform: skewX(6deg); /* counter-skew so letters stay upright */
+  font-size: 88rpx;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  text-shadow: 1rpx 1rpx 0 rgba(255, 255, 255, 0.5);
+}
+.flip7-logo__seven {
+  display: inline-block;
+  transform: skewX(6deg) rotate(5deg); /* spec range: 4–6deg */
+  font-size: 152rpx;
+  font-weight: 800;
+  color: var(--color-accent);
+  text-shadow:
+    2rpx 2rpx 0 var(--color-primary-dark),
+    4rpx 4rpx 0 var(--color-primary-dark),
+    6rpx 6rpx 0 var(--color-primary-dark);
+}
+
+/* Ribbon banner — classic folded-ribbon, tails behind main body */
+.flip7-logo__ribbon {
+  position: relative;
+  margin-top: var(--space-md);
+  padding: var(--space-xs) var(--space-xl);
+  background: var(--color-cream);
+  border: 3rpx solid var(--color-primary-dark);
+  font-weight: 800;
+  letter-spacing: 8rpx;
+  color: var(--color-primary-dark);
+}
+.flip7-logo__ribbon::before,
+.flip7-logo__ribbon::after {
+  content: "";
+  position: absolute;
+  top: 8rpx; /* offset for 3D fold effect */
+  width: 40rpx;
+  height: 48rpx; /* fixed height — never % height on a flex child's pseudo-element */
+  background: var(--color-cream-dark);
+  border: 3rpx solid var(--color-primary-dark);
+  z-index: -1;
+}
+.flip7-logo__ribbon::before { left: -24rpx; }
+.flip7-logo__ribbon::after { right: -24rpx; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes boom-pulse {
+  0%, 100% { box-shadow: var(--shadow-coral-glow); border-color: var(--color-coral); }
+  50%      { box-shadow: 0 4rpx 28rpx rgba(239, 108, 74, 0.55); border-color: var(--color-coral-dark); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.03); }
+}
+.glow-pulse { animation: glow-pulse 2s infinite; }
+
+@keyframes crown-bounce {
+  0%   { transform: translateY(0) rotate(0deg); }
+  25%  { transform: translateY(-10rpx) rotate(-6deg); }
+  50%  { transform: translateY(0) rotate(0deg); }
+  75%  { transform: translateY(-6rpx) rotate(6deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+.crown-bounce { animation: crown-bounce 1.5s infinite; }
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20rpx) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(600rpx) rotate(360deg); opacity: 0; }
+}
+.confetti-piece {
+  position: absolute;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  /* set animation-duration inline per piece, between 3.2s and 4.5s,
+     and background-color per piece from the palette above */
+}

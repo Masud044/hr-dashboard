@@ -1,3 +1,4 @@
+<!-- genesis-DESIGN.md -->
 # Genesis
 
 ## Overview
@@ -35,7 +36,6 @@ This design uses minimal shadows. Cards rest flat with a 1px border and gain a s
 - **Inputs**: 1px subtle border, surface background, 6px radius, 10px vertical and 14px horizontal padding, 14px font size. Focus: border turns indigo with a 3px rgba ring. Error: border turns red. Placeholder text uses muted color.
 - **Chips**: Tag chips use rounded-full (pill shape), gray-100 background, gray-600 text, 4px vertical and 12px horizontal padding, 12px font size. Active state: indigo background with white text. Status chips follow the same shape but use semantic colors (green for published, yellow for pending, red for rejected).
 - **Lists**: Stacked rows with 1px dividers between items. Each row is flex with space-between, 12px vertical and 16px horizontal padding. Hover: subtle background change.
-- **Table Row Striping**: Odd rows use Surface (#FFFFFF), even rows use #FAFAFA (reuses existing Background token). Row divider stays as existing 1px Border (#E8E8EC) between all rows. Hover uses #F3F3F5, slightly darker than both stripes so it stays visible on either. Header row stays Surface white with a slightly stronger bottom border than regular dividers to separate header from striped body.
 - **Checkboxes**: 20px size, rounded-full, gray-200 unchecked, indigo checked with white checkmark. Used as toggle switches for preferences.
 - **Tooltips**: Native browser tooltips via title attributes. No custom tooltip component currently.
 - **Navigation**: Sticky top nav with backdrop-blur, 56px height, 1px bottom border. Logo left, links center (desktop) or hamburger drawer (mobile), user avatar dropdown right. Nav links: 14px medium weight, hover shows bg-alt background.

@@ -1,3 +1,4 @@
+/* src\assets\genesis-theme.css */
 /* ============================================================
    GENESIS DESIGN SYSTEM — index.css
    Migrated from: Violet Bloom theme
@@ -36,6 +37,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-border: var(--input-border);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -135,7 +137,8 @@
   /* ── Border & Input ── */
   --border: #E8E8EC;
   /* card borders, dividers, input borders */
-  --input: #D1D1D6;
+  --input: #E8E8EC;
+ --input-border: #D1D5DB;
   /* input background */
 
   /* ── Ring — indigo focus ── */
@@ -233,7 +236,8 @@
   --destructive-foreground: #FFFFFF;
 
   --border: #2E3140;
-  --input: #2A2D3A;
+  --input: #2E3140;
+  --input-border: #374151;
 
   --ring: #818CF8;
 
@@ -275,8 +279,8 @@
    ============================================================ */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
-  }
+  @apply border-border ;
+}
 
   body {
     @apply bg-background text-foreground;
@@ -319,6 +323,21 @@
   h4 {
     font-size: 1rem;
   }
+
+
+  .text-display {
+  font-size: 4.5rem; /* 72px */
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+.text-headline {
+  font-size: 3.75rem; /* 60px */
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
 
   /* 16px */
 
@@ -365,5 +384,14 @@
   }
 }
 
+
+/* Genesis: Buttons Need Hover Transform (Vertical Lift) */
+.btn-lift {
+  transition: all 200ms ease;
+}
+
+.btn-lift:hover {
+  transform: translateY(-1px);
+}
 
 
