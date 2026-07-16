@@ -430,7 +430,7 @@ export default function ApprovedTab({
                         {fmtDate(r.APPROVED_DATE)}
                       </td>
                       <td className="px-4 py-2.5 min-w-[160px]">
-                        <InvoiceCell parentType="main" parentId={r.TXN_ID} />
+                        <InvoiceCell parentType="main" parentId={r.TXN_ID} row={r} />
                       </td>
                       <td className="px-4 py-2.5 min-w-[110px]">
                         <Button

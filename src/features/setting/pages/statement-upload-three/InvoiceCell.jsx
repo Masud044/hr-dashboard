@@ -6,7 +6,7 @@ import { Paperclip } from "lucide-react";
 import { url } from "./constants";
 import InvoiceSheet from "./InvoiceSheet";
 
-export default function InvoiceCell({ parentType, parentId }) {
+export default function InvoiceCell({ parentType, parentId, row }) {
   const [open, setOpen] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({
@@ -55,6 +55,7 @@ export default function InvoiceCell({ parentType, parentId }) {
         onClose={() => setOpen(false)}
         parentType={parentType}
         parentId={parentId}
+        row={row}
       />
     </>
   );

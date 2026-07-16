@@ -41,7 +41,7 @@ import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import { AttendanceFormSheet } from "./attendance-form-sheet";
 import { useNavigate } from "react-router-dom";
 import { formatDateWithDay } from "@/lib/utils";
-
+import DateInput from "@/components/shared/DateInput";
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function AttendanceList() {
@@ -202,7 +202,7 @@ export function AttendanceList() {
       accessorKey: "WORKER_ID",
       header: "Worker",
       cell: ({ row }) => (
-        <div className="text-sm font-medium">
+        <div className="text-sm font-semibold text-foreground">
           {workerMap[row.getValue("WORKER_ID")] ||
             `ID: ${row.getValue("WORKER_ID")}`}
         </div>
@@ -233,19 +233,21 @@ export function AttendanceList() {
         const original = row.original;
         if (original.CALC_BASIS === "DAY") {
           return (
-            <div className="text-sm">{original.DAYS_WORKED ?? "—"} Days</div>
+            <div className="text-sm font-medium text-primary">
+              {original.DAYS_WORKED ?? "—"} Days
+            </div>
           );
         }
         if (original.CALC_BASIS === "HOUR") {
           if (original.ENTRY_MODE === "HOURS")
             return (
-              <div className="text-sm">
+              <div className="text-sm font-medium text-primary">
                 {original.HOURS_WORKED ?? "—"} Hours
               </div>
             );
           if (original.ENTRY_MODE === "TIME")
             return (
-              <div className="text-sm">
+              <div className="text-sm font-medium text-primary">
                 {original.START_TIME} - {original.END_TIME}
               </div>
             );
@@ -258,7 +260,7 @@ export function AttendanceList() {
       header: "Remarks",
       cell: ({ row }) => (
         <div
-          className="text-sm max-w-[150px] truncate"
+          className="text-sm max-w-[150px] truncate text-muted-foreground"
           title={row.getValue("REMARKS")}
         >
           {row.getValue("REMARKS") || "—"}
@@ -268,7 +270,7 @@ export function AttendanceList() {
     {
       id: "actions",
       header: () => (
-        <div className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Actions
         </div>
       ),
@@ -276,18 +278,18 @@ export function AttendanceList() {
         const item = row.original;
         const itemId = item.ID || item.ATTENDANCE_ID;
         return (
-          <div className="flex items-center gap-1 justify-center">
+          <div className="flex items-center gap-1.5 justify-center">
             <button
               onClick={() => handleEdit(item)}
               title="Edit"
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
+              className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
             >
               <Pencil size={15} />
             </button>
             <button
               onClick={() => handleDeleteClick(itemId)}
               title="Delete"
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
+              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
               disabled={deleteMutation.isPending}
             >
               <Trash2 size={15} />
@@ -312,113 +314,131 @@ export function AttendanceList() {
     <>
       <div className="mt-6 px-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5">
-        <div className="flex flex-wrap items-center gap-3  flex-1">
-          <Select
-            value={draftFilters.WORKER_ID}
-            onValueChange={(v) =>
-              setDraftFilters((f) => ({
-                ...f,
-                WORKER_ID: v === "all" ? "" : v,
-              }))
-            }
-          >
-            <SelectTrigger className="w-[180px] h-10">
-              <SelectValue placeholder="All Workers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Workers</SelectItem>
-              {workers.map((w) => (
-                <SelectItem key={w.WORKER_ID} value={String(w.WORKER_ID)}>
-                  {w.WORKER_NAME}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={draftFilters.PROJECT_ID}
-            onValueChange={(v) =>
-              setDraftFilters((f) => ({
-                ...f,
-                PROJECT_ID: v === "all" ? "" : v,
-              }))
-            }
-          >
-            <SelectTrigger className="w-[180px] h-10">
-              <SelectValue placeholder="All Projects" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Projects</SelectItem>
-              {projects.map((p) => (
-                <SelectItem key={p.P_ID} value={String(p.P_ID)}>
-                  {p.P_NAME}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="date"
-            value={draftFilters.FROM_DATE}
-            onChange={(e) =>
-              setDraftFilters((f) => ({ ...f, FROM_DATE: e.target.value }))
-            }
-            className="w-[160px] h-10"
-          />
-          <Input
-            type="date"
-            value={draftFilters.TO_DATE}
-            onChange={(e) =>
-              setDraftFilters((f) => ({ ...f, TO_DATE: e.target.value }))
-            }
-            className="w-[160px] h-10"
-          />
-
-          <div className="relative w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search by worker"
-              value={draftFilters.WORKER_NAME}
-              onChange={(e) =>
-                setDraftFilters((f) => ({ ...f, WORKER_NAME: e.target.value }))
+          <div className="flex flex-wrap items-center gap-3  flex-1">
+            <Select
+              value={draftFilters.WORKER_ID}
+              onValueChange={(v) =>
+                setDraftFilters((f) => ({
+                  ...f,
+                  WORKER_ID: v === "all" ? "" : v,
+                }))
               }
-              className="w-full h-10 pl-9"
+            >
+              <SelectTrigger className="w-[180px] h-10 rounded-md border-input-border focus:shadow-focus">
+                <SelectValue placeholder="All Workers" />
+              </SelectTrigger>
+              <SelectContent className="rounded-md">
+                <SelectItem value="all">All Workers</SelectItem>
+                {workers.map((w) => (
+                  <SelectItem key={w.WORKER_ID} value={String(w.WORKER_ID)}>
+                    {w.WORKER_NAME}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={draftFilters.PROJECT_ID}
+              onValueChange={(v) =>
+                setDraftFilters((f) => ({
+                  ...f,
+                  PROJECT_ID: v === "all" ? "" : v,
+                }))
+              }
+            >
+              <SelectTrigger className="w-[180px] h-10 rounded-md border-input-border focus:shadow-focus">
+                <SelectValue placeholder="All Projects" />
+              </SelectTrigger>
+              <SelectContent className="rounded-md">
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects.map((p) => (
+                  <SelectItem key={p.P_ID} value={String(p.P_ID)}>
+                    {p.P_NAME}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* <Input
+              type="date"
+              value={draftFilters.FROM_DATE}
+              onChange={(e) =>
+                setDraftFilters((f) => ({ ...f, FROM_DATE: e.target.value }))
+              }
+              className="w-[160px] h-10"
             />
-          </div>
+            <Input
+              type="date"
+              value={draftFilters.TO_DATE}
+              onChange={(e) =>
+                setDraftFilters((f) => ({ ...f, TO_DATE: e.target.value }))
+              }
+              className="w-[160px] h-10"
+            /> */}
+            <DateInput
+              value={draftFilters.FROM_DATE}
+              onChange={(v) => setDraftFilters((f) => ({ ...f, FROM_DATE: v }))}
+            />
+            <DateInput
+              value={draftFilters.TO_DATE}
+              onChange={(v) => setDraftFilters((f) => ({ ...f, TO_DATE: v }))}
+            />
 
-          <Button
-            onClick={handleSearch}
-            disabled={!hasActiveDraftFilter || isDateRangeInvalid}
-            className="h-10"
-          >
-            Search
-          </Button>
+            <div className="relative w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by worker"
+                value={draftFilters.WORKER_NAME}
+                onChange={(e) =>
+                  setDraftFilters((f) => ({
+                    ...f,
+                    WORKER_NAME: e.target.value,
+                  }))
+                }
+                className="w-full h-10 pl-9 rounded-md border-input-border focus-visible:shadow-focus"
+              />
+            </div>
 
-          {hasActiveDraftFilter && (
-            <Button variant="outline" onClick={handleClear} className="h-10">
-              Clear
+            <Button
+              onClick={handleSearch}
+              disabled={!hasActiveDraftFilter || isDateRangeInvalid}
+              className="h-10 rounded-full bg-primary text-primary-foreground shadow-teal-glow hover:bg-primary/90 disabled:shadow-none font-semibold transition-transform active:scale-95"
+            >
+              Search
             </Button>
-          )}
-        </div>
-         <Button onClick={handleCreate} className="h-10 rounded-md gap-2">
-    <PlusIcon size={16} />
-    Add Attendance
-  </Button>
+
+            {hasActiveDraftFilter && (
+              <Button
+                variant="outline"
+                onClick={handleClear}
+                className="h-10 rounded-full border-primary text-primary hover:bg-secondary font-semibold transition-transform active:scale-95"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+          <Button
+            onClick={handleCreate}
+            className="h-10 rounded-full gap-2 font-bold text-primary-dark bg-gradient-to-b from-accent-light via-accent to-accent-dark shadow-accent-glow hover:brightness-105 transition-transform active:scale-95"
+          >
+            <PlusIcon size={16} />
+            Add Attendance
+          </Button>
         </div>
 
-        <div className="rounded-lg border border-border overflow-hidden bg-card">
+        <div className="rounded-lg border border-border overflow-hidden bg-card shadow-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((group) => (
                 <TableRow
                   key={group.id}
-                  className="border-b border-border bg-muted/20"
+                  className="border-b border-dashed border-border bg-secondary/60 hover:bg-secondary/60"
                 >
                   {group.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="px-4 py-3 font-medium"
+                      className="px-4 py-3 font-bold text-foreground"
                     >
                       {header.isPlaceholder
                         ? null
@@ -446,7 +466,7 @@ export function AttendanceList() {
                 ? table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}
-                      className="border-b border-border hover:bg-muted/30 transition-colors"
+                      className="border-b border-border hover:bg-secondary/50 transition-colors"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
@@ -492,20 +512,25 @@ export function AttendanceList() {
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-card border-border rounded-lg">
+        <AlertDialogContent className="bg-card border-border rounded-xl shadow-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Attendance?</AlertDialogTitle>
+            <AlertDialogTitle className="text-foreground">
+              Delete Attendance?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete this attendance record. This action
               cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteTargetId(null)}>
+            <AlertDialogCancel
+              onClick={() => setDeleteTargetId(null)}
+              className="rounded-full"
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
+              className="rounded-full bg-destructive text-destructive-foreground shadow-coral-glow hover:bg-destructive/90"
               onClick={handleDeleteConfirm}
             >
               Delete

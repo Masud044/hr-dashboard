@@ -88,7 +88,7 @@ const StagingRow = React.memo(function StagingRow({
           disabled={approved} onBlur={(e) => !approved && onRemarksBlur(r.STAGING_ID, e.target.value)} />
       </td>
       <td className="px-4 py-2.5 min-w-[160px]">
-        <InvoiceCell parentType="staging" parentId={r.STAGING_ID} />
+        <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
       </td>
       <td className="px-4 py-2.5 min-w-[110px]">
         {!approved ? (

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Loader2, Trash2, ExternalLink, PlusCircle, X } from "lucide-react";
+import { url, fmtDate, fmtAmount } from "./constants";
 import {
   Sheet,
   SheetContent,
@@ -12,9 +13,9 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { url } from "./constants";
 
-export default function InvoiceSheet({ open, onClose, parentType, parentId }) {
+
+export default function InvoiceSheet({ open, onClose, parentType, parentId, row }) {
   const queryClient = useQueryClient();
   const [invoiceNo, setInvoiceNo] = useState("");
   const [files, setFiles] = useState([]);
@@ -101,6 +102,20 @@ export default function InvoiceSheet({ open, onClose, parentType, parentId }) {
         <SheetHeader className="border-b border-border pb-3">
           <SheetTitle className="font-display text-foreground">Invoices</SheetTitle>
         </SheetHeader>
+
+        {row && (
+  <div className="px-4 py-2.5 bg-secondary/50 border-b border-border text-xs">
+    <div className="flex items-center justify-between">
+      <span className="text-muted-foreground">{fmtDate(row.TXN_DATE)}</span>
+      <span className={`font-semibold ${Number(row.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}>
+        {fmtAmount(row.AMOUNT)}
+      </span>
+    </div>
+    {row.DESCRIPTION && (
+      <div className="text-muted-foreground mt-1 line-clamp-2">{row.DESCRIPTION}</div>
+    )}
+  </div>
+)}
 
         <div className="mt-4 space-y-4 px-4">
           {isLoading ? (
