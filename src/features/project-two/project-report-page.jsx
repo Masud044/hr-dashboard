@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { SectionContainer } from "@/components/SectionContainer";
-import InvoiceCell from "@/features/setting/pages/statement-upload-three/InvoiceCell";
+import InvoiceCell from "@/features/setting/pages/statement-upload-three/invoice/InvoiceCell";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 

@@ -1,10 +1,10 @@
 // src/lib/avatar-utils.js
 
 const AVATAR_COLORS = [
-  "bg-red-500",    "bg-orange-500", "bg-amber-500",
-  "bg-green-500",  "bg-teal-500",   "bg-blue-500",
-  "bg-indigo-500", "bg-violet-500", "bg-pink-500",
-  "bg-rose-500",   "bg-cyan-500",   "bg-emerald-500",
+  "#6366F1", "#10B981", "#F59E0B",
+  "#EF4444", "#20970B", "#818CF8",
+  "#0EA5E9", "#EC4899", "#8B5CF6",
+  "#14B8A6",
 ];
 
 const hashName = (str) => {
@@ -15,6 +15,6 @@ const hashName = (str) => {
   return Math.abs(hash);
 };
 
-export const getAvatarColor = (name = "") => {
-  return AVATAR_COLORS[hashName(name) % AVATAR_COLORS.length];
+export const getAvatarColor = (name) => {
+  return AVATAR_COLORS[hashName(name || "") % AVATAR_COLORS.length];
 };

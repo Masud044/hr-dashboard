@@ -1,4 +1,4 @@
-// src/features/setting/pages/statement-upload-three/InvoiceSheet.jsx
+// src\features\setting\pages\statement-upload-three\invoice\InvoiceSheet.jsx
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 
 export default function InvoiceSheet({ open, onClose, parentType, parentId, row }) {
   const queryClient = useQueryClient();
+  const { user } = useAuthV2();
   const [invoiceNo, setInvoiceNo] = useState("");
   const [files, setFiles] = useState([]);
 
@@ -38,6 +39,7 @@ export default function InvoiceSheet({ open, onClose, parentType, parentId, row 
       const fd = new FormData();
       fd.append("invoiceNo", invoiceNo);
       files.forEach((f) => fd.append("files", f));
+      if (user?.ID) fd.append("userId", user.ID);
       return axios.post(`${url}/api/statement/${parentType}/${parentId}/invoices`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -55,6 +57,7 @@ export default function InvoiceSheet({ open, onClose, parentType, parentId, row 
     mutationFn: async ({ invoiceId, file }) => {
       const fd = new FormData();
       fd.append("file", file);
+      if (user?.ID) fd.append("userId", user.ID);
       return axios.post(`${url}/api/statement/invoices/${invoiceId}/files`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });

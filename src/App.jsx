@@ -56,6 +56,7 @@ import { WorkerFormPage } from "./features/worker/worker-form-page";
 import { AttendanceList } from "./features/worker-attendance/attendance-list";
 import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
 import { AttendanceReport } from "./features/worker-attendance/attendance-report";
+import InvoiceManagementPage from "./features/setting/pages/statement-upload-three/invoice/InvoiceManagementPage";
 const ADMIN = ["Admin"];
 const DataEntryUser = ["Admin", "DataEntry"];
 
@@ -176,6 +177,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+  path="statement/:parentType/:parentId/invoices"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <InvoiceManagementPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="project/:id"
                 element={

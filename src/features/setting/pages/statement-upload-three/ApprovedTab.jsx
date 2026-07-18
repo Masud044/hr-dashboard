@@ -36,7 +36,7 @@ import {
   downloadCsv,
 } from "./constants";
 import { useStagingSelectionStore } from "./useStagingSelectionStore";
-import InvoiceCell from "./InvoiceCell";
+import InvoiceCell from "./invoice/InvoiceCell";
 
 // ── ADD THIS BLOCK HERE, before the component definition ──
 const INTERACTIVE_SELECTOR =
