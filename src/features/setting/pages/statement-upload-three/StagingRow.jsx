@@ -7,7 +7,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import Combobox from "./Combobox";
 import { CATEGORY_STYLES, STATUS_STYLES, fmtDate, fmtAmount, url } from "./constants";
 import { useStagingSelectionStore } from "./useStagingSelectionStore";
-import InvoiceCell from "./InvoiceCell";
+import InvoiceCell from "./invoice/InvoiceCell";
 
 // A click on any of these (or their descendants) is "interacting with a
 // control", not "selecting the row" — skip the row toggle in that case.
