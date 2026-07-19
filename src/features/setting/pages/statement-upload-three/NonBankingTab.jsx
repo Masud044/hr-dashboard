@@ -214,7 +214,7 @@ export default function NonBankingTab({ projectOptions, contractorOptions, proje
       </div>
 
       <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[75vh]">
           <table className="w-full text-sm min-w-[1400px]">
             <StagingThead />
             <tbody>

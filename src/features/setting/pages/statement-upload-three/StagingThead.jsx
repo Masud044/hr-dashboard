@@ -5,17 +5,17 @@ const StagingThead = React.memo(function StagingThead() {
   return (
     <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
       <tr>
-        <th className="px-4 py-3 text-left">Status</th>
-        <th className="px-4 py-3 text-left">Date</th>
-        <th className="px-4 py-3 text-right">Amount</th>
-        <th className="px-4 py-3 text-left">Description</th>
-        {/* <th className="px-4 py-3 text-left">Category</th> */}
-        <th className="px-4 py-3 text-left">Project</th>
-        <th className="px-4 py-3 text-left">Contractor</th>
-  <th className="px-4 py-3 text-left">Remarks</th>
-<th className="px-4 py-3 text-left">Invoice</th>
-        {/* <th className="px-4 py-3 text-left">Invoice File</th> */}
-        <th className="px-4 py-3 text-left">Action</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Status</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Date</th>
+        <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Amount</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Description</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Project</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Contractor</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Remarks</th>
+        <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Invoice</th>
+        <th className="px-4 py-3 text-left sticky top-0 right-0 z-30 bg-gray-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]">
+          Action
+        </th>
       </tr>
     </thead>
   );

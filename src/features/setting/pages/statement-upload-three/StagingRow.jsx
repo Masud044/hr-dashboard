@@ -8,6 +8,7 @@ import Combobox from "./Combobox";
 import { CATEGORY_STYLES, STATUS_STYLES, fmtDate, fmtAmount, url } from "./constants";
 import { useStagingSelectionStore } from "./useStagingSelectionStore";
 import InvoiceCell from "./invoice/InvoiceCell";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // A click on any of these (or their descendants) is "interacting with a
 // control", not "selecting the row" — skip the row toggle in that case.
@@ -39,13 +40,23 @@ const StagingRow = React.memo(function StagingRow({
       ? "bg-yellow-200/60 border-l-4 border-l-blue-500"
       : "hover:bg-gray-50";
 
+  // The sticky Action cell paints its own background (it sits above the
+  // rest of the row while scrolling), so it needs to mirror rowClass's
+  // background explicitly rather than relying on the <tr> background /
+  // :hover showing through.
+  const stickyBg = approved
+    ? "bg-green-50"
+    : isSelected
+      ? "bg-yellow-200/60"
+      : "bg-white group-hover:bg-gray-50";
+
   return (
     <tr
       onClick={(e) => {
         if (isInteractiveClick(e)) return;
         setSelectedStagingId(r.STAGING_ID);
       }}
-      className={`border-b last:border-0 cursor-pointer ${rowClass}`}
+      className={`group border-b last:border-0 cursor-pointer ${rowClass}`}
     >
       <td className="px-4 py-2.5">
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLES[r.STATUS] || STATUS_STYLES.PENDING}`}>
@@ -90,16 +101,30 @@ const StagingRow = React.memo(function StagingRow({
       <td className="px-4 py-2.5 min-w-[160px]">
         <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
       </td>
-      <td className="px-4 py-2.5 min-w-[110px]">
-        {!approved ? (
-          <Button size="sm" onClick={() => onApproveClick(r)} disabled={isApproving}
-            className="h-7 px-2.5 text-xs rounded-full bg-violet-600 hover:bg-violet-700">
-            {isApproving ? (<><Loader2 size={12} className="mr-1 animate-spin" /> Approving...</>) : (<><CheckCircle2 size={12} className="mr-1" /> Approve</>)}
-          </Button>
-        ) : (
-          <span className="text-[10px] text-green-600 font-semibold">Approved</span>
-        )}
-      </td>
+     <td className={`px-4 py-2.5 min-w-[60px] backdrop-blur-sm sticky right-0 z-20 ${stickyBg} shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]`}>
+  {!approved ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          size="icon"
+          onClick={() => onApproveClick(r)}
+          disabled={isApproving}
+          aria-label="Approve"
+          className="h-7 w-7 rounded-full bg-violet-600 hover:bg-violet-700"
+        >
+          {isApproving ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <CheckCircle2 size={14} />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Approve</TooltipContent>
+    </Tooltip>
+  ) : (
+    <span className="text-[10px] text-green-600 font-semibold">Approved</span>
+  )}
+</td>
     </tr>
   );
 });
