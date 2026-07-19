@@ -19,12 +19,16 @@ import { url, fmtDate, fmtAmount } from "../constants";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import InvoiceCard from "./InvoiceCard";
 import AddInvoicePanel from "./AddInvoicePanel";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const MAX_SIZE = 1 * 1024 * 1024;
 const ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/jpg"];
 
 export default function InvoiceManagementPage() {
   const { parentType, parentId } = useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuthV2();
 
@@ -231,6 +235,14 @@ const requestDeleteInvoice = (invoiceId) => setDeleteInvoiceTarget(invoiceId);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate(-1)}
+        className="mb-4"
+      >
+        <ArrowLeft size={16} /> Back
+      </Button>
       {/* {isRowLoading ? (
         <div className="border border-border rounded-xl p-4 bg-card mb-6 h-[68px] animate-pulse" />
       ) : row ? (

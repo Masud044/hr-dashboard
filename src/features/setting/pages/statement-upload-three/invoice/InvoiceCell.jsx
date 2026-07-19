@@ -1,13 +1,14 @@
-// src\features\setting\pages\statement-upload-three\invoice\InvoiceCell.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Paperclip } from "lucide-react";
 import { url } from "../constants";
+import { useStagingSelectionStore } from "../useStagingSelectionStore";
 
 export default function InvoiceCell({ parentType, parentId, row }) {
   const navigate = useNavigate();
+  const forceSelect = useStagingSelectionStore((s) => s.forceSelect);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", parentType, parentId],
@@ -23,6 +24,7 @@ export default function InvoiceCell({ parentType, parentId, row }) {
   const extraCount = invoices.length - visibleInvoices.length;
 
   const handleClick = () => {
+    forceSelect(parentId);
     navigate(`/dashboard/statement/${parentType}/${parentId}/invoices`);
   };
 
