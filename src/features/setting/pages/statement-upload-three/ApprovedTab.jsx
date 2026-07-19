@@ -37,6 +37,11 @@ import {
 } from "./constants";
 import { useStagingSelectionStore } from "./useStagingSelectionStore";
 import InvoiceCell from "./invoice/InvoiceCell";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // ── ADD THIS BLOCK HERE, before the component definition ──
 const INTERACTIVE_SELECTOR =
@@ -210,27 +215,27 @@ export default function ApprovedTab({
       </div>
 
       <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* <div className="overflow-x-auto"> */}
+          <div className="overflow-auto max-h-[75vh]">
           <table className="w-full text-sm min-w-[1500px]">
             <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3 text-right">Receive</th>
-                <th className="px-4 py-3 text-right">Payment</th>
-                <th className="px-4 py-3 text-left">Description</th>
-                {/* <th className="px-4 py-3 text-left">Category</th> */}
-                <th className="px-4 py-3 text-left">Source</th>
-                <th className="px-4 py-3 text-left">Project</th>
-                <th className="px-4 py-3 text-left">Contractor</th>
-                {/* <th className="px-4 py-3 text-left">Invoice No</th> */}
-                <th className="px-4 py-3 text-left">Remarks</th>
-                <th className="px-4 py-3 text-left">Approved Date</th>
-                {/* <th className="px-4 py-3 text-left">Invoice File</th> */}
-                <th className="px-4 py-3 text-left">Invoice</th>
-                <th className="px-4 py-3 text-left">Action</th>
-              </tr>
-            </thead>
+  <tr>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Date</th>
+    <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Amount</th>
+    <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Receive</th>
+    <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Payment</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Description</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Source</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Project</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Contractor</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Remarks</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Approved Date</th>
+    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Invoice</th>
+    <th className="px-4 py-3 text-left sticky top-0 right-0 z-30 bg-gray-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]">
+      Action
+    </th>
+  </tr>
+</thead>
             <tbody>
               {isLoading ? (
                 <tr>
@@ -253,10 +258,10 @@ export default function ApprovedTab({
                     <tr
                       key={r.TXN_ID}
                       onClick={(e) => {
-        if (isInteractiveClick(e)) return;
-        setSelectedStagingId(r.TXN_ID);
-      }}
-                      className={`border-b last:border-0 cursor-pointer ${isSelected ? "bg-yellow-200/60 border-l-4 border-l-yellow-700" : "hover:bg-gray-50"}`}
+                        if (isInteractiveClick(e)) return;
+                        setSelectedStagingId(r.TXN_ID);
+                      }}
+                      className={`group border-b last:border-0 cursor-pointer ${isSelected ? "bg-yellow-200/60 border-l-4 border-l-yellow-700" : "hover:bg-gray-50"}`}
                     >
                       <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
                         {fmtDate(r.TXN_DATE)}
@@ -430,22 +435,38 @@ export default function ApprovedTab({
                         {fmtDate(r.APPROVED_DATE)}
                       </td>
                       <td className="px-4 py-2.5 min-w-[160px]">
-                        <InvoiceCell parentType="main" parentId={r.TXN_ID} row={r} />
+                        <InvoiceCell
+                          parentType="main"
+                          parentId={r.TXN_ID}
+                          row={r}
+                        />
                       </td>
-                      <td className="px-4 py-2.5 min-w-[110px]">
-                        <Button
-                          size="sm"
-                          onClick={() => setDisapproveTarget(r)}
-                          disabled={!r.STAGING_ID}
-                          className="h-7 px-2.5 text-xs rounded-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
-                          title={
-                            !r.STAGING_ID
+
+                      <td
+                        className={`px-4 py-2.5 min-w-[60px] backdrop-blur-sm sticky right-0 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)] ${
+                          isSelected
+                            ? "bg-yellow-200/60"
+                            : "bg-white group-hover:bg-gray-50"
+                        }`}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              onClick={() => setDisapproveTarget(r)}
+                              disabled={!r.STAGING_ID}
+                              aria-label="Disapprove"
+                              className="h-7 w-7 rounded-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                            >
+                              <RotateCcw size={14} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {!r.STAGING_ID
                               ? "Legacy records cannot be disapproved"
-                              : ""
-                          }
-                        >
-                          <RotateCcw size={12} className="mr-1" /> Disapprove
-                        </Button>
+                              : "Disapprove"}
+                          </TooltipContent>
+                        </Tooltip>
                       </td>
                     </tr>
                   );
