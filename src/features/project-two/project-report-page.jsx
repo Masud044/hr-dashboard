@@ -43,6 +43,7 @@ export function ProjectReportPage() {
 
   const [activeTab, setActiveTab] = useState("transactions"); // "transactions" | "byContractor"
   const workerSectionRef = useRef(null);
+  const MARGIN_PERCENT = 10; // TODO: replace with per-project margin from PM_PROJECT once added to DB
 
   const scrollToWorkerSection = () => {
     workerSectionRef.current?.scrollIntoView({
@@ -77,6 +78,34 @@ export function ProjectReportPage() {
     const workerCost = Number(workerTotals.totalAmount) || 0;
     return { debit, credit, workerCost, net: debit - credit - workerCost };
   }, [rows, workerTotals]);
+
+  const summary = useMemo(() => {
+    const projectExpenses = totals.credit;
+    const workerCost = totals.workerCost;
+    const buildExpenses = projectExpenses + workerCost;
+
+    const builderMargin = buildExpenses * (MARGIN_PERCENT / 100);
+    const gst = builderMargin * 0.10;
+    const totalBuilderMargin = builderMargin + gst;
+
+    const finalProjectExpenses = buildExpenses + totalBuilderMargin;
+
+    const customerPaid = rows.reduce((s, r) => {
+      if (r.SOURCE_TYPE === "NON_BANKING" && r.PAYMENT_BY === "CUSTOMER" && r.DEBIT != null) {
+        return s + Number(r.DEBIT);
+      }
+      return s;
+    }, 0);
+
+    const collectionReceived = totals.debit;
+    const balance = (collectionReceived + customerPaid) - finalProjectExpenses;
+
+    return {
+      projectExpenses, workerCost, buildExpenses,
+      builderMargin, gst, totalBuilderMargin,
+      finalProjectExpenses, collectionReceived, customerPaid, balance,
+    };
+  }, [totals, rows]);
 
   const groupedByContractor = useMemo(() => {
     const map = new Map();
@@ -253,36 +282,78 @@ export function ProjectReportPage() {
           <div className="w-full h-px bg-border mt-4" />
         </div>
 
-        {/* Summary bar — always visible regardless of active tab */}
+        {/* Summary — Project Expenses / Build Expenses / Builder Margin / Balance */}
         {!isLoading && (rows.length > 0 || workerLogs.length > 0) && (
-          <div className="flex items-center gap-6 px-6 py-3 mb-6 bg-muted/30 border border-border rounded-lg text-sm">
-            <div>
-              <span className="text-muted-foreground">Total Received: </span>
-              <strong className="text-green-500">
-                {fmtAmount(totals.debit)}
-              </strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Total Payment: </span>
-              <strong className="text-destructive">
-                {fmtAmount(totals.credit)}
-              </strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Worker Cost: </span>
-              <strong className="text-destructive">
-                {fmtAmount(totals.workerCost)}
-              </strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Total: </span>
-              <strong
-                className={
-                  totals.net >= 0 ? "text-green-500" : "text-destructive"
-                }
+          <div className="mb-6 border border-border rounded-lg overflow-hidden max-w-xl">
+            <div className="grid grid-cols-2 text-sm">
+              <div className="px-4 py-2 text-foreground">Project Expenses</div>
+              <div className="px-4 py-2 text-right font-semibold text-destructive">
+                {fmtAmount(summary.projectExpenses)}
+              </div>
+
+              <div className="px-4 py-2 text-muted-foreground">Worker Cost</div>
+              <div className="px-4 py-2 text-right text-muted-foreground">
+                {fmtAmount(summary.workerCost)}
+              </div>
+
+              <div className="px-4 py-2 bg-green-100 dark:bg-green-900/20 font-medium text-foreground">
+                Build Expenses
+              </div>
+              <div className="px-4 py-2 bg-green-100 dark:bg-green-900/20 text-right font-semibold text-foreground">
+                {fmtAmount(summary.buildExpenses)}
+              </div>
+
+              <div className="px-4 py-2 pt-4 bg-pink-100 dark:bg-pink-900/20 text-foreground">
+                Builder Margin{" "}
+                <span className="text-red-500 font-semibold">
+                  {MARGIN_PERCENT}%
+                </span>
+              </div>
+              <div className="px-4 py-2 pt-4 bg-pink-100 dark:bg-pink-900/20 text-right font-semibold text-foreground">
+                {fmtAmount(summary.builderMargin)}
+              </div>
+
+              <div className="px-4 py-2 bg-pink-100 dark:bg-pink-900/20 pl-8 text-muted-foreground">
+                gst
+              </div>
+              <div className="px-4 py-2 bg-pink-100 dark:bg-pink-900/20 text-right text-foreground">
+                {fmtAmount(summary.gst)}
+              </div>
+
+              <div className="px-4 py-2 bg-green-100 dark:bg-green-900/20 font-medium text-foreground">
+                Total Builder Margin
+              </div>
+              <div className="px-4 py-2 bg-green-100 dark:bg-green-900/20 text-right font-semibold text-foreground">
+                {fmtAmount(summary.totalBuilderMargin)}
+              </div>
+
+              <div className="px-4 py-2 pt-4 bg-green-100 dark:bg-green-900/20 font-medium text-foreground">
+                Project Expenses
+              </div>
+              <div className="px-4 py-2 pt-4 bg-green-100 dark:bg-green-900/20 text-right font-semibold text-foreground">
+                {fmtAmount(summary.finalProjectExpenses)}
+              </div>
+
+              <div className="px-4 py-2 pt-4 text-foreground">
+                Collection/Received
+              </div>
+              <div className="px-4 py-2 pt-4 text-right font-bold text-green-500">
+                {fmtAmount(summary.collectionReceived)}
+              </div>
+
+              <div className="px-4 py-2 text-foreground">Customer paid</div>
+              <div className="px-4 py-2 text-right font-semibold text-green-500">
+                {fmtAmount(summary.customerPaid)}
+              </div>
+
+              <div className="px-4 py-2 pt-4 text-foreground">Balance</div>
+              <div
+                className={`px-4 py-2 pt-4 text-right font-bold ${
+                  summary.balance >= 0 ? "text-green-500" : "text-destructive"
+                }`}
               >
-                {fmtAmount(totals.net)}
-              </strong>
+                {fmtAmount(summary.balance)}
+              </div>
             </div>
           </div>
         )}
