@@ -364,14 +364,17 @@ export default function ApprovedTab({
                         </Select>
                       </td> */}
                       <td className="px-3 py-2.5">
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.SOURCE_TYPE === "NON_BANKING" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
-                        >
-                          {r.SOURCE_TYPE === "NON_BANKING"
-                            ? "Non-Banking"
-                            : "Banking"}
-                        </span>
-                      </td>
+  <span
+    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.SOURCE_TYPE === "NON_BANKING" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
+  >
+    {r.SOURCE_TYPE === "NON_BANKING" ? "Non-Banking" : "Banking"}
+  </span>
+  {r.SOURCE_TYPE === "NON_BANKING" && r.PAYMENT_BY === "CUSTOMER" && (
+    <span className="block mt-1 text-[9px] font-medium text-orange-600">
+      Paid by Customer
+    </span>
+  )}
+</td>
                       <td className="px-3 py-2.5 w-[220px]">
                         <Combobox
                           options={projectOpts}

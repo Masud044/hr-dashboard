@@ -70,7 +70,7 @@ const StagingRow = React.memo(function StagingRow({
   );
   const isSelected = selectedStagingId === r.STAGING_ID;
 
-const stripe = index % 2 === 1 ? "bg-gray-100" : "bg-white";
+  const stripe = index % 2 === 1 ? "bg-gray-100" : "bg-white";
   const rowClass = approved
     ? `bg-green-50 opacity-70 ${isSelected ? "border-l-4 border-l-yellow-700" : ""}`
     : isSelected
@@ -81,7 +81,7 @@ const stripe = index % 2 === 1 ? "bg-gray-100" : "bg-white";
   // rest of the row while scrolling), so it needs to mirror rowClass's
   // background explicitly rather than relying on the <tr> background /
   // :hover showing through.
-const stickyBg = approved
+  const stickyBg = approved
     ? "bg-green-50"
     : isSelected
       ? "bg-yellow-200/60"
@@ -111,8 +111,13 @@ const stickyBg = approved
         {fmtAmount(r.AMOUNT)}
       </td>
       <td className="px-3 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">
-        {r.DESCRIPTION}
-      </td>
+  {r.DESCRIPTION}
+  {r.PAYMENT_BY === "CUSTOMER" && (
+    <span className="block mt-1 text-[9px] font-medium text-orange-600">
+      Paid by Customer
+    </span>
+  )}
+</td>
       <td className="px-3 py-2.5 w-[220px]">
         <Combobox
           options={projectOpts}
