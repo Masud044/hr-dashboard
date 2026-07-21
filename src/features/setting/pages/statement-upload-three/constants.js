@@ -20,7 +20,7 @@ export const STATUS_STYLES = {
 export const EMPTY_NB = {
   txnDate: "", amount: "", description: "", entryType: "DEBIT", category: "other",
   pId: "", projectName: "", contractorId: "", contractorName: "",
-  invoiceNo: "", remarks: "",
+  invoiceNo: "", remarks: "", paymentBy: "BUILDER",
 };
 
 export const EMPTY_FILTERS = {
@@ -53,18 +53,18 @@ export const fmtAmount = (amt) => {
 };
 
 function buildCsv(dataRows) {
-  const headers = ["Date", "Amount", "Debit", "Credit", "Description", /* "Category", */ "Project", "Contractor", "Invoice No", "Source", "Remarks", "Status"];
+  const headers = ["Date", "Amount", "Debit", "Credit", "Description", "Project", "Contractor", "Invoice No", "Source", "Payment By", "Remarks", "Status"];
   const csvRows = dataRows.map((r) => [
     fmtDate(r.TXN_DATE),
     r.AMOUNT,
     r.DEBIT ?? "",
     r.CREDIT ?? "",
     `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
-    // r.CATEGORY,
     `"${(r.PROJECT_NAME || "").replace(/"/g, '""')}"`,
     `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
     `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,
     r.SOURCE_TYPE || "",
+    r.SOURCE_TYPE === "NON_BANKING" ? (r.PAYMENT_BY || "") : "",
     `"${(r.REMARKS || "").replace(/"/g, '""')}"`,
     r.STATUS || "",
   ]);

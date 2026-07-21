@@ -232,6 +232,22 @@ export default function NonBankingTab({
               </SelectContent>
             </Select>
           </div>
+
+          <div>
+  <label className="text-xs text-gray-500 mb-1 block">Payment By</label>
+  <Select
+    value={nbForm.paymentBy}
+    onValueChange={(v) => setNbForm((p) => ({ ...p, paymentBy: v }))}
+  >
+    <SelectTrigger className="h-8 text-xs">
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="BUILDER">Builder</SelectItem>
+      <SelectItem value="CUSTOMER">Customer</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Amount *</label>
             <Input
