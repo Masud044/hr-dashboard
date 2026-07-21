@@ -80,9 +80,12 @@ export default function NonBankingTab({
   );
 
   const sortedContractorOptions = useMemo(
-  () => [...contractorOptions].sort((a, b) => a.CONTRATOR_NAME.localeCompare(b.CONTRATOR_NAME)),
-  [contractorOptions]
-);
+    () =>
+      [...contractorOptions].sort((a, b) =>
+        a.CONTRATOR_NAME.localeCompare(b.CONTRATOR_NAME),
+      ),
+    [contractorOptions],
+  );
   const {
     data: result,
     isLoading,
@@ -158,6 +161,8 @@ export default function NonBankingTab({
     updateRowMutation.mutate({ stagingId, remarks: value });
   const handleCategoryChange = (stagingId, value) =>
     updateRowMutation.mutate({ stagingId, category: value });
+  const handlePaymentByChange = (stagingId, value) =>
+    updateRowMutation.mutate({ stagingId, paymentBy: value });
   const handleInvoiceFileSelect = (stagingId, fileList) => {
     const f = fileList?.[0];
     if (!f) return;
@@ -234,20 +239,22 @@ export default function NonBankingTab({
           </div>
 
           <div>
-  <label className="text-xs text-gray-500 mb-1 block">Payment By</label>
-  <Select
-    value={nbForm.paymentBy}
-    onValueChange={(v) => setNbForm((p) => ({ ...p, paymentBy: v }))}
-  >
-    <SelectTrigger className="h-8 text-xs">
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="BUILDER">Builder</SelectItem>
-      <SelectItem value="CUSTOMER">Customer</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
+            <label className="text-xs text-gray-500 mb-1 block">
+              Payment By
+            </label>
+            <Select
+              value={nbForm.paymentBy}
+              onValueChange={(v) => setNbForm((p) => ({ ...p, paymentBy: v }))}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BUILDER">Builder</SelectItem>
+                <SelectItem value="CUSTOMER">Customer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Amount *</label>
             <Input
@@ -427,39 +434,41 @@ export default function NonBankingTab({
       <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-auto max-h-[75vh]">
           <table className="w-full text-sm min-w-[1400px]">
-            <StagingThead />
+            <StagingThead showPaymentBy />
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-10 text-gray-400">
+                  <td colSpan={10} className="text-center py-10 text-gray-400">
                     <Loader2 className="inline animate-spin mr-2" size={16} />
                     Loading...
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-10 text-gray-400">
+                  <td colSpan={10} className="text-center py-10 text-gray-400">
                     No rows found.
                   </td>
                 </tr>
               ) : (
                 rows.map((r, idx) => (
-  <StagingRow
-    key={r.STAGING_ID}
-    row={r}
-    index={idx}
-                    projectOpts={projectOpts}
-                    contractorOpts={contractorOpts}
-                    isApproving={approvingRowId === r.STAGING_ID}
-                    onProjectChange={handleProjectChange}
-                    onContractorChange={handleContractorChange}
-                    onInvoiceNoBlur={handleInvoiceNoBlur}
-                    onRemarksBlur={handleRemarksBlur}
-                    onCategoryChange={handleCategoryChange}
-                    onInvoiceFileSelect={handleInvoiceFileSelect}
-                    onDeleteInvoiceClick={handleDeleteInvoiceClick}
-                    onApproveClick={handleApproveClick}
-                  />
+   <StagingRow
+  key={r.STAGING_ID}
+  row={r}
+  index={idx}
+  projectOpts={projectOpts}
+  contractorOpts={contractorOpts}
+  isApproving={approvingRowId === r.STAGING_ID}
+  onProjectChange={handleProjectChange}
+  onContractorChange={handleContractorChange}
+  onInvoiceNoBlur={handleInvoiceNoBlur}
+  onRemarksBlur={handleRemarksBlur}
+  onCategoryChange={handleCategoryChange}
+  onPaymentByChange={handlePaymentByChange}
+  showPaymentBy
+  onInvoiceFileSelect={handleInvoiceFileSelect}
+  onDeleteInvoiceClick={handleDeleteInvoiceClick}
+  onApproveClick={handleApproveClick}
+/>
                 ))
               )}
             </tbody>

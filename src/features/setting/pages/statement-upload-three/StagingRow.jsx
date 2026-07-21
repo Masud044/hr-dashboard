@@ -51,10 +51,13 @@ const StagingRow = React.memo(function StagingRow({
   isApproving,
   onProjectChange,
   onContractorChange,
+
   onInvoiceNoBlur,
   onRemarksBlur,
   onCategoryChange,
   onInvoiceFileSelect,
+  onPaymentByChange, // ← NEW
+  showPaymentBy = false, // ← NEW
   onDeleteInvoiceClick,
   onApproveClick,
 }) {
@@ -110,13 +113,8 @@ const StagingRow = React.memo(function StagingRow({
       >
         {fmtAmount(r.AMOUNT)}
       </td>
-      <td className="px-3 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">
+    <td className="px-3 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">
   {r.DESCRIPTION}
-  {r.PAYMENT_BY === "CUSTOMER" && (
-    <span className="block mt-1 text-[9px] font-medium text-orange-600">
-      Paid by Customer
-    </span>
-  )}
 </td>
       <td className="px-3 py-2.5 w-[220px]">
         <Combobox
@@ -155,6 +153,42 @@ const StagingRow = React.memo(function StagingRow({
           }
         />
       </td>
+      {/* {showPaymentBy && (
+        <td className="px-3 py-2.5 w-[110px]">
+          <Select
+            value={r.PAYMENT_BY || "BUILDER"}
+            onValueChange={(v) => onPaymentByChange(r.STAGING_ID, v)}
+            disabled={approved}
+          >
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="BUILDER">Builder</SelectItem>
+              <SelectItem value="CUSTOMER">Customer</SelectItem>
+            </SelectContent>
+          </Select>
+        </td>
+      )} */}
+      {showPaymentBy && (
+  <td className="px-3 py-2.5 w-[110px]">
+    <Select
+      value={r.PAYMENT_BY || "BUILDER"}
+      onValueChange={(v) => onPaymentByChange(r.STAGING_ID, v)}
+      disabled={approved}
+    >
+      <SelectTrigger className="h-7 text-xs">
+        <SelectValue>
+          {r.PAYMENT_BY === "CUSTOMER" ? "Customer" : "—"}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="BUILDER">Builder</SelectItem>
+        <SelectItem value="CUSTOMER">Customer</SelectItem>
+      </SelectContent>
+    </Select>
+  </td>
+)}
       <td className="px-3 py-2.5 min-w-[110px]">
         <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
       </td>

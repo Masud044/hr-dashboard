@@ -280,6 +280,9 @@ export default function ApprovedTab({
                   Remarks
                 </th>
                 <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Payment By
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
                   Approved Date
                 </th>
                 <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
@@ -293,14 +296,14 @@ export default function ApprovedTab({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={11} className="text-center py-10 text-gray-400">
+                  <td colSpan={13} className="text-center py-10 text-gray-400">
                     <Loader2 className="inline animate-spin mr-2" size={16} />
                     Loading...
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="text-center py-10 text-gray-400">
+                  <td colSpan={13} className="text-center py-10 text-gray-400">
                     No approved transactions yet.
                   </td>
                 </tr>
@@ -364,17 +367,14 @@ export default function ApprovedTab({
                         </Select>
                       </td> */}
                       <td className="px-3 py-2.5">
-  <span
-    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.SOURCE_TYPE === "NON_BANKING" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
-  >
-    {r.SOURCE_TYPE === "NON_BANKING" ? "Non-Banking" : "Banking"}
-  </span>
-  {r.SOURCE_TYPE === "NON_BANKING" && r.PAYMENT_BY === "CUSTOMER" && (
-    <span className="block mt-1 text-[9px] font-medium text-orange-600">
-      Paid by Customer
-    </span>
-  )}
-</td>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.SOURCE_TYPE === "NON_BANKING" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
+                        >
+                          {r.SOURCE_TYPE === "NON_BANKING"
+                            ? "Non-Banking"
+                            : "Banking"}
+                        </span>
+                      </td>
                       <td className="px-3 py-2.5 w-[220px]">
                         <Combobox
                           options={projectOpts}
@@ -489,6 +489,28 @@ export default function ApprovedTab({
                           }
                         />
                       </td>
+                      <td className="px-3 py-2.5 min-w-[110px]">
+  {r.SOURCE_TYPE === "NON_BANKING" ? (
+    <Select
+      value={r.PAYMENT_BY || "BUILDER"}
+      onValueChange={(v) =>
+        updateMainRowMutation.mutate({ txnId: r.TXN_ID, paymentBy: v })
+      }
+    >
+      <SelectTrigger className="h-7 text-xs">
+        <SelectValue>
+          {r.PAYMENT_BY === "CUSTOMER" ? "Customer" : "—"}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="BUILDER">Builder</SelectItem>
+        <SelectItem value="CUSTOMER">Customer</SelectItem>
+      </SelectContent>
+    </Select>
+  ) : (
+    <span className="text-gray-400 text-xs">—</span>
+  )}
+</td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-gray-500 text-xs">
                         {fmtDate(r.APPROVED_DATE)}
                       </td>
