@@ -85,25 +85,36 @@ export function ProjectReportPage() {
     const buildExpenses = projectExpenses + workerCost;
 
     const builderMargin = buildExpenses * (MARGIN_PERCENT / 100);
-    const gst = builderMargin * 0.10;
+    const gst = builderMargin * 0.1;
     const totalBuilderMargin = builderMargin + gst;
 
     const finalProjectExpenses = buildExpenses + totalBuilderMargin;
 
     const customerPaid = rows.reduce((s, r) => {
-      if (r.SOURCE_TYPE === "NON_BANKING" && r.PAYMENT_BY === "CUSTOMER" && r.DEBIT != null) {
-        return s + Number(r.DEBIT);
+      if (
+        r.SOURCE_TYPE === "NON_BANKING" &&
+        r.PAYMENT_BY === "CUSTOMER" &&
+        r.CREDIT != null
+      ) {
+        return s + Number(r.CREDIT);
       }
       return s;
     }, 0);
 
     const collectionReceived = totals.debit;
-    const balance = (collectionReceived + customerPaid) - finalProjectExpenses;
+    const balance = collectionReceived + customerPaid - finalProjectExpenses;
 
     return {
-      projectExpenses, workerCost, buildExpenses,
-      builderMargin, gst, totalBuilderMargin,
-      finalProjectExpenses, collectionReceived, customerPaid, balance,
+      projectExpenses,
+      workerCost,
+      buildExpenses,
+      builderMargin,
+      gst,
+      totalBuilderMargin,
+      finalProjectExpenses,
+      collectionReceived,
+      customerPaid,
+      balance,
     };
   }, [totals, rows]);
 
@@ -514,18 +525,26 @@ export function ProjectReportPage() {
                           {/* <td className="px-4 py-2.5 text-foreground text-xs">
                             {r.INVOICE_NO || <span className="text-muted-foreground italic">—</span>}
                           </td> */}
-                          <td className="px-4 py-2.5">
-                            <span
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                r.SOURCE_TYPE === "NON_BANKING"
-                                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                                  : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                              }`}
-                            >
-                              {r.SOURCE_TYPE === "NON_BANKING"
-                                ? "Non-Banking"
-                                : "Banking"}
-                            </span>
+                         <td className="px-4 py-2.5">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span
+                                className={`w-fit whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                  r.SOURCE_TYPE === "NON_BANKING"
+                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                }`}
+                              >
+                                {r.SOURCE_TYPE === "NON_BANKING"
+                                  ? "Non-Banking"
+                                  : "Banking"}
+                              </span>
+                              {r.SOURCE_TYPE === "NON_BANKING" &&
+                                r.PAYMENT_BY === "CUSTOMER" && (
+                                  <span className="whitespace-nowrap text-[9px] font-medium text-amber-600 dark:text-amber-400">
+                                    Customer Paid
+                                  </span>
+                                )}
+                            </div>
                           </td>
                           <td className="px-4 py-2.5 text-foreground text-xs">
                             {r.REMARKS || (
@@ -703,18 +722,26 @@ export function ProjectReportPage() {
                                 </td> */}
 
                                 <td className="px-4 py-2.5">
-                                  <span
-                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                      r.SOURCE_TYPE === "NON_BANKING"
-                                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                                        : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                    }`}
-                                  >
-                                    {r.SOURCE_TYPE === "NON_BANKING"
-                                      ? "Non-Banking"
-                                      : "Banking"}
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span
+                                className={`w-fit whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                  r.SOURCE_TYPE === "NON_BANKING"
+                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                }`}
+                              >
+                                {r.SOURCE_TYPE === "NON_BANKING"
+                                  ? "Non-Banking"
+                                  : "Banking"}
+                              </span>
+                              {r.SOURCE_TYPE === "NON_BANKING" &&
+                                r.PAYMENT_BY === "CUSTOMER" && (
+                                  <span className="whitespace-nowrap text-[9px] font-medium text-amber-600 dark:text-amber-400">
+                                    Customer Paid
                                   </span>
-                                </td>
+                                )}
+                            </div>
+                          </td>
                                 <td className="px-4 py-2.5 text-foreground text-xs">
                                   {r.REMARKS || (
                                     <span className="text-muted-foreground italic">
