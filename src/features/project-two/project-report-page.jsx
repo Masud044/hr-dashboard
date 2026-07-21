@@ -422,9 +422,9 @@ export function ProjectReportPage() {
                     <th className="px-4 py-3 text-left font-medium">
                       Description
                     </th>
-                    <th className="px-4 py-3 text-left font-medium">
+                    {/* <th className="px-4 py-3 text-left font-medium">
                       Category
-                    </th>
+                    </th> */}
                     <th className="px-4 py-3 text-left font-medium">
                       Matched Address
                     </th>
@@ -504,13 +504,13 @@ export function ProjectReportPage() {
                           <td className="px-4 py-2.5 max-w-[200px] text-foreground text-xs break-words">
                             {r.DESCRIPTION}
                           </td>
-                          <td className="px-4 py-2.5">
+                          {/* <td className="px-4 py-2.5">
                             <span
                               className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${CATEGORY_STYLES[cat] || CATEGORY_STYLES.other}`}
                             >
                               {cat}
                             </span>
-                          </td>
+                          </td> */}
                           <td className="px-4 py-2.5 max-w-[150px] text-xs">
                             {r.MATCHED_ADDRESS ? (
                               <span className="text-primary font-medium">
