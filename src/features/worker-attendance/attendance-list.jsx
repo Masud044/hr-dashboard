@@ -464,10 +464,10 @@ export function AttendanceList() {
               )}
               {!isLoading && table.getRowModel().rows?.length
                 ? table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className="border-b border-border hover:bg-secondary/50 transition-colors"
-                    >
+                   <TableRow
+  key={row.id}
+  className={`border-b border-border hover:bg-secondary/50 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
+>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
                           key={cell.id}

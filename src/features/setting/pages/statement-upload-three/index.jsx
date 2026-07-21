@@ -12,6 +12,7 @@ import ApprovedTab from "./ApprovedTab";
 import { useStatementMutations } from "./useStatementMutations";
 import { url } from "./constants";
 import { toSortedOpts } from "@/lib/utils";
+import InvoiceSheet from "./invoice/InvoiceSheet";
 
 const MainTabBtn = React.memo(function MainTabBtn({ id, label, icon: Icon, active, onClick }) {
   return (
@@ -170,6 +171,7 @@ export default function StatementUploadThree() {
           />
         )}
       </div>
+       <InvoiceSheet />
     </SectionContainer>
   );
 }

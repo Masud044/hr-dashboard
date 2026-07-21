@@ -236,10 +236,10 @@ export function NewProjectTable() {
     },
   });
 
-    const statusMutation = useMutation({
+  const statusMutation = useMutation({
     mutationFn: async ({ id, status }) => {
-      return axios.patch(`${url}/api/project/${id}/status`, { 
-        PROJECT_STATUS: status 
+      return axios.patch(`${url}/api/project/${id}/status`, {
+        PROJECT_STATUS: status,
       });
     },
     onSuccess: () => {
@@ -270,9 +270,9 @@ export function NewProjectTable() {
     setDeleteDialogOpen(true);
   };
 
-const handleOpenReport = (item) => {
-  navigate(`/dashboard/projects/${item.P_ID}/report`);
-};
+  const handleOpenReport = (item) => {
+    navigate(`/dashboard/projects/${item.P_ID}/report`);
+  };
 
   const handleDeleteConfirm = () => {
     if (deleteTargetId) deleteMutation.mutate(deleteTargetId);
@@ -362,7 +362,7 @@ const handleOpenReport = (item) => {
         </div>
       ),
     },
-       {
+    {
       accessorKey: "PROJECT_STATUS",
       header: ({ column }) => (
         <button
@@ -375,13 +375,24 @@ const handleOpenReport = (item) => {
       cell: ({ row }) => {
         const item = row.original;
         const status = item.PROJECT_STATUS || "RUNNING";
-        
-        let className = "capitalize border-0 cursor-pointer hover:opacity-80 transition-opacity ";
-        if (status === "RUNNING") className += "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
-        else if (status === "COMPLETED") className += "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
-        else if (status === "ON_HOLD") className += "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-        else if (status === "CANCELLED") className += "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
-        else className += "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+
+        let className =
+          "capitalize border-0 cursor-pointer hover:opacity-80 transition-opacity ";
+        if (status === "RUNNING")
+          className +=
+            "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+        else if (status === "COMPLETED")
+          className +=
+            "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
+        else if (status === "ON_HOLD")
+          className +=
+            "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+        else if (status === "CANCELLED")
+          className +=
+            "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
+        else
+          className +=
+            "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
 
         const handleStatusChange = (newStatus) => {
           if (newStatus !== status) {
@@ -396,18 +407,45 @@ const handleOpenReport = (item) => {
                 {status.toLowerCase().replace(/_/g, " ")}
               </Badge>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border w-44">
-              <DropdownMenuItem onClick={() => handleStatusChange("RUNNING")} className="cursor-pointer flex items-center">
-                <Badge className="bg-emerald-100 text-emerald-800 border-0 mr-2 text-[10px]">running</Badge> Running
+            <DropdownMenuContent
+              align="end"
+              className="bg-card border-border w-44"
+            >
+              <DropdownMenuItem
+                onClick={() => handleStatusChange("RUNNING")}
+                className="cursor-pointer flex items-center"
+              >
+                <Badge className="bg-emerald-100 text-emerald-800 border-0 mr-2 text-[10px]">
+                  running
+                </Badge>{" "}
+                Running
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStatusChange("COMPLETED")} className="cursor-pointer flex items-center">
-                <Badge className="bg-blue-100 text-blue-800 border-0 mr-2 text-[10px]">completed</Badge> Completed
+              <DropdownMenuItem
+                onClick={() => handleStatusChange("COMPLETED")}
+                className="cursor-pointer flex items-center"
+              >
+                <Badge className="bg-blue-100 text-blue-800 border-0 mr-2 text-[10px]">
+                  completed
+                </Badge>{" "}
+                Completed
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStatusChange("ON_HOLD")} className="cursor-pointer flex items-center">
-                <Badge className="bg-amber-100 text-amber-800 border-0 mr-2 text-[10px]">on hold</Badge> On Hold
+              <DropdownMenuItem
+                onClick={() => handleStatusChange("ON_HOLD")}
+                className="cursor-pointer flex items-center"
+              >
+                <Badge className="bg-amber-100 text-amber-800 border-0 mr-2 text-[10px]">
+                  on hold
+                </Badge>{" "}
+                On Hold
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStatusChange("CANCELLED")} className="cursor-pointer flex items-center">
-                <Badge className="bg-red-100 text-red-800 border-0 mr-2 text-[10px]">cancelled</Badge> Cancelled
+              <DropdownMenuItem
+                onClick={() => handleStatusChange("CANCELLED")}
+                className="cursor-pointer flex items-center"
+              >
+                <Badge className="bg-red-100 text-red-800 border-0 mr-2 text-[10px]">
+                  cancelled
+                </Badge>{" "}
+                Cancelled
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -553,15 +591,15 @@ const handleOpenReport = (item) => {
         </div>
       ),
       cell: ({ row }) => (
-       <ReorderCell
-  item={row.original}
-  itemId={row.original.P_ID}
-  apiData={apiData}
-  moveMutation={moveMutation}
-  reorderMutation={reorderMutation}
-  handleMove={handleMove}
-  handleReorderInput={handleReorderInput}
-/>
+        <ReorderCell
+          item={row.original}
+          itemId={row.original.P_ID}
+          apiData={apiData}
+          moveMutation={moveMutation}
+          reorderMutation={reorderMutation}
+          handleMove={handleMove}
+          handleReorderInput={handleReorderInput}
+        />
       ),
     },
 
@@ -738,10 +776,15 @@ const handleOpenReport = (item) => {
               {!isLoading &&
                 table.getRowModel().rows.length > 0 &&
                 table.getRowModel().rows.map((row) => (
+                  // <TableRow
+                  //   key={row.id}
+                  //   data-state={row.getIsSelected() && "selected"}
+                  //   className="border-b border-border hover:bg-muted/30 transition-colors"
+                  // >
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="border-b border-border hover:bg-muted/30 transition-colors"
+                    className={`border-b border-border hover:bg-muted/30 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell

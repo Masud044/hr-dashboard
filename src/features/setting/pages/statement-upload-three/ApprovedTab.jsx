@@ -1,6 +1,8 @@
 // src/features/setting/pages/statement-upload-three/ApprovedTab.jsx
 import React, { useState, useMemo } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
+import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import {
   CheckCircle2,
   Download,
@@ -69,7 +71,11 @@ export default function ApprovedTab({
   );
 
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
-  const [page, setPage] = useState(1);
+  // const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [disapproveTarget, setDisapproveTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
@@ -123,13 +129,22 @@ export default function ApprovedTab({
     });
   };
 
+  // const queryParams = useMemo(
+  //   () => ({
+  //     ...appliedFilters,
+  //     page,
+  //     pageSize: PAGE_SIZE,
+  //   }),
+  //   [appliedFilters, page],
+  // );
+
   const queryParams = useMemo(
     () => ({
       ...appliedFilters,
-      page,
-      pageSize: PAGE_SIZE,
+      page: pagination.pageIndex + 1,
+      pageSize: pagination.pageSize,
     }),
-    [appliedFilters, page],
+    [appliedFilters, pagination],
   );
 
   const {
@@ -156,6 +171,15 @@ export default function ApprovedTab({
   });
   const rows = result?.rows || [];
   const totalCount = result?.totalCount || 0;
+  const table = useReactTable({
+    data: rows,
+    columns: [],
+    state: { pagination },
+    onPaginationChange: setPagination,
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const handleExportCsv = async () => {
     setExporting(true);
@@ -180,13 +204,21 @@ export default function ApprovedTab({
     <>
       <FilterBar
         initialFilters={appliedFilters}
+        // onApply={(f) => {
+        //   setAppliedFilters(f);
+        //   setPage(1);
+        // }}
+        // onClear={() => {
+        //   setAppliedFilters(EMPTY_FILTERS);
+        //   setPage(1);
+        // }}
         onApply={(f) => {
           setAppliedFilters(f);
-          setPage(1);
+          setPagination((p) => ({ ...p, pageIndex: 0 }));
         }}
         onClear={() => {
           setAppliedFilters(EMPTY_FILTERS);
-          setPage(1);
+          setPagination((p) => ({ ...p, pageIndex: 0 }));
         }}
         projectOptions={projectOptions}
         contractorOptions={contractorOptions}
@@ -216,26 +248,48 @@ export default function ApprovedTab({
 
       <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
         {/* <div className="overflow-x-auto"> */}
-          <div className="overflow-auto max-h-[75vh]">
+        <div className="overflow-auto max-h-[75vh]">
           <table className="w-full text-sm min-w-[1500px]">
             <thead className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
-  <tr>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Date</th>
-    <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Amount</th>
-    <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Receive</th>
-    <th className="px-4 py-3 text-right sticky top-0 z-10 bg-gray-50">Payment</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Description</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Source</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Project</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Contractor</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Remarks</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Approved Date</th>
-    <th className="px-4 py-3 text-left sticky top-0 z-10 bg-gray-50">Invoice</th>
-    <th className="px-4 py-3 text-left sticky top-0 right-0 z-30 bg-gray-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]">
-      Action
-    </th>
-  </tr>
-</thead>
+              <tr>
+                <th className="px-2 py-3 w-[100px] text-left sticky top-0 z-10 bg-gray-50">
+                  Date
+                </th>
+                <th className="px-2 py-3 w-[90px] text-right sticky top-0 z-10 bg-gray-50">
+                  Amount
+                </th>
+                <th className="px-3 py-3 text-right sticky top-0 z-10 bg-gray-50">
+                  Receive
+                </th>
+                <th className="px-3 py-3 text-right sticky top-0 z-10 bg-gray-50">
+                  Payment
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Description
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Source
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Project
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Contractor
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Remarks
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Approved Date
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Invoice
+                </th>
+                <th className="px-3 py-3 text-left sticky top-0 right-0 z-30 bg-gray-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]">
+                  Action
+                </th>
+              </tr>
+            </thead>
             <tbody>
               {isLoading ? (
                 <tr>
@@ -251,9 +305,10 @@ export default function ApprovedTab({
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => {
+                rows.map((r, idx) => {
                   // const cat = (r.CATEGORY || "other").toLowerCase();
                   const isSelected = selectedStagingId === r.TXN_ID;
+                  const stripe = idx % 2 === 1 ? "bg-gray-100" : "bg-white";
                   return (
                     <tr
                       key={r.TXN_ID}
@@ -261,27 +316,27 @@ export default function ApprovedTab({
                         if (isInteractiveClick(e)) return;
                         setSelectedStagingId(r.TXN_ID);
                       }}
-                      className={`group border-b last:border-0 cursor-pointer ${isSelected ? "bg-yellow-200/60 border-l-4 border-l-yellow-700" : "hover:bg-gray-50"}`}
+                      className={`group border-b last:border-0 cursor-pointer ${isSelected ? "bg-yellow-200/60 border-l-4 border-l-yellow-700" : `${stripe} hover:bg-gray-200`}`}
                     >
-                      <td className="px-4 py-2.5 whitespace-nowrap font-medium text-gray-900">
+                      <td className="px-2 py-2.5 w-[100px] whitespace-nowrap font-medium text-gray-900">
                         {fmtDate(r.TXN_DATE)}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right font-semibold whitespace-nowrap ${Number(r.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}
+                        className={`px-2 py-2.5 w-[90px] text-right font-semibold whitespace-nowrap ${Number(r.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}
                       >
                         {fmtAmount(r.AMOUNT)}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-red-600 whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-right font-semibold text-red-600 whitespace-nowrap">
                         {r.DEBIT != null
                           ? `$${Number(r.DEBIT).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                           : "—"}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-right font-semibold text-emerald-600 whitespace-nowrap">
                         {r.CREDIT != null
                           ? `$${Number(r.CREDIT).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                           : "—"}
                       </td>
-                      <td className="px-4 py-2.5 max-w-[220px] text-gray-700 text-xs break-words">
+                      <td className="px-3 py-2.5 max-w-[220px] text-gray-700 text-xs break-words">
                         {r.DESCRIPTION}
                       </td>
                       {/* <td className="px-4 py-2.5 min-w-[110px]">
@@ -308,7 +363,7 @@ export default function ApprovedTab({
                           </SelectContent>
                         </Select>
                       </td> */}
-                      <td className="px-4 py-2.5">
+                      <td className="px-3 py-2.5">
                         <span
                           className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.SOURCE_TYPE === "NON_BANKING" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
                         >
@@ -317,7 +372,7 @@ export default function ApprovedTab({
                             : "Banking"}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 min-w-[170px]">
+                      <td className="px-3 py-2.5 w-[220px]">
                         <Combobox
                           options={projectOpts}
                           value={r.P_ID ? String(r.P_ID) : ""}
@@ -335,7 +390,7 @@ export default function ApprovedTab({
                           searchPlaceholder="Search projects..."
                         />
                       </td>
-                      <td className="px-4 py-2.5 min-w-[170px]">
+                      <td className="px-3 py-2.5 w-[220px]">
                         <Combobox
                           options={contractorOpts}
                           value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
@@ -421,7 +476,7 @@ export default function ApprovedTab({
                         )}
                       </td> */}
 
-                      <td className="px-4 py-2.5 min-w-[120px]">
+                      <td className="px-3 py-2.5 min-w-[120px]">
                         <Input
                           defaultValue={r.REMARKS || ""}
                           placeholder="Remarks"
@@ -431,10 +486,10 @@ export default function ApprovedTab({
                           }
                         />
                       </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-gray-500 text-xs">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-gray-500 text-xs">
                         {fmtDate(r.APPROVED_DATE)}
                       </td>
-                      <td className="px-4 py-2.5 min-w-[160px]">
+                      <td className="px-3 py-2.5 min-w-[160px]">
                         <InvoiceCell
                           parentType="main"
                           parentId={r.TXN_ID}
@@ -443,10 +498,10 @@ export default function ApprovedTab({
                       </td>
 
                       <td
-                        className={`px-4 py-2.5 min-w-[60px] backdrop-blur-sm sticky right-0 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)] ${
+                        className={`px-3 py-2.5 min-w-[60px] backdrop-blur-sm sticky right-0 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)] ${
                           isSelected
                             ? "bg-yellow-200/60"
-                            : "bg-white group-hover:bg-gray-50"
+                            : `${stripe} group-hover:bg-gray-200`
                         }`}
                       >
                         <Tooltip>
@@ -475,7 +530,8 @@ export default function ApprovedTab({
             </tbody>
           </table>
         </div>
-        <Pagination page={page} totalRows={totalCount} onPageChange={setPage} />
+        {/* <Pagination page={page} totalRows={totalCount} onPageChange={setPage} /> */}
+        <DataTablePaginationTwo table={table} tableKey="statementApproved" />
       </div>
 
       <DisapproveModal

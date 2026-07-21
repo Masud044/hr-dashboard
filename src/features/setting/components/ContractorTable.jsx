@@ -623,11 +623,16 @@ export function ContractorTable() {
               {!isLoading &&
                 table.getRowModel().rows.length > 0 &&
                 table.getRowModel().rows.map((row) => (
+                  // <TableRow
+                  //   key={row.id}
+                  //   data-state={row.getIsSelected() && "selected"}
+                  //   className="border-b border-border hover:bg-muted/30 transition-colors"
+                  // >
                   <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="border-b border-border hover:bg-muted/30 transition-colors"
-                  >
+  key={row.id}
+  data-state={row.getIsSelected() && "selected"}
+  className={`border-b border-border hover:bg-muted/30 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
+>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
