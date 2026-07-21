@@ -463,6 +463,7 @@ export function ProjectReportPage() {
                     </tr>
                   ) : (
                     rows.map((r) => {
+                      // no need it anymore
                       const cat = (r.CATEGORY || "other").toLowerCase();
                       return (
                         <tr
@@ -510,6 +511,7 @@ export function ProjectReportPage() {
                             >
                               {cat}
                             </span>
+                            
                           </td> */}
                           <td className="px-4 py-2.5 max-w-[150px] text-xs">
                             {r.MATCHED_ADDRESS ? (
