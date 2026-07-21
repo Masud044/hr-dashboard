@@ -1,25 +1,50 @@
-// src\features\setting\pages\statement-upload-three\invoice\InvoiceSheet.jsx
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// src/features/setting/pages/statement-upload-three/invoice/InvoiceSheet.jsx
+import React, { useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Loader2, Trash2, ExternalLink, PlusCircle, X } from "lucide-react";
-import { url, fmtDate, fmtAmount } from "./constants";
+import { Loader2, UploadCloud, FileStack } from "lucide-react";
+import { url, fmtDate, fmtAmount } from "../constants";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
+import { useInvoiceSheetStore } from "../useInvoiceSheetStore";
+import InvoiceCard from "./InvoiceCard";
+import FileStatusRow from "./FileStatusRow";
 
-export default function InvoiceSheet({ open, onClose, parentType, parentId, row }) {
+export default function InvoiceSheet() {
+  const { open, parentType, parentId, row, closeSheet } = useInvoiceSheetStore();
   const queryClient = useQueryClient();
   const { user } = useAuthV2();
+
   const [invoiceNo, setInvoiceNo] = useState("");
-  const [files, setFiles] = useState([]);
+  const [stagedFiles, setStagedFiles] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [addFileState, setAddFileState] = useState(null);
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState(null);
+  const [deletingFileId, setDeletingFileId] = useState(null);
+  const [deleteInvoiceTarget, setDeleteInvoiceTarget] = useState(null);
+  const [deleteFileTarget, setDeleteFileTarget] = useState(null);
+
+  const newInvoiceIdRef = useRef(null);
+  const abortControllersRef = useRef({});
 
   const queryKey = ["invoices", parentType, parentId];
 
@@ -29,185 +54,346 @@ export default function InvoiceSheet({ open, onClose, parentType, parentId, row 
       const res = await axios.get(`${url}/api/statement/${parentType}/${parentId}/invoices`);
       return res.data?.data || [];
     },
-    enabled: open,
+    enabled: open && !!parentType && !!parentId,
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
-  const addInvoiceMutation = useMutation({
-    mutationFn: async () => {
-      const fd = new FormData();
-      fd.append("invoiceNo", invoiceNo);
-      files.forEach((f) => fd.append("files", f));
-      if (user?.ID) fd.append("userId", user.ID);
-      return axios.post(`${url}/api/statement/${parentType}/${parentId}/invoices`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    },
-    onSuccess: () => {
-      toast.success("Invoice added.");
-      setInvoiceNo("");
-      setFiles([]);
-      invalidate();
-    },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to add invoice."),
-  });
-
-  const addFileMutation = useMutation({
-    mutationFn: async ({ invoiceId, file }) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      if (user?.ID) fd.append("userId", user.ID);
-      return axios.post(`${url}/api/statement/invoices/${invoiceId}/files`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    },
-    onSuccess: () => { toast.success("File added."); invalidate(); },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to add file."),
-  });
-
-  const deleteFileMutation = useMutation({
-    mutationFn: async (fileId) => axios.delete(`${url}/api/statement/invoices/files/${fileId}`),
-    onSuccess: () => { toast.success("File deleted."); invalidate(); },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete file."),
-  });
-
-  const deleteInvoiceMutation = useMutation({
-    mutationFn: async (invoiceId) => axios.delete(`${url}/api/statement/invoices/${invoiceId}`),
-    onSuccess: () => { toast.success("Invoice deleted."); invalidate(); },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete invoice."),
-  });
-
-  const handleSubmit = () => {
-    if (files.length === 0) {
-      toast.error("Please select at least one file.");
-      return;
-    }
-    addInvoiceMutation.mutate();
+  const resetLocalState = () => {
+    setInvoiceNo("");
+    setStagedFiles([]);
+    newInvoiceIdRef.current = null;
   };
 
-  const handleAddFileClick = (invoiceId, fileList) => {
-    const f = fileList?.[0];
-    if (!f) return;
-    if (f.size > 20 * 1024 * 1024) {
-      toast.error(`"${f.name}" exceeds 20 MB limit.`);
+  const handleClose = () => {
+    resetLocalState();
+    closeSheet();
+  };
+
+  const updateStagedFile = (id, patch) =>
+    setStagedFiles((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+
+  const addFilesToStage = (fileList) => {
+    const arr = Array.from(fileList || []);
+    if (arr.length === 0) return;
+    const entries = arr.map((file) => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+      file,
+      status: "pending",
+      progress: 0,
+      error: null,
+    }));
+    setStagedFiles((prev) => [...prev, ...entries]);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    addFilesToStage(e.dataTransfer.files);
+  };
+
+  const removeStagedFile = (id) => {
+    const controller = abortControllersRef.current[id];
+    if (controller) controller.abort();
+    setStagedFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const uploadOneStagedFile = async (fileEntry) => {
+    const controller = new AbortController();
+    abortControllersRef.current[fileEntry.id] = controller;
+    updateStagedFile(fileEntry.id, { status: "uploading", progress: 0, error: null });
+
+    try {
+      if (newInvoiceIdRef.current == null) {
+        const fd = new FormData();
+        fd.append("invoiceNo", invoiceNo);
+        fd.append("files", fileEntry.file);
+        if (user?.id) fd.append("userId", user.id);
+        const res = await axios.post(`${url}/api/statement/${parentType}/${parentId}/invoices`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+          signal: controller.signal,
+          onUploadProgress: (evt) => {
+            const pct = Math.round((evt.loaded / evt.total) * 100);
+            updateStagedFile(fileEntry.id, { progress: pct });
+          },
+        });
+        newInvoiceIdRef.current = res.data?.invoiceId;
+      } else {
+        const fd = new FormData();
+        fd.append("file", fileEntry.file);
+        if (user?.id) fd.append("userId", user.id);
+        await axios.post(`${url}/api/statement/invoices/${newInvoiceIdRef.current}/files`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+          signal: controller.signal,
+          onUploadProgress: (evt) => {
+            const pct = Math.round((evt.loaded / evt.total) * 100);
+            updateStagedFile(fileEntry.id, { progress: pct });
+          },
+        });
+      }
+      updateStagedFile(fileEntry.id, { status: "done", progress: 100 });
+    } catch (err) {
+      if (axios.isCancel(err) || err.code === "ERR_CANCELED") return;
+      updateStagedFile(fileEntry.id, { status: "error", error: err.response?.data?.message || "Upload failed" });
+      throw err;
+    } finally {
+      delete abortControllersRef.current[fileEntry.id];
+    }
+  };
+
+  const handleSubmitInvoice = async (retryId) => {
+    setSubmitting(true);
+    const targets = retryId
+      ? stagedFiles.filter((f) => f.id === retryId)
+      : stagedFiles.filter((f) => f.status !== "done");
+
+    let hadError = false;
+    for (const entry of targets) {
+      try {
+        await uploadOneStagedFile(entry);
+      } catch {
+        hadError = true;
+      }
+    }
+    setSubmitting(false);
+    invalidate();
+
+    if (!retryId && !hadError) {
+      toast.success("Invoice added.");
+      resetLocalState();
+    } else if (hadError) {
+      toast.error("Some files failed to upload. Retry the failed ones.");
+    } else if (retryId) {
+      setStagedFiles((current) => {
+        const stillPending = current.some((f) => f.status !== "done");
+        if (!stillPending && current.length > 0) {
+          resetLocalState();
+          return [];
+        }
+        return current;
+      });
+    }
+  };
+
+  const handleDeleteInvoice = async (invoiceId) => {
+    if (deletingInvoiceId) return;
+    setDeletingInvoiceId(invoiceId);
+    try {
+      await axios.delete(`${url}/api/statement/invoices/${invoiceId}`);
+      toast.success("Invoice deleted.");
+      invalidate();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete invoice.");
+    } finally {
+      setDeletingInvoiceId(null);
+      setDeleteInvoiceTarget(null);
+    }
+  };
+
+  const handleDeleteFile = async (fileId) => {
+    if (deletingFileId) return;
+    setDeletingFileId(fileId);
+    try {
+      await axios.delete(`${url}/api/statement/invoices/files/${fileId}`);
+      toast.success("File deleted.");
+      invalidate();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete file.");
+    } finally {
+      setDeletingFileId(null);
+      setDeleteFileTarget(null);
+    }
+  };
+
+  const handleAddFileToInvoice = async (invoiceId, file, isRetry = false) => {
+    if (!file) {
+      setAddFileState(null);
       return;
     }
-    addFileMutation.mutate({ invoiceId, file: f });
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error(`"${file.name}" exceeds 20 MB limit.`);
+      return;
+    }
+    setAddFileState({ invoiceId, file, status: "uploading", progress: 0, error: null });
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (user?.id) fd.append("userId", user.id);
+      await axios.post(`${url}/api/statement/invoices/${invoiceId}/files`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (evt) => {
+          const pct = Math.round((evt.loaded / evt.total) * 100);
+          setAddFileState((prev) => (prev ? { ...prev, progress: pct } : prev));
+        },
+      });
+      setAddFileState((prev) => (prev ? { ...prev, status: "done", progress: 100 } : prev));
+      toast.success("File added.");
+      invalidate();
+      setTimeout(() => setAddFileState(null), 800);
+    } catch (err) {
+      setAddFileState((prev) => (prev ? { ...prev, status: "error", error: err.response?.data?.message || "Upload failed" } : prev));
+    }
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        className="w-full sm:max-w-md overflow-y-auto bg-card border-border"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <SheetHeader className="border-b border-border pb-3">
+    <Sheet open={open} onOpenChange={(v) => !v && handleClose()}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-card border-border p-0">
+        <SheetHeader className="border-b border-border px-4 py-3">
           <SheetTitle className="font-display text-foreground">Invoices</SheetTitle>
         </SheetHeader>
 
         {row && (
-  <div className="px-4 py-2.5 bg-secondary/50 border-b border-border text-xs">
-    <div className="flex items-center justify-between">
-      <span className="text-muted-foreground">{fmtDate(row.TXN_DATE)}</span>
-      <span className={`font-semibold ${Number(row.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}>
-        {fmtAmount(row.AMOUNT)}
-      </span>
-    </div>
-    {row.DESCRIPTION && (
-      <div className="text-muted-foreground mt-1 line-clamp-2">{row.DESCRIPTION}</div>
-    )}
-  </div>
-)}
-
-        <div className="mt-4 space-y-4 px-4">
-          {isLoading ? (
-            <div className="text-center py-6 text-muted-foreground text-sm">
-              <Loader2 className="inline animate-spin mr-2" size={16} /> Loading...
+          <div className="px-4 py-3 bg-secondary/50 border-b border-border flex items-center gap-3">
+            <div className="w-9 h-9 rounded-md bg-accent flex items-center justify-center shrink-0">
+              <FileStack size={16} className="text-primary" />
             </div>
-          ) : invoices.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground text-sm">No invoices yet.</div>
-          ) : (
-            invoices.map((inv) => (
-              <div key={inv.INVOICE_ID} className="border border-border rounded-lg p-3 bg-secondary">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">
-                    {inv.INVOICE_NO || <span className="text-muted-foreground font-normal">No invoice number</span>}
-                  </span>
-                  <button
-                    onClick={() => deleteInvoiceMutation.mutate(inv.INVOICE_ID)}
-                    className="text-destructive/70 hover:text-destructive transition-colors"
-                    title="Delete invoice"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-muted-foreground">{fmtDate(row.TXN_DATE)}</div>
+              <div className="text-sm text-foreground truncate">{row.DESCRIPTION}</div>
+            </div>
+            <div className={`text-sm font-semibold shrink-0 ${Number(row.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}>
+              {fmtAmount(row.AMOUNT)}
+            </div>
+          </div>
+        )}
 
-                <div className="space-y-1.5">
-                  {(inv.files || []).map((f) => (
-                    <div key={f.FILE_ID} className="flex items-center justify-between text-xs">
-                      <a
-                        href={`${url}/api/statement/invoices/files/${f.FILE_ID}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-primary hover:text-[#4F46E5] truncate max-w-[220px]"
-                        title={f.FILE_NAME}
-                      >
-                        <ExternalLink size={11} className="shrink-0" />
-                        {f.FILE_NAME}
-                      </a>
-                      <button
-                        onClick={() => deleteFileMutation.mutate(f.FILE_ID)}
-                        className="text-muted-foreground hover:text-destructive shrink-0 transition-colors"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+        <div className="p-4 space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-foreground">Uploaded Invoices</h3>
+              <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">
+                {invoices.length} Total
+              </span>
+            </div>
 
-                <label className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer mt-2 transition-colors">
-                  <PlusCircle size={12} /> Add file
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => handleAddFileClick(inv.INVOICE_ID, e.target.files)}
-                  />
-                </label>
+            {isLoading ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                <Loader2 className="inline animate-spin mr-2" size={16} /> Loading...
               </div>
-            ))
-          )}
+            ) : invoices.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
+                No invoices yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {invoices.map((inv) => (
+                  <InvoiceCard
+                    key={inv.INVOICE_ID}
+                    invoice={inv}
+                    onDeleteInvoice={(id) => setDeleteInvoiceTarget(id)}
+                    onDeleteFile={(id) => setDeleteFileTarget(id)}
+                    onAddFile={handleAddFileToInvoice}
+                    addFileState={addFileState}
+                    deletingInvoiceId={deletingInvoiceId}
+                    deletingFileId={deletingFileId}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="border-t border-border pt-4">
-            <h4 className="text-sm font-medium text-foreground mb-2 font-display">Add New Invoice</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-2">Add Invoice</h4>
             <Input
               placeholder="Invoice No (optional)"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              className="h-9 text-sm mb-2 border-input-border rounded-sm"
+              className="h-9 text-sm mb-3"
             />
-            <input
-              type="file"
-              multiple
-              onChange={(e) => setFiles(Array.from(e.target.files || []))}
-              className="text-xs mb-2 w-full text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-sm file:border file:border-input-border file:bg-secondary file:text-foreground file:text-xs"
-            />
-            {files.length > 0 && (
-              <div className="text-xs text-muted-foreground mb-2">{files.length} file(s) selected</div>
-            )}
-            <Button
-              onClick={handleSubmit}
-              disabled={addInvoiceMutation.isPending}
-              className="w-full h-9 text-sm rounded-full bg-primary hover:bg-[#4F46E5] text-primary-foreground btn-lift"
+
+            <label
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-xl py-6 cursor-pointer transition-colors ${
+                dragOver ? "border-primary bg-accent/40" : "border-border hover:border-primary/50"
+              }`}
             >
-              {addInvoiceMutation.isPending ? (
-                <><Loader2 size={14} className="mr-1 animate-spin" /> Adding...</>
+              <UploadCloud size={20} className="text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Drag & drop files, or click to browse</span>
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => { addFilesToStage(e.target.files); e.target.value = ""; }}
+              />
+            </label>
+
+            {stagedFiles.length > 0 && (
+              <div className="space-y-1.5 mt-3">
+                {stagedFiles.map((f) => (
+                  <FileStatusRow
+                    key={f.id}
+                    fileName={f.file.name}
+                    fileSize={f.file.size}
+                    fileType={f.file.type}
+                    status={f.status}
+                    progress={f.progress}
+                    error={f.error}
+                    onRemove={() => removeStagedFile(f.id)}
+                    onRetry={() => handleSubmitInvoice(f.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            <Button
+              onClick={() => handleSubmitInvoice()}
+              disabled={submitting || stagedFiles.every((f) => f.status === "done") || stagedFiles.length === 0}
+              className="w-full h-9 text-sm rounded-full bg-primary hover:bg-[#4F46E5] text-primary-foreground mt-3"
+            >
+              {submitting ? (
+                <><Loader2 size={14} className="mr-1 animate-spin" /> Uploading...</>
               ) : (
-                "Add Invoice"
+                "Upload"
               )}
             </Button>
           </div>
         </div>
+
+        <AlertDialog open={!!deleteInvoiceTarget} onOpenChange={(o) => !o && setDeleteInvoiceTarget(null)}>
+          <AlertDialogContent className="bg-card border-border rounded-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground">Delete Invoice?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                This will permanently delete this invoice and all its attached files. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteInvoiceTarget(null)} className="border-border">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={() => handleDeleteInvoice(deleteInvoiceTarget)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!deleteFileTarget} onOpenChange={(o) => !o && setDeleteFileTarget(null)}>
+          <AlertDialogContent className="bg-card border-border rounded-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground">Delete File?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                This will permanently delete this file. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteFileTarget(null)} className="border-border">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={() => handleDeleteFile(deleteFileTarget)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SheetContent>
     </Sheet>
   );

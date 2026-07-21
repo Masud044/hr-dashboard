@@ -6,6 +6,8 @@ import {
   useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
+import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
+import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import { Upload, RotateCcw, Download, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -44,7 +46,8 @@ export default function BankingTab({
   const [batchId, setBatchId] = useState(null);
   // const [activeCats, setActiveCats] = useState({ address: true, place: true, product: true, other: true });
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
-  const [page, setPage] = useState(1);
+  // const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZE });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [approveTarget, setApproveTarget] = useState(null);
   const [approvingRowId, setApprovingRowId] = useState(null);
@@ -95,23 +98,37 @@ export default function BankingTab({
       toast.error(err.response?.data?.message || "Failed to process CSV."),
   });
 
+  // const queryParams = useMemo(
+  //   () => ({
+  //     sourceType: "BANKING",
+  //     ...appliedFilters,
+  //     // categories: categoriesParam,
+  //     status: sortBy === "recent" ? "PENDING" : appliedFilters.status,
+  //     sortBy,
+  //     page,
+  //     pageSize: PAGE_SIZE,
+  //   }),
+  //   [
+  //     appliedFilters,
+  //     //  categoriesParam,
+  //     sortBy,
+  //     page,
+  //   ],
+  // );
+
   const queryParams = useMemo(
-    () => ({
-      sourceType: "BANKING",
-      ...appliedFilters,
-      // categories: categoriesParam,
-      status: sortBy === "recent" ? "PENDING" : appliedFilters.status,
-      sortBy,
-      page,
-      pageSize: PAGE_SIZE,
-    }),
-    [
-      appliedFilters,
-      //  categoriesParam,
-      sortBy,
-      page,
-    ],
-  );
+  () => ({
+    sourceType: "BANKING",
+    ...appliedFilters,
+    status: sortBy === "recent" ? "PENDING" : appliedFilters.status,
+    sortBy,
+    page: pagination.pageIndex + 1,
+    pageSize: pagination.pageSize,
+  }),
+  [appliedFilters, sortBy, pagination],
+);
+
+
 
   const {
     data: result,
@@ -140,6 +157,15 @@ export default function BankingTab({
   // const totalCount = noCategoriesSelected ? 0 : result?.totalCount || 0;
   const rows = result?.rows || [];
   const totalCount = result?.totalCount || 0;
+  const table = useReactTable({
+  data: rows,
+  columns: [],
+  state: { pagination },
+  onPaginationChange: setPagination,
+  manualPagination: true,
+  pageCount: Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
+  getCoreRowModel: getCoreRowModel(),
+});
 
   const statsParams = useMemo(
     () => ({ sourceType: "BANKING", ...appliedFilters }),
@@ -308,14 +334,22 @@ export default function BankingTab({
 
       <FilterBar
         initialFilters={appliedFilters}
+        // onApply={(f) => {
+        //   setAppliedFilters(f);
+        //   setPage(1);
+        // }}
+        // onClear={() => {
+        //   setAppliedFilters(EMPTY_FILTERS);
+        //   setPage(1);
+        // }}
         onApply={(f) => {
-          setAppliedFilters(f);
-          setPage(1);
-        }}
-        onClear={() => {
-          setAppliedFilters(EMPTY_FILTERS);
-          setPage(1);
-        }}
+  setAppliedFilters(f);
+  setPagination((p) => ({ ...p, pageIndex: 0 }));
+}}
+onClear={() => {
+  setAppliedFilters(EMPTY_FILTERS);
+  setPagination((p) => ({ ...p, pageIndex: 0 }));
+}}
         projectOptions={projectOptions}
         contractorOptions={contractorOptions}
         // showCategory
@@ -387,10 +421,11 @@ export default function BankingTab({
               ) : rows.length === 0 ? (
                 <tr><td colSpan={9} className="text-center py-10 text-gray-400">No rows found.</td></tr>
               ) : (
-                rows.map((r) => (
-                  <StagingRow
-                    key={r.STAGING_ID}
-                    row={r}
+               rows.map((r, idx) => (
+  <StagingRow
+    key={r.STAGING_ID}
+    row={r}
+    index={idx}
                     projectOpts={projectOpts}
                     contractorOpts={contractorOpts}
                     isApproving={approvingRowId === r.STAGING_ID}
@@ -408,7 +443,8 @@ export default function BankingTab({
             </tbody>
           </table>
         </div>
-        <Pagination page={page} totalRows={totalCount} onPageChange={setPage} />
+        {/* <Pagination page={page} totalRows={totalCount} onPageChange={setPage} /> */}
+        <DataTablePaginationTwo table={table} tableKey="statementBanking" />
       </div>
 
       <DeleteInvoiceModal

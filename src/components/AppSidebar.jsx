@@ -50,7 +50,7 @@ export default function AppSidebar() {
           {!isCollapsed && (
             <div className="flex flex-col leading-none overflow-hidden">
               <span className="font-display text-[15px] font-extrabold text-primary tracking-tight whitespace-nowrap">
-                Flip7 SaaS
+                7Skies Riversoft
               </span>
               <span className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase whitespace-nowrap">
                 Admin Console

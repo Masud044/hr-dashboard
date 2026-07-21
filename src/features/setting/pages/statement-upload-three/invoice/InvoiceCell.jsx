@@ -1,14 +1,12 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Paperclip } from "lucide-react";
 import { url } from "../constants";
-import { useStagingSelectionStore } from "../useStagingSelectionStore";
+import { useInvoiceSheetStore } from "../useInvoiceSheetStore";
 
 export default function InvoiceCell({ parentType, parentId, row }) {
-  const navigate = useNavigate();
-  const forceSelect = useStagingSelectionStore((s) => s.forceSelect);
+  const openSheet = useInvoiceSheetStore((s) => s.openSheet);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", parentType, parentId],
@@ -19,14 +17,10 @@ export default function InvoiceCell({ parentType, parentId, row }) {
     staleTime: 30 * 1000,
   });
 
-  const totalFiles = invoices.reduce((sum, inv) => sum + (inv.files?.length || 0), 0);
   const visibleInvoices = invoices.slice(0, 2);
   const extraCount = invoices.length - visibleInvoices.length;
 
-  const handleClick = () => {
-    forceSelect(parentId);
-    navigate(`/dashboard/statement/${parentType}/${parentId}/invoices`);
-  };
+  const handleClick = () => openSheet(parentType, parentId, row);
 
   return (
     <button
@@ -43,8 +37,7 @@ export default function InvoiceCell({ parentType, parentId, row }) {
         <div className="space-y-0.5">
           {visibleInvoices.map((inv) => (
             <div key={inv.INVOICE_ID} className="text-xs text-blue-700 font-medium truncate max-w-[160px]">
-              {inv.INVOICE_NO || "No number"}
-              {inv.files?.[0] && <span className="text-gray-500"> · {inv.files[0].FILE_NAME}</span>}
+              {inv.files?.[0]?.FILE_NAME || inv.INVOICE_NO}
               {inv.files?.length > 1 && <span className="text-gray-400"> +{inv.files.length - 1}</span>}
             </div>
           ))}
