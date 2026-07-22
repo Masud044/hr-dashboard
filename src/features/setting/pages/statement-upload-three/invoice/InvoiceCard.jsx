@@ -18,7 +18,16 @@ function Avatar({ name, size = 18 }) {
   );
 }
 
-export default function InvoiceCard({ invoice, onDeleteInvoice, onDeleteFile, onAddFile, addFileState, deletingInvoiceId, deletingFileId }) {
+export default function InvoiceCard({
+  invoice,
+  onDeleteInvoice,
+  onDeleteFile,
+  onAddFile,
+  addFileState,
+  deletingInvoiceId,
+  deletingFileId,
+  readOnly = false,
+}) {
   const inputRef = useRef(null);
   const isAddingHere = addFileState?.invoiceId === invoice.INVOICE_ID;
   const isDeletingThisInvoice = deletingInvoiceId === invoice.INVOICE_ID;
@@ -69,14 +78,16 @@ export default function InvoiceCard({ invoice, onDeleteInvoice, onDeleteFile, on
             <span>Added by <span className="font-medium text-foreground">{invoice.CREATED_BY_NAME || "Unknown"}</span> · {timeAgo(invoice.CREATION_DATE)}</span>
           </div>
         )}
-        <button
-          onClick={() => onDeleteInvoice(invoice.INVOICE_ID)}
-          disabled={isDeletingThisInvoice}
-          className="text-destructive/70 hover:text-destructive transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Delete invoice"
-        >
-          <Trash2 size={14} />
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => onDeleteInvoice(invoice.INVOICE_ID)}
+            disabled={isDeletingThisInvoice}
+            className="text-destructive/70 hover:text-destructive transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Delete invoice"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
       <div className="space-y-1.5 mt-2.5">
@@ -122,33 +133,37 @@ export default function InvoiceCard({ invoice, onDeleteInvoice, onDeleteFile, on
                   <Download size={12} />
                 )}
               </button>
-              <button
-                onClick={() => onDeleteFile(f.FILE_ID)}
-                disabled={deletingFileId === f.FILE_ID}
-                className="text-muted-foreground hover:text-destructive shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Trash2 size={12} />
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => onDeleteFile(f.FILE_ID)}
+                  disabled={deletingFileId === f.FILE_ID}
+                  className="text-muted-foreground hover:text-destructive shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
             </div>
           );
         })}
 
-        {isAddingHere ? (
-          <FileStatusRow
-            fileName={addFileState.file.name}
-            fileSize={addFileState.file.size}
-            fileType={addFileState.file.type}
-            status={addFileState.status}
-            progress={addFileState.progress}
-            error={addFileState.error}
-            onRemove={() => onAddFile(invoice.INVOICE_ID, null)}
-            onRetry={() => onAddFile(invoice.INVOICE_ID, addFileState.file, true)}
-          />
-        ) : (
-          <label className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer mt-1 transition-colors">
-            <PlusCircle size={12} /> Add file
-            <input ref={inputRef} type="file" className="hidden" onChange={handlePick} />
-          </label>
+        {!readOnly && (
+          isAddingHere ? (
+            <FileStatusRow
+              fileName={addFileState.file.name}
+              fileSize={addFileState.file.size}
+              fileType={addFileState.file.type}
+              status={addFileState.status}
+              progress={addFileState.progress}
+              error={addFileState.error}
+              onRemove={() => onAddFile(invoice.INVOICE_ID, null)}
+              onRetry={() => onAddFile(invoice.INVOICE_ID, addFileState.file, true)}
+            />
+          ) : (
+            <label className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer mt-1 transition-colors">
+              <PlusCircle size={12} /> Add file
+              <input ref={inputRef} type="file" className="hidden" onChange={handlePick} />
+            </label>
+          )
         )}
       </div>
     </div>

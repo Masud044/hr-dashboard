@@ -24,6 +24,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Combobox from "./Combobox";
+import EntityCombobox from "@/components/shared/entity-combobox";
 import FilterBar from "./FilterBar";
 import Pagination from "./Pagination";
 import DisapproveModal from "./modals/DisapproveModal";
@@ -376,7 +377,7 @@ export default function ApprovedTab({
                         </span>
                       </td>
                       <td className="px-3 py-2.5 w-[220px]">
-                        <Combobox
+                        {/* <Combobox
                           options={projectOpts}
                           value={r.P_ID ? String(r.P_ID) : ""}
                           onChange={(pId) => {
@@ -391,10 +392,19 @@ export default function ApprovedTab({
                           }}
                           placeholder="Select project"
                           searchPlaceholder="Search projects..."
-                        />
+                        /> */}
+                         <EntityCombobox
+    items={projectOpts}
+    value={r.P_ID ? String(r.P_ID) : ""}
+    onValueChange={(pId) => {
+      const proj = projectOpts.find((p) => p.value === pId);
+      handleProjectChange(r.TXN_ID, pId || null, proj?.label || null);
+    }}
+    placeholder="Select project"
+  />
                       </td>
                       <td className="px-3 py-2.5 w-[220px]">
-                        <Combobox
+                        {/* <Combobox
                           options={contractorOpts}
                           value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
                           onChange={(cId) => {
@@ -409,7 +419,16 @@ export default function ApprovedTab({
                           }}
                           placeholder="Select contractor"
                           searchPlaceholder="Search contractors..."
-                        />
+                        /> */}
+                        <EntityCombobox
+    items={contractorOpts}
+    value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
+    onValueChange={(cId) => {
+      const c = contractorOpts.find((x) => x.value === cId);
+      handleContractorChange(r.TXN_ID, cId || null, c?.label || null);
+    }}
+    placeholder="Select contractor"
+  />
                       </td>
                       {/* <td className="px-4 py-2.5 min-w-[100px]">
                         <Input
@@ -490,27 +509,30 @@ export default function ApprovedTab({
                         />
                       </td>
                       <td className="px-3 py-2.5 min-w-[110px]">
-  {r.SOURCE_TYPE === "NON_BANKING" ? (
-    <Select
-      value={r.PAYMENT_BY || "BUILDER"}
-      onValueChange={(v) =>
-        updateMainRowMutation.mutate({ txnId: r.TXN_ID, paymentBy: v })
-      }
-    >
-      <SelectTrigger className="h-7 text-xs">
-        <SelectValue>
-          {r.PAYMENT_BY === "CUSTOMER" ? "Customer" : "—"}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="BUILDER">Builder</SelectItem>
-        <SelectItem value="CUSTOMER">Customer</SelectItem>
-      </SelectContent>
-    </Select>
-  ) : (
-    <span className="text-gray-400 text-xs">—</span>
-  )}
-</td>
+                        {r.SOURCE_TYPE === "NON_BANKING" ? (
+                          <Select
+                            value={r.PAYMENT_BY || "BUILDER"}
+                            onValueChange={(v) =>
+                              updateMainRowMutation.mutate({
+                                txnId: r.TXN_ID,
+                                paymentBy: v,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue>
+                                {r.PAYMENT_BY === "CUSTOMER" ? "Customer" : "—"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="BUILDER">Builder</SelectItem>
+                              <SelectItem value="CUSTOMER">Customer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-gray-500 text-xs">
                         {fmtDate(r.APPROVED_DATE)}
                       </td>

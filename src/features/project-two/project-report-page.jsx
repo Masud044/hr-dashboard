@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { SectionContainer } from "@/components/SectionContainer";
 import InvoiceCell from "@/features/setting/pages/statement-upload-three/invoice/InvoiceCell";
+import InvoiceSheet from "@/features/setting/pages/statement-upload-three/invoice/InvoiceSheet";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -527,7 +528,7 @@ export function ProjectReportPage() {
                           {/* <td className="px-4 py-2.5 text-foreground text-xs">
                             {r.INVOICE_NO || <span className="text-muted-foreground italic">—</span>}
                           </td> */}
-                         <td className="px-4 py-2.5">
+                          <td className="px-4 py-2.5">
                             <div className="flex flex-col items-center gap-0.5">
                               <span
                                 className={`w-fit whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full ${
@@ -576,9 +577,14 @@ export function ProjectReportPage() {
                             )}
                           </td> */}
                           <td className="px-4 py-2.5 min-w-[160px]">
+                            {/* <InvoiceCell
+                              parentType="main"
+                              parentId={r.TXN_ID}
+                            /> */}
                             <InvoiceCell
                               parentType="main"
                               parentId={r.TXN_ID}
+                              readOnly
                             />
                           </td>
                         </tr>
@@ -724,26 +730,26 @@ export function ProjectReportPage() {
                                 </td> */}
 
                                 <td className="px-4 py-2.5">
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span
-                                className={`w-fit whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                  r.SOURCE_TYPE === "NON_BANKING"
-                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                }`}
-                              >
-                                {r.SOURCE_TYPE === "NON_BANKING"
-                                  ? "Non-Banking"
-                                  : "Banking"}
-                              </span>
-                              {r.SOURCE_TYPE === "NON_BANKING" &&
-                                r.PAYMENT_BY === "CUSTOMER" && (
-                                  <span className="whitespace-nowrap text-[9px] font-medium text-amber-600 dark:text-amber-400">
-                                    Customer Paid
-                                  </span>
-                                )}
-                            </div>
-                          </td>
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <span
+                                      className={`w-fit whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                        r.SOURCE_TYPE === "NON_BANKING"
+                                          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                      }`}
+                                    >
+                                      {r.SOURCE_TYPE === "NON_BANKING"
+                                        ? "Non-Banking"
+                                        : "Banking"}
+                                    </span>
+                                    {r.SOURCE_TYPE === "NON_BANKING" &&
+                                      r.PAYMENT_BY === "CUSTOMER" && (
+                                        <span className="whitespace-nowrap text-[9px] font-medium text-amber-600 dark:text-amber-400">
+                                          Customer Paid
+                                        </span>
+                                      )}
+                                  </div>
+                                </td>
                                 <td className="px-4 py-2.5 text-foreground text-xs">
                                   {r.REMARKS || (
                                     <span className="text-muted-foreground italic">
@@ -779,9 +785,10 @@ export function ProjectReportPage() {
                                 </td> */}
                                 <td className="px-4 py-2.5 min-w-[160px]">
                                   <InvoiceCell
-                                    parentType="main"
-                                    parentId={r.TXN_ID}
-                                  />
+  parentType="main"
+  parentId={r.TXN_ID}
+  readOnly
+/>
                                 </td>
                               </tr>
                             );
@@ -906,6 +913,7 @@ export function ProjectReportPage() {
           </div>
         )}
       </div>
+      <InvoiceSheet />
     </SectionContainer>
   );
 }
