@@ -451,24 +451,24 @@ export default function NonBankingTab({
                 </tr>
               ) : (
                 rows.map((r, idx) => (
-   <StagingRow
-  key={r.STAGING_ID}
-  row={r}
-  index={idx}
-  projectOpts={projectOpts}
-  contractorOpts={contractorOpts}
-  isApproving={approvingRowId === r.STAGING_ID}
-  onProjectChange={handleProjectChange}
-  onContractorChange={handleContractorChange}
-  onInvoiceNoBlur={handleInvoiceNoBlur}
-  onRemarksBlur={handleRemarksBlur}
-  onCategoryChange={handleCategoryChange}
-  onPaymentByChange={handlePaymentByChange}
-  showPaymentBy
-  onInvoiceFileSelect={handleInvoiceFileSelect}
-  onDeleteInvoiceClick={handleDeleteInvoiceClick}
-  onApproveClick={handleApproveClick}
-/>
+                  <StagingRow
+                    key={r.STAGING_ID}
+                    row={r}
+                    index={idx}
+                    projectOpts={projectOpts}
+                    contractorOpts={contractorOpts}
+                    isApproving={approvingRowId === r.STAGING_ID}
+                    onProjectChange={handleProjectChange}
+                    onContractorChange={handleContractorChange}
+                    onInvoiceNoBlur={handleInvoiceNoBlur}
+                    onRemarksBlur={handleRemarksBlur}
+                    onCategoryChange={handleCategoryChange}
+                    onPaymentByChange={handlePaymentByChange}
+                    showPaymentBy
+                    onInvoiceFileSelect={handleInvoiceFileSelect}
+                    onDeleteInvoiceClick={handleDeleteInvoiceClick}
+                    onApproveClick={handleApproveClick}
+                  />
                 ))
               )}
             </tbody>

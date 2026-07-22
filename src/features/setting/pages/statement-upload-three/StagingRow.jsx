@@ -17,6 +17,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Combobox from "./Combobox";
+import EntityCombobox from "@/components/shared/entity-combobox";
 import {
   CATEGORY_STYLES,
   STATUS_STYLES,
@@ -113,11 +114,11 @@ const StagingRow = React.memo(function StagingRow({
       >
         {fmtAmount(r.AMOUNT)}
       </td>
-    <td className="px-3 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">
-  {r.DESCRIPTION}
-</td>
+      <td className="px-3 py-2.5 max-w-[240px] text-gray-700 text-xs break-words">
+        {r.DESCRIPTION}
+      </td>
       <td className="px-3 py-2.5 w-[220px]">
-        <Combobox
+        {/* <Combobox
           options={projectOpts}
           value={r.P_ID ? String(r.P_ID) : ""}
           onChange={(pId) => {
@@ -127,10 +128,20 @@ const StagingRow = React.memo(function StagingRow({
           placeholder="Select project"
           searchPlaceholder="Search projects..."
           disabled={approved}
+        /> */}
+        <EntityCombobox
+          items={projectOpts}
+          value={r.P_ID ? String(r.P_ID) : ""}
+          onValueChange={(pId) => {
+            const proj = projectOpts.find((p) => p.value === pId);
+            onProjectChange(r.STAGING_ID, pId || null, proj?.label || null);
+          }}
+          placeholder="Select project"
+          disabled={approved}
         />
       </td>
       <td className="px-3 py-2.5 w-[220px]">
-        <Combobox
+        {/* <Combobox
           options={contractorOpts}
           value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
           onChange={(cId) => {
@@ -139,6 +150,16 @@ const StagingRow = React.memo(function StagingRow({
           }}
           placeholder="Select contractor"
           searchPlaceholder="Search contractors..."
+          disabled={approved}
+        /> */}
+        <EntityCombobox
+          items={contractorOpts}
+          value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
+          onValueChange={(cId) => {
+            const c = contractorOpts.find((x) => x.value === cId);
+            onContractorChange(r.STAGING_ID, cId || null, c?.label || null);
+          }}
+          placeholder="Select contractor"
           disabled={approved}
         />
       </td>
@@ -171,24 +192,24 @@ const StagingRow = React.memo(function StagingRow({
         </td>
       )} */}
       {showPaymentBy && (
-  <td className="px-3 py-2.5 w-[110px]">
-    <Select
-      value={r.PAYMENT_BY || "BUILDER"}
-      onValueChange={(v) => onPaymentByChange(r.STAGING_ID, v)}
-      disabled={approved}
-    >
-      <SelectTrigger className="h-7 text-xs">
-        <SelectValue>
-          {r.PAYMENT_BY === "CUSTOMER" ? "Customer" : "—"}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="BUILDER">Builder</SelectItem>
-        <SelectItem value="CUSTOMER">Customer</SelectItem>
-      </SelectContent>
-    </Select>
-  </td>
-)}
+        <td className="px-3 py-2.5 w-[110px]">
+          <Select
+            value={r.PAYMENT_BY || "BUILDER"}
+            onValueChange={(v) => onPaymentByChange(r.STAGING_ID, v)}
+            disabled={approved}
+          >
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue>
+                {r.PAYMENT_BY === "CUSTOMER" ? "Customer" : "—"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="BUILDER">Builder</SelectItem>
+              <SelectItem value="CUSTOMER">Customer</SelectItem>
+            </SelectContent>
+          </Select>
+        </td>
+      )}
       <td className="px-3 py-2.5 min-w-[110px]">
         <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
       </td>

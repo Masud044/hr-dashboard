@@ -29,7 +29,7 @@ import InvoiceCard from "./InvoiceCard";
 import FileStatusRow from "./FileStatusRow";
 
 export default function InvoiceSheet() {
-  const { open, parentType, parentId, row, closeSheet } = useInvoiceSheetStore();
+  const { open, parentType, parentId, row, readOnly, closeSheet } = useInvoiceSheetStore();
   const queryClient = useQueryClient();
   const { user } = useAuthV2();
 
@@ -280,6 +280,7 @@ export default function InvoiceSheet() {
                   <InvoiceCard
                     key={inv.INVOICE_ID}
                     invoice={inv}
+                    readOnly={readOnly}
                     onDeleteInvoice={(id) => setDeleteInvoiceTarget(id)}
                     onDeleteFile={(id) => setDeleteFileTarget(id)}
                     onAddFile={handleAddFileToInvoice}
@@ -292,108 +293,114 @@ export default function InvoiceSheet() {
             )}
           </div>
 
-          <div className="border-t border-border pt-4">
-            <h4 className="text-sm font-semibold text-foreground mb-2">Add Invoice</h4>
-            <Input
-              placeholder="Invoice No (optional)"
-              value={invoiceNo}
-              onChange={(e) => setInvoiceNo(e.target.value)}
-              className="h-9 text-sm mb-3"
-            />
-
-            <label
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-xl py-6 cursor-pointer transition-colors ${
-                dragOver ? "border-primary bg-accent/40" : "border-border hover:border-primary/50"
-              }`}
-            >
-              <UploadCloud size={20} className="text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Drag & drop files, or click to browse</span>
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(e) => { addFilesToStage(e.target.files); e.target.value = ""; }}
+          {!readOnly && (
+            <div className="border-t border-border pt-4">
+              <h4 className="text-sm font-semibold text-foreground mb-2">Add Invoice</h4>
+              <Input
+                placeholder="Invoice No (optional)"
+                value={invoiceNo}
+                onChange={(e) => setInvoiceNo(e.target.value)}
+                className="h-9 text-sm mb-3"
               />
-            </label>
 
-            {stagedFiles.length > 0 && (
-              <div className="space-y-1.5 mt-3">
-                {stagedFiles.map((f) => (
-                  <FileStatusRow
-                    key={f.id}
-                    fileName={f.file.name}
-                    fileSize={f.file.size}
-                    fileType={f.file.type}
-                    status={f.status}
-                    progress={f.progress}
-                    error={f.error}
-                    onRemove={() => removeStagedFile(f.id)}
-                    onRetry={() => handleSubmitInvoice(f.id)}
-                  />
-                ))}
-              </div>
-            )}
+              <label
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className={`flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-xl py-6 cursor-pointer transition-colors ${
+                  dragOver ? "border-primary bg-accent/40" : "border-border hover:border-primary/50"
+                }`}
+              >
+                <UploadCloud size={20} className="text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Drag & drop files, or click to browse</span>
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => { addFilesToStage(e.target.files); e.target.value = ""; }}
+                />
+              </label>
 
-            <Button
-              onClick={() => handleSubmitInvoice()}
-              disabled={submitting || stagedFiles.every((f) => f.status === "done") || stagedFiles.length === 0}
-              className="w-full h-9 text-sm rounded-full bg-primary hover:bg-[#4F46E5] text-primary-foreground mt-3"
-            >
-              {submitting ? (
-                <><Loader2 size={14} className="mr-1 animate-spin" /> Uploading...</>
-              ) : (
-                "Upload"
+              {stagedFiles.length > 0 && (
+                <div className="space-y-1.5 mt-3">
+                  {stagedFiles.map((f) => (
+                    <FileStatusRow
+                      key={f.id}
+                      fileName={f.file.name}
+                      fileSize={f.file.size}
+                      fileType={f.file.type}
+                      status={f.status}
+                      progress={f.progress}
+                      error={f.error}
+                      onRemove={() => removeStagedFile(f.id)}
+                      onRetry={() => handleSubmitInvoice(f.id)}
+                    />
+                  ))}
+                </div>
               )}
-            </Button>
-          </div>
+
+              <Button
+                onClick={() => handleSubmitInvoice()}
+                disabled={submitting || stagedFiles.every((f) => f.status === "done") || stagedFiles.length === 0}
+                className="w-full h-9 text-sm rounded-full bg-primary hover:bg-[#4F46E5] text-primary-foreground mt-3"
+              >
+                {submitting ? (
+                  <><Loader2 size={14} className="mr-1 animate-spin" /> Uploading...</>
+                ) : (
+                  "Upload"
+                )}
+              </Button>
+            </div>
+          )}
         </div>
 
-        <AlertDialog open={!!deleteInvoiceTarget} onOpenChange={(o) => !o && setDeleteInvoiceTarget(null)}>
-          <AlertDialogContent className="bg-card border-border rounded-lg">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground">Delete Invoice?</AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                This will permanently delete this invoice and all its attached files. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteInvoiceTarget(null)} className="border-border">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive hover:bg-destructive/90"
-                onClick={() => handleDeleteInvoice(deleteInvoiceTarget)}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!readOnly && (
+          <>
+            <AlertDialog open={!!deleteInvoiceTarget} onOpenChange={(o) => !o && setDeleteInvoiceTarget(null)}>
+              <AlertDialogContent className="bg-card border-border rounded-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-foreground">Delete Invoice?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    This will permanently delete this invoice and all its attached files. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteInvoiceTarget(null)} className="border-border">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive hover:bg-destructive/90"
+                    onClick={() => handleDeleteInvoice(deleteInvoiceTarget)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
-        <AlertDialog open={!!deleteFileTarget} onOpenChange={(o) => !o && setDeleteFileTarget(null)}>
-          <AlertDialogContent className="bg-card border-border rounded-lg">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground">Delete File?</AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                This will permanently delete this file. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteFileTarget(null)} className="border-border">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive hover:bg-destructive/90"
-                onClick={() => handleDeleteFile(deleteFileTarget)}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            <AlertDialog open={!!deleteFileTarget} onOpenChange={(o) => !o && setDeleteFileTarget(null)}>
+              <AlertDialogContent className="bg-card border-border rounded-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-foreground">Delete File?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    This will permanently delete this file. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteFileTarget(null)} className="border-border">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive hover:bg-destructive/90"
+                    onClick={() => handleDeleteFile(deleteFileTarget)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );
