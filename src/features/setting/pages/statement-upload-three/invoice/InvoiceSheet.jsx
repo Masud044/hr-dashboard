@@ -28,8 +28,27 @@ import { useInvoiceSheetStore } from "../useInvoiceSheetStore";
 import InvoiceCard from "./InvoiceCard";
 import FileStatusRow from "./FileStatusRow";
 
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+];
+
+function validateFile(file) {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return `"${file.name}" — only PDF, PNG, JPG allowed.`;
+  }
+  if (file.size > MAX_SIZE) {
+    return `"${file.name}" exceeds 2MB limit.`;
+  }
+  return null;
+}
+
 export default function InvoiceSheet() {
-  const { open, parentType, parentId, row, readOnly, closeSheet } = useInvoiceSheetStore();
+  const { open, parentType, parentId, row, readOnly, closeSheet } =
+    useInvoiceSheetStore();
   const queryClient = useQueryClient();
   const { user } = useAuthV2();
 
@@ -51,7 +70,9 @@ export default function InvoiceSheet() {
   const { data: invoices = [], isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const res = await axios.get(`${url}/api/statement/${parentType}/${parentId}/invoices`);
+      const res = await axios.get(
+        `${url}/api/statement/${parentType}/${parentId}/invoices`,
+      );
       return res.data?.data || [];
     },
     enabled: open && !!parentType && !!parentId,
@@ -71,19 +92,30 @@ export default function InvoiceSheet() {
   };
 
   const updateStagedFile = (id, patch) =>
-    setStagedFiles((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+    setStagedFiles((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+    );
 
   const addFilesToStage = (fileList) => {
     const arr = Array.from(fileList || []);
     if (arr.length === 0) return;
-    const entries = arr.map((file) => ({
-      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
-      file,
-      status: "pending",
-      progress: 0,
-      error: null,
-    }));
-    setStagedFiles((prev) => [...prev, ...entries]);
+
+    const entries = [];
+    for (const file of arr) {
+      const err = validateFile(file);
+      if (err) {
+        toast.error(err);
+        continue;
+      }
+      entries.push({
+        id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+        file,
+        status: "pending",
+        progress: 0,
+        error: null,
+      });
+    }
+    if (entries.length) setStagedFiles((prev) => [...prev, ...entries]);
   };
 
   const handleDrop = (e) => {
@@ -101,7 +133,11 @@ export default function InvoiceSheet() {
   const uploadOneStagedFile = async (fileEntry) => {
     const controller = new AbortController();
     abortControllersRef.current[fileEntry.id] = controller;
-    updateStagedFile(fileEntry.id, { status: "uploading", progress: 0, error: null });
+    updateStagedFile(fileEntry.id, {
+      status: "uploading",
+      progress: 0,
+      error: null,
+    });
 
     try {
       if (newInvoiceIdRef.current == null) {
@@ -109,32 +145,43 @@ export default function InvoiceSheet() {
         fd.append("invoiceNo", invoiceNo);
         fd.append("files", fileEntry.file);
         if (user?.id) fd.append("userId", user.id);
-        const res = await axios.post(`${url}/api/statement/${parentType}/${parentId}/invoices`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
-          signal: controller.signal,
-          onUploadProgress: (evt) => {
-            const pct = Math.round((evt.loaded / evt.total) * 100);
-            updateStagedFile(fileEntry.id, { progress: pct });
+        const res = await axios.post(
+          `${url}/api/statement/${parentType}/${parentId}/invoices`,
+          fd,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            signal: controller.signal,
+            onUploadProgress: (evt) => {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              updateStagedFile(fileEntry.id, { progress: pct });
+            },
           },
-        });
+        );
         newInvoiceIdRef.current = res.data?.invoiceId;
       } else {
         const fd = new FormData();
         fd.append("file", fileEntry.file);
         if (user?.id) fd.append("userId", user.id);
-        await axios.post(`${url}/api/statement/invoices/${newInvoiceIdRef.current}/files`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
-          signal: controller.signal,
-          onUploadProgress: (evt) => {
-            const pct = Math.round((evt.loaded / evt.total) * 100);
-            updateStagedFile(fileEntry.id, { progress: pct });
+        await axios.post(
+          `${url}/api/statement/invoices/${newInvoiceIdRef.current}/files`,
+          fd,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            signal: controller.signal,
+            onUploadProgress: (evt) => {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              updateStagedFile(fileEntry.id, { progress: pct });
+            },
           },
-        });
+        );
       }
       updateStagedFile(fileEntry.id, { status: "done", progress: 100 });
     } catch (err) {
       if (axios.isCancel(err) || err.code === "ERR_CANCELED") return;
-      updateStagedFile(fileEntry.id, { status: "error", error: err.response?.data?.message || "Upload failed" });
+      updateStagedFile(fileEntry.id, {
+        status: "error",
+        error: err.response?.data?.message || "Upload failed",
+      });
       throw err;
     } finally {
       delete abortControllersRef.current[fileEntry.id];
@@ -210,11 +257,18 @@ export default function InvoiceSheet() {
       setAddFileState(null);
       return;
     }
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error(`"${file.name}" exceeds 20 MB limit.`);
+    const err = validateFile(file);
+    if (err) {
+      toast.error(err);
       return;
     }
-    setAddFileState({ invoiceId, file, status: "uploading", progress: 0, error: null });
+    setAddFileState({
+      invoiceId,
+      file,
+      status: "uploading",
+      progress: 0,
+      error: null,
+    });
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -226,12 +280,22 @@ export default function InvoiceSheet() {
           setAddFileState((prev) => (prev ? { ...prev, progress: pct } : prev));
         },
       });
-      setAddFileState((prev) => (prev ? { ...prev, status: "done", progress: 100 } : prev));
+      setAddFileState((prev) =>
+        prev ? { ...prev, status: "done", progress: 100 } : prev,
+      );
       toast.success("File added.");
       invalidate();
       setTimeout(() => setAddFileState(null), 800);
     } catch (err) {
-      setAddFileState((prev) => (prev ? { ...prev, status: "error", error: err.response?.data?.message || "Upload failed" } : prev));
+      setAddFileState((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "error",
+              error: err.response?.data?.message || "Upload failed",
+            }
+          : prev,
+      );
     }
   };
 
@@ -239,7 +303,9 @@ export default function InvoiceSheet() {
     <Sheet open={open} onOpenChange={(v) => !v && handleClose()}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-card border-border p-0">
         <SheetHeader className="border-b border-border px-4 py-3">
-          <SheetTitle className="font-display text-foreground">Invoices</SheetTitle>
+          <SheetTitle className="font-display text-foreground">
+            Invoices
+          </SheetTitle>
         </SheetHeader>
 
         {row && (
@@ -248,10 +314,16 @@ export default function InvoiceSheet() {
               <FileStack size={16} className="text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-muted-foreground">{fmtDate(row.TXN_DATE)}</div>
-              <div className="text-sm text-foreground truncate">{row.DESCRIPTION}</div>
+              <div className="text-xs text-muted-foreground">
+                {fmtDate(row.TXN_DATE)}
+              </div>
+              <div className="text-sm text-foreground truncate">
+                {row.DESCRIPTION}
+              </div>
             </div>
-            <div className={`text-sm font-semibold shrink-0 ${Number(row.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}>
+            <div
+              className={`text-sm font-semibold shrink-0 ${Number(row.AMOUNT) < 0 ? "text-red-600" : "text-emerald-600"}`}
+            >
               {fmtAmount(row.AMOUNT)}
             </div>
           </div>
@@ -260,7 +332,9 @@ export default function InvoiceSheet() {
         <div className="p-4 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-foreground">Uploaded Invoices</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Uploaded Invoices
+              </h3>
               <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">
                 {invoices.length} Total
               </span>
@@ -268,7 +342,8 @@ export default function InvoiceSheet() {
 
             {isLoading ? (
               <div className="text-center py-6 text-muted-foreground text-sm">
-                <Loader2 className="inline animate-spin mr-2" size={16} /> Loading...
+                <Loader2 className="inline animate-spin mr-2" size={16} />{" "}
+                Loading...
               </div>
             ) : invoices.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
@@ -295,7 +370,9 @@ export default function InvoiceSheet() {
 
           {!readOnly && (
             <div className="border-t border-border pt-4">
-              <h4 className="text-sm font-semibold text-foreground mb-2">Add Invoice</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-2">
+                Add Invoice
+              </h4>
               <Input
                 placeholder="Invoice No (optional)"
                 value={invoiceNo}
@@ -304,20 +381,32 @@ export default function InvoiceSheet() {
               />
 
               <label
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 className={`flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-xl py-6 cursor-pointer transition-colors ${
-                  dragOver ? "border-primary bg-accent/40" : "border-border hover:border-primary/50"
+                  dragOver
+                    ? "border-primary bg-accent/40"
+                    : "border-border hover:border-primary/50"
                 }`}
               >
                 <UploadCloud size={20} className="text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Drag & drop files, or click to browse</span>
+                <span className="text-xs text-muted-foreground">
+                  Drag & drop files, or click to browse
+                </span>
+                <span className="text-[11px] text-muted-foreground">PDF, PNG, JPG up to 2MB</span>
                 <input
                   type="file"
                   multiple
+                  accept=".pdf,.png,.jpg,.jpeg"
                   className="hidden"
-                  onChange={(e) => { addFilesToStage(e.target.files); e.target.value = ""; }}
+                  onChange={(e) => {
+                    addFilesToStage(e.target.files);
+                    e.target.value = "";
+                  }}
                 />
               </label>
 
@@ -341,11 +430,18 @@ export default function InvoiceSheet() {
 
               <Button
                 onClick={() => handleSubmitInvoice()}
-                disabled={submitting || stagedFiles.every((f) => f.status === "done") || stagedFiles.length === 0}
+                disabled={
+                  submitting ||
+                  stagedFiles.every((f) => f.status === "done") ||
+                  stagedFiles.length === 0
+                }
                 className="w-full h-9 text-sm rounded-full bg-primary hover:bg-[#4F46E5] text-primary-foreground mt-3"
               >
                 {submitting ? (
-                  <><Loader2 size={14} className="mr-1 animate-spin" /> Uploading...</>
+                  <>
+                    <Loader2 size={14} className="mr-1 animate-spin" />{" "}
+                    Uploading...
+                  </>
                 ) : (
                   "Upload"
                 )}
@@ -356,16 +452,25 @@ export default function InvoiceSheet() {
 
         {!readOnly && (
           <>
-            <AlertDialog open={!!deleteInvoiceTarget} onOpenChange={(o) => !o && setDeleteInvoiceTarget(null)}>
+            <AlertDialog
+              open={!!deleteInvoiceTarget}
+              onOpenChange={(o) => !o && setDeleteInvoiceTarget(null)}
+            >
               <AlertDialogContent className="bg-card border-border rounded-lg">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-foreground">Delete Invoice?</AlertDialogTitle>
+                  <AlertDialogTitle className="text-foreground">
+                    Delete Invoice?
+                  </AlertDialogTitle>
                   <AlertDialogDescription className="text-muted-foreground">
-                    This will permanently delete this invoice and all its attached files. This action cannot be undone.
+                    This will permanently delete this invoice and all its
+                    attached files. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setDeleteInvoiceTarget(null)} className="border-border">
+                  <AlertDialogCancel
+                    onClick={() => setDeleteInvoiceTarget(null)}
+                    className="border-border"
+                  >
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
@@ -378,16 +483,25 @@ export default function InvoiceSheet() {
               </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={!!deleteFileTarget} onOpenChange={(o) => !o && setDeleteFileTarget(null)}>
+            <AlertDialog
+              open={!!deleteFileTarget}
+              onOpenChange={(o) => !o && setDeleteFileTarget(null)}
+            >
               <AlertDialogContent className="bg-card border-border rounded-lg">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-foreground">Delete File?</AlertDialogTitle>
+                  <AlertDialogTitle className="text-foreground">
+                    Delete File?
+                  </AlertDialogTitle>
                   <AlertDialogDescription className="text-muted-foreground">
-                    This will permanently delete this file. This action cannot be undone.
+                    This will permanently delete this file. This action cannot
+                    be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setDeleteFileTarget(null)} className="border-border">
+                  <AlertDialogCancel
+                    onClick={() => setDeleteFileTarget(null)}
+                    className="border-border"
+                  >
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction

@@ -9,7 +9,7 @@ import FileStatusRow from "./FileStatusRow";
 let idCounter = 0;
 const nextId = () => `f${++idCounter}`;
 
-const MAX_SIZE = 1 * 1024 * 1024; // 1MB
+const MAX_SIZE = 2 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/jpg"];
 
 function validateFile(file) {
@@ -17,7 +17,7 @@ function validateFile(file) {
     return `"${file.name}" — only PDF, PNG, JPG allowed.`;
   }
   if (file.size > MAX_SIZE) {
-    return `"${file.name}" exceeds 1MB limit.`;
+    return `"${file.name}" exceeds 2MB limit.`;
   }
   return null;
 }
@@ -77,7 +77,7 @@ export default function AddInvoicePanel({ invoiceNo, setInvoiceNo, stagedFiles, 
       >
         <UploadCloud size={22} className="text-muted-foreground mb-2" />
         <div className="text-sm text-foreground">Drop files or click to browse</div>
-        <div className="text-xs text-muted-foreground mt-0.5">PDF, PNG, JPG up to 1MB</div>
+        <div className="text-xs text-muted-foreground mt-0.5">PDF, PNG, JPG up to 2MB</div>
         <input
           id="add-invoice-file-input"
           type="file"
