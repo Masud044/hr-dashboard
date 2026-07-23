@@ -5,7 +5,7 @@ import { url } from "../constants";
 import { fmtBytes, timeAgo, initials } from "./fileUtils";
 import FileStatusRow from "./FileStatusRow";
 import { getAvatarColor } from "@/lib/avatar-utils";
-
+import { toast } from "react-toastify";
 function Avatar({ name, size = 18 }) {
   return (
     <span
@@ -33,13 +33,25 @@ export default function InvoiceCard({
   const isDeletingThisInvoice = deletingInvoiceId === invoice.INVOICE_ID;
   const [downloadingId, setDownloadingId] = useState(null);
 
-  const handlePick = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (f.size > 20 * 1024 * 1024) return;
-    onAddFile(invoice.INVOICE_ID, f);
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/jpg"];
+
+const handlePick = (e) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  if (!ALLOWED_TYPES.includes(f.type)) {
+    toast.error(`"${f.name}" — only PDF, PNG, JPG allowed.`);
     e.target.value = "";
-  };
+    return;
+  }
+  if (f.size > MAX_SIZE) {
+    toast.error(`"${f.name}" exceeds 2MB limit.`);
+    e.target.value = "";
+    return;
+  }
+  onAddFile(invoice.INVOICE_ID, f);
+  e.target.value = "";
+};
 
   const handleDownload = async (fileUrl, fileId, fileName) => {
     if (downloadingId) return;
@@ -161,7 +173,7 @@ export default function InvoiceCard({
           ) : (
             <label className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer mt-1 transition-colors">
               <PlusCircle size={12} /> Add file
-              <input ref={inputRef} type="file" className="hidden" onChange={handlePick} />
+              <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" className="hidden" onChange={handlePick} />
             </label>
           )
         )}

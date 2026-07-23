@@ -133,6 +133,7 @@ const FilterBar = React.memo(function FilterBar({
             onValueChange={(v) => update("contractorId", v)}
             placeholder="All contractors"
             showAvatar
+            avatarInTrigger
             getImageUrl={(item) =>
               `${import.meta.env.VITE_API_BASE_URL}/api/emp-images/contractor/${item.value}`
             }

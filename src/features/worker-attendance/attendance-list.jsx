@@ -42,6 +42,7 @@ import { AttendanceFormSheet } from "./attendance-form-sheet";
 import { useNavigate } from "react-router-dom";
 import { formatDateWithDay } from "@/lib/utils";
 import DateInput from "@/components/shared/DateInput";
+import EntityCombobox from "@/components/shared/entity-combobox";
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function AttendanceList() {
@@ -83,11 +84,26 @@ export function AttendanceList() {
       return res.data?.data || [];
     },
   });
+  const workerOpts = useMemo(
+    () =>
+      workers.map((w) => ({
+        value: String(w.WORKER_ID),
+        label: w.WORKER_NAME,
+      })),
+    [workers],
+  );
+
+
 
   const workerMap = useMemo(
     () => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])),
     [workers],
   );
+
+  const projectOpts = useMemo(
+  () => projects.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
+  [projects],
+);
   const projectMap = useMemo(
     () => Object.fromEntries(projects.map((p) => [p.P_ID, p.P_NAME])),
     [projects],
@@ -315,7 +331,7 @@ export function AttendanceList() {
       <div className="mt-6 px-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5">
           <div className="flex flex-wrap items-center gap-3  flex-1">
-            <Select
+            {/* <Select
               value={draftFilters.WORKER_ID}
               onValueChange={(v) =>
                 setDraftFilters((f) => ({
@@ -335,9 +351,24 @@ export function AttendanceList() {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
+            <EntityCombobox
+              items={workerOpts}
+              value={draftFilters.WORKER_ID}
+              onValueChange={(v) =>
+                setDraftFilters((f) => ({ ...f, WORKER_ID: v }))
+              }
+              placeholder="All Workers"
+              size="md"
+              className="w-[180px]"
+              showAvatar
+              avatarInTrigger 
+              // getImageUrl={(item) =>
+              //   `${import.meta.env.VITE_API_BASE_URL}/api/emp-images/person/${item.value}`
+              // }
+            />
 
-            <Select
+            {/* <Select
               value={draftFilters.PROJECT_ID}
               onValueChange={(v) =>
                 setDraftFilters((f) => ({
@@ -357,7 +388,16 @@ export function AttendanceList() {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
+
+            <EntityCombobox
+  items={projectOpts}
+  value={draftFilters.PROJECT_ID}
+  onValueChange={(v) => setDraftFilters((f) => ({ ...f, PROJECT_ID: v }))}
+  placeholder="All Projects"
+  size="md"
+  className="w-60"
+/>
 
             {/* <Input
               type="date"
@@ -464,10 +504,10 @@ export function AttendanceList() {
               )}
               {!isLoading && table.getRowModel().rows?.length
                 ? table.getRowModel().rows.map((row) => (
-                   <TableRow
-  key={row.id}
-  className={`border-b border-border hover:bg-secondary/50 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
->
+                    <TableRow
+                      key={row.id}
+                      className={`border-b border-border hover:bg-secondary/50 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
                           key={cell.id}
