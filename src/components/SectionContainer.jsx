@@ -1,6 +1,7 @@
+// src\components\SectionContainer.jsx
 import { cn } from "@/lib/utils";
 
-// src\components\SectionContainer.jsx
+
 export const SectionContainer = ({
   children,
   className,

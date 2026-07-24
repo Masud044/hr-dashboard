@@ -9,7 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Trash2, AlertCircle, RefreshCw, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -48,6 +48,7 @@ import AddRoleDialog from "./add-role-dialog";
 import UpdateRoleDialog from "./update-role-dialog";
 import CustomDataTableColumnHeader from "@/components/shared/custom-data-table-column-header";
 import CustomDataTableToolbar from "@/components/shared/custom-data-table-toolbar";
+import { toast } from "react-toastify";
 
 export default function RoleList() {
   const navigate = useNavigate();
@@ -75,7 +76,8 @@ export default function RoleList() {
   const { data = [], isLoading, isError, error, refetch, isFetching } = useRoles();
 
 // শুধু Admin + Inventory filter করুন
-const rolesData = data.filter((r) => ["Admin"].includes(r.ROLE_NAME));
+// const rolesData = data.filter((r) => ["Admin"].includes(r.ROLE_NAME));
+const rolesData = data;
   
 
   const deleteRoleMutation = useDeleteRole();
@@ -149,53 +151,53 @@ const rolesData = data.filter((r) => ["Admin"].includes(r.ROLE_NAME));
         </div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   enableHiding: false,
-    //   cell: ({ row }) => {
-    //     const role = row.original;
+    {
+      id: "actions",
+      header: "Actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const role = row.original;
 
-    //     return (
-    //       <div className="flex items-center gap-1">
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8"
-    //           onClick={() => handleEdit(role)}
-    //         >
-    //           <IconEdit className="h-4 w-4" />
-    //           <span className="sr-only">Edit</span>
-    //         </Button>
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleEdit(role)}
+            >
+              <IconEdit className="h-4 w-4" />
+              <span className="sr-only">Edit</span>
+            </Button>
 
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8 text-destructive hover:text-destructive"
-    //           onClick={() => handleDelete(role)}
-    //           disabled={deleteRoleMutation.isPending}
-    //         >
-    //           {deleteRoleMutation.isPending ? (
-    //             <Spinner data-icon="inline-start" />
-    //           ) : (
-    //             <Trash2 className="h-4 w-4" />
-    //           )}
-    //           <span className="sr-only">Delete</span>
-    //         </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => handleDelete(role)}
+              disabled={deleteRoleMutation.isPending}
+            >
+              {deleteRoleMutation.isPending ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="sr-only">Delete</span>
+            </Button>
 
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8"
-    //           onClick={() => navigate(`/user-management/roles/${role.ID}`)}
-    //         >
-    //           <IconEye className="h-4 w-4" />
-    //           <span className="sr-only">View</span>
-    //         </Button>
-    //       </div>
-    //     );
-    //   },
-    // },
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => navigate(`/dashboard/role/${role.ID}`)}
+            >
+              <IconEye className="h-4 w-4" />
+              <span className="sr-only">View</span>
+            </Button>
+          </div>
+        );
+      },
+    },
   ];
 
   const table = useReactTable({
@@ -229,10 +231,10 @@ const rolesData = data.filter((r) => ["Admin"].includes(r.ROLE_NAME));
                 Roles
               </h1>
             </div>
-            {/* <Button disabled>
+            <Button disabled>
               <IconPlus />
               Add Role
-            </Button> */}
+            </Button>
           </div>
         </div>
         <div className="bg-card rounded-md shadow-sm p-4">
@@ -255,10 +257,10 @@ const rolesData = data.filter((r) => ["Admin"].includes(r.ROLE_NAME));
                 Roles
               </h1>
             </div>
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
               <IconPlus />
               Add Role
-            </Button> */}
+            </Button>
           </div>
         </div>
         <div className="bg-card rounded-md shadow-sm p-4">
@@ -324,17 +326,17 @@ const rolesData = data.filter((r) => ["Admin"].includes(r.ROLE_NAME));
           <div className="flex items-center gap-2">
             
 
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
               <IconPlus />
               Add Role
-            </Button> */}
-            <Button
-              variant="outline"
-              onClick={() => navigate("/user-management/roles/matrix")}
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Permission Matrix
             </Button>
+           <Button
+  variant="outline"
+  onClick={() => navigate("/dashboard/role/matrix")}
+>
+  <LayoutGrid className="h-4 w-4 mr-2" />
+  Permission Matrix
+</Button>
           </div>
         </div>
       </div>

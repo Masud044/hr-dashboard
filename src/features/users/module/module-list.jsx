@@ -159,43 +159,43 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
         <div className="text-muted-foreground">{row.getValue("DESCRIPTION") || "—"}</div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   enableHiding: false,
-    //   cell: ({ row }) => {
-    //     const module = row.original;
+    {
+      id: "actions",
+      header: "Actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const module = row.original;
 
-    //     return (
-    //       <div className="flex items-center gap-1">
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8"
-    //           onClick={() => handleEdit(module)}
-    //         >
-    //           <IconEdit className="h-4 w-4" />
-    //           <span className="sr-only">Edit</span>
-    //         </Button>
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleEdit(module)}
+            >
+              <IconEdit className="h-4 w-4" />
+              <span className="sr-only">Edit</span>
+            </Button>
 
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8 text-destructive hover:text-destructive"
-    //           onClick={() => handleDelete(module)}
-    //           disabled={deleteModuleMutation.isPending}
-    //         >
-    //           {deleteModuleMutation.isPending ? (
-    //             <Spinner data-icon="inline-start" />
-    //           ) : (
-    //             <Trash2 className="h-4 w-4" />
-    //           )}
-    //           <span className="sr-only">Delete</span>
-    //         </Button>
-    //       </div>
-    //     );
-    //   },
-    // },
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => handleDelete(module)}
+              disabled={deleteModuleMutation.isPending}
+            >
+              {deleteModuleMutation.isPending ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="sr-only">Delete</span>
+            </Button>
+          </div>
+        );
+      },
+    },
   ];
 
   const table = useReactTable({
@@ -248,10 +248,10 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
             <div>
               <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Modules</h1>
             </div>
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
               <IconPlus />
               Add Module
-            </Button> */}
+            </Button>
           </div>
         </div>
         <div className="bg-card rounded-md shadow-sm p-4">
@@ -310,17 +310,17 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
             </Breadcrumb>
           </div>
 
-          {/* <div className="flex items-center gap-2"> */}
-            {/* <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} /> 
               <span className="sr-only">Refresh data</span>
-            </Button> */}
+            </Button>
 
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
               <IconPlus />
               Add Module
-            </Button> */}
-          {/* </div> */}
+            </Button>
+          </div>
         </div>
       </div>
 

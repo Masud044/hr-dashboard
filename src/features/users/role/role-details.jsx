@@ -10,7 +10,7 @@ import {
   ChevronsUpDown,
   Check,
 } from "lucide-react";
-import { toast } from "sonner";
+
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,7 +48,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 
-import PageContainer from "@/components/page-container";
+
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 
 import {
@@ -58,6 +58,8 @@ import {
   useAssignPermissionToRole,
   useRevokePermissionFromRole,
 } from "../../user-management/queries";
+import { SectionContainer } from "@/components/SectionContainer";
+import { toast } from "react-toastify";
 
 export default function RoleDetailsPage() {
   const { id } = useParams();
@@ -147,16 +149,16 @@ export default function RoleDetailsPage() {
 
   if (isLoading) {
     return (
-      <PageContainer>
+      <SectionContainer>
         <Skeleton className="h-[80vh] w-full rounded-xl" />
-      </PageContainer>
+      </SectionContainer>
     );
   }
 
   const allAssigned = availablePermissions.length === 0;
 
   return (
-    <PageContainer>
+    <SectionContainer>
       <div className="space-y-5">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
@@ -347,6 +349,6 @@ export default function RoleDetailsPage() {
       </div>
 
       <ConfirmationDialog />
-    </PageContainer>
+    </SectionContainer>
   );
 }
