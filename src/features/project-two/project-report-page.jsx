@@ -275,14 +275,14 @@ const MARGIN_PERCENT =
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
+              {/* <Button
                 onClick={() => navigate(-1)}
                 variant="outline"
                 size="sm"
                 className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
               >
                 Back
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleDownloadCsv}
                 variant="outline"
