@@ -130,6 +130,49 @@ function ReorderCell({
   );
 }
 
+function MarginCell({ item, marginMutation }) {
+  const [localValue, setLocalValue] = React.useState(
+    String(item.MARGIN_PERCENT ?? ""),
+  );
+
+  React.useEffect(() => {
+    setLocalValue(String(item.MARGIN_PERCENT ?? ""));
+  }, [item.MARGIN_PERCENT]);
+
+  const handleBlur = () => {
+    const parsed = Number.parseFloat(localValue);
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+      setLocalValue(String(item.MARGIN_PERCENT ?? ""));
+      return;
+    }
+    if (parsed !== Number(item.MARGIN_PERCENT)) {
+      marginMutation.mutate({ id: item.P_ID, margin: parsed });
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center gap-0.5">
+      <Input
+        type="text"
+        inputMode="decimal"
+        value={localValue}
+        disabled={marginMutation.isPending}
+        onChange={(e) =>
+          setLocalValue(e.target.value.replace(/[^0-9.]/g, ""))
+        }
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+        }}
+        onBlur={handleBlur}
+        className="h-7 w-16 text-center text-sm px-1 disabled:opacity-50"
+      />
+      <span className="text-xs text-muted-foreground">%</span>
+    </div>
+  );
+}
+
+
+
 export function NewProjectTable() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -250,6 +293,21 @@ export function NewProjectTable() {
       toast.error("Failed to update status.");
     },
   });
+
+  const marginMutation = useMutation({
+  mutationFn: async ({ id, margin }) => {
+    return axios.patch(`${url}/api/project/${id}/margin`, {
+      MARGIN_PERCENT: margin,
+    });
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(["projects"]);
+    toast.success("Margin updated!");
+  },
+  onError: (err) => {
+    toast.error(err?.response?.data?.message || "Failed to update margin.");
+  },
+});
 
   const handleMove = (id, direction) => {
     moveMutation.mutate({ id, direction });
@@ -452,6 +510,20 @@ export function NewProjectTable() {
         );
       },
     },
+    {
+  accessorKey: "MARGIN_PERCENT",
+  header: ({ column }) => (
+    <button
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+    >
+      Margin <ArrowUpDown className="h-3 w-3" />
+    </button>
+  ),
+  cell: ({ row }) => (
+    <MarginCell item={row.original} marginMutation={marginMutation} />
+  ),
+},
     {
       accessorKey: "SUBWRB",
       header: ({ column }) => (
