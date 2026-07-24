@@ -11,6 +11,7 @@ import { ToastContainer } from "react-toastify";
 import Home from "./pages/Home";
 import WelcomePage from "./pages/welcomePage";
 import DashboardLayout from "./Layout/DashboardLayout";
+import PlainLayout from "./Layout/PlainLayout";
 import Dashboard from "./features/main-entry/pages/Dashboard";
 import Project from "./features/setting/pages/Project";
 import Contractor from "./features/setting/pages/Contractor";
@@ -88,6 +89,20 @@ const App = () => {
             <Route path="/login" element={<LoginV2 />} />
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            {/* PlainLayout — Admin only, no sidebar */}
+<Route
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <PlainLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route
+    path="/dashboard/projects/:id/report"
+    element={<ProjectReportPage />}
+  />
+  {/* add more PlainLayout + ADMIN pages here */}
+</Route>
 
             {/* Protected Layout — Admin only */}
             <Route
@@ -178,13 +193,13 @@ const App = () => {
                 }
               />
               <Route
-  path="statement/:parentType/:parentId/invoices"
-  element={
-    <ProtectedRoute anyRole={ADMIN}>
-      <InvoiceManagementPage />
-    </ProtectedRoute>
-  }
-/>
+                path="statement/:parentType/:parentId/invoices"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <InvoiceManagementPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="project/:id"
                 element={
@@ -268,13 +283,13 @@ const App = () => {
                 }
               />
               <Route
-  path="attendance-report"
-  element={
-    <ProtectedRoute anyRole={DataEntryUser}>
-      <AttendanceReport />
-    </ProtectedRoute>
-  }
-/>
+                path="attendance-report"
+                element={
+                  <ProtectedRoute anyRole={DataEntryUser}>
+                    <AttendanceReport />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="calendar"
                 element={
@@ -345,10 +360,10 @@ const App = () => {
 
               <Route path="projects/create" element={<CreateProjectPage />} />
               <Route path="projects/:id/edit" element={<EditProjectPage />} />
-              <Route
+              {/* <Route
                 path="projects/:id/report"
                 element={<ProjectReportPage />}
-              />
+              /> */}
 
               <Route
                 path="process"

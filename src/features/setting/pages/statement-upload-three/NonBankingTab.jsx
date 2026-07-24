@@ -22,6 +22,7 @@ import StagingThead from "./StagingThead";
 import StagingRow from "./StagingRow";
 import DeleteInvoiceModal from "./modals/DeleteInvoiceModal";
 import ApproveModal from "./modals/ApproveModal";
+import DeleteRowModal from "./modals/DeleteRowModal";
 import {
   url,
   EMPTY_FILTERS,
@@ -45,6 +46,7 @@ export default function NonBankingTab({
     deleteInvoiceMutation,
     approveMutation,
     addNonBankingMutation,
+    deleteStagingRowMutation,
   } = mutations;
 
   const [nbForm, setNbForm] = useState(EMPTY_NB);
@@ -56,6 +58,7 @@ export default function NonBankingTab({
   });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [approveTarget, setApproveTarget] = useState(null);
+  const [deleteRowTarget, setDeleteRowTarget] = useState(null);
   const [approvingRowId, setApprovingRowId] = useState(null);
   const [exporting, setExporting] = useState(false);
 
@@ -182,6 +185,13 @@ export default function NonBankingTab({
     });
     setApproveTarget(null);
   };
+  const handleDeleteRowClick = (row) =>
+  setDeleteRowTarget({ stagingId: row.STAGING_ID, description: row.DESCRIPTION });
+const confirmDeleteRow = (stagingId) => {
+  deleteStagingRowMutation.mutate(stagingId, {
+    onSuccess: () => setDeleteRowTarget(null),
+  });
+};
   const confirmDeleteInvoice = (stagingId) => {
     deleteInvoiceMutation.mutate(stagingId, {
       onSuccess: () => setDeleteTarget(null),
@@ -468,6 +478,7 @@ export default function NonBankingTab({
                     onInvoiceFileSelect={handleInvoiceFileSelect}
                     onDeleteInvoiceClick={handleDeleteInvoiceClick}
                     onApproveClick={handleApproveClick}
+                     onDeleteRowClick={handleDeleteRowClick}
                   />
                 ))
               )}
@@ -490,6 +501,12 @@ export default function NonBankingTab({
         onConfirm={confirmApprove}
         isPending={approveMutation.isPending}
       />
+      <DeleteRowModal
+  target={deleteRowTarget}
+  onCancel={() => setDeleteRowTarget(null)}
+  onConfirm={confirmDeleteRow}
+  isPending={deleteStagingRowMutation.isPending}
+/>
     </>
   );
 }
