@@ -44,7 +44,7 @@ export function ProjectReportPage() {
 
   const [activeTab, setActiveTab] = useState("transactions"); // "transactions" | "byContractor"
   const workerSectionRef = useRef(null);
-  const MARGIN_PERCENT = 10; // TODO: replace with per-project margin from PM_PROJECT once added to DB
+
 
   const scrollToWorkerSection = () => {
     workerSectionRef.current?.scrollIntoView({
@@ -53,21 +53,24 @@ export function ProjectReportPage() {
     });
   };
 
-  const { data: report, isLoading } = useQuery({
-    queryKey: ["projectReport", projectId],
-    queryFn: async () =>
-      (await axios.get(`${url}/api/statement/project-report/${projectId}`)).data
-        ?.data || { transactions: [], workerLogs: [], workerTotals: {} },
-    enabled: !!projectId,
-  });
+const { data: report, isLoading } = useQuery({
+  queryKey: ["projectReport", projectId],
+  queryFn: async () =>
+    (await axios.get(`${url}/api/statement/project-report/${projectId}`)).data
+      ?.data || { transactions: [], workerLogs: [], workerTotals: {}, marginPercent: null },
+  enabled: !!projectId,
+});
 
-  const rows = report?.transactions || [];
-  const workerLogs = report?.workerLogs || [];
-  const workerTotals = report?.workerTotals || {
-    totalHours: 0,
-    totalDays: 0,
-    totalAmount: 0,
-  };
+const rows = useMemo(() => report?.transactions || [], [report]);
+const workerLogs = useMemo(() => report?.workerLogs || [], [report]);
+const workerTotals = useMemo(
+  () => report?.workerTotals || { totalHours: 0, totalDays: 0, totalAmount: 0 },
+  [report]
+);
+
+// ── margin: from DB if available, otherwise default 10 ──
+const MARGIN_PERCENT =
+  report?.marginPercent != null ? Number(report.marginPercent) : 10;
 
   // Extract project name from the first row
   const projectName =
@@ -117,7 +120,7 @@ export function ProjectReportPage() {
       customerPaid,
       balance,
     };
-  }, [totals, rows]);
+  }, [totals, rows, MARGIN_PERCENT]);
 
   const groupedByContractor = useMemo(() => {
     const map = new Map();
