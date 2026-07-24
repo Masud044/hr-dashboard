@@ -1,9 +1,6 @@
 
-
-
 import UserList from "./user-list";
 import { SectionContainer } from "@/components/SectionContainer";
-
 
 
 

@@ -1,4 +1,4 @@
-// src/features/users/role/role-permission-matrix.jsx
+// src\features\users\role\role-permission-matrix.jsx
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router";
 import { useQueries } from "@tanstack/react-query";
@@ -33,9 +33,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import PageContainer from "@/components/page-container";
+
 
 import { useRoles, usePermissions } from "../../user-management/queries";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -133,26 +134,26 @@ export default function RolePermissionMatrix() {
   // ── Loading ──
   if (isLoading)
     return (
-      <PageContainer>
+      <SectionContainer variant="dashboard">
         <Skeleton className="h-[80vh] w-full rounded-xl" />
-      </PageContainer>
+      </SectionContainer>
     );
 
   // ── Error ──
   if (isError)
     return (
-      <PageContainer>
+      <SectionContainer variant="dashboard">
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             Failed to load roles or permissions.
           </AlertDescription>
         </Alert>
-      </PageContainer>
+      </SectionContainer>
     );
 
   return (
-    <PageContainer>
+    <SectionContainer variant="dashboard">
       <div className="space-y-4">
 
         {/* Header */}
@@ -269,6 +270,6 @@ export default function RolePermissionMatrix() {
           </CardContent>
         </Card>
       </div>
-    </PageContainer>
+    </SectionContainer>
   );
 }

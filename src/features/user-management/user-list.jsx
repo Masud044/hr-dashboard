@@ -24,7 +24,7 @@ import {
   IconSelector,
   IconX,
 } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router";
 import { format } from "date-fns";
 

@@ -29,6 +29,8 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 import Grades from "./features/user-management";
 import UserDetailsPage from "./features/user-management/user-details";
 import Roles from "./features/users/role";
+import RolePermissionMatrix from "./features/users/role/role-permission-matrix";
+import RoleDetailsPage from "./features/users/role/role-details";
 import Modules from "./features/users/module";
 import Permissions from "./features/users/permission";
 import OwnerInfo from "./features/setting/owner-info/owner-info";
@@ -90,19 +92,19 @@ const App = () => {
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             {/* PlainLayout — Admin only, no sidebar */}
-<Route
-  element={
-    <ProtectedRoute anyRole={ADMIN}>
-      <PlainLayout />
-    </ProtectedRoute>
-  }
->
-  <Route
-    path="/dashboard/projects/:id/report"
-    element={<ProjectReportPage />}
-  />
-  {/* add more PlainLayout + ADMIN pages here */}
-</Route>
+            <Route
+              element={
+                <ProtectedRoute anyRole={ADMIN}>
+                  <PlainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                path="/dashboard/projects/:id/report"
+                element={<ProjectReportPage />}
+              />
+              {/* add more PlainLayout + ADMIN pages here */}
+            </Route>
 
             {/* Protected Layout — Admin only */}
             <Route
@@ -141,6 +143,22 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="role/matrix"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <RolePermissionMatrix />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+  path="role/:id"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <RoleDetailsPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="module"
                 element={
