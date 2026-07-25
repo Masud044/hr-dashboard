@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,95 +15,90 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, ChevronsUpDown, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { UserPlus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useCreateUser } from "./queries";
-import { useEmployeeLiteSearch } from "@/hooks/use-lite-search";
-// import { useHrLocations } from "@/features/settings/work-structure/locations/queries";
-import { getAvatarColor } from "@/lib/avatar-utils";
-import { IconX } from "@tabler/icons-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCreateUser, useRoles } from "./queries";
+import { useWorkers } from "@/features/worker/queries";
+import { useOwnerInfoList } from "@/features/setting/owner-info/queries";
+import EntityCombobox from "@/components/shared/entity-combobox";
+import MultiSelectCombobox from "@/components/shared/multi-select-combobox";
 
 const formSchema = z.object({
   username: z.string().min(1, "Username is required").max(100),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
   confirmPassword: z.string().min(1, "Please confirm your password"),
-  employeeId: z.coerce.number().optional().nullable(),
-  locationId: z.coerce.number().optional().nullable(),
+  userType: z.enum(["WORKER", "OWNER"], { required_error: "Type is required" }),
+  refId: z.coerce.number({ required_error: "Please select a " }).min(1, "Please make a selection"),
+  roleIds: z.array(z.string()).min(1, "At least one role is required"),
+  // locationId: z.coerce.number().optional().nullable(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
+const defaultValues = {
+  username: "",
+  password: "",
+  confirmPassword: "",
+  userType: "",
+  refId: "",
+  roleIds: [],
+  // locationId: null,
+};
+
 export default function AddUserDialog({ open, onOpenChange, showConfirmation }) {
   const createMutation = useCreateUser();
-
-  // Employee search state
-  const [empOpen, setEmpOpen] = useState(false);
-  const [empSearch, setEmpSearch] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const { data: employees = [], isFetching: empFetching } = useEmployeeLiteSearch(empSearch);
-
-  // Location state
-  // const [locOpen, setLocOpen] = useState(false);
-  // const [selectedLocation, setSelectedLocation] = useState(null);
-  // const { data: locations = [], isLoading: locLoading } = useHrLocations();
+  const { data: roles = [] } = useRoles();
+  const { data: workers = [] } = useWorkers();
+  const { data: owners = [] } = useOwnerInfoList();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      confirmPassword: "",
-      employeeId: null,
-      locationId: null,
-    },
+    defaultValues,
   });
 
   const { formState: { isDirty } } = form;
+  const userType = form.watch("userType");
 
   useEffect(() => {
-    if (open) {
-      form.reset({
-        username: "",
-        password: "",
-        confirmPassword: "",
-        employeeId: null,
-        locationId: null,
-      });
-      setSelectedEmployee(null);
-      // setSelectedLocation(null);
-      setEmpSearch("");
-    }
+    if (open) form.reset(defaultValues);
   }, [open]);
+
+  // Reset refId whenever the type changes
+  useEffect(() => {
+    form.setValue("refId", "");
+  }, [userType]);
+
+  const roleOptions = useMemo(
+    () => roles.map((r) => ({ value: String(r.ID), label: r.ROLE_NAME })),
+    [roles],
+  );
+
+  const refOptions = useMemo(() => {
+    if (userType === "WORKER") {
+      return workers.map((w) => ({ value: String(w.WORKER_ID), label: w.WORKER_NAME }));
+    }
+    if (userType === "OWNER") {
+      return owners.map((o) => ({ value: String(o.ID), label: o.O_NAME }));
+    }
+    return [];
+  }, [userType, workers, owners]);
 
   const onSubmit = async (data) => {
     try {
       await createMutation.mutateAsync({
         USERNAME: data.username,
         PASSWORD: data.password,
-        EMPLOYEE_ID: data.employeeId || null,
-        LOCATION_ID: data.locationId || null,
-        STATUS: "ACTIVE", // Default status
+        USER_TYPE: data.userType,
+        REF_ID: data.refId,
+        roleIds: data.roleIds,
+        // LOCATION_ID: data.locationId || null,
+        STATUS: "ACTIVE",
       });
       toast.success("User created successfully!");
-      form.reset();
+      form.reset(defaultValues);
       onOpenChange(false);
     } catch (err) {
       toast.error(err?.message || "Failed to create user.");
@@ -121,7 +116,7 @@ export default function AddUserDialog({ open, onOpenChange, showConfirmation }) 
       });
       if (!confirmed) return;
     }
-    form.reset();
+    form.reset(defaultValues);
     onOpenChange(false);
   };
 
@@ -154,11 +149,7 @@ export default function AddUserDialog({ open, onOpenChange, showConfirmation }) 
                     Username <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g. john.doe"
-                      disabled={isSubmitting}
-                      {...field}
-                    />
+                    <Input placeholder="e.g. john.doe" disabled={isSubmitting} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -175,12 +166,7 @@ export default function AddUserDialog({ open, onOpenChange, showConfirmation }) 
                     Password <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Min. 6 characters"
-                      disabled={isSubmitting}
-                      {...field}
-                    />
+                    <Input type="password" placeholder="Min. 6 characters" disabled={isSubmitting} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -197,11 +183,83 @@ export default function AddUserDialog({ open, onOpenChange, showConfirmation }) 
                     Confirm Password <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Re-enter password"
+                    <Input type="password" placeholder="Re-enter password" disabled={isSubmitting} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* User Type */}
+            <FormField
+              control={form.control}
+              name="userType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Type <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select type..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="WORKER">Worker</SelectItem>
+                      <SelectItem value="OWNER">Owner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Ref (Worker / Owner) */}
+            {userType && (
+              <FormField
+                control={form.control}
+                name="refId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {userType === "WORKER" ? "Worker" : "Owner"} <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <EntityCombobox
+                        items={refOptions}
+                        value={field.value ? String(field.value) : ""}
+                        onValueChange={(v) => field.onChange(v ? Number(v) : "")}
+                        placeholder={`Search ${userType === "WORKER" ? "worker" : "owner"}...`}
+                        showAvatar
+                        avatarInTrigger
+                        size="md"
+                        className="w-full"
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Roles */}
+            <FormField
+              control={form.control}
+              name="roleIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Roles <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <MultiSelectCombobox
+                      items={roleOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select roles..."
                       disabled={isSubmitting}
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -209,224 +267,19 @@ export default function AddUserDialog({ open, onOpenChange, showConfirmation }) 
               )}
             />
 
-           {/* Employee */}
-<FormField
-  control={form.control}
-  name="employeeId"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Employee (Optional)</FormLabel>
-      <Popover open={empOpen} onOpenChange={setEmpOpen}>
-        <PopoverTrigger asChild>
-          <FormControl>
-            <Button
-              variant="outline"
-              role="combobox"
-              disabled={isSubmitting}
-              className={cn(
-                "w-full justify-between font-normal px-2",
-                !selectedEmployee && "text-muted-foreground"
-              )}
-            >
-              {selectedEmployee ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <Avatar className="h-5 w-5 shrink-0">
-                    <AvatarImage
-                      src={`${import.meta.env.VITE_API_BASE_URL}/api/emp-images/person/${selectedEmployee.id}`}
-                    />
-                    <AvatarFallback
-                      className={cn(
-                        "text-[10px] font-semibold text-white",
-                        getAvatarColor(selectedEmployee.name),
-                      )}
-                    >
-                      {selectedEmployee.name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="truncate text-sm text-foreground">
-                    {selectedEmployee.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    ({selectedEmployee.empNo})
-                  </span>
-                </div>
-              ) : (
-                <span>Search by name or emp no...</span>
-              )}
-              <div className="flex items-center gap-0.5 ml-1 shrink-0">
-                {selectedEmployee && (
-                  <span
-                    role="button"
-                    className="rounded p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEmployee(null);
-                      setEmpSearch("");
-                      field.onChange(null);
-                    }}
-                  >
-                    <IconX className="h-3.5 w-3.5" />
-                  </span>
-                )}
-                <ChevronsUpDown className="h-4 w-4 opacity-50" />
-              </div>
-            </Button>
-          </FormControl>
-        </PopoverTrigger>
-        <PopoverContent className="w-[450px] p-0" align="start">
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder="Type 2+ characters..."
-              value={empSearch}
-              onValueChange={setEmpSearch}
-            />
-            <CommandList>
-              {empFetching && (
-                <div className="flex items-center justify-center py-4">
-                  <Spinner className="h-4 w-4" />
-                </div>
-              )}
-              {!empFetching && empSearch.length >= 2 && employees.length === 0 && (
-                <CommandEmpty>No employees found.</CommandEmpty>
-              )}
-              {!empFetching && empSearch.length < 2 && (
-                <CommandEmpty>Type at least 2 characters to search.</CommandEmpty>
-              )}
-              <CommandGroup>
-                {employees.map((emp) => (
-                  <CommandItem
-                    key={emp.id}
-                    value={String(emp.id)}
-                    onSelect={() => {
-                      setSelectedEmployee(emp);
-                      field.onChange(emp.id);
-                      setEmpOpen(false);
-                    }}
-                  >
-                    <Avatar className="h-6 w-6 shrink-0 mr-2">
-                      <AvatarImage
-                        src={`${import.meta.env.VITE_API_BASE_URL}/api/emp-images/person/${emp.id}`}
-                      />
-                      <AvatarFallback
-                        className={cn(
-                          "text-[10px] font-semibold text-white",
-                          getAvatarColor(emp.name),
-                        )}
-                      >
-                        {emp.name
-                          ?.split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="truncate">{emp.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground shrink-0">
-                      {emp.empNo}
-                    </span>
-                    <Check
-                      className={cn(
-                        "ml-2 h-4 w-4 shrink-0",
-                        selectedEmployee?.id === emp.id
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
-            {/* Location */}
+            {/* Location — kept for later, currently disabled */}
             {/* <FormField
               control={form.control}
               name="locationId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location (Optional)</FormLabel>
-                  <Popover open={locOpen} onOpenChange={setLocOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          disabled={isSubmitting}
-                          className={cn(
-                            "w-full justify-between font-normal",
-                            !selectedLocation && "text-muted-foreground"
-                          )}
-                        >
-                          {selectedLocation
-                            ? selectedLocation.LOCATION_NAME
-                            : "Select location..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[450px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search location..." />
-                        <CommandList>
-                          {locLoading && (
-                            <div className="flex items-center justify-center py-4">
-                              <Spinner className="h-4 w-4" />
-                            </div>
-                          )}
-                          {!locLoading && locations.length === 0 && (
-                            <CommandEmpty>No locations found.</CommandEmpty>
-                          )}
-                          <CommandGroup>
-                            {locations.map((loc) => (
-                              <CommandItem
-                                key={loc.ID}
-                                value={loc.LOCATION_NAME}
-                                onSelect={() => {
-                                  setSelectedLocation(loc);
-                                  field.onChange(loc.ID);
-                                  setLocOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedLocation?.ID === loc.ID
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {loc.LOCATION_NAME}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
                 </FormItem>
               )}
             /> */}
 
             <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>

@@ -61,7 +61,7 @@ export default function AppSidebar() {
       </SidebarHeader>
 
       {/* ── Nav Groups ── */}
-      <SidebarContent className="px-2 py-4 gap-4">
+      {/* <SidebarContent className="px-2 py-4 gap-4">
         {NAV_ITEMS
           .filter((group) => group.roles?.some((r) => userRoles.includes(r)))
           .map((group, idx) => {
@@ -147,7 +147,95 @@ export default function AppSidebar() {
               </Collapsible>
             );
           })}
-      </SidebarContent>
+      </SidebarContent> */}
+
+      {/* ── Nav Groups ── */}
+<SidebarContent className="px-2 py-4 gap-4">
+  {NAV_ITEMS
+    .map((group) => {
+      const visibleLinks = group.links.filter((linkItem) => {
+        const allowed = linkItem.roles ?? ["Admin"];
+        return allowed.some((r) => userRoles.includes(r));
+      });
+      if (visibleLinks.length === 0) return null;
+
+      return (
+        <Collapsible key={group.label} defaultOpen className="group/collapsible">
+          <SidebarGroup className="px-0">
+            {!isCollapsed && (
+              <CollapsibleTrigger asChild>
+                <SidebarGroupLabel
+                  className="
+                    text-[11px] font-bold tracking-wider text-muted-foreground uppercase
+                    px-3 pb-2 mx-1 cursor-pointer
+                    border-b border-dashed border-border
+                    hover:text-primary transition-colors
+                    flex items-center justify-between
+                  "
+                >
+                  {group.label}
+                  <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+            )}
+            <CollapsibleContent>
+              <SidebarGroupContent className="mt-1">
+                <SidebarMenu className="gap-1">
+                  {visibleLinks.map((linkItem, linkIdx) => {
+                    const isActive =
+                      linkItem.to === "/dashboard"
+                        ? location.pathname === linkItem.to
+                        : location.pathname === linkItem.to ||
+                          location.pathname.startsWith(linkItem.to + "/");
+
+                    return (
+                      <SidebarMenuItem key={linkIdx}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={isCollapsed ? linkItem.label : undefined}
+                          className="
+                            h-auto rounded-l-none rounded-r-full px-3 py-2
+                            text-[13px] font-semibold
+                            text-muted-foreground
+                            transition-all duration-150
+                            hover:bg-secondary hover:text-primary
+                            data-[active=true]:bg-primary
+                            data-[active=true]:text-primary-foreground
+                            data-[active=true]:shadow-teal-glow
+                            data-[active=true]:font-bold
+                          "
+                        >
+                          <NavLink
+                            to={linkItem.to}
+                            end={linkItem.to === "/dashboard"}
+                            className="flex items-center gap-3"
+                          >
+                            {linkItem.Icon && (
+                              <span
+                                className={
+                                  isActive
+                                    ? "flex items-center justify-center w-6 h-6 rounded-md bg-white/20 shrink-0"
+                                    : "flex items-center justify-center w-6 h-6 shrink-0"
+                                }
+                              >
+                                <linkItem.Icon className="w-[16px] h-[16px]" />
+                              </span>
+                            )}
+                            <span>{linkItem.label}</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+      );
+    })}
+</SidebarContent>
 
       {/* ── Footer ── */}
       <SidebarFooter className="border-t border-border p-2">

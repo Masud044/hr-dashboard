@@ -107,63 +107,39 @@ function UserAvatar({ user }) {
   const [uploading, setUploading] = useState(false);
   const BASE = import.meta.env.VITE_API_BASE_URL;
 
-  const urlsToTry = [
-    `${BASE}/api/emp-images/person/${user.ID}`,
-    user.EMPLOYEE_ID
-      ? `${BASE}/api/emp-images/person/${user.EMPLOYEE_ID}`
-      : null,
-  ].filter(Boolean);
-
-  const [srcIndex, setSrcIndex] = useState(0);
+  const imageUrl = `${BASE}/api/emp-images/person/${user.ID}`;
   const [failed, setFailed] = useState(false);
 
-  const handleError = () => {
-    const next = srcIndex + 1;
-    if (next < urlsToTry.length) {
-      setSrcIndex(next);
-    } else {
-      setFailed(true);
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+    setUploading(true);
+    try {
+      let res = await fetch(`${BASE}/api/emp-images/${user.ID}`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (res.status === 404) {
+        res = await fetch(`${BASE}/api/emp-images/${user.ID}`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+      if (!res.ok) throw new Error("Upload failed");
+      setFailed(false);
+      toast.success("Profile photo updated!");
+    } catch {
+      toast.error("Image upload failed.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
   };
 
-const handleUpload = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  // Use EMPLOYEE_ID if linked, otherwise fall back to user ID
-  const uploadId = user.EMPLOYEE_ID ?? user.ID;
-
-  const formData = new FormData();
-  formData.append("image", file);
-  setUploading(true);
-  try {
-    let res = await fetch(`${BASE}/api/emp-images/${uploadId}`, {
-      method: "PUT",
-      body: formData,
-    });
-    if (res.status === 404) {
-      res = await fetch(`${BASE}/api/emp-images/${uploadId}`, {
-        method: "POST",
-        body: formData,
-      });
-    }
-    if (!res.ok) throw new Error("Upload failed");
-    setSrcIndex(0);
-    setFailed(false);
-    toast.success("Profile photo updated!");
-  } catch {
-    toast.error("Image upload failed.");
-  } finally {
-    setUploading(false);
-    e.target.value = "";
-  }
-};
-
-  const initials =
-    [user.FIRST_NAME?.[0], user.LAST_NAME?.[0]]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() || user.USERNAME?.[0]?.toUpperCase();
+  const initials = user.USERNAME?.slice(0, 2)?.toUpperCase();
 
   return (
     <div className="relative group">
@@ -182,9 +158,9 @@ const handleUpload = async (e) => {
       >
         {!failed ? (
           <img
-            key={urlsToTry[srcIndex]}
-            src={urlsToTry[srcIndex]}
-            onError={handleError}
+            key={imageUrl}
+            src={imageUrl}
+            onError={() => setFailed(true)}
             alt={user.USERNAME}
             className="h-full w-full object-cover"
           />
@@ -289,14 +265,8 @@ export default function UserDetailsPage() {
   const deactivateMutation = useDeleteUser();
   const activateMutation = useActivateUser();
 
-  const assignedRoleIds = new Set(user?.roles?.map((r) => r.ID));
-  // const availableRoles = allRoles.filter((r) => !assignedRoleIds.has(r.ID));
-
-  const ALLOWED_ROLES = ["Admin", "DataEntry"];
-
-const availableRoles = allRoles.filter(
-  (r) => ALLOWED_ROLES.includes(r.ROLE_NAME) && !assignedRoleIds.has(r.ID)
-);
+const assignedRoleIds = new Set(user?.roles?.map((r) => r.ID));
+  const availableRoles = allRoles.filter((r) => !assignedRoleIds.has(r.ID));
   const allRolesAssigned = availableRoles.length === 0;
 
   const handleDeactivate = async () => {
@@ -417,7 +387,7 @@ const availableRoles = allRoles.filter(
 
   const isActive = user.STATUS === "ACTIVE";
   const isBusy = deactivateMutation.isPending || activateMutation.isPending;
-  const fullName = [user.FIRST_NAME, user.LAST_NAME].filter(Boolean).join(" ");
+const fullName = [user.FIRST_NAME, user.LAST_NAME].filter(Boolean).join(" ");
 
   return (
     <SectionContainer>
@@ -443,11 +413,11 @@ const availableRoles = allRoles.filter(
         <Card className="border-border shadow-sm overflow-hidden bg-card">
           <div className="h-32 bg-gradient-to-r from-muted/50 to-muted border-b border-border relative">
             <div className="absolute top-4 right-6 flex items-center gap-3">
-              <Button
+             <Button
                 variant="outline"
                 size="sm"
                 className="bg-background/60 backdrop-blur-md border-border hover:bg-accent"
-                onClick={() => setIsUpdateOpen(true)}
+                onClick={() => navigate(`/dashboard/user-management/users/${id}/edit`)}
               >
                 <Pencil className="h-4 w-4 mr-2" /> Edit User
               </Button>
@@ -496,16 +466,13 @@ const availableRoles = allRoles.filter(
                     {user.STATUS}
                   </Badge>
                 </div>
-                {fullName && (
+               {user.USER_TYPE && (
                   <p className="text-base font-medium text-foreground/80">
-                    {fullName}
-                    {user.EMP_NO && (
-                      <span className="text-muted-foreground font-normal"> · {user.EMP_NO}</span>
+                    {user.USER_TYPE === "WORKER" ? "Worker" : "Owner"}
+                    {user.refName && (
+                      <span className="text-muted-foreground font-normal"> · {user.refName}</span>
                     )}
                   </p>
-                )}
-                {user.LOCATION_NAME && (
-                  <p className="text-sm text-muted-foreground mt-0.5">{user.LOCATION_NAME}</p>
                 )}
               </div>
               <div className="hidden md:block bg-muted/50 p-3 rounded-lg border border-border">
@@ -515,7 +482,10 @@ const availableRoles = allRoles.filter(
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-6 border-t border-border">
-              <DataItem label="Location" value={user.LOCATION_NAME} />
+              <DataItem
+                label="Type"
+                value={user.USER_TYPE ? `${user.USER_TYPE === "WORKER" ? "Worker" : "Owner"}${user.refName ? ` — ${user.refName}` : ""}` : "—"}
+              />
               <DataItem label="Created" value={formatDate(user.CREATED_AT)} />
               <DataItem label="Last Updated" value={formatDate(user.UPDATED_AT)} />
               <DataItem label="Roles" value={`${user.roles?.length ?? 0} assigned`} />

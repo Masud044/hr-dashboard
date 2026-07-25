@@ -417,9 +417,12 @@ export default function UserList() {
   };
 
   // ── Dialog helpers ──────────────────────────────────────────────────────────
+  // const handleEdit = (user) => {
+  //   setSelectedUser(user);
+  //   setIsUpdateOpen(true);
+  // };
   const handleEdit = (user) => {
-    setSelectedUser(user);
-    setIsUpdateOpen(true);
+    navigate(`/dashboard/user-management/users/${user.ID}/edit`);
   };
   const handlePassword = (user) => {
     setSelectedUser(user);
@@ -665,7 +668,8 @@ export default function UserList() {
         <PageHeader
           onRefetch={refetch}
           isFetching={isFetching}
-          onAdd={() => setIsAddOpen(true)}
+          // onAdd={() => setIsAddOpen(true)}
+          onAdd={() => navigate("/dashboard/user-management/users/create")}
         />
         <div className="bg-card rounded-md shadow-sm p-4">
           <Alert variant="destructive">
@@ -704,7 +708,8 @@ export default function UserList() {
       <PageHeader
         onRefetch={refetch}
         isFetching={isFetching}
-        onAdd={() => setIsAddOpen(true)}
+        // onAdd={() => setIsAddOpen(true)}
+        onAdd={() => navigate("/dashboard/user-management/users/create")}
       />
 
       <div className="bg-card rounded-md shadow-sm p-4">

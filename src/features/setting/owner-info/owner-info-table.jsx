@@ -1,3 +1,4 @@
+// src\features\setting\owner-info\owner-info-table.jsx
 import React, { useState } from "react";
 import {
   flexRender,

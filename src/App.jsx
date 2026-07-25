@@ -23,7 +23,7 @@ import EditProject from "./features/setting/pages/EditProject";
 import LoginV2 from "./features/authentication-v2/index";
 import RegisterV2 from "./features/authentication-v2/register-index";
 import ProtectedRoute from "./pages/route/ProtectedRoute";
-import UnauthorizedPage from "./pages/route/Unauthorized";
+
 import { useAuthV2 } from "./features/authentication-v2/use-auth-v2";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import Grades from "./features/user-management";
@@ -60,25 +60,33 @@ import { AttendanceList } from "./features/worker-attendance/attendance-list";
 import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
 import { AttendanceReport } from "./features/worker-attendance/attendance-report";
 import InvoiceManagementPage from "./features/setting/pages/statement-upload-three/invoice/InvoiceManagementPage";
-const ADMIN = ["Admin"];
-const DataEntryUser = ["Admin", "DataEntry"];
+import AddUserPage from "./features/user-management/add-user-page";
+import EditUserPage from "./features/user-management/edit-user-page";
 
-// ── Dashboard Index — Admin হলে WelcomePage, অন্যথায় login এ redirect ──────
-// const DashboardIndex = () => {
-//   const { user, isLoading } = useAuthV2();
-//   if (isLoading) return null;
-//   if (user?.roles?.includes("Admin")) return <Overview />;
-//   return <Navigate to="/login" replace />;
-// };
+import {
+  ALL_ROLES,
+  ADMIN_ONLY,
+  ADMIN_DE,
+  ADMIN_DE_WORKER,
+  ADMIN_OWNER,
+} from "@/config/roles";
+import UnauthorizedPage from "./pages/route/Unauthorized";
 
+// ── Dashboard Index — role-based landing redirect ──────────────────────────
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   if (isLoading) return null;
-  if (user?.roles?.includes("Admin")) return <Overview />;
-  if (user?.roles?.includes("DataEntry"))
+  const roles = user?.roles ?? [];
+  if (roles.includes("Admin")) return <Overview />;
+  if (roles.includes("DataEntry"))
     return <Navigate to="/dashboard/worker-attendance" replace />;
+  if (roles.includes("Worker"))
+    return <Navigate to="/dashboard/worker-attendance" replace />;
+  if (roles.includes("Owner"))
+    return <Navigate to="/dashboard/projects" replace />;
   return <Navigate to="/login" replace />;
 };
+
 const App = () => {
   return (
     <>
@@ -94,7 +102,7 @@ const App = () => {
             {/* PlainLayout — Admin only, no sidebar */}
             <Route
               element={
-                <ProtectedRoute anyRole={ADMIN}>
+                <ProtectedRoute anyRole={ADMIN_ONLY}>
                   <PlainLayout />
                 </ProtectedRoute>
               }
@@ -106,11 +114,11 @@ const App = () => {
               {/* add more PlainLayout + ADMIN pages here */}
             </Route>
 
-            {/* Protected Layout — Admin only */}
+            {/* Protected Layout — all roles can enter, sidebar filters per-role */}
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute anyRole={DataEntryUser}>
+                <ProtectedRoute anyRole={ALL_ROLES}>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
@@ -121,8 +129,24 @@ const App = () => {
               <Route
                 path="user-management"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Grades />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="user-management/users/create"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <AddUserPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="user-management/users/:id/edit"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <EditUserPage />
                   </ProtectedRoute>
                 }
               />
@@ -130,7 +154,7 @@ const App = () => {
               <Route
                 path="user-management/users/:id"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <UserDetailsPage />
                   </ProtectedRoute>
                 }
@@ -138,7 +162,7 @@ const App = () => {
               <Route
                 path="role"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Roles />
                   </ProtectedRoute>
                 }
@@ -146,23 +170,23 @@ const App = () => {
               <Route
                 path="role/matrix"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <RolePermissionMatrix />
                   </ProtectedRoute>
                 }
               />
               <Route
-  path="role/:id"
-  element={
-    <ProtectedRoute anyRole={ADMIN}>
-      <RoleDetailsPage />
-    </ProtectedRoute>
-  }
-/>
+                path="role/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <RoleDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="module"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Modules />
                   </ProtectedRoute>
                 }
@@ -170,7 +194,7 @@ const App = () => {
               <Route
                 path="permission"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Permissions />
                   </ProtectedRoute>
                 }
@@ -179,7 +203,7 @@ const App = () => {
               <Route
                 path="supplier"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Supplier />
                   </ProtectedRoute>
                 }
@@ -187,7 +211,7 @@ const App = () => {
               <Route
                 path="supplier/:id"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Supplier />
                   </ProtectedRoute>
                 }
@@ -196,7 +220,7 @@ const App = () => {
               <Route
                 path="project"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Project />
                   </ProtectedRoute>
                 }
@@ -204,7 +228,7 @@ const App = () => {
               <Route
                 path="statement"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     {/* <StatementUploadTwo /> */}
                     <StatementUploadThree />
                   </ProtectedRoute>
@@ -213,7 +237,7 @@ const App = () => {
               <Route
                 path="statement/:parentType/:parentId/invoices"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <InvoiceManagementPage />
                   </ProtectedRoute>
                 }
@@ -221,7 +245,7 @@ const App = () => {
               <Route
                 path="project/:id"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Project />
                   </ProtectedRoute>
                 }
@@ -230,7 +254,7 @@ const App = () => {
               <Route
                 path="contractor"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Contractor />
                   </ProtectedRoute>
                 }
@@ -238,7 +262,7 @@ const App = () => {
               {/* <Route
               path="contractor/:id"
               element={
-                <ProtectedRoute anyRole={ADMIN}>
+                <ProtectedRoute anyRole={ADMIN_ONLY}>
                   <Contractor />
                 </ProtectedRoute>
               }
@@ -255,7 +279,7 @@ const App = () => {
               <Route
                 path="worker"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <WorkerList />
                   </ProtectedRoute>
                 }
@@ -263,7 +287,7 @@ const App = () => {
               <Route
                 path="worker/create"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <WorkerFormPage />
                   </ProtectedRoute>
                 }
@@ -271,7 +295,7 @@ const App = () => {
               <Route
                 path="worker/:workerId/edit"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <WorkerFormPage />
                   </ProtectedRoute>
                 }
@@ -279,7 +303,7 @@ const App = () => {
               <Route
                 path="worker-attendance"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE_WORKER}>
                     <AttendanceList />
                   </ProtectedRoute>
                 }
@@ -287,7 +311,7 @@ const App = () => {
               <Route
                 path="worker-attendance/create"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE_WORKER}>
                     <AttendanceFormPage />
                   </ProtectedRoute>
                 }
@@ -295,7 +319,7 @@ const App = () => {
               <Route
                 path="worker-attendance/:attendanceId/edit"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE_WORKER}>
                     <AttendanceFormPage />
                   </ProtectedRoute>
                 }
@@ -303,7 +327,7 @@ const App = () => {
               <Route
                 path="attendance-report"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <AttendanceReport />
                   </ProtectedRoute>
                 }
@@ -311,7 +335,7 @@ const App = () => {
               <Route
                 path="calendar"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Calendar />
                   </ProtectedRoute>
                 }
@@ -319,7 +343,7 @@ const App = () => {
               <Route
                 path="project-type"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <ProjectType />
                   </ProtectedRoute>
                 }
@@ -328,7 +352,7 @@ const App = () => {
               <Route
                 path="contractor-type"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <ContractorType />
                   </ProtectedRoute>
                 }
@@ -343,7 +367,7 @@ const App = () => {
               <Route
                 path="dashboard-schedule"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Dashboard />
                   </ProtectedRoute>
                 }
@@ -351,7 +375,7 @@ const App = () => {
               <Route
                 path="dashboard-schedule/:id"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Dashboard />
                   </ProtectedRoute>
                 }
@@ -360,7 +384,7 @@ const App = () => {
               <Route
                 path="timeline"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     {/* <DashboardTimeline /> */}
                     <DashboardTimelineTwo />
                   </ProtectedRoute>
@@ -369,7 +393,7 @@ const App = () => {
               <Route
                 path="timeline/:H_ID"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     {/* <DashboardTimeline /> */}
                     <DashboardTimelineTwo />
                   </ProtectedRoute>
@@ -386,7 +410,7 @@ const App = () => {
               <Route
                 path="process"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <EditProject />
                   </ProtectedRoute>
                 }
@@ -394,7 +418,7 @@ const App = () => {
               <Route
                 path="process/:id"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <EditProject />
                   </ProtectedRoute>
                 }
@@ -402,7 +426,7 @@ const App = () => {
               <Route
                 path="projects"
                 element={
-                  <ProtectedRoute anyRole={ADMIN}>
+                  <ProtectedRoute anyRole={ADMIN_OWNER}>
                     <ProjectPage />
                   </ProtectedRoute>
                 }
@@ -411,7 +435,7 @@ const App = () => {
               <Route
                 path="invoices"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <InvoiceListPage />
                   </ProtectedRoute>
                 }
@@ -419,7 +443,7 @@ const App = () => {
               <Route
                 path="invoices/create"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <InvoiceCreatePage />
                   </ProtectedRoute>
                 }
@@ -427,7 +451,7 @@ const App = () => {
               <Route
                 path="invoices/:id/edit"
                 element={
-                  <ProtectedRoute anyRole={DataEntryUser}>
+                  <ProtectedRoute anyRole={ADMIN_DE}>
                     <InvoiceEditPage />
                   </ProtectedRoute>
                 }
