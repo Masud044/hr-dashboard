@@ -8,10 +8,10 @@ export default function UnauthorizedPage() {
       <h1 className="text-3xl font-bold text-destructive">403 — Access Denied</h1>
      
       <button
-        onClick={() => navigate("/dashboard")}
+        onClick={() => navigate(-1)}
         className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90"
       >
-        Go Back Dashboard 
+        Go Back
       </button>
     </div>
   );

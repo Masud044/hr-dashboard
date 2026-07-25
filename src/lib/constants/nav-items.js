@@ -1,95 +1,44 @@
 // src/lib/constants/nav-items.js
 import {
-  IconBuildingSkyscraper,
-  IconDashboard,
-  IconDatabaseEdit,
-  IconSettings,
-  IconTruckDelivery,
-  IconUserHexagon,
-  IconUsers,
-  IconUserShield,
+  IconBuildingSkyscraper, IconDashboard, IconSettings,
+  IconUserHexagon, IconUsers,
 } from "@tabler/icons-react";
-import {
-  Home,
-  FileText,
-  Plus,
-  Wrench,
-  ClipboardList,
-  Settings,
-  User,
-  LogOutIcon,
-  Menu,
-  X,
-  LayoutDashboard,
-} from "lucide-react";
+import { ClipboardList, FileText, LayoutDashboard } from "lucide-react";
+import { ALL_ROLES, ADMIN_ONLY, ADMIN_DE, ADMIN_DE_WORKER, ADMIN_OWNER } from "@/config/roles";
 
 export const NAV_ITEMS = [
   {
     label: "Main Entry",
     ItemIcon: IconDashboard,
-    roles: ["Admin"],
+    roles: ADMIN_ONLY,
     links: [
       { to: "/dashboard", label: "Overview", Icon: LayoutDashboard },
-
-      {
-        to: "/dashboard/dashboard-schedule",
-        label: "Schedule Dashboard",
-        Icon: LayoutDashboard,
-      },
+      { to: "/dashboard/dashboard-schedule", label: "Schedule Dashboard", Icon: LayoutDashboard },
     ],
   },
-
   {
     label: "Settings",
     ItemIcon: IconSettings,
-    roles: ["Admin", "DataEntry"],
+    roles: ADMIN_DE_WORKER, // union so group shows for Owner too — Owner-only link below handles gating
     links: [
-      // { to: "/dashboard/supplier", label: "Supplier", Icon: IconTruckDelivery },
-
-      // { to: "/dashboard/project", label: "Project", Icon: IconBuildingSkyscraper },
-      { to: "/dashboard/projects", label: "Project", Icon: IconUserHexagon },
-      {
-        to: "/dashboard/statement",
-        label: "Project Statement",
-        Icon: IconUserHexagon,
-      },
-      {
-        to: "/dashboard/contractor",
-        label: "Contractor",
-        Icon: IconUserHexagon,
-      },
-      // { to: "/dashboard/owner-info", label: "Owner Info", Icon: IconUserHexagon },
-      // { to: "/dashboard/contractor-type-info", label: "Contractor info", Icon: IconUserHexagon },
-      { to: "/dashboard/calendar", label: "Calender", Icon: IconUserHexagon },
-      {
-        to: "/dashboard/project-type",
-        label: "Project Type",
-        Icon: IconUserHexagon,
-      },
-      {
-        to: "/dashboard/contractor-type",
-        label: "Contractor Type",
-        Icon: IconUserHexagon,
-      },
-
-      // { to: "/dashboard/process", label: "process", Icon: IconUserHexagon },
-      { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon,  roles: ["Admin", "DataEntry"] },
-      { to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList, roles: ["Admin", "DataEntry"] },
-      { to: "/dashboard/attendance-report", label: "Attendance Report", Icon: FileText, roles: ["Admin", "DataEntry"] },
-      { to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon, roles: ["Admin", "DataEntry"] },
+      { to: "/dashboard/projects", label: "Project", Icon: IconUserHexagon, roles: ADMIN_OWNER },
+      { to: "/dashboard/statement", label: "Project Statement", Icon: IconUserHexagon, roles: ADMIN_ONLY },
+      { to: "/dashboard/contractor", label: "Contractor", Icon: IconUserHexagon, roles: ADMIN_ONLY },
+      { to: "/dashboard/calendar", label: "Calender", Icon: IconUserHexagon, roles: ADMIN_ONLY },
+      { to: "/dashboard/project-type", label: "Project Type", Icon: IconUserHexagon, roles: ADMIN_ONLY },
+      { to: "/dashboard/contractor-type", label: "Contractor Type", Icon: IconUserHexagon, roles: ADMIN_ONLY },
+      { to: "/dashboard/worker", label: "Worker", Icon: IconUserHexagon, roles: ADMIN_DE },
+      { to: "/dashboard/worker-attendance", label: "Attendance", Icon: ClipboardList, roles: ADMIN_DE_WORKER },
+      { to: "/dashboard/attendance-report", label: "Attendance Report", Icon: FileText, roles: ADMIN_DE },
+      { to: "/dashboard/invoices", label: "Invoice", Icon: IconUserHexagon, roles: ADMIN_DE },
     ],
   },
-
   {
     label: "User Management",
     ItemIcon: IconUsers,
-    roles: ["Admin"], // শুধু Admin
+    roles: ADMIN_ONLY,
     links: [
-      {
-        to: "/dashboard/user-management",
-        label: "User Management",
-        Icon: ClipboardList,
-      },
+      { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
       { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
       { to: "/dashboard/role", label: "Role", Icon: FileText },
       { to: "/dashboard/permission", label: "Permission", Icon: FileText },

@@ -113,7 +113,8 @@ export default function RoleDetailsPage() {
 
     try {
       await assignMutation.mutateAsync({
-        roleId: parseInt(id),
+        // roleId: parseInt(id),
+        roleId: id,  
         permissionId: parseInt(selectedPermissionId),
       });
 
@@ -137,7 +138,8 @@ export default function RoleDetailsPage() {
 
     try {
       await revokeMutation.mutateAsync({
-        roleId: parseInt(id),
+        // roleId: parseInt(id),
+         roleId: id,
         permissionId: perm.ID,
       });
 

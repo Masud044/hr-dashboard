@@ -77,9 +77,10 @@ export default function ModuleList() {
   isFetching,
 } = useModules();
 
-// শুধু এই 4টা module দেখাবে
-const ALLOWED_MODULES = ["Dashboard timeline", "Main Entry", "Contractor", "Project"];
-const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_NAME));
+
+// const ALLOWED_MODULES = ["Dashboard timeline", "Main Entry", "Contractor", "Project"];
+// const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_NAME));
+const modulesData = rawModules;
 
   const deleteModuleMutation = useDeleteModule();
 

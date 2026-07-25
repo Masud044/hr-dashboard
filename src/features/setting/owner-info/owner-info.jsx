@@ -1,3 +1,4 @@
+// src\features\setting\owner-info\owner-info.jsx
 import { SectionContainer } from "@/components/SectionContainer";
 import { OwnerInfoTable } from "./owner-info-table";
 
