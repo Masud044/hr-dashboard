@@ -43,6 +43,7 @@ const projectSchema = z.object({
   P_TENTATIVE_END_DATE:  z.string().optional().nullable(),
   P_CODE:                z.string().optional().nullable(),
   DESCRIPTION:           z.string().optional().nullable(),
+  MARGIN_PERCENT:        z.coerce.number().min(0).max(100).default(10),
 });
 
 const ALLOWED_MIME = [
@@ -73,7 +74,7 @@ export function EditProjectPage() {
       STATE: "NSW", USER_ID: 105, USER_BY: 105, UPDATED_BY: 105,
       LOT: "", DP: "", INSURANCE_NO: "",
       P_ENTATIVE_START_DATE: "", P_TENTATIVE_END_DATE: "",
-      P_CODE: "", DESCRIPTION: "",
+      P_CODE: "", DESCRIPTION: "",MARGIN_PERCENT: 10,
     },
   });
 
@@ -162,6 +163,7 @@ export function EditProjectPage() {
         P_TENTATIVE_END_DATE:  existingProject.P_TENTATIVE_END_DATE || "",
         P_CODE:                existingProject.P_CODE || "",
         DESCRIPTION:           existingProject.DESCRIPTION || "",
+        MARGIN_PERCENT:        existingProject.MARGIN_PERCENT ?? 10,
       });
       const savedCtIds = (existingProject.CONTRACTOR_TYPES || []).map(
         (c) => c.CONTRACTOR_TYPE_ID
@@ -413,8 +415,19 @@ export function EditProjectPage() {
                   </FormItem>
                 )} />
 
+                 <FormField control={form.control} name="MARGIN_PERCENT" render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel className="text-sm font-medium text-foreground">Margin %</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} max={100} step="0.01" {...field}
+                      className="h-10 px-3 py-2 text-sm border-border focus-visible:ring-primary/20" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
                 <FormField control={form.control} name="P_ENTATIVE_START_DATE" render={({ field }) => (
-                  <FormItem className="sm:col-span-1">
+                  <FormItem className="sm:col-span-2">
                     <FormLabel className="text-sm font-medium text-foreground">Start Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} value={field.value || ""}
@@ -425,7 +438,7 @@ export function EditProjectPage() {
                 )} />
 
                 <FormField control={form.control} name="P_TENTATIVE_END_DATE" render={({ field }) => (
-                  <FormItem className="sm:col-span-1">
+                  <FormItem className="sm:col-span-2">
                     <FormLabel className="text-sm font-medium text-foreground">End Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} value={field.value || ""}
@@ -434,6 +447,8 @@ export function EditProjectPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
+
+               
               </div>
             </div>
 
