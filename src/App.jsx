@@ -100,19 +100,18 @@ const App = () => {
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             {/* PlainLayout — Admin only, no sidebar */}
-            <Route
-              element={
-                <ProtectedRoute anyRole={ADMIN_ONLY}>
-                  <PlainLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                path="/dashboard/projects/:id/report"
-                element={<ProjectReportPage />}
-              />
-              {/* add more PlainLayout + ADMIN pages here */}
-            </Route>
+<Route
+  element={
+    <ProtectedRoute anyRole={ADMIN_OWNER}>
+      <PlainLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route
+    path="/dashboard/projects/:id/report"
+    element={<ProjectReportPage />}
+  />
+</Route>
 
             {/* Protected Layout — all roles can enter, sidebar filters per-role */}
             <Route
