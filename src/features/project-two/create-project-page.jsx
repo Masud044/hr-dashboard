@@ -50,6 +50,7 @@ const projectSchema = z.object({
   P_TENTATIVE_END_DATE: z.string().optional().nullable(),
   P_CODE: z.string().optional().nullable(),
   DESCRIPTION: z.string().optional().nullable(),
+  MARGIN_PERCENT: z.coerce.number().min(0).max(100).default(10),
 });
 
 const ALLOWED_MIME = [
@@ -81,6 +82,7 @@ const DEFAULT_VALUES = {
   P_TENTATIVE_END_DATE: "",
   P_CODE: "",
   DESCRIPTION: "",
+  MARGIN_PERCENT: 10,
 };
 
 export function CreateProjectPage() {
@@ -340,12 +342,33 @@ export function CreateProjectPage() {
                     </FormItem>
                   )}
                 />
-
+<FormField
+                control={form.control}
+                name="MARGIN_PERCENT"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Margin %
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.01"
+                        {...field}
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
                 <FormField
                   control={form.control}
                   name="P_ENTATIVE_START_DATE"
                   render={({ field }) => (
-                    <FormItem className="sm:col-span-1">
+                    <FormItem className="sm:col-span-2">
                       <FormLabel className="text-sm font-medium text-foreground">
                         Start Date
                       </FormLabel>
@@ -366,7 +389,7 @@ export function CreateProjectPage() {
                   control={form.control}
                   name="P_TENTATIVE_END_DATE"
                   render={({ field }) => (
-                    <FormItem className="sm:col-span-1">
+                    <FormItem className="sm:col-span-2">
                       <FormLabel className="text-sm font-medium text-foreground">
                         End Date
                       </FormLabel>
@@ -383,6 +406,7 @@ export function CreateProjectPage() {
                   )}
                 />
               </div>
+              
             </div>
 
             {/* ── Land Details ─────────────────────────────────────────── */}

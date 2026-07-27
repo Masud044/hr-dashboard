@@ -157,9 +157,7 @@ function MarginCell({ item, marginMutation }) {
         inputMode="decimal"
         value={localValue}
         disabled={marginMutation.isPending}
-        onChange={(e) =>
-          setLocalValue(e.target.value.replace(/[^0-9.]/g, ""))
-        }
+        onChange={(e) => setLocalValue(e.target.value.replace(/[^0-9.]/g, ""))}
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
@@ -170,8 +168,6 @@ function MarginCell({ item, marginMutation }) {
     </div>
   );
 }
-
-
 
 export function NewProjectTable() {
   const queryClient = useQueryClient();
@@ -295,19 +291,19 @@ export function NewProjectTable() {
   });
 
   const marginMutation = useMutation({
-  mutationFn: async ({ id, margin }) => {
-    return axios.patch(`${url}/api/project/${id}/margin`, {
-      MARGIN_PERCENT: margin,
-    });
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries(["projects"]);
-    toast.success("Margin updated!");
-  },
-  onError: (err) => {
-    toast.error(err?.response?.data?.message || "Failed to update margin.");
-  },
-});
+    mutationFn: async ({ id, margin }) => {
+      return axios.patch(`${url}/api/project/${id}/margin`, {
+        MARGIN_PERCENT: margin,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["projects"]);
+      toast.success("Margin updated!");
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to update margin.");
+    },
+  });
 
   const handleMove = (id, direction) => {
     moveMutation.mutate({ id, direction });
@@ -510,20 +506,20 @@ export function NewProjectTable() {
         );
       },
     },
-    {
-  accessorKey: "MARGIN_PERCENT",
-  header: ({ column }) => (
-    <button
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
-    >
-      Margin <ArrowUpDown className="h-3 w-3" />
-    </button>
-  ),
-  cell: ({ row }) => (
-    <MarginCell item={row.original} marginMutation={marginMutation} />
-  ),
-},
+    // {
+    //   accessorKey: "MARGIN_PERCENT",
+    //   header: ({ column }) => (
+    //     <button
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //       className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+    //     >
+    //       Margin <ArrowUpDown className="h-3 w-3" />
+    //     </button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <MarginCell item={row.original} marginMutation={marginMutation} />
+    //   ),
+    // },
     {
       accessorKey: "SUBWRB",
       header: ({ column }) => (
