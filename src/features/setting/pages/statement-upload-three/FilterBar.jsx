@@ -176,6 +176,20 @@ const FilterBar = React.memo(function FilterBar({
             className="h-8 text-xs"
           />
         </div>
+        {/* NEW: exact amount search, matches both + and - */}
+        <div>
+          <label className="text-[10px] text-gray-400 block mb-0.5">
+            Amount
+          </label>
+          <Input
+            type="number"
+            step="1"
+            placeholder="e.g. 300"
+            value={draft.amount}
+            onChange={(e) => update("amount", e.target.value)}
+            className="h-8 text-xs"
+          />
+        </div>
         <div>
           <label className="text-[10px] text-gray-400 block mb-0.5">
             Description

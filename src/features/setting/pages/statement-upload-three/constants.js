@@ -25,7 +25,7 @@ export const EMPTY_NB = {
 
 export const EMPTY_FILTERS = {
   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
-  invoiceNo: "", amountMin: "", amountMax: "", description: "", category: "",
+  invoiceNo: "", amountMin: "", amountMax: "", amount: "", description: "", category: "",
 };
 
 export const PAGE_SIZE = 50;
