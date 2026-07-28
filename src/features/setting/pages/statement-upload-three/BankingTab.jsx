@@ -32,7 +32,7 @@ export default function BankingTab({
   projectOpts,
   contractorOpts,
   mutations,
-  sortBy = "txnDate" 
+  sortBy = "txnDate",
 }) {
   const queryClient = useQueryClient();
   const {
@@ -40,14 +40,19 @@ export default function BankingTab({
     uploadInvoiceMutation,
     deleteInvoiceMutation,
     approveMutation,
+    rematchRowMutation
   } = mutations;
 
   const [file, setFile] = useState(null);
   const [batchId, setBatchId] = useState(null);
+  const [rematchingRowId, setRematchingRowId] = useState(null);
   // const [activeCats, setActiveCats] = useState({ address: true, place: true, product: true, other: true });
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
   // const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZE });
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [approveTarget, setApproveTarget] = useState(null);
   const [approvingRowId, setApprovingRowId] = useState(null);
@@ -117,18 +122,16 @@ export default function BankingTab({
   // );
 
   const queryParams = useMemo(
-  () => ({
-    sourceType: "BANKING",
-    ...appliedFilters,
-    status: sortBy === "recent" ? "PENDING" : appliedFilters.status,
-    sortBy,
-    page: pagination.pageIndex + 1,
-    pageSize: pagination.pageSize,
-  }),
-  [appliedFilters, sortBy, pagination],
-);
-
-
+    () => ({
+      sourceType: "BANKING",
+      ...appliedFilters,
+      status: sortBy === "recent" ? "PENDING" : appliedFilters.status,
+      sortBy,
+      page: pagination.pageIndex + 1,
+      pageSize: pagination.pageSize,
+    }),
+    [appliedFilters, sortBy, pagination],
+  );
 
   const {
     data: result,
@@ -158,14 +161,14 @@ export default function BankingTab({
   const rows = result?.rows || [];
   const totalCount = result?.totalCount || 0;
   const table = useReactTable({
-  data: rows,
-  columns: [],
-  state: { pagination },
-  onPaginationChange: setPagination,
-  manualPagination: true,
-  pageCount: Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
-  getCoreRowModel: getCoreRowModel(),
-});
+    data: rows,
+    columns: [],
+    state: { pagination },
+    onPaginationChange: setPagination,
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil(totalCount / pagination.pageSize)),
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const statsParams = useMemo(
     () => ({ sourceType: "BANKING", ...appliedFilters }),
@@ -259,6 +262,13 @@ export default function BankingTab({
     });
   };
 
+const handleRematchClick = (stagingId) => {
+  setRematchingRowId(stagingId);
+  rematchRowMutation.mutate(stagingId, {
+    onSettled: () => setRematchingRowId(null),
+  });
+};
+
   const handleExportCsv = async () => {
     setExporting(true);
     try {
@@ -343,13 +353,13 @@ export default function BankingTab({
         //   setPage(1);
         // }}
         onApply={(f) => {
-  setAppliedFilters(f);
-  setPagination((p) => ({ ...p, pageIndex: 0 }));
-}}
-onClear={() => {
-  setAppliedFilters(EMPTY_FILTERS);
-  setPagination((p) => ({ ...p, pageIndex: 0 }));
-}}
+          setAppliedFilters(f);
+          setPagination((p) => ({ ...p, pageIndex: 0 }));
+        }}
+        onClear={() => {
+          setAppliedFilters(EMPTY_FILTERS);
+          setPagination((p) => ({ ...p, pageIndex: 0 }));
+        }}
         projectOptions={projectOptions}
         contractorOptions={contractorOptions}
         // showCategory
@@ -417,18 +427,28 @@ onClear={() => {
             <StagingThead />
             <tbody>
               {isLoading ? (
-               <tr><td colSpan={9} className="text-center py-10 text-gray-400"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                <tr>
+                  <td colSpan={9} className="text-center py-10 text-gray-400">
+                    <Loader2 className="inline animate-spin mr-2" size={16} />
+                    Loading...
+                  </td>
+                </tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-10 text-gray-400">No rows found.</td></tr>
+                <tr>
+                  <td colSpan={9} className="text-center py-10 text-gray-400">
+                    No rows found.
+                  </td>
+                </tr>
               ) : (
-               rows.map((r, idx) => (
-  <StagingRow
-    key={r.STAGING_ID}
-    row={r}
-    index={idx}
+                rows.map((r, idx) => (
+                  <StagingRow
+                    key={r.STAGING_ID}
+                    row={r}
+                    index={idx}
                     projectOpts={projectOpts}
                     contractorOpts={contractorOpts}
                     isApproving={approvingRowId === r.STAGING_ID}
+                    isRematching={rematchingRowId === r.STAGING_ID}
                     onProjectChange={handleProjectChange}
                     onContractorChange={handleContractorChange}
                     onInvoiceNoBlur={handleInvoiceNoBlur}
@@ -437,6 +457,7 @@ onClear={() => {
                     onInvoiceFileSelect={handleInvoiceFileSelect}
                     onDeleteInvoiceClick={handleDeleteInvoiceClick}
                     onApproveClick={handleApproveClick}
+                    onRematchClick={handleRematchClick}
                   />
                 ))
               )}

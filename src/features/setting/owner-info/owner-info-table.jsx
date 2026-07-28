@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -39,7 +40,7 @@ const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function OwnerInfoTable() {
   const queryClient = useQueryClient();
-
+const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ["ownerInfoList"],
     queryFn: async () => {
@@ -58,10 +59,13 @@ export function OwnerInfoTable() {
   const [createSheetOpen, setCreateSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
 
+  // const handleEdit = (id) => {
+  //   setSelectedId(id);
+  //   setEditSheetOpen(true);
+  // };
   const handleEdit = (id) => {
-    setSelectedId(id);
-    setEditSheetOpen(true);
-  };
+  navigate(`/dashboard/owner-info/${id}/edit`);
+};
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
@@ -259,10 +263,14 @@ export function OwnerInfoTable() {
           </DropdownMenu>
 
           <div className="flex justify-end ml-2">
-            <Button onClick={() => setCreateSheetOpen(true)}>
+            {/* <Button onClick={() => setCreateSheetOpen(true)}>
               <PlusIcon size={16} className="mr-2" />
               Add New Owner
-            </Button>
+            </Button> */}
+            <Button onClick={() => navigate("/dashboard/owner-info/create")}>
+  <PlusIcon size={16} className="mr-2" />
+  Add New Owner
+</Button>
           </div>
         </div>
 

@@ -34,6 +34,8 @@ import RoleDetailsPage from "./features/users/role/role-details";
 import Modules from "./features/users/module";
 import Permissions from "./features/users/permission";
 import OwnerInfo from "./features/setting/owner-info/owner-info";
+import { CreateOwnerInfoPage } from "./features/setting/owner-info/create-owner-info-page";
+import { EditOwnerInfoPage } from "./features/setting/owner-info/edit-owner-info-page";
 import ContractorTypeInfo from "./features/setting/contractor-type-info/contractor-type-info";
 import Calendar from "./features/setting/calendar/calender";
 import ProjectType from "./features/setting/project-type/project-type";
@@ -100,18 +102,18 @@ const App = () => {
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             {/* PlainLayout — Admin only, no sidebar */}
-<Route
-  element={
-    <ProtectedRoute anyRole={ADMIN_OWNER}>
-      <PlainLayout />
-    </ProtectedRoute>
-  }
->
-  <Route
-    path="/dashboard/projects/:id/report"
-    element={<ProjectReportPage />}
-  />
-</Route>
+            <Route
+              element={
+                <ProtectedRoute anyRole={ADMIN_OWNER}>
+                  <PlainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                path="/dashboard/projects/:id/report"
+                element={<ProjectReportPage />}
+              />
+            </Route>
 
             {/* Protected Layout — all roles can enter, sidebar filters per-role */}
             <Route
@@ -356,7 +358,30 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route path="owner-info" element={<OwnerInfo />} />
+              <Route
+                path="owner-info"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <OwnerInfo />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+  path="owner-info/create"
+  element={
+    <ProtectedRoute anyRole={ADMIN_ONLY}>
+      <CreateOwnerInfoPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="owner-info/:id/edit"
+  element={
+    <ProtectedRoute anyRole={ADMIN_ONLY}>
+      <EditOwnerInfoPage />
+    </ProtectedRoute>
+  }
+/>
 
               <Route
                 path="contractor-type-info"

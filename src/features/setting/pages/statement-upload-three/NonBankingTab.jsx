@@ -38,6 +38,7 @@ export default function NonBankingTab({
   projectOpts,
   contractorOpts,
   mutations,
+  
   sortBy = "txnDate",
 }) {
   const {
@@ -47,6 +48,7 @@ export default function NonBankingTab({
     approveMutation,
     addNonBankingMutation,
     deleteStagingRowMutation,
+    rematchRowMutation
   } = mutations;
 
   const [nbForm, setNbForm] = useState(EMPTY_NB);
@@ -61,6 +63,8 @@ export default function NonBankingTab({
   const [deleteRowTarget, setDeleteRowTarget] = useState(null);
   const [approvingRowId, setApprovingRowId] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [rematchingRowId, setRematchingRowId] = useState(null);
+const [deletingRowId, setDeletingRowId] = useState(null);
 
   // const queryParams = useMemo(() => ({
   //   sourceType: "NON_BANKING", ...appliedFilters, status: sortBy === "recent" ? "PENDING" : appliedFilters.status, page,sortBy, pageSize: PAGE_SIZE,
@@ -188,8 +192,10 @@ export default function NonBankingTab({
   const handleDeleteRowClick = (row) =>
   setDeleteRowTarget({ stagingId: row.STAGING_ID, description: row.DESCRIPTION });
 const confirmDeleteRow = (stagingId) => {
+  setDeletingRowId(stagingId);
   deleteStagingRowMutation.mutate(stagingId, {
     onSuccess: () => setDeleteRowTarget(null),
+    onSettled: () => setDeletingRowId(null),
   });
 };
   const confirmDeleteInvoice = (stagingId) => {
@@ -197,7 +203,12 @@ const confirmDeleteRow = (stagingId) => {
       onSuccess: () => setDeleteTarget(null),
     });
   };
-
+const handleRematchClick = (stagingId) => {
+  setRematchingRowId(stagingId);
+  rematchRowMutation.mutate(stagingId, {
+    onSettled: () => setRematchingRowId(null),
+  });
+};
   const handleExportCsv = async () => {
     setExporting(true);
     try {
@@ -468,6 +479,8 @@ const confirmDeleteRow = (stagingId) => {
                     projectOpts={projectOpts}
                     contractorOpts={contractorOpts}
                     isApproving={approvingRowId === r.STAGING_ID}
+                     isRematching={rematchingRowId === r.STAGING_ID}
+                    isDeleting={deletingRowId === r.STAGING_ID}
                     onProjectChange={handleProjectChange}
                     onContractorChange={handleContractorChange}
                     onInvoiceNoBlur={handleInvoiceNoBlur}
@@ -479,6 +492,7 @@ const confirmDeleteRow = (stagingId) => {
                     onDeleteInvoiceClick={handleDeleteInvoiceClick}
                     onApproveClick={handleApproveClick}
                      onDeleteRowClick={handleDeleteRowClick}
+                     onRematchClick={handleRematchClick}
                   />
                 ))
               )}
