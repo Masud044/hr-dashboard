@@ -78,6 +78,15 @@ export function useStatementMutations() {
   onError: (err) => toast.error(err.response?.data?.message || "Failed to delete row."),
 });
 
+const rematchRowMutation = useMutation({
+  mutationFn: async (stagingId) => axios.post(`${url}/api/statement/staging/${stagingId}/rematch`),
+  onSuccess: (res) => {
+    toast.success(res.data?.message || "Row rematched.");
+    invalidateStaging();
+  },
+  onError: (err) => toast.error(err.response?.data?.message || "Failed to rematch row."),
+});
+
   const disapproveMutation = useMutation({
     mutationFn: async (txnId) => axios.post(`${url}/api/statement/disapprove`, { txnId }),
     onSuccess: (res) => {
@@ -97,6 +106,6 @@ export function useStatementMutations() {
  return {
     updateRowMutation, uploadInvoiceMutation, deleteInvoiceMutation,
     approveMutation, disapproveMutation, addNonBankingMutation,
-    updateMainRowMutation, uploadMainInvoiceMutation, deleteMainInvoiceMutation, deleteStagingRowMutation
+    updateMainRowMutation, uploadMainInvoiceMutation, deleteMainInvoiceMutation, deleteStagingRowMutation, rematchRowMutation
   };
 }
