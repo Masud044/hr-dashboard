@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import WelcomePage from "./pages/welcomePage";
 import DashboardLayout from "./Layout/DashboardLayout";
 import PlainLayout from "./Layout/PlainLayout";
+import RoleAwareLayout from "./Layout/RoleAwareLayout";
 import Dashboard from "./features/main-entry/pages/Dashboard";
 import Project from "./features/setting/pages/Project";
 import Contractor from "./features/setting/pages/Contractor";
@@ -101,19 +102,19 @@ const App = () => {
             <Route path="/login" element={<LoginV2 />} />
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
-            {/* PlainLayout — Admin only, no sidebar */}
-            <Route
-              element={
-                <ProtectedRoute anyRole={ADMIN_OWNER}>
-                  <PlainLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                path="/dashboard/projects/:id/report"
-                element={<ProjectReportPage />}
-              />
-            </Route>
+            {/* Report route — sidebar for Admin, no sidebar for Owner */}
+<Route
+  element={
+    <ProtectedRoute anyRole={ADMIN_OWNER}>
+      <RoleAwareLayout sidebarRoles={["Admin"]} />
+    </ProtectedRoute>
+  }
+>
+  <Route
+    path="/dashboard/projects/:id/report"
+    element={<ProjectReportPage />}
+  />
+</Route>
 
             {/* Protected Layout — all roles can enter, sidebar filters per-role */}
             <Route

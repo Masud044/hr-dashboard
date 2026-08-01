@@ -157,7 +157,7 @@ export default function StatementUploadThree() {
         projectOpts={projectOpts}
         contractorOpts={contractorOpts}
         mutations={mutations}
-        sortBy="recent"
+        // sortBy="recent"
       />
     )}
   </>
