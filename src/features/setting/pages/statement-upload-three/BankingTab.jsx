@@ -33,6 +33,7 @@ export default function BankingTab({
   contractorOpts,
   mutations,
   sortBy = "txnDate",
+  
 }) {
   const queryClient = useQueryClient();
   const {
