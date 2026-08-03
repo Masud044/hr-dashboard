@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
-import { Loader2 } from "lucide-react";
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const attendanceSchema = z
@@ -35,26 +34,58 @@ const attendanceSchema = z
     ATTENDANCE_DATE: z.string().min(1, "Date is required"),
     WORKER_ID: z.coerce.number().min(1, "Worker is required"),
     PROJECT_ID: z.coerce.number().min(1, "Project is required"),
-    HOURS_INPUT: z.any().optional(),
-    MINUTES_INPUT: z.any().optional(),
+    CALC_BASIS: z.enum(["HOUR", "DAY"], {
+      required_error: "Calc basis is required",
+    }),
+    // ENTRY_MODE: z.string().optional(),
+    ENTRY_MODE: z.string().nullable().optional(),
+    START_TIME: z.string().nullable().optional(),
+    END_TIME: z.string().nullable().optional(),
+    HOURS_WORKED: z.any().optional(),
+    DAYS_WORKED: z.any().optional(),
+    // REMARKS: z.string().optional(),
     REMARKS: z.string().nullable().optional(),
   })
   .superRefine((data, ctx) => {
-    const h = parseInt(data.HOURS_INPUT, 10) || 0;
-    const m = parseInt(data.MINUTES_INPUT, 10) || 0;
-    if (h <= 0 && m <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Enter hours and/or minutes worked",
-        path: ["HOURS_INPUT"],
-      });
-    }
-    if (m < 0 || m > 59) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Minutes must be between 0 and 59",
-        path: ["MINUTES_INPUT"],
-      });
+    if (data.CALC_BASIS === "DAY") {
+      const days = parseFloat(data.DAYS_WORKED);
+      if (isNaN(days) || days <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Days worked is required and must be > 0",
+          path: ["DAYS_WORKED"],
+        });
+      }
+    } else if (data.CALC_BASIS === "HOUR") {
+      if (!data.ENTRY_MODE) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Entry mode is required",
+          path: ["ENTRY_MODE"],
+        });
+      } else if (data.ENTRY_MODE === "TIME") {
+        if (!data.START_TIME)
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Start time is required",
+            path: ["START_TIME"],
+          });
+        if (!data.END_TIME)
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "End time is required",
+            path: ["END_TIME"],
+          });
+      } else if (data.ENTRY_MODE === "HOURS") {
+        const hours = parseFloat(data.HOURS_WORKED);
+        if (isNaN(hours) || hours <= 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Hours worked is required and must be > 0",
+            path: ["HOURS_WORKED"],
+          });
+        }
+      }
     }
   });
 
@@ -62,19 +93,14 @@ const defaultValues = {
   ATTENDANCE_DATE: new Date().toISOString().split("T")[0],
   WORKER_ID: "",
   PROJECT_ID: "",
-  HOURS_INPUT: "",
-  MINUTES_INPUT: "",
+  CALC_BASIS: "HOUR",
+  ENTRY_MODE: "",
+  START_TIME: "",
+  END_TIME: "",
+  HOURS_WORKED: "",
+  DAYS_WORKED: "",
   REMARKS: "",
 };
-
-function decimalToHoursMinutes(decimalHours) {
-  if (decimalHours == null || isNaN(decimalHours)) return { hours: "", minutes: "" };
-  const totalMinutes = Math.round(Number(decimalHours) * 60);
-  return {
-    hours: String(Math.floor(totalMinutes / 60)),
-    minutes: String(totalMinutes % 60),
-  };
-}
 
 export function AttendanceFormPage() {
   const { user } = useAuthV2();
@@ -88,7 +114,11 @@ export function AttendanceFormPage() {
     defaultValues,
   });
 
-  const { data: workers = [], isLoading: workersLoading } = useQuery({
+  const calcBasis = form.watch("CALC_BASIS");
+  const entryMode = form.watch("ENTRY_MODE");
+
+  // Fetch workers and projects for dropdowns
+  const { data: workers = [] } = useQuery({
     queryKey: ["workers"],
     queryFn: async () => {
       const res = await axios.get(`${url}/api/worker`);
@@ -96,7 +126,7 @@ export function AttendanceFormPage() {
     },
   });
 
-  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+  const { data: projects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
       const res = await axios.get(`${url}/api/project`);
@@ -104,7 +134,8 @@ export function AttendanceFormPage() {
     },
   });
 
-  const { data: fetchedData, isLoading: fetchedDataLoading } = useQuery({
+  // Fetch existing attendance record when editing
+  const { data: fetchedData } = useQuery({
     queryKey: ["worker-attendance", attendanceId],
     queryFn: async () => {
       const res = await axios.get(
@@ -115,12 +146,21 @@ export function AttendanceFormPage() {
     enabled: isEdit,
   });
 
-  const isPageLoading =
-  workersLoading || projectsLoading || (isEdit && fetchedDataLoading);
+  // useEffect(() => {
+  //   if (fetchedData) {
+  //     form.reset({
+  //       ...defaultValues,
+  //       ...fetchedData,
+  //       WORKER_ID: fetchedData.WORKER_ID ? String(fetchedData.WORKER_ID) : "",
+  //       PROJECT_ID: fetchedData.PROJECT_ID ? String(fetchedData.PROJECT_ID) : "",
+  //     });
+  //   } else if (!isEdit) {
+  //     form.reset(defaultValues);
+  //   }
+  // }, [isEdit, fetchedData, form]);
 
   useEffect(() => {
     if (fetchedData) {
-      const { hours, minutes } = decimalToHoursMinutes(fetchedData.HOURS_WORKED);
       form.reset({
         ...defaultValues,
         ...fetchedData,
@@ -129,8 +169,6 @@ export function AttendanceFormPage() {
           ? String(fetchedData.PROJECT_ID)
           : "",
         REMARKS: fetchedData.REMARKS ?? "",
-        HOURS_INPUT: hours,
-        MINUTES_INPUT: minutes,
       });
     } else if (!isEdit) {
       form.reset(defaultValues);
@@ -139,23 +177,13 @@ export function AttendanceFormPage() {
 
   const mutation = useMutation({
     mutationFn: async (formData) => {
-      const h = parseInt(formData.HOURS_INPUT, 10) || 0;
-      const m = parseInt(formData.MINUTES_INPUT, 10) || 0;
-
-      const payload = {
-        ATTENDANCE_DATE: formData.ATTENDANCE_DATE,
-        WORKER_ID: formData.WORKER_ID,
-        PROJECT_ID: formData.PROJECT_ID,
-        HOURS_WORKED: Math.round((h + m / 60) * 100) / 100,
-        REMARKS: formData.REMARKS,
-      };
-
+      const payload = { ...formData };
       if (!isEdit) {
         payload.CREATED_BY = user?.username;
       }
 
       if (isEdit) {
-        payload.ATTENDANCE_ID = attendanceId;
+        payload.ATTENDANCE_ID = attendanceId; // Ensure PK is sent for full update
         payload.UPDATED_BY = user?.username;
         return axios.put(`${url}/api/worker-attendance`, payload);
       } else {
@@ -184,25 +212,6 @@ export function AttendanceFormPage() {
     navigate(-1);
   };
 
-
-   // ── Loading state ───────────────────────────
-  // if (isPageLoading) {
-  //   return (
-  //     <div className="flex min-h-[420px] flex-col items-center justify-center gap-4 px-4">
-  //       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card shadow-sm">
-  //         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-  //       </div>
-  //       <div className="text-center">
-  //         <p className="text-sm font-semibold text-foreground">
-  //           Fetching Records
-  //         </p>
-  //         <p className="mt-1 text-sm text-muted-foreground">
-  //           Loading attendance details...
-  //         </p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
   return (
     <div className="mx-auto w-full max-w-2xl py-8 px-4">
       <div className="mb-4">
@@ -242,7 +251,6 @@ export function AttendanceFormPage() {
                   <Select
                     onValueChange={field.onChange}
                     value={String(field.value)}
-                    key={`worker-select-${field.value || "empty"}`}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -276,7 +284,6 @@ export function AttendanceFormPage() {
                   <Select
                     onValueChange={field.onChange}
                     value={String(field.value)}
-                     key={`project-select-${field.value || "empty"}`}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -298,50 +305,158 @@ export function AttendanceFormPage() {
 
             <FormField
               control={form.control}
-              name="HOURS_INPUT"
+              name="CALC_BASIS"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Hours <span className="text-red-500">*</span>
+                    Calculation Basis <span className="text-red-500">*</span>
                   </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="1"
-                      min="0"
-                      placeholder="e.g. 2"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                    />
-                  </FormControl>
+                  <Select
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      // Reset dependent fields when basis changes
+                      form.setValue("ENTRY_MODE", "");
+                      form.setValue("START_TIME", "");
+                      form.setValue("END_TIME", "");
+                      form.setValue("HOURS_WORKED", "");
+                      form.setValue("DAYS_WORKED", "");
+                    }}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select basis" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="z-[200]">
+                      <SelectItem value="HOUR">Hour</SelectItem>
+                      <SelectItem value="DAY">Day</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="MINUTES_INPUT"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minutes</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="1"
-                      min="0"
-                      max="59"
-                      placeholder="e.g. 30"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {calcBasis === "DAY" && (
+              <FormField
+                control={form.control}
+                name="DAYS_WORKED"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Days Worked <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {calcBasis === "HOUR" && (
+              <FormField
+                control={form.control}
+                name="ENTRY_MODE"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Entry Mode <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        // Reset dependent fields
+                        form.setValue("START_TIME", "");
+                        form.setValue("END_TIME", "");
+                        form.setValue("HOURS_WORKED", "");
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select mode" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="z-[200]">
+                        <SelectItem value="TIME">Time</SelectItem>
+                        <SelectItem value="HOURS">Hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {calcBasis === "HOUR" && entryMode === "TIME" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="START_TIME"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Start Time <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="END_TIME"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        End Time <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            {calcBasis === "HOUR" && entryMode === "HOURS" && (
+              <FormField
+                control={form.control}
+                name="HOURS_WORKED"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Hours Worked <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="md:col-span-2">
               <FormField
