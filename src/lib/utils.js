@@ -3,6 +3,7 @@ import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge"
 import { format, parseISO, isValid } from "date-fns";
 
+
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
@@ -66,4 +67,13 @@ export function formatDateWithDay(dateInput) {
   if (!isValid(d)) return "—";
 
   return format(d, "dd-MM-yyyy EEE");
+}
+
+
+export function formatHoursMinutes(decimalHours) {
+  if (decimalHours == null || isNaN(decimalHours)) return "—";
+  const totalMinutes = Math.round(Number(decimalHours) * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }

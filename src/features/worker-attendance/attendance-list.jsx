@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Pencil, Trash2, PlusIcon, Search } from "lucide-react";
+import { Pencil, Trash2, PlusIcon, Search, Eye } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   flexRender,
@@ -40,9 +40,12 @@ import {
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import { AttendanceFormSheet } from "./attendance-form-sheet";
 import { useNavigate } from "react-router-dom";
-import { formatDateWithDay } from "@/lib/utils";
+
 import DateInput from "@/components/shared/DateInput";
 import EntityCombobox from "@/components/shared/entity-combobox";
+import { formatDateWithDay, formatHoursMinutes } from "@/lib/utils";
+
+
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function AttendanceList() {
@@ -168,7 +171,9 @@ export function AttendanceList() {
     const id = row.ID || row.ATTENDANCE_ID;
     navigate(`/dashboard/worker-attendance/${id}/edit`);
   };
-
+  const handleView = (id) => {
+    navigate(`/dashboard/worker-attendance/${id}`);
+  };
   const handleDeleteClick = (id) => {
     setDeleteTargetId(id);
     setDeleteDialogOpen(true);
@@ -235,42 +240,16 @@ export function AttendanceList() {
       ),
     },
 
+    
     {
-      accessorKey: "CALC_BASIS",
-      header: "Calc Basis",
-      cell: ({ row }) => (
-        <div className="text-sm">{row.getValue("CALC_BASIS") || "—"}</div>
-      ),
-    },
-    {
-      id: "worked",
-      header: "Hours/Days Worked",
-      cell: ({ row }) => {
-        const original = row.original;
-        if (original.CALC_BASIS === "DAY") {
-          return (
-            <div className="text-sm font-medium text-primary">
-              {original.DAYS_WORKED ?? "—"} Days
-            </div>
-          );
-        }
-        if (original.CALC_BASIS === "HOUR") {
-          if (original.ENTRY_MODE === "HOURS")
-            return (
-              <div className="text-sm font-medium text-primary">
-                {original.HOURS_WORKED ?? "—"} Hours
-              </div>
-            );
-          if (original.ENTRY_MODE === "TIME")
-            return (
-              <div className="text-sm font-medium text-primary">
-                {original.START_TIME} - {original.END_TIME}
-              </div>
-            );
-        }
-        return <div className="text-sm">—</div>;
-      },
-    },
+  id: "worked",
+  header: "Hours Worked",
+  cell: ({ row }) => (
+    <div className="text-sm font-medium text-primary">
+      {formatHoursMinutes(row.original.HOURS_WORKED)}
+    </div>
+  ),
+},
     {
       accessorKey: "REMARKS",
       header: "Remarks",
@@ -290,29 +269,36 @@ export function AttendanceList() {
           Actions
         </div>
       ),
-      cell: ({ row }) => {
-        const item = row.original;
-        const itemId = item.ID || item.ATTENDANCE_ID;
-        return (
-          <div className="flex items-center gap-1.5 justify-center">
-            <button
-              onClick={() => handleEdit(item)}
-              title="Edit"
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
-            >
-              <Pencil size={15} />
-            </button>
-            <button
-              onClick={() => handleDeleteClick(itemId)}
-              title="Delete"
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
-        );
-      },
+          cell: ({ row }) => {
+      const item = row.original;
+      const itemId = item.ID || item.ATTENDANCE_ID;
+      return (
+        <div className="flex items-center gap-1.5 justify-center">
+          <button
+            onClick={() => handleView(itemId)}
+            title="View"
+            className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
+          >
+            <Eye size={15} />
+          </button>
+          <button
+            onClick={() => handleEdit(item)}
+            title="Edit"
+            className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
+          >
+            <Pencil size={15} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(itemId)}
+            title="Delete"
+            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
+            disabled={deleteMutation.isPending}
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      );
+    },
     },
   ];
 

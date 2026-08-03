@@ -238,33 +238,25 @@ export function AttendanceReport() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/20 hover:bg-muted/20">
-                    <TableHead className="px-4 py-3 font-medium">Worker</TableHead>
-                    <TableHead className="px-4 py-3 font-medium">Date</TableHead>
-                    <TableHead className="px-4 py-3 font-medium">Basis</TableHead>
-                    <TableHead className="px-4 py-3 font-medium text-right">Hours</TableHead>
-                    <TableHead className="px-4 py-3 font-medium text-right">Days</TableHead>
-                    <TableHead className="px-4 py-3 font-medium text-right">Amount</TableHead>
-                  </TableRow>
+  <TableHead className="px-4 py-3 font-medium">Worker</TableHead>
+  <TableHead className="px-4 py-3 font-medium">Date</TableHead>
+  <TableHead className="px-4 py-3 font-medium text-right">Hours</TableHead>
+  <TableHead className="px-4 py-3 font-medium text-right">Amount</TableHead>
+</TableRow>
                 </TableHeader>
                 <TableBody>
                   {reportData?.details?.length > 0 ? (
                     reportData.details.map((row) => (
-                      <TableRow key={row.ATTENDANCE_ID} className="border-b border-border hover:bg-muted/30 transition-colors">
-                        <TableCell className="px-4 py-3 text-sm font-medium">{row.WORKER_NAME}</TableCell>
-                        <TableCell className="px-4 py-3 text-sm">{row.ATTENDANCE_DATE}</TableCell>
-                        <TableCell className="px-4 py-3 text-sm">
-                          <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
-                            {row.CALC_BASIS}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-sm text-right">{row.HOURS_WORKED ?? "—"}</TableCell>
-                        <TableCell className="px-4 py-3 text-sm text-right">{row.DAYS_WORKED ?? "—"}</TableCell>
-                        <TableCell className="px-4 py-3 text-sm text-right font-medium">{formatCurrency(row.AMOUNT)}</TableCell>
-                      </TableRow>
-                    ))
+  <TableRow key={row.ATTENDANCE_ID} className="border-b border-border hover:bg-muted/30 transition-colors">
+    <TableCell className="px-4 py-3 text-sm font-medium">{row.WORKER_NAME}</TableCell>
+    <TableCell className="px-4 py-3 text-sm">{row.ATTENDANCE_DATE}</TableCell>
+    <TableCell className="px-4 py-3 text-sm text-right">{row.HOURS_WORKED ?? "—"}</TableCell>
+    <TableCell className="px-4 py-3 text-sm text-right font-medium">{formatCurrency(row.AMOUNT)}</TableCell>
+  </TableRow>
+))
                   ) : (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={6} className="text-center h-24 text-sm text-muted-foreground">
+                      <TableCell colSpan={4} className="text-center h-24 text-sm text-muted-foreground">
                         No records found.
                       </TableCell>
                     </TableRow>

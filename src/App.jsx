@@ -62,6 +62,7 @@ import { WorkerFormPage } from "./features/worker/worker-form-page";
 import { AttendanceList } from "./features/worker-attendance/attendance-list";
 import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
 import { AttendanceReport } from "./features/worker-attendance/attendance-report";
+import { AttendanceDetails } from "./features/worker-attendance/attendance-details";
 import InvoiceManagementPage from "./features/setting/pages/statement-upload-three/invoice/InvoiceManagementPage";
 import AddUserPage from "./features/user-management/add-user-page";
 import EditUserPage from "./features/user-management/edit-user-page";
@@ -103,18 +104,18 @@ const App = () => {
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             {/* Report route — sidebar for Admin, no sidebar for Owner */}
-<Route
-  element={
-    <ProtectedRoute anyRole={ADMIN_OWNER}>
-      <RoleAwareLayout sidebarRoles={["Admin"]} />
-    </ProtectedRoute>
-  }
->
-  <Route
-    path="/dashboard/projects/:id/report"
-    element={<ProjectReportPage />}
-  />
-</Route>
+            <Route
+              element={
+                <ProtectedRoute anyRole={ADMIN_OWNER}>
+                  <RoleAwareLayout sidebarRoles={["Admin"]} />
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                path="/dashboard/projects/:id/report"
+                element={<ProjectReportPage />}
+              />
+            </Route>
 
             {/* Protected Layout — all roles can enter, sidebar filters per-role */}
             <Route
@@ -311,6 +312,14 @@ const App = () => {
                 }
               />
               <Route
+                path="worker-attendance/:attendanceId"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_DE_WORKER}>
+                    <AttendanceDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="worker-attendance/create"
                 element={
                   <ProtectedRoute anyRole={ADMIN_DE_WORKER}>
@@ -368,21 +377,21 @@ const App = () => {
                 }
               />
               <Route
-  path="owner-info/create"
-  element={
-    <ProtectedRoute anyRole={ADMIN_ONLY}>
-      <CreateOwnerInfoPage />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="owner-info/:id/edit"
-  element={
-    <ProtectedRoute anyRole={ADMIN_ONLY}>
-      <EditOwnerInfoPage />
-    </ProtectedRoute>
-  }
-/>
+                path="owner-info/create"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <CreateOwnerInfoPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="owner-info/:id/edit"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <EditOwnerInfoPage />
+                  </ProtectedRoute>
+                }
+              />
 
               <Route
                 path="contractor-type-info"
