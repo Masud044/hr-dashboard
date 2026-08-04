@@ -67,6 +67,7 @@ const EntityCombobox = React.memo(function EntityCombobox({
   getImageUrl,
   size = "sm",
   avatarInTrigger = false,
+  renderItem, // ← new: (item) => ReactNode, overrides default label rendering
 }) {
   const s = SIZE_MAP[size] ?? SIZE_MAP.sm;
 
@@ -105,7 +106,7 @@ const EntityCombobox = React.memo(function EntityCombobox({
         <ComboboxContent>
           <ComboboxEmpty>{emptyText}</ComboboxEmpty>
           <ComboboxList>
-            {(item) => (
+            {/* {(item) => (
               <ComboboxItem key={item.value} value={item} className={s.item}>
                 <div className="flex items-center gap-2 min-w-0">
                   {showAvatar && renderAvatar(item)}
@@ -114,7 +115,21 @@ const EntityCombobox = React.memo(function EntityCombobox({
                   </span>
                 </div>
               </ComboboxItem>
-            )}
+            )} */}
+            {(item) => (
+  <ComboboxItem key={item.value} value={item} className={s.item}>
+    <div className="flex items-center gap-2 min-w-0">
+      {showAvatar && renderAvatar(item)}
+      {renderItem ? (
+        renderItem(item)
+      ) : (
+        <span className="line-clamp-2 leading-snug">
+          {item.label}
+        </span>
+      )}
+    </div>
+  </ComboboxItem>
+)}
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
@@ -129,42 +144,45 @@ const EntityCombobox = React.memo(function EntityCombobox({
       value={selectedItem}
       onValueChange={(item) => onValueChange(item?.value ?? "")}
       disabled={disabled}
+      modal={true}
     >
       <div className="relative inline-block">
-  <ComboboxTrigger
-    disabled={disabled}
-    className={cn(
-      "inline-flex items-center justify-between gap-2 rounded-md border border-input bg-transparent px-2 shadow-xs w-[220px]",
-      s.trigger,
-      !selectedItem && "text-muted-foreground",
-      showClear && selectedItem && "pr-8 [&_[data-slot=combobox-trigger-icon]]:hidden",
-      className,
-    )}
-  >
-    <span className="flex items-center gap-2 min-w-0 flex-1">
-      {selectedItem ? (
-        <>
-          {renderAvatar(selectedItem)}
-          <span className="truncate leading-none">{selectedItem.label}</span>
-        </>
-      ) : (
-        <span className="truncate">{placeholder}</span>
-      )}
-    </span>
-  </ComboboxTrigger>
+        <ComboboxTrigger
+          disabled={disabled}
+          className={cn(
+            "inline-flex items-center justify-between gap-2 bg-transparent dark:bg-input/30 rounded-md border border-input-border  px-2 shadow-xs w-[220px]",
+            s.trigger,
+            !selectedItem && "text-muted-foreground",
+            showClear &&
+              selectedItem &&
+              "pr-8 [&_[data-slot=combobox-trigger-icon]]:hidden",
+            className,
+          )}
+        >
+          <span className="flex items-center gap-2 min-w-0 flex-1">
+            {selectedItem ? (
+              <>
+                {renderAvatar(selectedItem)}
+                <span className="truncate leading-none">
+                  {selectedItem.label}
+                </span>
+              </>
+            ) : (
+              <span className="truncate">{placeholder}</span>
+            )}
+          </span>
+        </ComboboxTrigger>
 
-  {showClear && selectedItem && !disabled && (
-    <ComboboxClear
-      className="absolute right-2 top-1/2 -translate-y-1/2"
-    />
-  )}
-</div>
+        {showClear && selectedItem && !disabled && (
+          <ComboboxClear className="absolute right-2 top-1/2 -translate-y-1/2" />
+        )}
+      </div>
 
       <ComboboxContent className="w-[260px] p-0">
         {/* <ComboboxInput placeholder="Search..." className="m-1 text-xs" showTrigger={false} /> */}
         <ComboboxInput
           placeholder="Search..."
-          className="m-1 text-xs"
+          className="m-1 text-xs "
           showTrigger={false}
         >
           <InputGroupAddon align="inline-start">

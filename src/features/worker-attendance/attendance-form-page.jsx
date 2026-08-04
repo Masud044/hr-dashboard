@@ -7,6 +7,7 @@ import * as z from "zod";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
+import DateInput from "@/components/shared/DateInput";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { Loader2 } from "lucide-react";
+import EntityCombobox from "@/components/shared/entity-combobox";
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const attendanceSchema = z
@@ -68,7 +70,8 @@ const defaultValues = {
 };
 
 function decimalToHoursMinutes(decimalHours) {
-  if (decimalHours == null || isNaN(decimalHours)) return { hours: "", minutes: "" };
+  if (decimalHours == null || isNaN(decimalHours))
+    return { hours: "", minutes: "" };
   const totalMinutes = Math.round(Number(decimalHours) * 60);
   return {
     hours: String(Math.floor(totalMinutes / 60)),
@@ -115,12 +118,24 @@ export function AttendanceFormPage() {
     enabled: isEdit,
   });
 
+  const workerOpts = workers.map((w) => ({
+  value: String(w.WORKER_ID),
+  label: w.WORKER_NAME,
+}));
+
+const projectOpts = projects.map((p) => ({
+  value: String(p.P_ID),
+  label: p.P_NAME,
+}));
+
   const isPageLoading =
-  workersLoading || projectsLoading || (isEdit && fetchedDataLoading);
+    workersLoading || projectsLoading || (isEdit && fetchedDataLoading);
 
   useEffect(() => {
     if (fetchedData) {
-      const { hours, minutes } = decimalToHoursMinutes(fetchedData.HOURS_WORKED);
+      const { hours, minutes } = decimalToHoursMinutes(
+        fetchedData.HOURS_WORKED,
+      );
       form.reset({
         ...defaultValues,
         ...fetchedData,
@@ -184,8 +199,7 @@ export function AttendanceFormPage() {
     navigate(-1);
   };
 
-
-   // ── Loading state ───────────────────────────
+  // ── Loading state ───────────────────────────
   // if (isPageLoading) {
   //   return (
   //     <div className="flex min-h-[420px] flex-col items-center justify-center gap-4 px-4">
@@ -215,7 +229,7 @@ export function AttendanceFormPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-            <FormField
+            {/* <FormField
               control={form.control}
               name="ATTENDANCE_DATE"
               render={({ field }) => (
@@ -229,9 +243,24 @@ export function AttendanceFormPage() {
                   <FormMessage />
                 </FormItem>
               )}
+            /> */}
+            <FormField
+              control={form.control}
+              name="ATTENDANCE_DATE"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Attendance Date <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <DateInput value={field.value} onChange={field.onChange} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="WORKER_ID"
               render={({ field }) => (
@@ -263,9 +292,33 @@ export function AttendanceFormPage() {
                   <FormMessage />
                 </FormItem>
               )}
-            />
-
+            /> */}
             <FormField
+  control={form.control}
+  name="WORKER_ID"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>
+        Worker <span className="text-red-500">*</span>
+      </FormLabel>
+      <FormControl>
+        <EntityCombobox
+          items={workerOpts}
+          value={String(field.value || "")}
+          onValueChange={field.onChange}
+          placeholder="Select worker"
+          size="md"
+          className="w-full"
+          showAvatar
+          avatarInTrigger
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+            {/* <FormField
               control={form.control}
               name="PROJECT_ID"
               render={({ field }) => (
@@ -276,7 +329,7 @@ export function AttendanceFormPage() {
                   <Select
                     onValueChange={field.onChange}
                     value={String(field.value)}
-                     key={`project-select-${field.value || "empty"}`}
+                    key={`project-select-${field.value || "empty"}`}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -294,7 +347,29 @@ export function AttendanceFormPage() {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
+            <FormField
+  control={form.control}
+  name="PROJECT_ID"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>
+        Project <span className="text-red-500">*</span>
+      </FormLabel>
+      <FormControl>
+        <EntityCombobox
+          items={projectOpts}
+          value={String(field.value || "")}
+          onValueChange={field.onChange}
+          placeholder="Select project"
+          className="w-full"
+          size="md"
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
             <FormField
               control={form.control}

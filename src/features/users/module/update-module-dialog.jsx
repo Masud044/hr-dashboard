@@ -1,3 +1,4 @@
+// src\features\users\module\update-module-dialog.jsx
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,12 +26,11 @@ import {
 import { LayoutGrid } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useUpdateModule } from "./queries";
+import EntityCombobox from "@/components/shared/entity-combobox";
+import { MODULE_OPTIONS } from "@/config/module-options";
 
 const formSchema = z.object({
-  moduleName: z
-    .string()
-    .min(1, "Module name is required")
-    .max(100, "Module name cannot exceed 100 characters"),
+  moduleName: z.string().min(1, "Module name is required"),
   description: z.string().max(255, "Description cannot exceed 255 characters").optional(),
   sequenceNo: z
     .string()
@@ -115,11 +115,13 @@ export default function UpdateModuleDialog({
 
   return (
     <Dialog
+    
       open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) handleCancel();
       }}
     >
+       
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -146,10 +148,14 @@ export default function UpdateModuleDialog({
                     Module Name <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g. HR Management"
+                    <EntityCombobox
+                      items={MODULE_OPTIONS}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select module..."
+                      size="md"
+                      className="w-full"
                       disabled={isSubmitting}
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />

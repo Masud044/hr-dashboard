@@ -36,13 +36,21 @@ const formSchema = z.object({
   username: z.string().min(1, "Username is required").max(100),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
   confirmPassword: z.string().min(1, "Please confirm your password"),
-  userType: z.enum(["WORKER", "OWNER"], { required_error: "Type is required" }),
-  refId: z.coerce.number({ required_error: "Please select a " }).min(1, "Please make a selection"),
+ userType: z
+  .union([z.enum(["WORKER", "OWNER"]), z.literal("")])
+  .optional()
+  .transform((v) => (v === "" ? undefined : v)),
+  refId: z.coerce.number().optional().nullable(),
   roleIds: z.array(z.string()).min(1, "At least one role is required"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+})
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => !data.userType || (data.refId && data.refId >= 1), {
+    message: "Please make a selection",
+    path: ["refId"],
+  });
 
 const defaultValues = {
   username: "",
@@ -147,7 +155,7 @@ export default function AddUserPage() {
                       Username <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. john.doe" disabled={isSubmitting} {...field} />
+                      <Input placeholder="e.g. john.doe" autoComplete="off" disabled={isSubmitting} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,7 +173,7 @@ export default function AddUserPage() {
                         Password <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Min. 6 characters" disabled={isSubmitting} {...field} />
+                        <Input type="password" autoComplete="new-password" placeholder="Min. 6 characters" disabled={isSubmitting} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -181,7 +189,7 @@ export default function AddUserPage() {
                         Confirm Password <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Re-enter password" disabled={isSubmitting} {...field} />
+                        <Input type="password" autoComplete="new-password" placeholder="Re-enter password" disabled={isSubmitting} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,7 +204,7 @@ export default function AddUserPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Type <span className="text-destructive">*</span>
+                      Type 
                     </FormLabel>
                     <Select
                       onValueChange={(v) => {

@@ -1,6 +1,5 @@
 // src\features\users\permission\add-permission-dialog.jsx
-
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -33,14 +32,13 @@ import {
 } from "@/components/ui/select";
 import { KeyRound } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useCreatePermission, useModulesForSelect } from "./queries";
+import { useCreatePermission, useModules } from "@/features/user-management/queries";
+import EntityCombobox from "@/components/shared/entity-combobox";
+import { ACTION_OPTIONS, buildPermissionCode, buildPermissionName } from "@/config/permission-actions";
 
 const formSchema = z.object({
   moduleId: z.string().min(1, "Module is required"),
-  permissionCode: z
-    .string()
-    .min(1, "Permission code is required")
-    .max(100, "Permission code cannot exceed 100 characters"),
+  action: z.string().min(1, "Action is required"),
   permissionName: z
     .string()
     .min(1, "Permission name is required")
@@ -50,13 +48,18 @@ const formSchema = z.object({
 
 export default function AddPermissionDialog({ open, onOpenChange, showConfirmation }) {
   const createPermissionMutation = useCreatePermission();
-  const { data: modules = [], isLoading: isLoadingModules } = useModulesForSelect();
+  const { data: modules = [], isLoading: isLoadingModules } = useModules();
+
+  const moduleOpts = useMemo(
+    () => modules.map((m) => ({ value: String(m.ID), label: m.MODULE_NAME })),
+    [modules]
+  );
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       moduleId: "",
-      permissionCode: "",
+      action: "",
       permissionName: "",
       description: "",
     },
@@ -66,17 +69,43 @@ export default function AddPermissionDialog({ open, onOpenChange, showConfirmati
     formState: { isDirty },
   } = form;
 
+  const moduleId = form.watch("moduleId");
+  const action = form.watch("action");
+
+  const selectedModule = modules.find((m) => String(m.ID) === moduleId);
+  const permissionCode = buildPermissionCode(selectedModule?.MODULE_NAME, action);
+  const actionLabel = ACTION_OPTIONS.find((a) => a.value === action)?.label ?? "";
+
+  // Tracks whether the user has manually typed into Permission Name.
+  // Using this ref (instead of RHF's dirtyFields) because setValue()
+  // from the auto-fill effect itself marks the field dirty, which would
+  // otherwise permanently block further auto-fills after the first one.
+  const nameEditedByUser = useRef(false);
+
   useEffect(() => {
     if (open) {
-      form.reset({ moduleId: "", permissionCode: "", permissionName: "", description: "" });
+      form.reset({ moduleId: "", action: "", permissionName: "", description: "" });
+      nameEditedByUser.current = false;
     }
   }, [open]);
+
+  // Auto-suggest permission name whenever module/action change, as long
+  // as the user hasn't typed a custom name themselves.
+  useEffect(() => {
+    if (selectedModule && action && !nameEditedByUser.current) {
+      form.setValue(
+        "permissionName",
+        buildPermissionName(selectedModule.MODULE_NAME, actionLabel),
+        { shouldValidate: true }
+      );
+    }
+  }, [moduleId, action]);
 
   const onSubmit = async (data) => {
     try {
       await createPermissionMutation.mutateAsync({
         MODULE_ID: parseInt(data.moduleId),
-        PERMISSION_CODE: data.permissionCode,
+        PERMISSION_CODE: buildPermissionCode(selectedModule?.MODULE_NAME, data.action),
         PERMISSION_NAME: data.permissionName,
         DESCRIPTION: data.description || null,
       });
@@ -108,11 +137,13 @@ export default function AddPermissionDialog({ open, onOpenChange, showConfirmati
 
   return (
     <Dialog
+      
       open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) handleCancel();
       }}
     >
+      
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -136,22 +167,45 @@ export default function AddPermissionDialog({ open, onOpenChange, showConfirmati
                   <FormLabel>
                     Module <span className="text-destructive">*</span>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isLoadingModules}
-                  >
+                  <FormControl>
+                    <EntityCombobox
+                      items={moduleOpts}
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                        form.setValue("action", "", { shouldValidate: false });
+                      }}
+                      placeholder={isLoadingModules ? "Loading modules..." : "Select a module"}
+                      disabled={isLoadingModules}
+                      size="md"
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="action"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Action <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!moduleId}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={isLoadingModules ? "Loading modules..." : "Select a module"}
+                          placeholder={moduleId ? "Select an action" : "Select a module first"}
                         />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {modules.map((module) => (
-                        <SelectItem key={module.ID} value={String(module.ID)}>
-                          {module.MODULE_NAME}
+                      {ACTION_OPTIONS.map((a) => (
+                        <SelectItem key={a.value} value={a.value}>
+                          {a.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -161,21 +215,14 @@ export default function AddPermissionDialog({ open, onOpenChange, showConfirmati
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="permissionCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Permission Code <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. HR_VIEW_EMPLOYEE" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-1.5">
+              <FormLabel>Permission Code</FormLabel>
+              <div className="h-9 flex items-center rounded-md border border-input bg-muted px-3">
+                <code className="text-sm font-mono text-muted-foreground">
+                  {permissionCode || "Select module & action"}
+                </code>
+              </div>
+            </div>
 
             <FormField
               control={form.control}
@@ -186,7 +233,14 @@ export default function AddPermissionDialog({ open, onOpenChange, showConfirmati
                     Permission Name <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. View Employee" {...field} />
+                    <Input
+                      placeholder="e.g. View Employee"
+                      {...field}
+                      onChange={(e) => {
+                        nameEditedByUser.current = true;
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
