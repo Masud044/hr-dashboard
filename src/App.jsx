@@ -66,6 +66,8 @@ import { AttendanceDetails } from "./features/worker-attendance/attendance-detai
 import InvoiceManagementPage from "./features/setting/pages/statement-upload-three/invoice/InvoiceManagementPage";
 import AddUserPage from "./features/user-management/add-user-page";
 import EditUserPage from "./features/user-management/edit-user-page";
+import AddModulePage from "./features/users/module/add-module-page";
+import UpdateModulePage from "./features/users/module/update-module-page";
 
 import {
   ALL_ROLES,
@@ -191,6 +193,22 @@ const App = () => {
                 element={
                   <ProtectedRoute anyRole={ADMIN_ONLY}>
                     <Modules />
+                  </ProtectedRoute>
+                }
+              />
+                            <Route
+                path="module/create"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <AddModulePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="module/:id/edit"
+                element={
+                  <ProtectedRoute anyRole={ADMIN_ONLY}>
+                    <UpdateModulePage />
                   </ProtectedRoute>
                 }
               />

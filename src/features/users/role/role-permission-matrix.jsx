@@ -2,23 +2,13 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router";
 import { useQueries } from "@tanstack/react-query";
-import {
-  Layers,
-  Info,
-  RefreshCw,
-  Check,
-  X,
-} from "lucide-react";
+import { Layers, Info, Check, X } from "lucide-react";
+import { toast } from "react-toastify";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,22 +23,80 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
-
-import { useRoles, usePermissions } from "../../user-management/queries";
+import {
+  useRoles,
+  usePermissions,
+  useAssignPermissionToRole,
+  useRevokePermissionFromRole,
+} from "../../user-management/queries";
 import { SectionContainer } from "@/components/SectionContainer";
+import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
-// ── Static Cell ─────────────────────────────────────────
-function MatrixCell({ granted }) {
+// ── Clickable Cell ─────────────────────────────────────
+function MatrixCell({ granted, permission, role, showConfirmation }) {
+  const assignMutation = useAssignPermissionToRole();
+  const revokeMutation = useRevokePermissionFromRole();
+  const isPending = assignMutation.isPending || revokeMutation.isPending;
+
+  const handleClick = async () => {
+    const confirmed = await showConfirmation({
+      title: granted ? "Revoke permission?" : "Grant permission?",
+      description: granted
+        ? `Remove "${permission.PERMISSION_NAME}" (${permission.PERMISSION_CODE}) from "${role.ROLE_NAME}"?`
+        : `Grant "${permission.PERMISSION_NAME}" (${permission.PERMISSION_CODE}) to "${role.ROLE_NAME}"?`,
+      confirmText: granted ? "Revoke" : "Grant",
+      cancelText: "Cancel",
+      variant: granted ? "destructive" : "default",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      if (granted) {
+        await revokeMutation.mutateAsync({
+          roleId: String(role.ID),
+          permissionId: permission.ID,
+        });
+        toast.success(`Revoked "${permission.PERMISSION_NAME}" from ${role.ROLE_NAME}`);
+      } else {
+        await assignMutation.mutateAsync({
+          roleId: String(role.ID),
+          permissionId: permission.ID,
+        });
+        toast.success(`Granted "${permission.PERMISSION_NAME}" to ${role.ROLE_NAME}`);
+      }
+    } catch (err) {
+      toast.error(
+        err?.message || `Failed to ${granted ? "revoke" : "grant"} permission`
+      );
+    }
+  };
+
   return (
     <td className="px-2 py-3 text-center border-b border-border/30">
-      {granted ? (
-        <Check className="h-4 w-4 text-emerald-600 mx-auto" />
-      ) : (
-        <X className="h-4 w-4 text-muted-foreground mx-auto" />
-      )}
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isPending}
+        title={granted ? "Click to revoke" : "Click to grant"}
+        className={cn(
+          "inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+          "hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed",
+        )}
+      >
+        {isPending ? (
+          <Spinner className="h-4 w-4" />
+        ) : granted ? (
+          <Check className="h-4 w-4 text-emerald-600" />
+        ) : (
+          <X className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
     </td>
   );
 }
@@ -56,6 +104,7 @@ function MatrixCell({ granted }) {
 // ── Main ────────────────────────────────────────────────
 export default function RolePermissionMatrix() {
   const [search, setSearch] = useState("");
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   const {
     data: roles = [],
@@ -125,12 +174,6 @@ export default function RolePermissionMatrix() {
     }, {});
   }, [allPermissions, search]);
 
-  const refetchAll = () => {
-    refetchRoles();
-    refetchPerms();
-    rolePermissionQueries.forEach((q) => q.refetch());
-  };
-
   // ── Loading ──
   if (isLoading)
     return (
@@ -173,8 +216,6 @@ export default function RolePermissionMatrix() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-
-         
         </div>
 
         {/* Search */}
@@ -192,7 +233,7 @@ export default function RolePermissionMatrix() {
           <CardContent className="p-0">
             <div className="overflow-auto max-h-[75vh]">
               <table className="w-full text-sm">
-                
+
                 {/* Header */}
                 <thead className="sticky top-0 bg-background z-20">
                   <tr>
@@ -210,7 +251,7 @@ export default function RolePermissionMatrix() {
                 <tbody>
                   {Object.entries(grouped).map(([module, perms]) => (
                     <React.Fragment key={module}>
-                      
+
                       {/* Module header */}
                       <tr>
                         <td
@@ -225,7 +266,7 @@ export default function RolePermissionMatrix() {
                       {/* Permissions */}
                       {perms.map((perm) => (
                         <tr key={perm.ID} className="hover:bg-muted/30 transition">
-                          
+
                           {/* Left sticky */}
                           <td className="sticky left-0 bg-background px-4 py-2 border-r">
                             <div className="flex items-center gap-2">
@@ -257,6 +298,9 @@ export default function RolePermissionMatrix() {
                             <MatrixCell
                               key={role.ID}
                               granted={rolePermMap[role.ID]?.has(perm.ID)}
+                              permission={perm}
+                              role={role}
+                              showConfirmation={showConfirmation}
                             />
                           ))}
                         </tr>
@@ -270,6 +314,8 @@ export default function RolePermissionMatrix() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmationDialog />
     </SectionContainer>
   );
 }
