@@ -24,4 +24,6 @@ export const MODULE_OPTIONS = [
   { value: "Module", label: "Module" },
   { value: "Role", label: "Role" },
   { value: "Permission", label: "Permission" },
+  { value: "Dashboard", label: "Dashboard" },
+  { value: "Schedule Dashboard", label: "Schedule Dashboard" },
 ];

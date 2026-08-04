@@ -5,6 +5,8 @@
 
 export const ACTION_OPTIONS = [
   { value: "VIEW", label: "View" },
+  { value: "VIEW_ALL", label: "View All" },
+{ value: "VIEW_SELF", label: "View Self" },
   { value: "CREATE", label: "Create" },
   { value: "EDIT", label: "Edit" },
   { value: "DELETE", label: "Delete" },

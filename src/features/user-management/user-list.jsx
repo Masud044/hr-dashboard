@@ -555,8 +555,8 @@ export default function UserList() {
                   </TooltipTrigger>
                   <TooltipContent>View Details</TooltipContent>
                 </Tooltip>
-
-                <Tooltip>
+{/* no need edit */}
+                {/* <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -568,7 +568,7 @@ export default function UserList() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Edit User</TooltipContent>
-                </Tooltip>
+                </Tooltip> */}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
