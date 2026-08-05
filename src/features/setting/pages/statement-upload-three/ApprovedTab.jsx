@@ -80,6 +80,7 @@ export default function ApprovedTab({
   const [disapproveTarget, setDisapproveTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [excludingMarginTxnId, setExcludingMarginTxnId] = useState(null);
 
   const projectOpts = useMemo(
     () =>
@@ -128,6 +129,20 @@ export default function ApprovedTab({
     deleteMainInvoiceMutation.mutate(txnId, {
       onSuccess: () => setDeleteTarget(null),
     });
+  };
+
+  const handleExcludeMarginChange = (txnId, value) => {
+    setExcludingMarginTxnId(txnId);
+    updateMainRowMutation.mutate(
+      { txnId, excludeMargin: value },
+      {
+        onSuccess: () =>
+          toast.success(
+            value === "Y" ? "Margin excluded." : "Margin included.",
+          ),
+        onSettled: () => setExcludingMarginTxnId(null),
+      },
+    );
   };
 
   // const queryParams = useMemo(
@@ -283,6 +298,10 @@ export default function ApprovedTab({
                 <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
                   Payment By
                 </th>
+
+                <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
+                  Excl. Margin
+                </th>
                 <th className="px-3 py-3 text-left sticky top-0 z-10 bg-gray-50">
                   Approved Date
                 </th>
@@ -297,14 +316,14 @@ export default function ApprovedTab({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={13} className="text-center py-10 text-gray-400">
+                  <td colSpan={14} className="text-center py-10 text-gray-400">
                     <Loader2 className="inline animate-spin mr-2" size={16} />
                     Loading...
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="text-center py-10 text-gray-400">
+                  <td colSpan={14} className="text-center py-10 text-gray-400">
                     No approved transactions yet.
                   </td>
                 </tr>
@@ -393,15 +412,21 @@ export default function ApprovedTab({
                           placeholder="Select project"
                           searchPlaceholder="Search projects..."
                         /> */}
-                         <EntityCombobox
-    items={projectOpts}
-    value={r.P_ID ? String(r.P_ID) : ""}
-    onValueChange={(pId) => {
-      const proj = projectOpts.find((p) => p.value === pId);
-      handleProjectChange(r.TXN_ID, pId || null, proj?.label || null);
-    }}
-    placeholder="Select project"
-  />
+                        <EntityCombobox
+                          items={projectOpts}
+                          value={r.P_ID ? String(r.P_ID) : ""}
+                          onValueChange={(pId) => {
+                            const proj = projectOpts.find(
+                              (p) => p.value === pId,
+                            );
+                            handleProjectChange(
+                              r.TXN_ID,
+                              pId || null,
+                              proj?.label || null,
+                            );
+                          }}
+                          placeholder="Select project"
+                        />
                       </td>
                       <td className="px-3 py-2.5 w-[220px]">
                         {/* <Combobox
@@ -421,14 +446,20 @@ export default function ApprovedTab({
                           searchPlaceholder="Search contractors..."
                         /> */}
                         <EntityCombobox
-    items={contractorOpts}
-    value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
-    onValueChange={(cId) => {
-      const c = contractorOpts.find((x) => x.value === cId);
-      handleContractorChange(r.TXN_ID, cId || null, c?.label || null);
-    }}
-    placeholder="Select contractor"
-  />
+                          items={contractorOpts}
+                          value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
+                          onValueChange={(cId) => {
+                            const c = contractorOpts.find(
+                              (x) => x.value === cId,
+                            );
+                            handleContractorChange(
+                              r.TXN_ID,
+                              cId || null,
+                              c?.label || null,
+                            );
+                          }}
+                          placeholder="Select contractor"
+                        />
                       </td>
                       {/* <td className="px-4 py-2.5 min-w-[100px]">
                         <Input
@@ -533,6 +564,21 @@ export default function ApprovedTab({
                           <span className="text-gray-400 text-xs">—</span>
                         )}
                       </td>
+                      <td className="px-3 py-2.5 min-w-[90px] text-center">
+  {excludingMarginTxnId === r.TXN_ID ? (
+    <Loader2 size={14} className="animate-spin text-red-600 inline-block" />
+  ) : (
+    <input
+      type="checkbox"
+      checked={r.EXCLUDE_MARGIN === "Y"}
+      onChange={(e) =>
+        handleExcludeMarginChange(r.TXN_ID, e.target.checked ? "Y" : "N")
+      }
+      className="accent-red-600 w-4 h-4 cursor-pointer"
+    />
+  )}
+</td>
+
                       <td className="px-3 py-2.5 whitespace-nowrap text-gray-500 text-xs">
                         {fmtDate(r.APPROVED_DATE)}
                       </td>

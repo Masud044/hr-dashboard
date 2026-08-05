@@ -42,9 +42,8 @@ export function ProjectReportPage() {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("transactions"); // "transactions" | "byContractor"
+  const [activeTab, setActiveTab] = useState("byContractor"); // "transactions" | "byContractor"
   const workerSectionRef = useRef(null);
-
 
   const scrollToWorkerSection = () => {
     workerSectionRef.current?.scrollIntoView({
@@ -53,24 +52,30 @@ export function ProjectReportPage() {
     });
   };
 
-const { data: report, isLoading } = useQuery({
-  queryKey: ["projectReport", projectId],
-  queryFn: async () =>
-    (await axios.get(`${url}/api/statement/project-report/${projectId}`)).data
-      ?.data || { transactions: [], workerLogs: [], workerTotals: {}, marginPercent: null },
-  enabled: !!projectId,
-});
+  const { data: report, isLoading } = useQuery({
+    queryKey: ["projectReport", projectId],
+    queryFn: async () =>
+      (await axios.get(`${url}/api/statement/project-report/${projectId}`)).data
+        ?.data || {
+        transactions: [],
+        workerLogs: [],
+        workerTotals: {},
+        marginPercent: null,
+      },
+    enabled: !!projectId,
+  });
 
-const rows = useMemo(() => report?.transactions || [], [report]);
-const workerLogs = useMemo(() => report?.workerLogs || [], [report]);
-const workerTotals = useMemo(
-  () => report?.workerTotals || { totalHours: 0, totalDays: 0, totalAmount: 0 },
-  [report]
-);
+  const rows = useMemo(() => report?.transactions || [], [report]);
+  const workerLogs = useMemo(() => report?.workerLogs || [], [report]);
+  const workerTotals = useMemo(
+    () =>
+      report?.workerTotals || { totalHours: 0, totalDays: 0, totalAmount: 0 },
+    [report],
+  );
 
-// ── margin: from DB if available, otherwise default 10 ──
-const MARGIN_PERCENT =
-  report?.marginPercent != null ? Number(report.marginPercent) : 10;
+  // ── margin: from DB if available, otherwise default 10 ──
+  const MARGIN_PERCENT =
+    report?.marginPercent != null ? Number(report.marginPercent) : 10;
 
   // Extract project name from the first row
   const projectName =
@@ -83,12 +88,58 @@ const MARGIN_PERCENT =
     return { debit, credit, workerCost, net: debit - credit - workerCost };
   }, [rows, workerTotals]);
 
+  // const summary = useMemo(() => {
+  //   const projectExpenses = totals.credit;
+  //   const workerCost = totals.workerCost;
+  //   const buildExpenses = projectExpenses + workerCost;
+
+  //   const builderMargin = buildExpenses * (MARGIN_PERCENT / 100);
+  //   const gst = builderMargin * 0.1;
+  //   const totalBuilderMargin = builderMargin + gst;
+
+  //   const finalProjectExpenses = buildExpenses + totalBuilderMargin;
+
+  //   const customerPaid = rows.reduce((s, r) => {
+  //     if (
+  //       r.SOURCE_TYPE === "NON_BANKING" &&
+  //       r.PAYMENT_BY === "CUSTOMER" &&
+  //       r.CREDIT != null
+  //     ) {
+  //       return s + Number(r.CREDIT);
+  //     }
+  //     return s;
+  //   }, 0);
+
+  //   const collectionReceived = totals.debit;
+  //   const balance = collectionReceived + customerPaid - finalProjectExpenses;
+
+  //   return {
+  //     projectExpenses,
+  //     workerCost,
+  //     buildExpenses,
+  //     builderMargin,
+  //     gst,
+  //     totalBuilderMargin,
+  //     finalProjectExpenses,
+  //     collectionReceived,
+  //     customerPaid,
+  //     balance,
+  //   };
+  // }, [totals, rows, MARGIN_PERCENT]);
+
   const summary = useMemo(() => {
     const projectExpenses = totals.credit;
     const workerCost = totals.workerCost;
     const buildExpenses = projectExpenses + workerCost;
 
-    const builderMargin = buildExpenses * (MARGIN_PERCENT / 100);
+    // ── margin base excludes transactions flagged EXCLUDE_MARGIN = 'Y' ──
+    const marginableCredit = rows.reduce((s, r) => {
+      if (r.EXCLUDE_MARGIN === "Y") return s;
+      return s + (Number(r.CREDIT) || 0);
+    }, 0);
+    const marginBase = marginableCredit + workerCost;
+
+    const builderMargin = marginBase * (MARGIN_PERCENT / 100);
     const gst = builderMargin * 0.1;
     const totalBuilderMargin = builderMargin + gst;
 
@@ -374,36 +425,58 @@ const MARGIN_PERCENT =
         )}
 
         {/* Tab Bar */}
-        <div className="flex items-center gap-6 border-b border-border mb-6">
-          <button
-            onClick={() => setActiveTab("transactions")}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "transactions"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Transactions ({rows.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("byContractor")}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "byContractor"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Group by Contractor ({groupedByContractor.length})
-          </button>
-          {activeTab === "byContractor" && workerLogs.length > 0 && (
-            <button
-              onClick={scrollToWorkerSection}
-              className="ml-auto text-xs font-medium text-primary hover:underline"
-            >
-              Jump to Worker ↓
-            </button>
-          )}
-        </div>
+        <div className="flex items-center gap-4 mb-6">
+  <div className="inline-flex items-center gap-1 bg-secondary rounded-lg p-1">
+    <button
+      onClick={() => setActiveTab("byContractor")}
+      className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+        activeTab === "byContractor"
+          ? "bg-card text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      Group by Contractor
+      <span
+        className={`text-xs px-1.5 py-0.5 rounded-full ${
+          activeTab === "byContractor"
+            ? "bg-accent text-accent-foreground"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {groupedByContractor.length}
+      </span>
+    </button>
+
+    <button
+      onClick={() => setActiveTab("transactions")}
+      className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+        activeTab === "transactions"
+          ? "bg-card text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      Transactions
+      <span
+        className={`text-xs px-1.5 py-0.5 rounded-full ${
+          activeTab === "transactions"
+            ? "bg-accent text-accent-foreground"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {rows.length}
+      </span>
+    </button>
+  </div>
+
+  {activeTab === "byContractor" && workerLogs.length > 0 && (
+    <button
+      onClick={scrollToWorkerSection}
+      className="ml-auto text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+    >
+      Jump to Worker ↓
+    </button>
+  )}
+</div>
 
         {/* Transactions Tab */}
         {activeTab === "transactions" && (
@@ -788,10 +861,10 @@ const MARGIN_PERCENT =
                                 </td> */}
                                 <td className="px-4 py-2.5 min-w-[160px]">
                                   <InvoiceCell
-  parentType="main"
-  parentId={r.TXN_ID}
-  readOnly
-/>
+                                    parentType="main"
+                                    parentId={r.TXN_ID}
+                                    readOnly
+                                  />
                                 </td>
                               </tr>
                             );
