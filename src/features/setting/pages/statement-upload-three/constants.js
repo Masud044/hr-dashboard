@@ -20,7 +20,7 @@ export const STATUS_STYLES = {
 export const EMPTY_NB = {
   txnDate: "", amount: "", description: "", entryType: "DEBIT", category: "other",
   pId: "", projectName: "", contractorId: "", contractorName: "",
-  invoiceNo: "", remarks: "", paymentBy: "BUILDER",
+  invoiceNo: "", remarks: "", paymentBy: "BUILDER",excludeMargin: "N",
 };
 
 export const EMPTY_FILTERS = {

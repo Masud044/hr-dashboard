@@ -62,10 +62,14 @@ const StagingRow = React.memo(function StagingRow({
   onInvoiceFileSelect,
   onPaymentByChange, // ← NEW
   showPaymentBy = false, // ← NEW
+  onExcludeMarginChange,        // ← ADD
+  showExcludeMargin = false,    // ← ADD
+  isExcludingMargin, 
   onDeleteInvoiceClick,
   onApproveClick,
   onDeleteRowClick, // ← NEW
   onRematchClick,
+
 }) {
   const r = row;
   // const cat = (r.CATEGORY || "other").toLowerCase();
@@ -215,6 +219,24 @@ const StagingRow = React.memo(function StagingRow({
           </Select>
         </td>
       )}
+      {showExcludeMargin && (
+  <td className="px-3 py-2.5 w-[90px] text-center">
+    {isExcludingMargin ? (
+      <Loader2 size={14} className="animate-spin text-red-600 inline-block" />
+    ) : (
+      <input
+        type="checkbox"
+        checked={r.EXCLUDE_MARGIN === "Y"}
+        disabled={approved}
+        onChange={(e) =>
+          onExcludeMarginChange(r.STAGING_ID, e.target.checked ? "Y" : "N")
+        }
+        className="accent-red-600 w-4 h-4 cursor-pointer disabled:cursor-not-allowed"
+      />
+    )}
+  </td>
+)}
+      
       <td className="px-3 py-2.5 min-w-[110px]">
         <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
       </td>

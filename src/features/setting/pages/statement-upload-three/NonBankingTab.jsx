@@ -38,7 +38,7 @@ export default function NonBankingTab({
   projectOpts,
   contractorOpts,
   mutations,
-  
+
   sortBy = "txnDate",
 }) {
   const {
@@ -48,7 +48,7 @@ export default function NonBankingTab({
     approveMutation,
     addNonBankingMutation,
     deleteStagingRowMutation,
-    rematchRowMutation
+    rematchRowMutation,
   } = mutations;
 
   const [nbForm, setNbForm] = useState(EMPTY_NB);
@@ -64,7 +64,8 @@ export default function NonBankingTab({
   const [approvingRowId, setApprovingRowId] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [rematchingRowId, setRematchingRowId] = useState(null);
-const [deletingRowId, setDeletingRowId] = useState(null);
+  const [deletingRowId, setDeletingRowId] = useState(null);
+  const [excludingMarginRowId, setExcludingMarginRowId] = useState(null);
 
   // const queryParams = useMemo(() => ({
   //   sourceType: "NON_BANKING", ...appliedFilters, status: sortBy === "recent" ? "PENDING" : appliedFilters.status, page,sortBy, pageSize: PAGE_SIZE,
@@ -190,25 +191,42 @@ const [deletingRowId, setDeletingRowId] = useState(null);
     setApproveTarget(null);
   };
   const handleDeleteRowClick = (row) =>
-  setDeleteRowTarget({ stagingId: row.STAGING_ID, description: row.DESCRIPTION });
-const confirmDeleteRow = (stagingId) => {
-  setDeletingRowId(stagingId);
-  deleteStagingRowMutation.mutate(stagingId, {
-    onSuccess: () => setDeleteRowTarget(null),
-    onSettled: () => setDeletingRowId(null),
-  });
-};
+    setDeleteRowTarget({
+      stagingId: row.STAGING_ID,
+      description: row.DESCRIPTION,
+    });
+  const confirmDeleteRow = (stagingId) => {
+    setDeletingRowId(stagingId);
+    deleteStagingRowMutation.mutate(stagingId, {
+      onSuccess: () => setDeleteRowTarget(null),
+      onSettled: () => setDeletingRowId(null),
+    });
+  };
   const confirmDeleteInvoice = (stagingId) => {
     deleteInvoiceMutation.mutate(stagingId, {
       onSuccess: () => setDeleteTarget(null),
     });
   };
-const handleRematchClick = (stagingId) => {
-  setRematchingRowId(stagingId);
-  rematchRowMutation.mutate(stagingId, {
-    onSettled: () => setRematchingRowId(null),
-  });
-};
+  const handleRematchClick = (stagingId) => {
+    setRematchingRowId(stagingId);
+    rematchRowMutation.mutate(stagingId, {
+      onSettled: () => setRematchingRowId(null),
+    });
+  };
+
+  const handleExcludeMarginChange = (stagingId, value) => {
+    setExcludingMarginRowId(stagingId);
+    updateRowMutation.mutate(
+      { stagingId, excludeMargin: value },
+      {
+        onSuccess: () =>
+          toast.success(
+            value === "Y" ? "Margin excluded." : "Margin included.",
+          ),
+        onSettled: () => setExcludingMarginRowId(null),
+      },
+    );
+  };
   const handleExportCsv = async () => {
     setExporting(true);
     try {
@@ -275,6 +293,22 @@ const handleRematchClick = (stagingId) => {
                 <SelectItem value="CUSTOMER">Customer</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-end pb-1.5">
+            <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={nbForm.excludeMargin === "Y"}
+                onChange={(e) =>
+                  setNbForm((p) => ({
+                    ...p,
+                    excludeMargin: e.target.checked ? "Y" : "N",
+                  }))
+                }
+                className="accent-red-600 w-4 h-4"
+              />
+              Exclude Margin
+            </label>
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Amount *</label>
@@ -455,45 +489,48 @@ const handleRematchClick = (stagingId) => {
       <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-auto max-h-[75vh]">
           <table className="w-full text-sm min-w-[1400px]">
-            <StagingThead showPaymentBy />
+            <StagingThead showPaymentBy showExcludeMargin />
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-10 text-gray-400">
+                  <td colSpan={11} className="text-center py-10 text-gray-400">
                     <Loader2 className="inline animate-spin mr-2" size={16} />
                     Loading...
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-10 text-gray-400">
+                  <td colSpan={11} className="text-center py-10 text-gray-400">
                     No rows found.
                   </td>
                 </tr>
               ) : (
                 rows.map((r, idx) => (
-                  <StagingRow
-                    key={r.STAGING_ID}
-                    row={r}
-                    index={idx}
-                    projectOpts={projectOpts}
-                    contractorOpts={contractorOpts}
-                    isApproving={approvingRowId === r.STAGING_ID}
-                     isRematching={rematchingRowId === r.STAGING_ID}
-                    isDeleting={deletingRowId === r.STAGING_ID}
-                    onProjectChange={handleProjectChange}
-                    onContractorChange={handleContractorChange}
-                    onInvoiceNoBlur={handleInvoiceNoBlur}
-                    onRemarksBlur={handleRemarksBlur}
-                    onCategoryChange={handleCategoryChange}
-                    onPaymentByChange={handlePaymentByChange}
-                    showPaymentBy
-                    onInvoiceFileSelect={handleInvoiceFileSelect}
-                    onDeleteInvoiceClick={handleDeleteInvoiceClick}
-                    onApproveClick={handleApproveClick}
-                     onDeleteRowClick={handleDeleteRowClick}
-                     onRematchClick={handleRematchClick}
-                  />
+                 <StagingRow
+  key={r.STAGING_ID}
+  row={r}
+  index={idx}
+  projectOpts={projectOpts}
+  contractorOpts={contractorOpts}
+  isApproving={approvingRowId === r.STAGING_ID}
+  isRematching={rematchingRowId === r.STAGING_ID}
+  isDeleting={deletingRowId === r.STAGING_ID}
+  isExcludingMargin={excludingMarginRowId === r.STAGING_ID}   // ← ADD
+  onProjectChange={handleProjectChange}
+  onContractorChange={handleContractorChange}
+  onInvoiceNoBlur={handleInvoiceNoBlur}
+  onRemarksBlur={handleRemarksBlur}
+  onCategoryChange={handleCategoryChange}
+  onPaymentByChange={handlePaymentByChange}
+  showPaymentBy
+  onInvoiceFileSelect={handleInvoiceFileSelect}
+  onDeleteInvoiceClick={handleDeleteInvoiceClick}
+  onApproveClick={handleApproveClick}
+  onDeleteRowClick={handleDeleteRowClick}
+  onRematchClick={handleRematchClick}
+  onExcludeMarginChange={handleExcludeMarginChange}
+  showExcludeMargin
+/>
                 ))
               )}
             </tbody>
@@ -516,11 +553,11 @@ const handleRematchClick = (stagingId) => {
         isPending={approveMutation.isPending}
       />
       <DeleteRowModal
-  target={deleteRowTarget}
-  onCancel={() => setDeleteRowTarget(null)}
-  onConfirm={confirmDeleteRow}
-  isPending={deleteStagingRowMutation.isPending}
-/>
+        target={deleteRowTarget}
+        onCancel={() => setDeleteRowTarget(null)}
+        onConfirm={confirmDeleteRow}
+        isPending={deleteStagingRowMutation.isPending}
+      />
     </>
   );
 }
