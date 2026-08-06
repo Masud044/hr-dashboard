@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useHasPermission } from "@/hooks/use-permission";
 
 import axios from "axios";
 import {
@@ -196,6 +197,11 @@ export function NewProjectTable() {
   // ── ProcessSheet state ───────────────────────────────────────────────────
   const [processSheetOpen, setProcessSheetOpen] = useState(false);
   //   const [processProjectId, setProcessProjectId]         = useState(null);
+
+  const canCreate = useHasPermission("PROJECT_CREATE");
+  const canEdit = useHasPermission("PROJECT_EDIT");
+  const canDelete = useHasPermission("PROJECT_DELETE");
+  const canViewReport = useHasPermission("PROJECT_REPORT_VIEW");
 
   // ── queries ──────────────────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
@@ -679,47 +685,53 @@ export function NewProjectTable() {
           Actions
         </div>
       ),
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex items-center gap-1 justify-center">
-            {/* Edit */}
-            <button
-              onClick={() => handleEdit(item.P_ID)}
-              title="Edit Project"
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
-            >
-              <Pencil size={15} />
-            </button>
+     cell: ({ row }) => {
+  const item = row.original;
+  return (
+    <div className="flex items-center gap-1 justify-center">
+      {canEdit && (
+        <button
+          onClick={() => handleEdit(item.P_ID)}
+          title="Edit Project"
+          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
+        >
+          <Pencil size={15} />
+        </button>
+      )}
 
-            {/* Create Process — এখন Sheet খোলে, navigate করে না */}
-            <button
-              onClick={() => handleCreateProcess(item.P_ID)}
-              title="Create Process & Dashboard"
-              className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
-            >
-              <Cog size={15} />
-            </button>
+      {canEdit && (
+        <button
+          onClick={() => handleCreateProcess(item.P_ID)}
+          title="Create Process & Dashboard"
+          className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
+        >
+          <Cog size={15} />
+        </button>
+      )}
 
-            <button
-              onClick={() => handleOpenReport(item)}
-              title="View Project Report"
-              className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
-            >
-              <FileText size={15} />
-            </button>
-            {/* Delete */}
-            <button
-              onClick={() => handleDeleteClick(item.P_ID)}
-              title="Delete Project"
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
-        );
-      },
+      {canViewReport && (
+        <button
+          onClick={() => handleOpenReport(item)}
+          title="View Project Report"
+          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
+        >
+          <FileText size={15} />
+        </button>
+      )}
+
+      {canDelete && (
+        <button
+          onClick={() => handleDeleteClick(item.P_ID)}
+          title="Delete Project"
+          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={15} />
+        </button>
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -793,14 +805,22 @@ export function NewProjectTable() {
                   ))}
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <Button
+            {canCreate && (
+              <Button
+                onClick={() => navigate("/dashboard/projects/create")}
+                className="h-10 rounded-md gap-2"
+              >
+                <PlusIcon size={16} />
+                Add New Project
+              </Button>
+            )}
+            {/* <Button
               onClick={() => navigate("/dashboard/projects/create")} // ← CHANGE THIS
               className="h-10 rounded-md gap-2"
             >
               <PlusIcon size={16} />
               Add New Project
-            </Button>
+            </Button> */}
           </div>
         </div>
 

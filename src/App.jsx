@@ -70,6 +70,7 @@ import AddModulePage from "./features/users/module/add-module-page";
 import UpdateModulePage from "./features/users/module/update-module-page";
 import AddPermissionPage from "./features/users/permission/add-permission-page";
 import UpdatePermissionPage from "./features/users/permission/update-permission-page";
+import { NAV_ITEMS } from "@/lib/constants/nav-items";
 
 import {
   ALL_ROLES,
@@ -81,6 +82,8 @@ import {
 import UnauthorizedPage from "./pages/route/Unauthorized";
 
 // ── Dashboard Index — role-based landing redirect ──────────────────────────
+
+
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   if (isLoading) return null;
@@ -88,16 +91,26 @@ const DashboardIndex = () => {
   const roles = user?.roles ?? [];
   const permissions = user?.permissions ?? [];
   const has = (code) => permissions.includes(code);
+  const hasAny = (required) => {
+    const codes = Array.isArray(required) ? required : [required];
+    return codes.some((c) => has(c));
+  };
 
-  if (roles.includes("Admin") || has("DASHBOARD_VIEW_ALL") || has("DASHBOARD_VIEW_SELF"))
+  // Admin (or anyone with dashboard scope) still lands on Overview.
+  if (roles.includes("Admin") || has("DASHBOARD_VIEW_ALL") || has("DASHBOARD_VIEW_SELF")) {
     return <Overview />;
-  if (has("ATTENDANCE_VIEW"))
-    return <Navigate to="/dashboard/worker-attendance" replace />;
-  if (has("PROJECT_VIEW_ALL") || has("PROJECT_VIEW_SELF") || has("PROJECT_VIEW"))
-    return <Navigate to="/dashboard/projects" replace />;
+  }
 
-  // Fallback: no landing-specific permission — still authenticated,
-  // so don't bounce back to /login. Unauthorized is more accurate.
+  // Otherwise, land on the first sidebar link the user actually has access to.
+  for (const group of NAV_ITEMS) {
+    for (const link of group.links) {
+      if (link.to !== "/dashboard" && hasAny(link.requiredPermission)) {
+        return <Navigate to={link.to} replace />;
+      }
+    }
+  }
+
+  // No accessible link at all — still authenticated, so not /login.
   return <Navigate to="/unauthorized" replace />;
 };
 
@@ -117,7 +130,7 @@ const App = () => {
             {/* Report route — sidebar for Admin, no sidebar for Owner */}
             <Route
               element={
-                <ProtectedRoute anyPermission="PROJECT_VIEW">
+                <ProtectedRoute anyPermission="PROJECT_REPORT_VIEW">
                   <RoleAwareLayout sidebarRoles={["Admin"]} />
                 </ProtectedRoute>
               }
