@@ -9,14 +9,17 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 // Matches NewProjectTable's status color mapping
 const STATUS_STYLES = {
-  RUNNING: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  RUNNING:
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
   COMPLETED: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  ON_HOLD: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  ON_HOLD:
+    "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
   CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
   DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
 };
@@ -35,7 +38,10 @@ function formatDateRange(start, end) {
   const fmt = (d) => {
     if (!d) return null;
     const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      year: "2-digit",
+    });
   };
   const s = fmt(start);
   const e = fmt(end);
@@ -43,9 +49,17 @@ function formatDateRange(start, end) {
   return `${s || "—"} - ${e || "TBD"}`;
 }
 
-function ProjectCard({ project, onViewReport }) {
-  const dateRange = formatDateRange(project.P_ENTATIVE_START_DATE, project.P_TENTATIVE_END_DATE);
-  const addressLine = [project.P_ADDRESS, project.SUBWRB, project.STATE, project.POSTCODE]
+function ProjectCard({ project, onViewReport, canViewReport }) {
+  const dateRange = formatDateRange(
+    project.P_ENTATIVE_START_DATE,
+    project.P_TENTATIVE_END_DATE,
+  );
+  const addressLine = [
+    project.P_ADDRESS,
+    project.SUBWRB,
+    project.STATE,
+    project.POSTCODE,
+  ]
     .filter(Boolean)
     .join(", ");
 
@@ -72,19 +86,21 @@ function ProjectCard({ project, onViewReport }) {
             {project.P_CODE ? ` · ${project.P_CODE}` : ""}
           </span>
           {dateRange && (
-            <span className="text-xs text-muted-foreground shrink-0">{dateRange}</span>
+            <span className="text-xs text-muted-foreground shrink-0">
+              {dateRange}
+            </span>
           )}
         </div>
       </div>
 
       <div className="px-5 pb-5">
-       <Button
-  variant="outline"
-  onClick={() => onViewReport(project.P_ID)}
-  className="w-full text-primary border-primary/30 hover:bg-accent hover:text-primary hover:border-primary/50"
->
-  View Report
-</Button>
+        {canViewReport && <Button
+          variant="outline"
+          onClick={() => onViewReport(project.P_ID)}
+          className="w-full text-primary border-primary/30 hover:bg-accent hover:text-primary hover:border-primary/50"
+        >
+          View Report
+        </Button>}
       </div>
     </div>
   );
@@ -120,7 +136,8 @@ function EmptyState() {
         No projects assigned yet
       </h3>
       <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
-        When you are assigned as an owner to new projects, they will appear here for you to track and manage.
+        When you are assigned as an owner to new projects, they will appear here
+        for you to track and manage.
       </p>
     </div>
   );
@@ -129,7 +146,7 @@ function EmptyState() {
 export default function OwnerProjects() {
   const navigate = useNavigate();
   const { user } = useAuthV2();
-
+  const canViewReport = useHasPermission("PROJECT_REPORT_VIEW");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["projects", "owner", user?.refId],
     queryFn: async () => {
@@ -172,7 +189,9 @@ export default function OwnerProjects() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading &&
-            Array.from({ length: 3 }).map((_, i) => <ProjectCardSkeleton key={i} />)}
+            Array.from({ length: 3 }).map((_, i) => (
+              <ProjectCardSkeleton key={i} />
+            ))}
 
           {!isLoading && !isError && projects.length === 0 && <EmptyState />}
 
@@ -183,6 +202,7 @@ export default function OwnerProjects() {
                 key={project.P_ID}
                 project={project}
                 onViewReport={handleViewReport}
+                canViewReport={canViewReport}
               />
             ))}
         </div>
