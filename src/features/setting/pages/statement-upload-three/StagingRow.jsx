@@ -7,6 +7,7 @@ import {
   Paperclip,
   Trash2,
   RefreshCw,
+  Info 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +70,7 @@ const StagingRow = React.memo(function StagingRow({
   onApproveClick,
   onDeleteRowClick, // ← NEW
   onRematchClick,
+  onDetailsClick,
 
 }) {
   const r = row;
@@ -243,6 +245,21 @@ const StagingRow = React.memo(function StagingRow({
       <td
         className={`px-3 py-2.5 min-w-[90px] backdrop-blur-sm sticky right-0 z-20 ${stickyBg} shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]`}
       >
+        <td className={`px-3 py-2.5 min-w-[90px] backdrop-blur-sm sticky right-0 z-20 ${stickyBg} shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]`}>
+  <div className="flex items-center gap-1.5">
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          size="icon"
+          onClick={() => onDetailsClick(r)}
+          aria-label="Details"
+          className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600"
+        >
+          <Info size={14} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Details</TooltipContent>
+    </Tooltip>
         {!approved ? (
           <div className="flex items-center gap-1.5">
             <Tooltip>

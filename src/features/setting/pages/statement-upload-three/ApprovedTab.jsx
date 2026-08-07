@@ -11,6 +11,7 @@ import {
   Paperclip,
   RotateCcw,
   Trash2,
+  Info
 } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -45,6 +46,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import DetailsSheet from "./DetailsSheet";
 
 // ── ADD THIS BLOCK HERE, before the component definition ──
 const INTERACTIVE_SELECTOR =
@@ -81,6 +83,7 @@ export default function ApprovedTab({
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [excludingMarginTxnId, setExcludingMarginTxnId] = useState(null);
+  const [detailsTarget, setDetailsTarget] = useState(null);
 
   const projectOpts = useMemo(
     () =>
@@ -615,6 +618,19 @@ export default function ApprovedTab({
                               : "Disapprove"}
                           </TooltipContent>
                         </Tooltip>
+                        <Tooltip>
+  <TooltipTrigger asChild>
+    <Button
+      size="icon"
+      onClick={() => setDetailsTarget(r)}
+      aria-label="Details"
+      className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600"
+    >
+      <Info size={14} />
+    </Button>
+  </TooltipTrigger>
+  <TooltipContent>Details</TooltipContent>
+</Tooltip>
                       </td>
                     </tr>
                   );
@@ -642,6 +658,7 @@ export default function ApprovedTab({
         onConfirm={confirmDeleteInvoice}
         isPending={deleteMainInvoiceMutation.isPending}
       />
+      <DetailsSheet row={detailsTarget} onClose={() => setDetailsTarget(null)} />
     </>
   );
 }

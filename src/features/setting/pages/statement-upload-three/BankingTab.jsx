@@ -25,6 +25,7 @@ import {
   CATEGORY_STYLES,
   downloadCsv,
 } from "./constants";
+import DetailsSheet from "./DetailsSheet";
 
 export default function BankingTab({
   projectOptions,
@@ -58,6 +59,7 @@ export default function BankingTab({
   const [approveTarget, setApproveTarget] = useState(null);
   const [approvingRowId, setApprovingRowId] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [detailsTarget, setDetailsTarget] = useState(null);
 
   // const selectedCatKeys = useMemo(
   //   () => Object.entries(activeCats).filter(([, v]) => v).map(([k]) => k),
@@ -455,27 +457,28 @@ export default function BankingTab({
                 </tr>
               ) : (
                 rows.map((r, idx) => (
-                 <StagingRow
-  key={r.STAGING_ID}
-  row={r}
-  index={idx}
-  projectOpts={projectOpts}
-  contractorOpts={contractorOpts}
-  isApproving={approvingRowId === r.STAGING_ID}
-  isRematching={rematchingRowId === r.STAGING_ID}
-  isExcludingMargin={excludingMarginRowId === r.STAGING_ID}   // ← ADD
-  onProjectChange={handleProjectChange}
-  onContractorChange={handleContractorChange}
-  onInvoiceNoBlur={handleInvoiceNoBlur}
-  onRemarksBlur={handleRemarksBlur}
-  onCategoryChange={handleCategoryChange}
-  onInvoiceFileSelect={handleInvoiceFileSelect}
-  onDeleteInvoiceClick={handleDeleteInvoiceClick}
-  onApproveClick={handleApproveClick}
-  onRematchClick={handleRematchClick}
-  onExcludeMarginChange={handleExcludeMarginChange}
-  showExcludeMargin
-/>
+                  <StagingRow
+                    key={r.STAGING_ID}
+                    row={r}
+                    index={idx}
+                    projectOpts={projectOpts}
+                    contractorOpts={contractorOpts}
+                    isApproving={approvingRowId === r.STAGING_ID}
+                    isRematching={rematchingRowId === r.STAGING_ID}
+                    isExcludingMargin={excludingMarginRowId === r.STAGING_ID} // ← ADD
+                    onProjectChange={handleProjectChange}
+                    onContractorChange={handleContractorChange}
+                    onInvoiceNoBlur={handleInvoiceNoBlur}
+                    onRemarksBlur={handleRemarksBlur}
+                    onCategoryChange={handleCategoryChange}
+                    onInvoiceFileSelect={handleInvoiceFileSelect}
+                    onDeleteInvoiceClick={handleDeleteInvoiceClick}
+                    onApproveClick={handleApproveClick}
+                    onRematchClick={handleRematchClick}
+                    onExcludeMarginChange={handleExcludeMarginChange}
+                    showExcludeMargin
+                    onDetailsClick={setDetailsTarget}
+                  />
                 ))
               )}
             </tbody>
@@ -497,6 +500,7 @@ export default function BankingTab({
         onConfirm={confirmApprove}
         isPending={approveMutation.isPending}
       />
+      <DetailsSheet row={detailsTarget} onClose={() => setDetailsTarget(null)} />
     </>
   );
 }

@@ -1,3 +1,4 @@
+import "./lib/axios-setup"; 
 import React from "react";
 import ReactDOM from "react-dom/client";
 
