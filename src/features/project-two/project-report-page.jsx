@@ -173,6 +173,21 @@ export function ProjectReportPage() {
     };
   }, [totals, rows, MARGIN_PERCENT]);
 
+  const buildSummaryCsvRows = () => [
+  "Summary",
+  `Project Expenses,${summary.projectExpenses}`,
+  `Worker Cost,${summary.workerCost}`,
+  `Build Expenses,${summary.buildExpenses}`,
+  `Builder Margin (${MARGIN_PERCENT}%),${summary.builderMargin}`,
+  `GST,${summary.gst}`,
+  `Total Builder Margin,${summary.totalBuilderMargin}`,
+  `Final Project Expenses,${summary.finalProjectExpenses}`,
+  `Collection/Received,${summary.collectionReceived}`,
+  `Customer Paid,${summary.customerPaid}`,
+  `Balance,${summary.balance}`,
+  "",
+];
+
   const groupedByContractor = useMemo(() => {
     const map = new Map();
 
@@ -212,98 +227,201 @@ export function ProjectReportPage() {
     });
   }, [rows]);
 
-  const handleDownloadCsv = () => {
-    if (rows.length === 0 && workerLogs.length === 0) {
-      toast.error("No data to download.");
-      return;
-    }
+  // const handleDownloadCsv = () => {
+  //   if (rows.length === 0 && workerLogs.length === 0) {
+  //     toast.error("No data to download.");
+  //     return;
+  //   }
 
-    const csvParts = [];
+  //   const csvParts = [];
 
-    // ── Section 1: Transactions ──
-    if (rows.length > 0) {
-      const headers = [
-        "Contractor",
-        "Date",
-        "Received",
-        "Payment",
-        "Description",
-        "Category",
-        "Matched Address",
-        "Invoice No",
-        "Source",
-        "Remarks",
-        "Approved Date",
-      ];
-      const csvRows = rows.map((r) => [
-        `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
-        fmtDate(r.TXN_DATE),
-        r.DEBIT ?? "",
-        r.CREDIT ?? "",
-        `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
-        r.CATEGORY || "",
-        `"${(r.MATCHED_ADDRESS || "").replace(/"/g, '""')}"`,
-        `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,
-        r.SOURCE_TYPE || "",
-        `"${(r.REMARKS || "").replace(/"/g, '""')}"`,
-        fmtDate(r.APPROVED_DATE),
-      ]);
-      csvParts.push(
-        "Transactions",
-        headers.join(","),
-        ...csvRows.map((r) => r.join(",")),
-        `Total Received,${totals.debit}`,
-        `Total Payment,${totals.credit}`,
-      );
-    }
+  //   // ── Section 1: Transactions ──
+  //   if (rows.length > 0) {
+  //     const headers = [
+  //       "Contractor",
+  //       "Date",
+  //       "Received",
+  //       "Payment",
+  //       "Description",
+  //       "Category",
+  //       "Matched Address",
+  //       "Invoice No",
+  //       "Source",
+  //       "Remarks",
+  //       "Approved Date",
+  //     ];
+  //     const csvRows = rows.map((r) => [
+  //       `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
+  //       fmtDate(r.TXN_DATE),
+  //       r.DEBIT ?? "",
+  //       r.CREDIT ?? "",
+  //       `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
+  //       r.CATEGORY || "",
+  //       `"${(r.MATCHED_ADDRESS || "").replace(/"/g, '""')}"`,
+  //       `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,
+  //       r.SOURCE_TYPE || "",
+  //       `"${(r.REMARKS || "").replace(/"/g, '""')}"`,
+  //       fmtDate(r.APPROVED_DATE),
+  //     ]);
+  //     csvParts.push(
+  //       "Transactions",
+  //       headers.join(","),
+  //       ...csvRows.map((r) => r.join(",")),
+  //       `Total Received,${totals.debit}`,
+  //       `Total Payment,${totals.credit}`,
+  //     );
+  //   }
 
-    // ── Section 2: Worker Hours & Costing ──
-    if (workerLogs.length > 0) {
-      const workerHeaders = [
-        "Worker",
-        "Date",
-        "Basis",
-        "Hours",
-        "Days",
-        "Rate",
-        "Amount",
-      ];
-      const workerRows = workerLogs.map((w) => [
-        `"${(w.WORKER_NAME || "").replace(/"/g, '""')}"`,
-        fmtDate(w.ATTENDANCE_DATE),
-        w.CALC_BASIS || "",
-        w.HOURS_WORKED ?? "",
-        w.DAYS_WORKED ?? "",
-        w.CALC_BASIS === "HOUR"
-          ? (w.RATE_PER_HOUR ?? "")
-          : (w.RATE_PER_DAY ?? ""),
-        w.AMOUNT ?? "MISSING_RATE",
-      ]);
-      csvParts.push(
-        "",
-        "Worker Hours & Costing",
-        workerHeaders.join(","),
-        ...workerRows.map((r) => r.join(",")),
-        `Total Hours,${workerTotals.totalHours}`,
-        `Total Days,${workerTotals.totalDays}`,
-        `Total Worker Cost,${workerTotals.totalAmount}`,
-      );
-    }
+  //   // ── Section 2: Worker Hours & Costing ──
+  //   if (workerLogs.length > 0) {
+  //     const workerHeaders = [
+  //       "Worker",
+  //       "Date",
+  //       "Basis",
+  //       "Hours",
+  //       "Days",
+  //       "Rate",
+  //       "Amount",
+  //     ];
+  //     const workerRows = workerLogs.map((w) => [
+  //       `"${(w.WORKER_NAME || "").replace(/"/g, '""')}"`,
+  //       fmtDate(w.ATTENDANCE_DATE),
+  //       w.CALC_BASIS || "",
+  //       w.HOURS_WORKED ?? "",
+  //       w.DAYS_WORKED ?? "",
+  //       w.CALC_BASIS === "HOUR"
+  //         ? (w.RATE_PER_HOUR ?? "")
+  //         : (w.RATE_PER_DAY ?? ""),
+  //       w.AMOUNT ?? "MISSING_RATE",
+  //     ]);
+  //     csvParts.push(
+  //       "",
+  //       "Worker Hours & Costing",
+  //       workerHeaders.join(","),
+  //       ...workerRows.map((r) => r.join(",")),
+  //       `Total Hours,${workerTotals.totalHours}`,
+  //       `Total Days,${workerTotals.totalDays}`,
+  //       `Total Worker Cost,${workerTotals.totalAmount}`,
+  //     );
+  //   }
 
-    // ── Section 3: Overall summary ──
+  //   // ── Section 3: Overall summary ──
+  //   csvParts.push(
+  //     "",
+  //     "Overall Net (Received - Payment - Worker Cost)",
+  //     `${totals.net}`,
+  //   );
+
+  //   const csv = csvParts.join("\n");
+  //   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  //   const link = document.createElement("a");
+  //   link.href = URL.createObjectURL(blob);
+  //   link.download = `${(projectName || "project").replace(/[^a-z0-9]/gi, "_")}_report.csv`;
+  //   link.click();
+  // };
+
+
+  const buildWorkerCsvRows = () => {
+  if (workerLogs.length === 0) return [];
+  const workerHeaders = ["Worker", "Date", "Basis", "Hours", "Days", "Rate", "Amount"];
+  const workerRows = workerLogs.map((w) => [
+    `"${(w.WORKER_NAME || "").replace(/"/g, '""')}"`,
+    fmtDate(w.ATTENDANCE_DATE),
+    w.CALC_BASIS || "",
+    w.HOURS_WORKED ?? "",
+    w.DAYS_WORKED ?? "",
+    w.CALC_BASIS === "HOUR" ? (w.RATE_PER_HOUR ?? "") : (w.RATE_PER_DAY ?? ""),
+    w.AMOUNT ?? "MISSING_RATE",
+  ]);
+  return [
+    "",
+    "Worker Hours & Costing",
+    workerHeaders.join(","),
+    ...workerRows.map((r) => r.join(",")),
+    `Total Hours,${workerTotals.totalHours}`,
+    `Total Days,${workerTotals.totalDays}`,
+    `Total Worker Cost,${workerTotals.totalAmount}`,
+  ];
+};
+
+const downloadCsvFile = (csvParts, suffix) => {
+  const csv = csvParts.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  // link.download = `${(projectName || "project").replace(/[^a-z0-9]/gi, "_")}_${suffix}.csv`;
+  link.download = `${(projectName || "project").replace(/[^a-z0-9]/gi, "_").replace(/^_+|_+$/g, "")}_${suffix}.csv`;
+  link.click();
+};
+
+const handleDownloadAllCsv = () => {
+  if (rows.length === 0 && workerLogs.length === 0) {
+    toast.error("No data to download.");
+    return;
+  }
+  const csvParts = [...buildSummaryCsvRows()];
+
+  if (rows.length > 0) {
+    const headers = ["Contractor", "Date", "Received", "Payment", "Description", "Category", "Matched Address", "Invoice No", "Source", "Remarks", "Approved Date"];
+    const csvRows = rows.map((r) => [
+      `"${(r.CONTRACTOR_NAME || "").replace(/"/g, '""')}"`,
+      fmtDate(r.TXN_DATE),
+      r.DEBIT ?? "",
+      r.CREDIT ?? "",
+      `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
+      r.CATEGORY || "",
+      `"${(r.MATCHED_ADDRESS || "").replace(/"/g, '""')}"`,
+      `"${(r.INVOICE_NO || "").replace(/"/g, '""')}"`,
+      r.SOURCE_TYPE || "",
+      `"${(r.REMARKS || "").replace(/"/g, '""')}"`,
+      fmtDate(r.APPROVED_DATE),
+    ]);
     csvParts.push(
+      "Transactions",
+      headers.join(","),
+      ...csvRows.map((r) => r.join(",")),
+      `Total Received,${totals.debit}`,
+      `Total Payment,${totals.credit}`,
       "",
-      "Overall Net (Received - Payment - Worker Cost)",
-      `${totals.net}`,
     );
+  }
 
-    const csv = csvParts.join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `${(projectName || "project").replace(/[^a-z0-9]/gi, "_")}_report.csv`;
-    link.click();
-  };
+  csvParts.push(...buildWorkerCsvRows());
+  downloadCsvFile(csvParts, "report_all");
+};
+
+const handleDownloadByContractorCsv = () => {
+  if (groupedByContractor.length === 0 && workerLogs.length === 0) {
+    toast.error("No data to download.");
+    return;
+  }
+  const csvParts = [...buildSummaryCsvRows()];
+
+  groupedByContractor.forEach((group) => {
+    const headers = ["Date", "Received", "Payment", "Description", "Source", "Remarks", "Approved Date"];
+    const csvRows = group.rows.map((r) => [
+      fmtDate(r.TXN_DATE),
+      r.DEBIT ?? "",
+      r.CREDIT ?? "",
+      `"${(r.DESCRIPTION || "").replace(/"/g, '""')}"`,
+      r.SOURCE_TYPE || "",
+      `"${(r.REMARKS || "").replace(/"/g, '""')}"`,
+      fmtDate(r.APPROVED_DATE),
+    ]);
+    csvParts.push(
+      `Contractor: ${group.contractorName}`,
+      headers.join(","),
+      ...csvRows.map((r) => r.join(",")),
+      `Total Received,${group.totalReceived}`,
+      `Total Payment,${group.totalPayment}`,
+      `Net,${group.net}`,
+      "",
+    );
+  });
+
+  csvParts.push(...buildWorkerCsvRows());
+  downloadCsvFile(csvParts, "report_by_contractor");
+};
 
   return (
     <SectionContainer variant="dashboard">
@@ -334,7 +452,7 @@ export function ProjectReportPage() {
               >
                 Back
               </Button> */}
-              <Button
+              {/* <Button
                 onClick={handleDownloadCsv}
                 variant="outline"
                 size="sm"
@@ -342,7 +460,17 @@ export function ProjectReportPage() {
                 disabled={rows.length === 0 && workerLogs.length === 0}
               >
                 <Download size={14} className="mr-2" /> Download CSV
-              </Button>
+              </Button> */}
+              <Button
+  onClick={activeTab === "transactions" ? handleDownloadAllCsv : handleDownloadByContractorCsv}
+  variant="outline"
+  size="sm"
+  className="h-9 px-4 text-sm font-medium border-border hover:bg-muted/50"
+  disabled={rows.length === 0 && workerLogs.length === 0}
+>
+  <Download size={14} className="mr-2" />
+  {activeTab === "transactions" ? "Download All CSV" : "Download by Contractor CSV"}
+</Button>
             </div>
           </div>
           <div className="w-full h-px bg-border mt-4" />
