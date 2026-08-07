@@ -23,6 +23,7 @@ import StagingRow from "./StagingRow";
 import DeleteInvoiceModal from "./modals/DeleteInvoiceModal";
 import ApproveModal from "./modals/ApproveModal";
 import DeleteRowModal from "./modals/DeleteRowModal";
+import DetailsSheet from "./DetailsSheet";
 import {
   url,
   EMPTY_FILTERS,
@@ -66,6 +67,7 @@ export default function NonBankingTab({
   const [rematchingRowId, setRematchingRowId] = useState(null);
   const [deletingRowId, setDeletingRowId] = useState(null);
   const [excludingMarginRowId, setExcludingMarginRowId] = useState(null);
+  const [detailsTarget, setDetailsTarget] = useState(null);
 
   // const queryParams = useMemo(() => ({
   //   sourceType: "NON_BANKING", ...appliedFilters, status: sortBy === "recent" ? "PENDING" : appliedFilters.status, page,sortBy, pageSize: PAGE_SIZE,
@@ -506,31 +508,32 @@ export default function NonBankingTab({
                 </tr>
               ) : (
                 rows.map((r, idx) => (
-                 <StagingRow
-  key={r.STAGING_ID}
-  row={r}
-  index={idx}
-  projectOpts={projectOpts}
-  contractorOpts={contractorOpts}
-  isApproving={approvingRowId === r.STAGING_ID}
-  isRematching={rematchingRowId === r.STAGING_ID}
-  isDeleting={deletingRowId === r.STAGING_ID}
-  isExcludingMargin={excludingMarginRowId === r.STAGING_ID}   // ← ADD
-  onProjectChange={handleProjectChange}
-  onContractorChange={handleContractorChange}
-  onInvoiceNoBlur={handleInvoiceNoBlur}
-  onRemarksBlur={handleRemarksBlur}
-  onCategoryChange={handleCategoryChange}
-  onPaymentByChange={handlePaymentByChange}
-  showPaymentBy
-  onInvoiceFileSelect={handleInvoiceFileSelect}
-  onDeleteInvoiceClick={handleDeleteInvoiceClick}
-  onApproveClick={handleApproveClick}
-  onDeleteRowClick={handleDeleteRowClick}
-  onRematchClick={handleRematchClick}
-  onExcludeMarginChange={handleExcludeMarginChange}
-  showExcludeMargin
-/>
+                  <StagingRow
+                    key={r.STAGING_ID}
+                    row={r}
+                    index={idx}
+                    projectOpts={projectOpts}
+                    contractorOpts={contractorOpts}
+                    isApproving={approvingRowId === r.STAGING_ID}
+                    isRematching={rematchingRowId === r.STAGING_ID}
+                    isDeleting={deletingRowId === r.STAGING_ID}
+                    isExcludingMargin={excludingMarginRowId === r.STAGING_ID} // ← ADD
+                    onProjectChange={handleProjectChange}
+                    onContractorChange={handleContractorChange}
+                    onInvoiceNoBlur={handleInvoiceNoBlur}
+                    onRemarksBlur={handleRemarksBlur}
+                    onCategoryChange={handleCategoryChange}
+                    onPaymentByChange={handlePaymentByChange}
+                    showPaymentBy
+                    onInvoiceFileSelect={handleInvoiceFileSelect}
+                    onDeleteInvoiceClick={handleDeleteInvoiceClick}
+                    onApproveClick={handleApproveClick}
+                    onDeleteRowClick={handleDeleteRowClick}
+                    onRematchClick={handleRematchClick}
+                    onExcludeMarginChange={handleExcludeMarginChange}
+                    showExcludeMargin
+                    onDetailsClick={setDetailsTarget}
+                  />
                 ))
               )}
             </tbody>
@@ -558,6 +561,7 @@ export default function NonBankingTab({
         onConfirm={confirmDeleteRow}
         isPending={deleteStagingRowMutation.isPending}
       />
+      <DetailsSheet row={detailsTarget} onClose={() => setDetailsTarget(null)} />
     </>
   );
 }

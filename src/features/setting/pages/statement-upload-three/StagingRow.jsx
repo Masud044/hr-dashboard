@@ -7,7 +7,7 @@ import {
   Paperclip,
   Trash2,
   RefreshCw,
-  Info 
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,8 +52,8 @@ const StagingRow = React.memo(function StagingRow({
   projectOpts,
   contractorOpts,
   isApproving,
-   isRematching,   // ← NEW
-  isDeleting,     // ← NEW
+  isRematching, // ← NEW
+  isDeleting, // ← NEW
   onProjectChange,
   onContractorChange,
 
@@ -63,15 +63,14 @@ const StagingRow = React.memo(function StagingRow({
   onInvoiceFileSelect,
   onPaymentByChange, // ← NEW
   showPaymentBy = false, // ← NEW
-  onExcludeMarginChange,        // ← ADD
-  showExcludeMargin = false,    // ← ADD
-  isExcludingMargin, 
+  onExcludeMarginChange, // ← ADD
+  showExcludeMargin = false, // ← ADD
+  isExcludingMargin,
   onDeleteInvoiceClick,
   onApproveClick,
   onDeleteRowClick, // ← NEW
   onRematchClick,
   onDetailsClick,
-
 }) {
   const r = row;
   // const cat = (r.CATEGORY || "other").toLowerCase();
@@ -222,112 +221,121 @@ const StagingRow = React.memo(function StagingRow({
         </td>
       )}
       {showExcludeMargin && (
-  <td className="px-3 py-2.5 w-[90px] text-center">
-    {isExcludingMargin ? (
-      <Loader2 size={14} className="animate-spin text-red-600 inline-block" />
-    ) : (
-      <input
-        type="checkbox"
-        checked={r.EXCLUDE_MARGIN === "Y"}
-        disabled={approved}
-        onChange={(e) =>
-          onExcludeMarginChange(r.STAGING_ID, e.target.checked ? "Y" : "N")
-        }
-        className="accent-red-600 w-4 h-4 cursor-pointer disabled:cursor-not-allowed"
-      />
-    )}
-  </td>
-)}
-      
+        <td className="px-3 py-2.5 w-[90px] text-center">
+          {isExcludingMargin ? (
+            <Loader2
+              size={14}
+              className="animate-spin text-red-600 inline-block"
+            />
+          ) : (
+            <input
+              type="checkbox"
+              checked={r.EXCLUDE_MARGIN === "Y"}
+              disabled={approved}
+              onChange={(e) =>
+                onExcludeMarginChange(
+                  r.STAGING_ID,
+                  e.target.checked ? "Y" : "N",
+                )
+              }
+              className="accent-red-600 w-4 h-4 cursor-pointer disabled:cursor-not-allowed"
+            />
+          )}
+        </td>
+      )}
+
       <td className="px-3 py-2.5 min-w-[110px]">
         <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
       </td>
       <td
         className={`px-3 py-2.5 min-w-[90px] backdrop-blur-sm sticky right-0 z-20 ${stickyBg} shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]`}
       >
-        <td className={`px-3 py-2.5 min-w-[90px] backdrop-blur-sm sticky right-0 z-20 ${stickyBg} shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]`}>
-  <div className="flex items-center gap-1.5">
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          size="icon"
-          onClick={() => onDetailsClick(r)}
-          aria-label="Details"
-          className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600"
-        >
-          <Info size={14} />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>Details</TooltipContent>
-    </Tooltip>
-        {!approved ? (
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5">
+          
+
+          {!approved ? (
+            <>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  onClick={() => onApproveClick(r)}
-                  disabled={isApproving || isRematching || isDeleting}
-                  aria-label="Approve"
-                  className="h-7 w-7 rounded-full bg-violet-600 hover:bg-violet-700"
-                >
-                  {isApproving ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <CheckCircle2 size={14} />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Approve</TooltipContent>
-            </Tooltip>
-
-            {onDeleteRowClick && (
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                onClick={() => onDetailsClick(r)}
+                disabled={approved}
+                aria-label="Details"
+                className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Info size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Details</TooltipContent>
+          </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
-                    onClick={() => onDeleteRowClick(r)}
+                    onClick={() => onApproveClick(r)}
                     disabled={isApproving || isRematching || isDeleting}
-                    aria-label="Delete"
-                    className="h-7 w-7 rounded-full bg-red-600 hover:bg-red-700"
+                    aria-label="Approve"
+                    className="h-7 w-7 rounded-full bg-violet-600 hover:bg-violet-700"
                   >
-                    {isDeleting ? (
+                    {isApproving ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
-                      <Trash2 size={14} />
+                      <CheckCircle2 size={14} />
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Delete</TooltipContent>
+                <TooltipContent>Approve</TooltipContent>
               </Tooltip>
-            )}
 
-            {onRematchClick && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    onClick={() => onRematchClick(r.STAGING_ID)}
-                    disabled={isApproving || isRematching || isDeleting}
-                    aria-label="Rematch"
-                    className="h-7 w-7 rounded-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isRematching ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <RefreshCw size={14} />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Rematch</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        ) : (
-          <span className="text-[10px] text-green-600 font-semibold">
-            Approved
-          </span>
-        )}
+              {onDeleteRowClick && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      onClick={() => onDeleteRowClick(r)}
+                      disabled={isApproving || isRematching || isDeleting}
+                      aria-label="Delete"
+                      className="h-7 w-7 rounded-full bg-red-600 hover:bg-red-700"
+                    >
+                      {isDeleting ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete</TooltipContent>
+                </Tooltip>
+              )}
+
+              {onRematchClick && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      onClick={() => onRematchClick(r.STAGING_ID)}
+                      disabled={isApproving || isRematching || isDeleting}
+                      aria-label="Rematch"
+                      className="h-7 w-7 rounded-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isRematching ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <RefreshCw size={14} />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Rematch</TooltipContent>
+                </Tooltip>
+              )}
+            </>
+          ) : (
+            <span className="text-[10px] text-green-600 font-semibold">
+              Approved
+            </span>
+          )}
+        </div>
       </td>
     </tr>
   );
