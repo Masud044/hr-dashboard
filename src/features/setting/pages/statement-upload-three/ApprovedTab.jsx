@@ -11,6 +11,7 @@ import {
   Paperclip,
   RotateCcw,
   Trash2,
+  Info,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -45,6 +46,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import DetailsSheet from "./DetailsSheet";
 
 // ── ADD THIS BLOCK HERE, before the component definition ──
 const INTERACTIVE_SELECTOR =
@@ -81,6 +83,7 @@ export default function ApprovedTab({
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [excludingMarginTxnId, setExcludingMarginTxnId] = useState(null);
+  const [detailsTarget, setDetailsTarget] = useState(null);
 
   const projectOpts = useMemo(
     () =>
@@ -565,19 +568,25 @@ export default function ApprovedTab({
                         )}
                       </td>
                       <td className="px-3 py-2.5 min-w-[90px] text-center">
-  {excludingMarginTxnId === r.TXN_ID ? (
-    <Loader2 size={14} className="animate-spin text-red-600 inline-block" />
-  ) : (
-    <input
-      type="checkbox"
-      checked={r.EXCLUDE_MARGIN === "Y"}
-      onChange={(e) =>
-        handleExcludeMarginChange(r.TXN_ID, e.target.checked ? "Y" : "N")
-      }
-      className="accent-red-600 w-4 h-4 cursor-pointer"
-    />
-  )}
-</td>
+                        {excludingMarginTxnId === r.TXN_ID ? (
+                          <Loader2
+                            size={14}
+                            className="animate-spin text-red-600 inline-block"
+                          />
+                        ) : (
+                          <input
+                            type="checkbox"
+                            checked={r.EXCLUDE_MARGIN === "Y"}
+                            onChange={(e) =>
+                              handleExcludeMarginChange(
+                                r.TXN_ID,
+                                e.target.checked ? "Y" : "N",
+                              )
+                            }
+                            className="accent-red-600 w-4 h-4 cursor-pointer"
+                          />
+                        )}
+                      </td>
 
                       <td className="px-3 py-2.5 whitespace-nowrap text-gray-500 text-xs">
                         {fmtDate(r.APPROVED_DATE)}
@@ -597,6 +606,7 @@ export default function ApprovedTab({
                             : `${stripe} group-hover:bg-gray-200`
                         }`}
                       >
+                         <div className="flex items-center gap-1.5">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -615,6 +625,20 @@ export default function ApprovedTab({
                               : "Disapprove"}
                           </TooltipContent>
                         </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              onClick={() => setDetailsTarget(r)}
+                              aria-label="Details"
+                              className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600"
+                            >
+                              <Info size={14} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Details</TooltipContent>
+                        </Tooltip>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -641,6 +665,10 @@ export default function ApprovedTab({
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDeleteInvoice}
         isPending={deleteMainInvoiceMutation.isPending}
+      />
+      <DetailsSheet
+        row={detailsTarget}
+        onClose={() => setDetailsTarget(null)}
       />
     </>
   );
