@@ -101,6 +101,7 @@ const EntityCombobox = React.memo(function EntityCombobox({
         <ComboboxInput
           placeholder={placeholder}
           showClear={showClear}
+           disabled={disabled}
           className={cn("w-[220px]", s.trigger, className)}
         />
         <ComboboxContent>

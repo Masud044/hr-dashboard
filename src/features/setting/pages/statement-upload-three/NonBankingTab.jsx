@@ -32,6 +32,7 @@ import {
   downloadCsv,
 } from "./constants";
 import { toSortedOpts } from "@/lib/utils";
+import { useHasPermission } from "@/hooks/use-permission";
 
 export default function NonBankingTab({
   projectOptions,
@@ -51,6 +52,9 @@ export default function NonBankingTab({
     deleteStagingRowMutation,
     rematchRowMutation,
   } = mutations;
+
+  const canCreate = useHasPermission("PROJECT_STATEMENT_CREATE");
+const canDownload = useHasPermission("PROJECT_STATEMENT_DOWNLOAD");
 
   const [nbForm, setNbForm] = useState(EMPTY_NB);
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS);
@@ -251,7 +255,10 @@ export default function NonBankingTab({
 
   return (
     <>
-      <div className="bg-white border rounded-2xl shadow-sm px-6 py-5 mb-5">
+      
+
+      {
+        canCreate && <div className="bg-white border rounded-2xl shadow-sm px-6 py-5 mb-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <PlusCircle size={15} className="text-blue-600" /> Add Entry
         </h3>
@@ -446,6 +453,7 @@ export default function NonBankingTab({
           </Button>
         </div>
       </div>
+      }
 
       <FilterBar
         initialFilters={appliedFilters}
@@ -472,7 +480,8 @@ export default function NonBankingTab({
           </span>
         )}
         <div className="flex items-center gap-2 ml-auto">
-          <Button
+          {
+            canDownload && <Button
             onClick={handleExportCsv}
             disabled={exporting}
             variant="outline"
@@ -485,6 +494,8 @@ export default function NonBankingTab({
             )}{" "}
             CSV
           </Button>
+          }
+          
         </div>
       </div>
 

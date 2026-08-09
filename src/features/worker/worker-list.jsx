@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useHasPermission } from "@/hooks/use-permission";
 import axios from "axios";
 import { 
   Pencil, 
@@ -59,6 +60,11 @@ const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function WorkerList() {
   const navigate = useNavigate();
+
+const canCreate = useHasPermission("WORKER_CREATE");
+const canEdit = useHasPermission("WORKER_EDIT");
+const canDelete = useHasPermission("WORKER_DELETE");
+
   const queryClient = useQueryClient();
   const [sorting, setSorting] = useState([{ id: "WORKER_NAME", desc: false }]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -205,49 +211,53 @@ export function WorkerList() {
           Actions
         </div>
       ),
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex items-center gap-1 justify-center">
-            {/* Set Rate */}
-            <button
-              onClick={() => handleSetRate(item.WORKER_ID)}
-              title="Set Rate"
-              className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
-            >
-              <DollarSign size={15} />
-            </button>
+     cell: ({ row }) => {
+  const item = row.original;
+  return (
+    <div className="flex items-center gap-1 justify-center">
+      {canEdit && (
+        <button
+          onClick={() => handleSetRate(item.WORKER_ID)}
+          title="Set Rate"
+          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
+        >
+          <DollarSign size={15} />
+        </button>
+      )}
 
-            {/* Rate History */}
-            <button
-              onClick={() => handleViewHistory(item.WORKER_ID)}
-              title="Rate History"
-              className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
-            >
-              <History size={15} />
-            </button>
+     
+        <button
+          onClick={() => handleViewHistory(item.WORKER_ID)}
+          title="Rate History"
+          className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
+        >
+          <History size={15} />
+        </button>
+     
 
-            {/* Edit */}
-            <button
-              onClick={() => handleEdit(item.WORKER_ID)}
-              title="Edit Worker"
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
-            >
-              <Pencil size={15} />
-            </button>
+      {canEdit && (
+        <button
+          onClick={() => handleEdit(item.WORKER_ID)}
+          title="Edit Worker"
+          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
+        >
+          <Pencil size={15} />
+        </button>
+      )}
 
-            {/* Delete */}
-            <button
-              onClick={() => handleDeleteClick(item.WORKER_ID)}
-              title="Delete Worker"
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
-        );
-      },
+      {canDelete && (
+        <button
+          onClick={() => handleDeleteClick(item.WORKER_ID)}
+          title="Delete Worker"
+          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={15} />
+        </button>
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -313,10 +323,12 @@ export function WorkerList() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button onClick={handleCreate} className="h-10 rounded-md gap-2">
-              <PlusIcon size={16} />
-              Add New Worker
-            </Button>
+           {canCreate && (
+  <Button onClick={handleCreate} className="h-10 rounded-md gap-2">
+    <PlusIcon size={16} />
+    Add New Worker
+  </Button>
+)}
           </div>
         </div>
 

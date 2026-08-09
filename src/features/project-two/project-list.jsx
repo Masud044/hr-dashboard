@@ -72,6 +72,7 @@ function ReorderCell({
   reorderMutation,
   handleMove,
   handleReorderInput,
+  canEdit
 }) {
   const [localValue, setLocalValue] = React.useState(
     String(item.SORT_ORDER ?? ""),
@@ -92,7 +93,7 @@ function ReorderCell({
           onClick={() => handleMove(itemId, "up")}
           title="Move up"
           disabled={
-            moveMutation.isPending || reorderMutation.isPending || isFirst
+            moveMutation.isPending || reorderMutation.isPending || isFirst  || !canEdit
           }
           className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
@@ -102,7 +103,7 @@ function ReorderCell({
           onClick={() => handleMove(itemId, "down")}
           title="Move down"
           disabled={
-            moveMutation.isPending || reorderMutation.isPending || isLast
+            moveMutation.isPending || reorderMutation.isPending || isLast  || !canEdit
           }
           className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
@@ -113,7 +114,7 @@ function ReorderCell({
         type="text"
         inputMode="numeric"
         value={localValue}
-        disabled={moveMutation.isPending || reorderMutation.isPending}
+        disabled={moveMutation.isPending || reorderMutation.isPending  || !canEdit}
         onChange={(e) => setLocalValue(e.target.value.replace(/[^0-9]/g, ""))}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -462,7 +463,7 @@ export function NewProjectTable() {
 
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild disabled={!canEdit}>
               <Badge variant="secondary" className={className}>
                 {status.toLowerCase().replace(/_/g, " ")}
               </Badge>
@@ -673,6 +674,7 @@ export function NewProjectTable() {
           reorderMutation={reorderMutation}
           handleMove={handleMove}
           handleReorderInput={handleReorderInput}
+          canEdit={canEdit}
         />
       ),
     },

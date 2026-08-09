@@ -15,6 +15,8 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+
+import { useHasPermission } from "@/hooks/use-permission";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -73,6 +75,10 @@ const MONTH_NAMES = {
 
 export function CalendarTable() {
   const queryClient = useQueryClient();
+
+  const canCreate = useHasPermission("CALENDAR_CREATE");
+const canEdit = useHasPermission("CALENDAR_EDIT");
+const canDelete = useHasPermission("CALENDAR_DELETE");
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [sorting, setSorting]                 = useState([]);
@@ -229,31 +235,35 @@ export function CalendarTable() {
       id: "actions",
       enableHiding: false,
       header: () => <div className="text-center">Actions</div>,
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex items-center gap-2 justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(item.DAY_ID)}
-              title="Edit"
-            >
-              <Pencil size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={() => handleDeleteClick(item.DAY_ID)}
-              title="Delete"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={16} />
-            </Button>
-          </div>
-        );
-      },
+     cell: ({ row }) => {
+  const item = row.original;
+  return (
+    <div className="flex items-center gap-2 justify-center">
+      {canEdit && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleEdit(item.DAY_ID)}
+          title="Edit"
+        >
+          <Pencil size={16} />
+        </Button>
+      )}
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="bg-destructive hover:bg-destructive/90"
+          onClick={() => handleDeleteClick(item.DAY_ID)}
+          title="Delete"
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={16} />
+        </Button>
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -307,10 +317,12 @@ export function CalendarTable() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button onClick={() => setCreateSheetOpen(true)}>
-            <PlusIcon size={16} className="mr-1" />
-            Add Calendar Day
-          </Button>
+          {canCreate && (
+  <Button onClick={() => setCreateSheetOpen(true)}>
+    <PlusIcon size={16} className="mr-1" />
+    Add Calendar Day
+  </Button>
+)}
         </div>
 
         {/* ── Table ──────────────────────────────────────────────────────── */}

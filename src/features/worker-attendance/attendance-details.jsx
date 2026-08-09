@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateWithDay, formatHoursMinutes } from "@/lib/utils";
+import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -57,6 +58,8 @@ function Field({ label, children, className = "" }) {
 export function AttendanceDetails() {
   const { attendanceId } = useParams();
   const navigate = useNavigate();
+
+  const canEdit = useHasPermission("ATTENDANCE_EDIT");
 
   const {
     data: attendance,
@@ -180,7 +183,9 @@ export function AttendanceDetails() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
-            <Button
+
+            {
+              canEdit && <Button
               size="sm"
               onClick={() =>
                 navigate(`/dashboard/worker-attendance/${attendanceId}/edit`)
@@ -190,6 +195,8 @@ export function AttendanceDetails() {
               <Pencil className="h-4 w-4" />
               Edit
             </Button>
+            }
+            
           </div>
         </div>
 

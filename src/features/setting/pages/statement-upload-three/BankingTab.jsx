@@ -18,6 +18,7 @@ import StagingThead from "./StagingThead";
 import StagingRow from "./StagingRow";
 import DeleteInvoiceModal from "./modals/DeleteInvoiceModal";
 import ApproveModal from "./modals/ApproveModal";
+import { useHasPermission } from "@/hooks/use-permission";
 import {
   url,
   EMPTY_FILTERS,
@@ -43,6 +44,8 @@ export default function BankingTab({
     approveMutation,
     rematchRowMutation,
   } = mutations;
+  const canCreate = useHasPermission("PROJECT_STATEMENT_CREATE");
+const canDownload = useHasPermission("PROJECT_STATEMENT_DOWNLOAD");
 
   const [file, setFile] = useState(null);
   const [batchId, setBatchId] = useState(null);
@@ -311,7 +314,9 @@ export default function BankingTab({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 mb-5">
+      
+      {
+        canCreate && <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="flex items-center gap-3 bg-white border rounded-full px-4 py-1.5 shadow-sm">
           <label
             htmlFor="statement-csv-input"
@@ -357,6 +362,7 @@ export default function BankingTab({
           </span>
         )}
       </div>
+      }
 
       <FilterBar
         initialFilters={appliedFilters}
@@ -421,7 +427,7 @@ export default function BankingTab({
           ))}
         </div> */}
         <div className="flex items-center gap-2 ml-auto">
-          <Button
+          {/* <Button
             onClick={handleExportCsv}
             disabled={exporting}
             variant="outline"
@@ -433,7 +439,12 @@ export default function BankingTab({
               <Download size={14} className="mr-1" />
             )}{" "}
             CSV
-          </Button>
+          </Button> */}
+          {canDownload && (
+  <Button onClick={handleExportCsv} disabled={exporting} variant="outline" className="rounded-full text-sm">
+    {exporting ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Download size={14} className="mr-1" />} CSV
+  </Button>
+)}
         </div>
       </div>
 
@@ -500,7 +511,10 @@ export default function BankingTab({
         onConfirm={confirmApprove}
         isPending={approveMutation.isPending}
       />
-      <DetailsSheet row={detailsTarget} onClose={() => setDetailsTarget(null)} />
+      <DetailsSheet
+        row={detailsTarget}
+        onClose={() => setDetailsTarget(null)}
+      />
     </>
   );
 }
