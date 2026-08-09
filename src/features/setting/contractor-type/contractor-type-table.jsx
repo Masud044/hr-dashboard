@@ -42,12 +42,16 @@ import {
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { EditContractorTypeSheet } from "./edit-contractor-type-sheet";
 import { CreateContractorTypeSheet } from "./create-contractor-type-sheet";
-
+import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function ContractorTypeTable() {
   const queryClient = useQueryClient();
+
+  const canCreate = useHasPermission("CONTRACTOR_TYPE_CREATE");
+const canEdit = useHasPermission("CONTRACTOR_TYPE_EDIT");
+const canDelete = useHasPermission("CONTRACTOR_TYPE_DELETE");
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [sorting, setSorting]                   = useState([]);
@@ -153,31 +157,35 @@ export function ContractorTypeTable() {
       id: "actions",
       enableHiding: false,
       header: () => <div className="text-center">Actions</div>,
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex items-center gap-2 justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(item.ID)}
-              title="Edit"
-            >
-              <Pencil size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-red-500 hover:text-red-700"
-              onClick={() => handleDeleteClick(item.ID)}
-              title="Delete"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={16} />
-            </Button>
-          </div>
-        );
-      },
+     cell: ({ row }) => {
+  const item = row.original;
+  return (
+    <div className="flex items-center gap-2 justify-center">
+      {canEdit && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleEdit(item.ID)}
+          title="Edit"
+        >
+          <Pencil size={16} />
+        </Button>
+      )}
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-red-500 hover:text-red-700"
+          onClick={() => handleDeleteClick(item.ID)}
+          title="Delete"
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={16} />
+        </Button>
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -231,10 +239,12 @@ export function ContractorTypeTable() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button onClick={() => setCreateSheetOpen(true)}>
-            <PlusIcon size={16} className="mr-1" />
-            Add Contractor Type
-          </Button>
+          {canCreate && (
+  <Button onClick={() => setCreateSheetOpen(true)}>
+    <PlusIcon size={16} className="mr-1" />
+    Add Contractor Type
+  </Button>
+)}
         </div>
 
         {/* ── Table ──────────────────────────────────────────────────────── */}

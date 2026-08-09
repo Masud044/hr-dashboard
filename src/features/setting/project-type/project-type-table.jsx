@@ -42,12 +42,16 @@ import {
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { CreateProjectTypeSheet } from "./create-project-type-sheet";
 import { EditProjectTypeSheet } from "./edit-project-type-sheet";
-
+import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function ProjectTypeTable() {
   const queryClient = useQueryClient();
+
+  const canCreate = useHasPermission("PROJECT_TYPE_CREATE");
+const canEdit = useHasPermission("PROJECT_TYPE_EDIT");
+const canDelete = useHasPermission("PROJECT_TYPE_DELETE");
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [sorting, setSorting]                   = useState([]);
@@ -167,30 +171,34 @@ export function ProjectTypeTable() {
       enableHiding: false,
       header: () => <div className="text-center">Actions</div>,
       cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex items-center gap-2 justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(item.ID)}
-              title="Edit"
-            >
-              <Pencil size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive/80"
-              onClick={() => handleDeleteClick(item.ID)}
-              title="Delete"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={16} />
-            </Button>
-          </div>
-        );
-      },
+  const item = row.original;
+  return (
+    <div className="flex items-center gap-2 justify-center">
+      {canEdit && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleEdit(item.ID)}
+          title="Edit"
+        >
+          <Pencil size={16} />
+        </Button>
+      )}
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive/80"
+          onClick={() => handleDeleteClick(item.ID)}
+          title="Delete"
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={16} />
+        </Button>
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -244,10 +252,12 @@ export function ProjectTypeTable() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button onClick={() => setCreateSheetOpen(true)}>
-            <PlusIcon size={16} className="mr-1" />
-            Add Project Type
-          </Button>
+          {canCreate && (
+  <Button onClick={() => setCreateSheetOpen(true)}>
+    <PlusIcon size={16} className="mr-1" />
+    Add Project Type
+  </Button>
+)}
         </div>
 
         {/* ── Table ──────────────────────────────────────────────────────── */}

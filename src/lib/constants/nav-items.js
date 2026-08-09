@@ -217,12 +217,12 @@ export const NAV_ITEMS = [
         Icon: FileText,
         requiredPermission: "ATTENDANCE_REPORT_VIEW",
       },
-      {
-        to: "/dashboard/invoices",
-        label: "Invoice",
-        Icon: IconUserHexagon,
-        requiredPermission: "INVOICE_VIEW",
-      },
+      // {
+      //   to: "/dashboard/invoices",
+      //   label: "Invoice",
+      //   Icon: IconUserHexagon,
+      //   requiredPermission: "INVOICE_VIEW",
+      // },
     ],
   },
   {

@@ -44,13 +44,18 @@ import { useNavigate } from "react-router-dom";
 import DateInput from "@/components/shared/DateInput";
 import EntityCombobox from "@/components/shared/entity-combobox";
 import { formatDateWithDay, formatHoursMinutes } from "@/lib/utils";
-
+import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function AttendanceList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const canCreate = useHasPermission("ATTENDANCE_CREATE");
+const canEdit = useHasPermission("ATTENDANCE_EDIT");
+const canDelete = useHasPermission("ATTENDANCE_DELETE");
+
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   // const [filters, setFilters] = useState({ WORKER_ID: "", PROJECT_ID: "", FROM_DATE: "", TO_DATE: "" });
   const emptyFilters = {
@@ -281,14 +286,17 @@ export function AttendanceList() {
           >
             <Eye size={15} />
           </button>
-          <button
+          {
+            canEdit &&  <button
             onClick={() => handleEdit(item)}
             title="Edit"
             className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
           >
             <Pencil size={15} />
           </button>
-          <button
+          }
+          {
+            canDelete && <button
             onClick={() => handleDeleteClick(itemId)}
             title="Delete"
             className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
@@ -296,6 +304,9 @@ export function AttendanceList() {
           >
             <Trash2 size={15} />
           </button>
+          }
+         
+          
         </div>
       );
     },
@@ -444,13 +455,16 @@ export function AttendanceList() {
               </Button>
             )}
           </div>
-          <Button
+          {
+            canCreate && <Button
             onClick={handleCreate}
             className="h-10 rounded-full gap-2 font-bold text-primary-dark bg-gradient-to-b from-accent-light via-accent to-accent-dark shadow-accent-glow hover:brightness-105 transition-transform active:scale-95"
           >
             <PlusIcon size={16} />
             Add Attendance
           </Button>
+          }
+          
         </div>
 
         <div className="rounded-lg border border-border overflow-hidden bg-card shadow-card">

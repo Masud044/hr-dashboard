@@ -34,6 +34,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useHasPermission } from "@/hooks/use-permission";
 
 // A click on any of these (or their descendants) is "interacting with a
 // control", not "selecting the row" — skip the row toggle in that case.
@@ -75,6 +76,9 @@ const StagingRow = React.memo(function StagingRow({
   const r = row;
   // const cat = (r.CATEGORY || "other").toLowerCase();
   const approved = r.STATUS === "APPROVED";
+
+  const canEdit = useHasPermission("PROJECT_STATEMENT_EDIT");
+const canDelete = useHasPermission("PROJECT_STATEMENT_DELETE");
 
   const selectedStagingId = useStagingSelectionStore(
     (s) => s.selectedStagingId,
@@ -147,7 +151,7 @@ const StagingRow = React.memo(function StagingRow({
             onProjectChange(r.STAGING_ID, pId || null, proj?.label || null);
           }}
           placeholder="Select project"
-          disabled={approved}
+          disabled={approved || !canEdit}
         />
       </td>
       <td className="px-3 py-2.5 w-[220px]">
@@ -170,7 +174,7 @@ const StagingRow = React.memo(function StagingRow({
             onContractorChange(r.STAGING_ID, cId || null, c?.label || null);
           }}
           placeholder="Select contractor"
-          disabled={approved}
+          disabled={approved || !canEdit}
         />
       </td>
       <td className="px-3 py-2.5 min-w-[120px]">
@@ -178,10 +182,10 @@ const StagingRow = React.memo(function StagingRow({
           defaultValue={r.REMARKS || ""}
           placeholder="Remarks"
           className="h-7 text-xs"
-          disabled={approved}
-          onBlur={(e) =>
-            !approved && onRemarksBlur(r.STAGING_ID, e.target.value)
-          }
+          disabled={approved || !canEdit}
+onBlur={(e) =>
+  !approved && canEdit && onRemarksBlur(r.STAGING_ID, e.target.value)
+}
         />
       </td>
       {/* {showPaymentBy && (
@@ -206,7 +210,7 @@ const StagingRow = React.memo(function StagingRow({
           <Select
             value={r.PAYMENT_BY || "BUILDER"}
             onValueChange={(v) => onPaymentByChange(r.STAGING_ID, v)}
-            disabled={approved}
+            disabled={approved || !canEdit}
           >
             <SelectTrigger className="h-7 text-xs">
               <SelectValue>
@@ -231,7 +235,7 @@ const StagingRow = React.memo(function StagingRow({
             <input
               type="checkbox"
               checked={r.EXCLUDE_MARGIN === "Y"}
-              disabled={approved}
+             disabled={approved || !canEdit}
               onChange={(e) =>
                 onExcludeMarginChange(
                   r.STAGING_ID,
@@ -245,7 +249,7 @@ const StagingRow = React.memo(function StagingRow({
       )}
 
       <td className="px-3 py-2.5 min-w-[110px]">
-        <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} />
+        <InvoiceCell parentType="staging" parentId={r.STAGING_ID} row={r} readOnly={!canEdit}/>
       </td>
       <td
         className={`px-3 py-2.5 min-w-[90px] backdrop-blur-sm sticky right-0 z-20 ${stickyBg} shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]`}
@@ -274,7 +278,7 @@ const StagingRow = React.memo(function StagingRow({
                   <Button
                     size="icon"
                     onClick={() => onApproveClick(r)}
-                    disabled={isApproving || isRematching || isDeleting}
+                    disabled={isApproving || isRematching || isDeleting || !canEdit}
                     aria-label="Approve"
                     className="h-7 w-7 rounded-full bg-violet-600 hover:bg-violet-700"
                   >
@@ -294,7 +298,7 @@ const StagingRow = React.memo(function StagingRow({
                     <Button
                       size="icon"
                       onClick={() => onDeleteRowClick(r)}
-                      disabled={isApproving || isRematching || isDeleting}
+                      disabled={isApproving || isRematching || isDeleting || !canDelete}
                       aria-label="Delete"
                       className="h-7 w-7 rounded-full bg-red-600 hover:bg-red-700"
                     >
@@ -315,7 +319,7 @@ const StagingRow = React.memo(function StagingRow({
                     <Button
                       size="icon"
                       onClick={() => onRematchClick(r.STAGING_ID)}
-                      disabled={isApproving || isRematching || isDeleting}
+                      disabled={isApproving || isRematching || isDeleting || !canEdit}
                       aria-label="Rematch"
                       className="h-7 w-7 rounded-full bg-blue-600 hover:bg-blue-700"
                     >

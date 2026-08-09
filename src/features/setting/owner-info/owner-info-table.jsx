@@ -11,8 +11,15 @@ import {
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, PlusIcon } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  ChevronDown,
+  PlusIcon,
+} from "lucide-react";
 import { toast } from "react-toastify";
+import { useHasPermission } from "@/hooks/use-permission";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,12 +42,15 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import { CreateOwnerInfoSheet } from "./create-owner-info-sheet";
 import { EditOwnerInfoSheet } from "./edit-owner-info-sheet";
 
-
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function OwnerInfoTable() {
   const queryClient = useQueryClient();
-const navigate = useNavigate();
+  const navigate = useNavigate();
+  const canCreate = useHasPermission("OWNER_INFO_CREATE");
+  const canEdit = useHasPermission("OWNER_INFO_EDIT");
+  const canDelete = useHasPermission("OWNER_INFO_DELETE");
+
   const { data, isLoading } = useQuery({
     queryKey: ["ownerInfoList"],
     queryFn: async () => {
@@ -64,8 +74,8 @@ const navigate = useNavigate();
   //   setEditSheetOpen(true);
   // };
   const handleEdit = (id) => {
-  navigate(`/dashboard/owner-info/${id}/edit`);
-};
+    navigate(`/dashboard/owner-info/${id}/edit`);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
@@ -133,7 +143,9 @@ const navigate = useNavigate();
           <ArrowUpDown />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("PROJECT_NAME") || "-"}</div>,
+      cell: ({ row }) => (
+        <div className="ml-3">{row.getValue("PROJECT_NAME") || "-"}</div>
+      ),
     },
     {
       accessorKey: "EMAIL",
@@ -191,24 +203,28 @@ const navigate = useNavigate();
       id: "actions",
       enableHiding: false,
       header: () => <div className="text-center">Actions</div>,
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex items-center gap-3 justify-center">
-            <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(item.ID)}>
-              <Pencil size={18} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => handleDelete(item.ID)}
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={18} />
-            </Button>
-          </div>
-        );
-      },
+     cell: ({ row }) => {
+  const item = row.original;
+  return (
+    <div className="flex items-center gap-3 justify-center">
+      {canEdit && (
+        <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(item.ID)}>
+          <Pencil size={18} />
+        </Button>
+      )}
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => handleDelete(item.ID)}
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 size={18} />
+        </Button>
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -267,10 +283,12 @@ const navigate = useNavigate();
               <PlusIcon size={16} className="mr-2" />
               Add New Owner
             </Button> */}
-            <Button onClick={() => navigate("/dashboard/owner-info/create")}>
-  <PlusIcon size={16} className="mr-2" />
-  Add New Owner
-</Button>
+            {canCreate && (
+  <Button onClick={() => navigate("/dashboard/owner-info/create")}>
+    <PlusIcon size={16} className="mr-2" />
+    Add New Owner
+  </Button>
+)}
           </div>
         </div>
 
@@ -283,7 +301,10 @@ const navigate = useNavigate();
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -292,7 +313,10 @@ const navigate = useNavigate();
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center h-24"
+                  >
                     Loading...
                   </TableCell>
                 </TableRow>
@@ -300,10 +324,16 @@ const navigate = useNavigate();
 
               {!isLoading && table.getRowModel().rows.length
                 ? table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -312,7 +342,10 @@ const navigate = useNavigate();
 
               {!isLoading && table.getRowModel().rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center h-24"
+                  >
                     No results.
                   </TableCell>
                 </TableRow>

@@ -3,6 +3,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
+import { useHasPermission } from "@/hooks/use-permission";
 import {
   CheckCircle2,
   Download,
@@ -66,6 +67,9 @@ export default function ApprovedTab({
     uploadMainInvoiceMutation,
     deleteMainInvoiceMutation,
   } = mutations;
+
+  const canEdit = useHasPermission("PROJECT_STATEMENT_EDIT");
+  const canDownload = useHasPermission("PROJECT_STATEMENT_DOWNLOAD");
   const selectedStagingId = useStagingSelectionStore(
     (s) => s.selectedStagingId,
   );
@@ -250,19 +254,21 @@ export default function ApprovedTab({
             <Loader2 className="animate-spin" size={12} /> refreshing...
           </span>
         )}
-        <Button
-          onClick={handleExportCsv}
-          disabled={exporting}
-          variant="outline"
-          className="rounded-full text-sm ml-auto"
-        >
-          {exporting ? (
-            <Loader2 size={14} className="mr-1 animate-spin" />
-          ) : (
-            <Download size={14} className="mr-1" />
-          )}{" "}
-          Download CSV
-        </Button>
+        {canDownload && (
+          <Button
+            onClick={handleExportCsv}
+            disabled={exporting}
+            variant="outline"
+            className="rounded-full text-sm ml-auto"
+          >
+            {exporting ? (
+              <Loader2 size={14} className="mr-1 animate-spin" />
+            ) : (
+              <Download size={14} className="mr-1" />
+            )}{" "}
+            Download CSV
+          </Button>
+        )}
       </div>
 
       <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
@@ -417,6 +423,7 @@ export default function ApprovedTab({
                         /> */}
                         <EntityCombobox
                           items={projectOpts}
+                          disabled={!canEdit}
                           value={r.P_ID ? String(r.P_ID) : ""}
                           onValueChange={(pId) => {
                             const proj = projectOpts.find(
@@ -450,6 +457,7 @@ export default function ApprovedTab({
                         /> */}
                         <EntityCombobox
                           items={contractorOpts}
+                          disabled={!canEdit}
                           value={r.CONTRACTOR_ID ? String(r.CONTRACTOR_ID) : ""}
                           onValueChange={(cId) => {
                             const c = contractorOpts.find(
@@ -536,8 +544,10 @@ export default function ApprovedTab({
                         <Input
                           defaultValue={r.REMARKS || ""}
                           placeholder="Remarks"
+                          disabled={!canEdit}
                           className="h-7 text-xs"
                           onBlur={(e) =>
+                            canEdit &&
                             handleRemarksBlur(r.TXN_ID, e.target.value)
                           }
                         />
@@ -546,6 +556,7 @@ export default function ApprovedTab({
                         {r.SOURCE_TYPE === "NON_BANKING" ? (
                           <Select
                             value={r.PAYMENT_BY || "BUILDER"}
+                            disabled={!canEdit}
                             onValueChange={(v) =>
                               updateMainRowMutation.mutate({
                                 txnId: r.TXN_ID,
@@ -576,6 +587,7 @@ export default function ApprovedTab({
                         ) : (
                           <input
                             type="checkbox"
+                            disabled={!canEdit}
                             checked={r.EXCLUDE_MARGIN === "Y"}
                             onChange={(e) =>
                               handleExcludeMarginChange(
@@ -583,7 +595,7 @@ export default function ApprovedTab({
                                 e.target.checked ? "Y" : "N",
                               )
                             }
-                            className="accent-red-600 w-4 h-4 cursor-pointer"
+                            className="accent-red-600 w-4 h-4 cursor-pointer disabled:cursor-not-allowed"
                           />
                         )}
                       </td>
@@ -596,6 +608,7 @@ export default function ApprovedTab({
                           parentType="main"
                           parentId={r.TXN_ID}
                           row={r}
+                          readOnly={!canEdit}
                         />
                       </td>
 
@@ -606,38 +619,38 @@ export default function ApprovedTab({
                             : `${stripe} group-hover:bg-gray-200`
                         }`}
                       >
-                         <div className="flex items-center gap-1.5">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              onClick={() => setDisapproveTarget(r)}
-                              disabled={!r.STAGING_ID}
-                              aria-label="Disapprove"
-                              className="h-7 w-7 rounded-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
-                            >
-                              <RotateCcw size={14} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {!r.STAGING_ID
-                              ? "Legacy records cannot be disapproved"
-                              : "Disapprove"}
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              onClick={() => setDetailsTarget(r)}
-                              aria-label="Details"
-                              className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600"
-                            >
-                              <Info size={14} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Details</TooltipContent>
-                        </Tooltip>
+                        <div className="flex items-center gap-1.5">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                onClick={() => setDisapproveTarget(r)}
+                                disabled={!r.STAGING_ID || !canEdit}
+                                aria-label="Disapprove"
+                                className="h-7 w-7 rounded-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                              >
+                                <RotateCcw size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {!r.STAGING_ID
+                                ? "Legacy records cannot be disapproved"
+                                : "Disapprove"}
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                onClick={() => setDetailsTarget(r)}
+                                aria-label="Details"
+                                className="h-7 w-7 rounded-full bg-gray-500 hover:bg-gray-600"
+                              >
+                                <Info size={14} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Details</TooltipContent>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

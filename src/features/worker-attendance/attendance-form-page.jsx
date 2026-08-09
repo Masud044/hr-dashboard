@@ -8,6 +8,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import DateInput from "@/components/shared/DateInput";
+import { useHasPermission } from "@/hooks/use-permission";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -85,6 +86,10 @@ export function AttendanceFormPage() {
   const { attendanceId } = useParams();
   const queryClient = useQueryClient();
   const isEdit = !!attendanceId;
+
+  const canCreate = useHasPermission("ATTENDANCE_CREATE");
+const canEdit = useHasPermission("ATTENDANCE_EDIT");
+const hasAccess = isEdit ? canEdit : canCreate;
 
   const form = useForm({
     resolver: zodResolver(attendanceSchema),
@@ -217,6 +222,23 @@ const projectOpts = projects.map((p) => ({
   //     </div>
   //   );
   // }
+
+  if (!hasAccess) {
+  return (
+    <div className="mx-auto w-full max-w-2xl py-16 px-4 text-center">
+      <h2 className="text-lg font-semibold text-foreground">
+        You don't have permission to {isEdit ? "edit" : "create"} attendance records.
+      </h2>
+      <Button
+        variant="outline"
+        onClick={() => navigate(-1)}
+        className="mt-6"
+      >
+        Go Back
+      </Button>
+    </div>
+  );
+}
   return (
     <div className="mx-auto w-full max-w-2xl py-8 px-4">
       <div className="mb-4">

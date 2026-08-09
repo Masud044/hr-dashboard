@@ -32,10 +32,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { useHasPermission } from "@/hooks/use-permission";
+
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
   const queryClient = useQueryClient();
+  const canDelete = useHasPermission("WORKER_DELETE");
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const { data: history = [], isLoading } = useQuery({
@@ -131,18 +134,18 @@ export function WorkerRateHistoryDialog({ isOpen, onClose, workerId }) {
                       {row.REMARKS || "—"}
                     </TableCell>
                     <TableCell>
-                      {!row.EFFECTIVE_TO && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-red-500 hover:text-red-600"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => setConfirmDeleteOpen(true)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                     {!row.EFFECTIVE_TO && canDelete && (
+  <Button
+    type="button"
+    variant="ghost"
+    size="icon"
+    className="h-7 w-7 text-red-500 hover:text-red-600"
+    disabled={deleteMutation.isPending}
+    onClick={() => setConfirmDeleteOpen(true)}
+  >
+    <Trash2 className="h-4 w-4" />
+  </Button>
+)}
                     </TableCell>
                   </TableRow>
                 ))}

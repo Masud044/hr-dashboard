@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useHasPermission } from "@/hooks/use-permission";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -92,6 +93,7 @@ function ReorderCell({
   reorderMutation,
   handleMove,
   handleReorderInput,
+  canEdit
 }) {
   const [localValue, setLocalValue] = React.useState(
     String(item.SORT_ORDER ?? ""),
@@ -111,7 +113,9 @@ function ReorderCell({
         <button
           onClick={() => handleMove(itemId, "up")}
           title="Move up"
-          disabled={moveMutation.isPending || reorderMutation.isPending || isFirst}
+          disabled={
+            moveMutation.isPending || reorderMutation.isPending || isFirst || !canEdit
+          }
           className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
           <ChevronUp size={14} />
@@ -119,7 +123,9 @@ function ReorderCell({
         <button
           onClick={() => handleMove(itemId, "down")}
           title="Move down"
-          disabled={moveMutation.isPending || reorderMutation.isPending || isLast}
+          disabled={
+            moveMutation.isPending || reorderMutation.isPending || isLast || !canEdit
+          }
           className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
           <ChevronDown size={14} />
@@ -129,7 +135,7 @@ function ReorderCell({
         type="text"
         inputMode="numeric"
         value={localValue}
-        disabled={moveMutation.isPending || reorderMutation.isPending}
+        disabled={moveMutation.isPending || reorderMutation.isPending || !canEdit}
         onChange={(e) => setLocalValue(e.target.value.replace(/[^0-9]/g, ""))}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -150,6 +156,10 @@ function ReorderCell({
 export function ContractorTable() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const canEdit = useHasPermission("CONTRACTOR_EDIT");
+  const canDelete = useHasPermission("CONTRACTOR_DELETE");
+  const canCreate = useHasPermission("CONTRACTOR_CREATE");
 
   // ── Default sort: most recently updated/created contractor first ────────
   // UPDATE_DATE is set to SYSDATE on both insert and update in the backend,
@@ -463,6 +473,7 @@ export function ContractorTable() {
           reorderMutation={reorderMutation}
           handleMove={handleMove}
           handleReorderInput={handleReorderInput}
+          canEdit={canEdit}
         />
       ),
     },
@@ -478,21 +489,26 @@ export function ContractorTable() {
         const item = row.original;
         return (
           <div className="flex items-center gap-1 justify-center">
-            <button
-              onClick={() => handleEdit(item.CONTRATOR_ID)}
-              title="Edit"
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
-            >
-              <Pencil size={16} />
-            </button>
-            <button
-              onClick={() => handleDeleteClick(item.CONTRATOR_ID)}
-              title="Delete"
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
-              disabled={deleteMutation.isPending}
-            >
-              <Trash2 size={16} />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => handleEdit(item.CONTRATOR_ID)}
+                title="Edit"
+                className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+
+            {canDelete && (
+              <button
+                onClick={() => handleDeleteClick(item.CONTRATOR_ID)}
+                title="Delete"
+                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         );
       },
@@ -572,13 +588,15 @@ export function ContractorTable() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
-              onClick={() => navigate("/dashboard/contractor/create")}
-              className="h-10 rounded-md gap-2"
-            >
-              <PlusIcon size={16} />
-              Add New Contractor
-            </Button>
+            {canCreate && (
+              <Button
+                onClick={() => navigate("/dashboard/contractor/create")}
+                className="h-10 rounded-md gap-2"
+              >
+                <PlusIcon size={16} />
+                Add New Contractor
+              </Button>
+            )}
           </div>
         </div>
 
@@ -629,10 +647,10 @@ export function ContractorTable() {
                   //   className="border-b border-border hover:bg-muted/30 transition-colors"
                   // >
                   <TableRow
-  key={row.id}
-  data-state={row.getIsSelected() && "selected"}
-  className={`border-b border-border hover:bg-muted/30 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
->
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={`border-b border-border hover:bg-muted/30 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
