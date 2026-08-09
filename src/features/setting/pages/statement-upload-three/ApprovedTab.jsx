@@ -423,6 +423,7 @@ export default function ApprovedTab({
                         /> */}
                         <EntityCombobox
                           items={projectOpts}
+                          disabled={!canEdit}
                           value={r.P_ID ? String(r.P_ID) : ""}
                           onValueChange={(pId) => {
                             const proj = projectOpts.find(
@@ -594,7 +595,7 @@ export default function ApprovedTab({
                                 e.target.checked ? "Y" : "N",
                               )
                             }
-                            className="accent-red-600 w-4 h-4 cursor-pointer"
+                            className="accent-red-600 w-4 h-4 cursor-pointer disabled:cursor-not-allowed"
                           />
                         )}
                       </td>

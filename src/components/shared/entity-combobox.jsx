@@ -185,6 +185,7 @@ const EntityCombobox = React.memo(function EntityCombobox({
           placeholder="Search..."
           className="m-1 text-xs "
           showTrigger={false}
+          
         >
           <InputGroupAddon align="inline-start">
             <Search className="size-3.5 text-muted-foreground" />
