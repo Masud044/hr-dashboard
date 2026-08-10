@@ -18,3 +18,12 @@ const hashName = (str) => {
 export const getAvatarColor = (name) => {
   return AVATAR_COLORS[hashName(name || "") % AVATAR_COLORS.length];
 };
+
+// ── Shared initials helper — first letter of the (trimmed) name, uppercased.
+// Falls back to "?" for empty/null names. Used by WrappedName and any
+// other avatar-bearing component so initials logic stays consistent
+// across contractors, workers, projects, etc.
+export const getInitials = (name) => {
+  const trimmed = (name || "").trim();
+  return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
+};
