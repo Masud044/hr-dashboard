@@ -80,6 +80,7 @@ import {
   ADMIN_OWNER,
 } from "@/config/roles";
 import UnauthorizedPage from "./pages/route/Unauthorized";
+import { ProjectReportPageTwo } from "./features/project-two/project-report-page-two";
 
 // ── Dashboard Index — role-based landing redirect ──────────────────────────
 
@@ -137,6 +138,10 @@ const App = () => {
             >
               <Route
                 path="/dashboard/projects/:id/report"
+                element={<ProjectReportPageTwo />}
+              />
+               <Route
+                path="/dashboard/projects/:id/report-old"
                 element={<ProjectReportPage />}
               />
             </Route>
