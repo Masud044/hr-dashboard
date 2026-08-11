@@ -81,6 +81,7 @@ import {
 } from "@/config/roles";
 import UnauthorizedPage from "./pages/route/Unauthorized";
 import { ProjectReportPageTwo } from "./features/project-two/project-report-page-two";
+import StatementUploadFour from "./features/setting/pages/statement-upload-four";
 
 // ── Dashboard Index — role-based landing redirect ──────────────────────────
 
@@ -304,10 +305,12 @@ const App = () => {
                 element={
                   <ProtectedRoute anyPermission="PROJECT_STATEMENT_VIEW">
                     {/* <StatementUploadTwo /> */}
-                    <StatementUploadThree />
+                   
+                    <StatementUploadFour />
                   </ProtectedRoute>
                 }
               />
+              
               <Route
                 path="statement/:parentType/:parentId/invoices"
                 element={
