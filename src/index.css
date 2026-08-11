@@ -279,7 +279,10 @@
 @layer base {
   * {
   @apply border-border ;
+  
 }
+
+
 
   body {
     @apply bg-background text-foreground;
@@ -288,6 +291,8 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* scrollbar-width: thin; */
+  scrollbar-color: var(--border) transparent;
   }
 
   /* General Sans for all headings — Genesis tight tracking */
