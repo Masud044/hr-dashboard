@@ -11,7 +11,7 @@ export const SectionContainer = ({
     full: "w-full px-4 md:px-6 lg:px-8",
     constrained: "w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8",
     narrow: "w-full max-w-[960px] mx-auto px-4 md:px-6 lg:px-8",
-    dashboard: "w-full px-4 py-4", // Less padding for sidebar layouts
+    dashboard: "w-full px-3 py-3", // Less padding for sidebar layouts
   };
 
   return (

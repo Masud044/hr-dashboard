@@ -147,7 +147,7 @@ export default function StatementUploadFour() {
                 projectOpts={projectOpts}
                 contractorOpts={contractorOpts}
                 mutations={mutations}
-                // sortBy="recent"
+                sortBy="recent"
               />
             )}
           </>

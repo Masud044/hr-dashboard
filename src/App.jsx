@@ -310,6 +310,16 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="statement-old"
+                element={
+                  <ProtectedRoute anyPermission="PROJECT_STATEMENT_VIEW">
+                    {/* <StatementUploadTwo /> */}
+                   
+                    <StatementUploadThree />
+                  </ProtectedRoute>
+                }
+              />
               
               <Route
                 path="statement/:parentType/:parentId/invoices"
