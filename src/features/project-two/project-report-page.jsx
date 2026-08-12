@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { SectionContainer } from "@/components/SectionContainer";
 import InvoiceCell from "@/features/setting/pages/statement-upload-three/invoice/InvoiceCell";
 import InvoiceSheet from "@/features/setting/pages/statement-upload-three/invoice/InvoiceSheet";
+import WrappedName from "@/components/shared/WrappedName";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -1069,6 +1070,7 @@ const handleDownloadByContractorCsv = () => {
                             >
                               <td className="px-4 py-2.5 text-foreground text-xs">
                                 {w.WORKER_NAME}
+                                
                               </td>
                               <td className="px-4 py-2.5 whitespace-nowrap text-xs">
                                 {fmtDate(w.ATTENDANCE_DATE)}

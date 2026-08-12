@@ -18,6 +18,8 @@ import {
   ChevronDown,
   PlusIcon,
   Search,
+  MoveUpIcon,
+  MoveDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -55,6 +57,7 @@ import { EditContractorSheet } from "../pages/EditContractorSheet";
 import { CreateContractorSheet } from "../pages/CreateContractorSheet";
 import { useNavigate } from "react-router-dom";
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
+import WrappedName from "@/components/shared/WrappedName";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -109,7 +112,7 @@ function ReorderCell({
 
   return (
     <div className="flex items-center gap-1 justify-center">
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-1">
         <button
           onClick={() => handleMove(itemId, "up")}
           title="Move up"
@@ -118,7 +121,7 @@ function ReorderCell({
           }
           className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
-          <ChevronUp size={14} />
+          <MoveUpIcon size={13} />
         </button>
         <button
           onClick={() => handleMove(itemId, "down")}
@@ -128,7 +131,7 @@ function ReorderCell({
           }
           className="p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
         >
-          <ChevronDown size={14} />
+          <MoveDown size={13} />
         </button>
       </div>
       <Input
@@ -147,7 +150,7 @@ function ReorderCell({
             handleReorderInput(itemId, localValue);
           }
         }}
-        className="h-7 w-14 text-center text-sm px-1 disabled:opacity-50"
+        className="h-7 w-14 text-center border-0 text-sm px-1 disabled:opacity-50"
       />
     </div>
   );
@@ -328,7 +331,8 @@ export function ContractorTable() {
         const lastName = parts.slice(1).join(" ") || "";
 
         return (
-          <div className="flex items-center gap-3">
+         <>
+          {/* <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8 rounded-full border border-border">
               <AvatarFallback
                 className={`text-xs font-bold ${getAvatarColor(name)}`}
@@ -346,7 +350,10 @@ export function ContractorTable() {
                 </span>
               )}
             </div>
-          </div>
+          </div> */}
+
+          <WrappedName name={name} maxLines={1} size="md" showAvatar  />
+          </>
         );
       },
     },
@@ -532,7 +539,8 @@ export function ContractorTable() {
 
   return (
     <>
-      <div className="mt-6">
+      <div className="bg-card p-4 sm:p-5 border border-border shadow-xs rounded-md">
+
         {/* ── Toolbar ──────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="relative flex-1 max-w-md">

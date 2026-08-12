@@ -1129,8 +1129,9 @@ export function ProjectReportPageTwo() {
                               key={w.ATTENDANCE_ID}
                               className="border-b border-border last:border-0 hover:bg-muted/30"
                             >
-                              <td className="px-4 py-2.5 text-foreground text-xs">
-                                {w.WORKER_NAME}
+                              <td className="px-4 py-2.5 ">
+                                {/* {w.WORKER_NAME} */}
+                                <WrappedName name={w.WORKER_NAME}  showAvatar maxLines={1} />
                               </td>
                               <td className="px-4 py-2.5 whitespace-nowrap text-xs">
                                 {fmtDate(w.ATTENDANCE_DATE)}

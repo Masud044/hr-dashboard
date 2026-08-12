@@ -4,7 +4,7 @@ import { ContractorTable } from "../components/ContractorTable";
 
 const Contractor = () => {
   return (
-    <SectionContainer>
+    <SectionContainer variant="dashboard">
       <div>
         {/* Table with Add New Button */}
         <ContractorTable />
