@@ -527,67 +527,67 @@ export function NewProjectTable() {
     //     <MarginCell item={row.original} marginMutation={marginMutation} />
     //   ),
     // },
-    {
-      accessorKey: "SUBWRB",
-      header: ({ column }) => (
-        <button
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
-        >
-          Suburb <ArrowUpDown className="h-3 w-3" />
-        </button>
-      ),
-      cell: ({ row }) => (
-        <div className="text-sm">{row.getValue("SUBWRB") || "—"}</div>
-      ),
-    },
-    {
-      accessorKey: "POSTCODE",
-      header: ({ column }) => (
-        <button
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
-        >
-          Postcode <ArrowUpDown className="h-3 w-3" />
-        </button>
-      ),
-      cell: ({ row }) => (
-        <div className="text-sm">{row.getValue("POSTCODE") || "—"}</div>
-      ),
-    },
-    {
-      accessorKey: "STATE",
-      header: ({ column }) => (
-        <button
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
-        >
-          State <ArrowUpDown className="h-3 w-3" />
-        </button>
-      ),
-      cell: ({ row }) => (
-        <div className="text-sm">{row.getValue("STATE") || "—"}</div>
-      ),
-    },
-    {
-      accessorKey: "P_ADDRESS",
-      header: ({ column }) => (
-        <button
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
-        >
-          Address <ArrowUpDown className="h-3 w-3" />
-        </button>
-      ),
-      cell: ({ row }) => (
-        <div
-          className="text-sm max-w-[180px] truncate"
-          title={row.getValue("P_ADDRESS")}
-        >
-          {row.getValue("P_ADDRESS") || "—"}
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: "SUBWRB",
+    //   header: ({ column }) => (
+    //     <button
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //       className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+    //     >
+    //       Suburb <ArrowUpDown className="h-3 w-3" />
+    //     </button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div className="text-sm">{row.getValue("SUBWRB") || "—"}</div>
+    //   ),
+    // },
+    // {
+    //   accessorKey: "POSTCODE",
+    //   header: ({ column }) => (
+    //     <button
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //       className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+    //     >
+    //       Postcode <ArrowUpDown className="h-3 w-3" />
+    //     </button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div className="text-sm">{row.getValue("POSTCODE") || "—"}</div>
+    //   ),
+    // },
+    // {
+    //   accessorKey: "STATE",
+    //   header: ({ column }) => (
+    //     <button
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //       className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+    //     >
+    //       State <ArrowUpDown className="h-3 w-3" />
+    //     </button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div className="text-sm">{row.getValue("STATE") || "—"}</div>
+    //   ),
+    // },
+    // {
+    //   accessorKey: "P_ADDRESS",
+    //   header: ({ column }) => (
+    //     <button
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //       className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs font-semibold uppercase tracking-wider"
+    //     >
+    //       Address <ArrowUpDown className="h-3 w-3" />
+    //     </button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div
+    //       className="text-sm max-w-[180px] truncate"
+    //       title={row.getValue("P_ADDRESS")}
+    //     >
+    //       {row.getValue("P_ADDRESS") || "—"}
+    //     </div>
+    //   ),
+    // },
     // hidden by default
     {
       accessorKey: "LOT",
