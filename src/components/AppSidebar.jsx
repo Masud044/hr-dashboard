@@ -95,11 +95,11 @@ export default function AppSidebar() {
                   <SidebarGroupContent className="mt-1">
                     <SidebarMenu className="gap-1">
                       {visibleLinks.map((linkItem, linkIdx) => {
-                        const isActive =
-                          linkItem.to === "/dashboard"
-                            ? location.pathname === linkItem.to
-                            : location.pathname === linkItem.to ||
-                              location.pathname.startsWith(linkItem.to + "/");
+                       const isActive =
+  linkItem.to === "/dashboard" || linkItem.exact
+    ? location.pathname === linkItem.to
+    : location.pathname === linkItem.to ||
+      location.pathname.startsWith(linkItem.to + "/");
 
                         return (
                           <SidebarMenuItem key={linkIdx}>
