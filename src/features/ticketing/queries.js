@@ -1,0 +1,243 @@
+// src/features/ticketing/queries.js
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getToken } from "@/features/authentication-v2/queries";
+
+const BASE = import.meta.env.VITE_API_BASE_URL;
+const URLS = {
+  root: `${BASE}/api/ticketing`,
+};
+
+export const attachmentFileUrl = (attachmentId) =>
+  `${URLS.root}/attachments/${attachmentId}/file`;
+
+const queryDefaults = {
+  retry: 2,
+  retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+  staleTime: 30 * 1000,
+  gcTime: 5 * 60 * 1000,
+  refetchOnWindowFocus: false,
+};
+
+// ── Fetcher (mirrors user-management/queries.js) ────────────────────────────
+const fetcher = async (url, options = {}) => {
+  const token = getToken();
+  const isFormData = options.body instanceof FormData;
+  const res = await fetch(url, {
+    headers: {
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...options,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.error || `Request failed: ${res.status}`);
+  }
+  return res.json();
+};
+
+const buildQS = (params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== "") qs.set(k, String(v));
+  });
+  return qs.toString();
+};
+
+// ── Lookups ──────────────────────────────────────────────────────────────────
+
+export const useLookups = () =>
+  useQuery({
+    queryKey: ["ticketing", "lookups"],
+    queryFn: async () => {
+      const json = await fetcher(`${URLS.root}/lookups`);
+      return json.data; // { statuses, priorities, categories }
+    },
+    ...queryDefaults,
+  });
+
+export const useCannedResponses = () =>
+  useQuery({
+    queryKey: ["ticketing", "canned-responses"],
+    queryFn: async () => {
+      const json = await fetcher(`${URLS.root}/canned-responses`);
+      return json.data;
+    },
+    ...queryDefaults,
+  });
+
+export const useCreateCannedResponse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) =>
+      fetcher(`${URLS.root}/canned-responses`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ticketing", "canned-responses"] }),
+  });
+};
+
+// ── Tickets: list / detail ───────────────────────────────────────────────────
+
+/**
+ * filters: { STATUS_ID, PRIORITY_ID, CATEGORY_ID, AGENT_ID, REQUESTED_FOR, OPEN_ONLY }
+ * pagination: { pageIndex, pageSize } — TanStack Table state
+ * Matches the ["worker-attendance", filters, pagination] queryKey pattern.
+ */
+export const useTickets = (filters, pagination) =>
+  useQuery({
+    queryKey: ["ticketing", "tickets", filters, pagination],
+    queryFn: async () => {
+      const qs = buildQS({
+        ...filters,
+        page: pagination.pageIndex + 1,
+        limit: pagination.pageSize,
+      });
+      const json = await fetcher(`${URLS.root}?${qs}`);
+      return json; // { success, total, page, limit, data: [...] }
+    },
+    placeholderData: (prev) => prev,
+    ...queryDefaults,
+  });
+
+export const useTicket = (ticketId) =>
+  useQuery({
+    queryKey: ["ticketing", "ticket", ticketId],
+    queryFn: async () => {
+      const json = await fetcher(`${URLS.root}/${ticketId}`);
+      return json.data; // { ticket, comments, history, attachments }
+    },
+    enabled: !!ticketId,
+    ...queryDefaults,
+  });
+
+export const useCreateTicket = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) =>
+      fetcher(URLS.root, { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] }),
+  });
+};
+
+export const useAssignAgent = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, agentId }) =>
+      fetcher(`${URLS.root}/${ticketId}/assign`, {
+        method: "PUT",
+        body: JSON.stringify({ AGENT_ID: agentId }),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
+export const useUpdateStatus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, statusName }) =>
+      fetcher(`${URLS.root}/${ticketId}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ STATUS_NAME: statusName }),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "dashboard"] });
+    },
+  });
+};
+
+// ── Comments ─────────────────────────────────────────────────────────────────
+
+export const useAddComment = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, data }) =>
+      fetcher(`${URLS.root}/${ticketId}/comments`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
+// ── Attachments ──────────────────────────────────────────────────────────────
+
+/**
+ * Raw axios call (not the JSON fetcher) since this is multipart with upload
+ * progress — mirrors InvoiceSheet.jsx. Exposed as a plain async fn (not a
+ * mutation) so components drive their own per-file progress state, same as
+ * FileStatusRow/addFileState.
+ */
+export const uploadAttachment = async ({ ticketId, file, commentId, onUploadProgress, signal }) => {
+  const axios = (await import("axios")).default;
+  const token = getToken();
+  const fd = new FormData();
+  fd.append("file", file);
+  if (commentId) fd.append("COMMENT_ID", commentId);
+
+  const res = await axios.post(`${URLS.root}/${ticketId}/attachments`, fd, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    onUploadProgress: (evt) => {
+      if (!evt.total) return;
+      onUploadProgress?.(Math.round((evt.loaded / evt.total) * 100));
+    },
+    signal,
+  });
+  return res.data;
+};
+
+export const useInvalidateTicketAfterAttachment = () => {
+  const qc = useQueryClient();
+  return (ticketId) => qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+};
+
+// ── CSAT ─────────────────────────────────────────────────────────────────────
+
+export const useRateTicket = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, rating, comment }) =>
+      fetcher(`${URLS.root}/${ticketId}/rating`, {
+        method: "POST",
+        body: JSON.stringify({ RATING: rating, COMMENT: comment }),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
+// ── Dashboard views ──────────────────────────────────────────────────────────
+
+export const useOpenTicketsView = () =>
+  useQuery({
+    queryKey: ["ticketing", "dashboard", "open"],
+    queryFn: async () => {
+      const json = await fetcher(`${URLS.root}/dashboard/open`);
+      return json.data;
+    },
+    ...queryDefaults,
+  });
+
+export const useAgentWorkloadView = () =>
+  useQuery({
+    queryKey: ["ticketing", "dashboard", "agent-workload"],
+    queryFn: async () => {
+      const json = await fetcher(`${URLS.root}/dashboard/agent-workload`);
+      return json.data;
+    },
+    ...queryDefaults,
+  });

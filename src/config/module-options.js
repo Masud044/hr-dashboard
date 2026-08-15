@@ -27,4 +27,7 @@ export const MODULE_OPTIONS = [
   { value: "Dashboard", label: "Dashboard" },
   { value: "Schedule Dashboard", label: "Schedule Dashboard" },
   { value: "Project Report", label: "Project Report" },
+  { value: "Ticket", label: "Ticket" },
+  { value: "Ticket Agent Dashboard", label: "Ticket Agent Dashboard" },
+  { value: "Canned Response", label: "Canned Response" },
 ];

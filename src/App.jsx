@@ -83,8 +83,15 @@ import UnauthorizedPage from "./pages/route/Unauthorized";
 import { ProjectReportPageTwo } from "./features/project-two/project-report-page-two";
 import StatementUploadFour from "./features/setting/pages/statement-upload-four";
 
-// ── Dashboard Index — role-based landing redirect ──────────────────────────
+import TicketListPage from "./features/ticketing/ticket-list-page";
+import MyTicketsPage from "./features/ticketing/my-tickets-page";
+import CreateTicketPage from "./features/ticketing/create-ticket-page";
+import AgentDashboardPage from "./features/ticketing/agent-dashboard-page";
+import CannedResponsesPage from "./features/ticketing/canned-responses-page";
+import CannedResponseFormPage from "./features/ticketing/canned-response-form-page";
+import TicketDetailPage from "./features/ticketing/ticket-detail-page";
 
+// ── Dashboard Index — role-based landing redirect ──────────────────────────
 
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
@@ -99,7 +106,11 @@ const DashboardIndex = () => {
   };
 
   // Admin (or anyone with dashboard scope) still lands on Overview.
-  if (roles.includes("Admin") || has("DASHBOARD_VIEW_ALL") || has("DASHBOARD_VIEW_SELF")) {
+  if (
+    roles.includes("Admin") ||
+    has("DASHBOARD_VIEW_ALL") ||
+    has("DASHBOARD_VIEW_SELF")
+  ) {
     return <Overview />;
   }
 
@@ -141,7 +152,7 @@ const App = () => {
                 path="/dashboard/projects/:id/report"
                 element={<ProjectReportPageTwo />}
               />
-               <Route
+              <Route
                 path="/dashboard/projects/:id/report-old"
                 element={<ProjectReportPage />}
               />
@@ -247,7 +258,7 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-                            <Route
+              <Route
                 path="permission/create"
                 element={
                   <ProtectedRoute anyPermission="PERMISSION_CREATE">
@@ -305,7 +316,7 @@ const App = () => {
                 element={
                   <ProtectedRoute anyPermission="PROJECT_STATEMENT_VIEW">
                     {/* <StatementUploadTwo /> */}
-                   
+
                     <StatementUploadFour />
                   </ProtectedRoute>
                 }
@@ -315,12 +326,12 @@ const App = () => {
                 element={
                   <ProtectedRoute anyPermission="PROJECT_STATEMENT_VIEW">
                     {/* <StatementUploadTwo /> */}
-                   
+
                     <StatementUploadThree />
                   </ProtectedRoute>
                 }
               />
-              
+
               <Route
                 path="statement/:parentType/:parentId/invoices"
                 element={
@@ -520,21 +531,21 @@ const App = () => {
               />
 
               <Route
-  path="projects/create"
-  element={
-    <ProtectedRoute anyPermission="PROJECT_VIEW">
-      <CreateProjectPage />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="projects/:id/edit"
-  element={
-    <ProtectedRoute anyPermission="PROJECT_VIEW">
-      <EditProjectPage />
-    </ProtectedRoute>
-  }
-/>
+                path="projects/create"
+                element={
+                  <ProtectedRoute anyPermission="PROJECT_VIEW">
+                    <CreateProjectPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="projects/:id/edit"
+                element={
+                  <ProtectedRoute anyPermission="PROJECT_VIEW">
+                    <EditProjectPage />
+                  </ProtectedRoute>
+                }
+              />
               {/* <Route
                 path="projects/:id/report"
                 element={<ProjectReportPage />}
@@ -588,6 +599,64 @@ const App = () => {
                 element={
                   <ProtectedRoute anyPermission="INVOICE_VIEW">
                     <InvoiceEditPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* ticketing */}
+              <Route
+                path="tickets"
+                element={
+                  <ProtectedRoute anyPermission="TICKET_VIEW_ALL">
+                    <TicketListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tickets/my-tickets"
+                element={
+                  <ProtectedRoute anyPermission="TICKET_VIEW_SELF">
+                    <MyTicketsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+  path="tickets/:id"
+  element={
+    <ProtectedRoute anyPermission={["TICKET_VIEW_ALL", "TICKET_VIEW_SELF"]}>
+      <TicketDetailPage />
+    </ProtectedRoute>
+  }
+/>
+              <Route
+                path="tickets/create"
+                element={
+                  <ProtectedRoute anyPermission="TICKET_CREATE">
+                    <CreateTicketPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tickets/agent-dashboard"
+                element={
+                  <ProtectedRoute anyPermission="TICKET_AGENT_DASHBOARD_VIEW">
+                    <AgentDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tickets/canned-responses"
+                element={
+                  <ProtectedRoute anyPermission="CANNED_RESPONSE_VIEW">
+                    <CannedResponsesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tickets/canned-responses/create"
+                element={
+                  <ProtectedRoute anyPermission="CANNED_RESPONSE_CREATE">
+                    <CannedResponseFormPage />
                   </ProtectedRoute>
                 }
               />
