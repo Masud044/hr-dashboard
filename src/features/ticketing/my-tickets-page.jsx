@@ -13,10 +13,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { SectionContainer } from "@/components/SectionContainer";
-import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useUsers } from "@/features/user-management/queries";
 
 import { useLookups, useTickets } from "./queries";
+import { useWorkers } from "./lookup-queries";
 import TicketTable from "./components/TicketTable";
 import TicketFilters from "./components/TicketFilters";
 import TicketDetailSheet from "./ticket-detail-sheet";
@@ -25,11 +25,11 @@ const emptyFilters = {
   STATUS_ID: "",
   PRIORITY_ID: "",
   CATEGORY_ID: "",
+  TICKET_TYPE: "",
 };
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
-  const { user } = useAuthV2();
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
@@ -37,8 +37,13 @@ export default function MyTicketsPage() {
 
   const { data: lookups } = useLookups();
   const { data: usersData } = useUsers({ limit: 500 });
+  const { data: workers = [] } = useWorkers();
   const users = usersData?.data || [];
   const userMap = useMemo(() => Object.fromEntries(users.map((u) => [u.ID, u.USERNAME])), [users]);
+  const workerMap = useMemo(
+    () => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])),
+    [workers]
+  );
 
   const statusOpts = useMemo(
     () => (lookups?.statuses || []).map((s) => ({ value: String(s.STATUS_ID), label: s.STATUS_NAME })),
@@ -53,10 +58,9 @@ export default function MyTicketsPage() {
     [lookups]
   );
 
-  // Fixed to the current user — not user-editable.
-  const filters = { ...appliedFilters, REQUESTED_FOR: user?.id };
-
-  const { data, isLoading, isFetching, refetch } = useTickets(filters, pagination);
+  // Scope is enforced server-side via TICKET_VIEW_SELF — no client-side
+  // filter override needed; the same call serves both views.
+  const { data, isLoading, isFetching, refetch } = useTickets(appliedFilters, pagination);
 
   const handleSearch = () => {
     setAppliedFilters(draftFilters);
@@ -116,7 +120,7 @@ export default function MyTicketsPage() {
             statusOpts={statusOpts}
             priorityOpts={priorityOpts}
             categoryOpts={categoryOpts}
-            showAgentFilter={false}
+            showWorkerFilter={false}
           />
         </div>
 
@@ -127,7 +131,8 @@ export default function MyTicketsPage() {
           setPagination={setPagination}
           total={data?.total || 0}
           userMap={userMap}
-          showAgentColumn={false}
+          workerMap={workerMap}
+          showWorkerColumn={false}
           tableKey="tickets-my"
         />
       </div>

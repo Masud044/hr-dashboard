@@ -2,6 +2,12 @@
 import { Button } from "@/components/ui/button";
 import EntityCombobox from "@/components/shared/entity-combobox";
 
+const TICKET_TYPE_OPTS = [
+  { value: "CHANGE_REQUEST", label: "Change Request" },
+  { value: "VARIATION", label: "Variation" },
+  { value: "SPECIAL_NOTE", label: "Special Note" },
+];
+
 /**
  * Controlled draft filters + explicit Search/Clear, matching
  * attendance-list.jsx's draftFilters/filters split.
@@ -9,8 +15,8 @@ import EntityCombobox from "@/components/shared/entity-combobox";
  * props:
  *  - draftFilters, setDraftFilters
  *  - hasActiveDraftFilter, onSearch, onClear
- *  - statusOpts, priorityOpts, categoryOpts, agentOpts (EntityCombobox items)
- *  - showAgentFilter (hide on "My Tickets" view)
+ *  - statusOpts, priorityOpts, categoryOpts, workerOpts (EntityCombobox items)
+ *  - showWorkerFilter (hide on "My Tickets" view)
  */
 export default function TicketFilters({
   draftFilters,
@@ -20,8 +26,8 @@ export default function TicketFilters({
   statusOpts = [],
   priorityOpts = [],
   categoryOpts = [],
-  agentOpts = [],
-  showAgentFilter = true,
+  workerOpts = [],
+  showWorkerFilter = true,
 }) {
   const hasActiveDraftFilter = Object.values(draftFilters).some((v) => v !== "" && v !== false);
 
@@ -32,6 +38,15 @@ export default function TicketFilters({
         value={draftFilters.STATUS_ID}
         onValueChange={(v) => setDraftFilters((f) => ({ ...f, STATUS_ID: v }))}
         placeholder="All Statuses"
+        size="md"
+        className="w-[160px]"
+      />
+
+      <EntityCombobox
+        items={TICKET_TYPE_OPTS}
+        value={draftFilters.TICKET_TYPE}
+        onValueChange={(v) => setDraftFilters((f) => ({ ...f, TICKET_TYPE: v }))}
+        placeholder="All Types"
         size="md"
         className="w-[160px]"
       />
@@ -54,16 +69,14 @@ export default function TicketFilters({
         className="w-[180px]"
       />
 
-      {showAgentFilter && (
+      {showWorkerFilter && (
         <EntityCombobox
-          items={agentOpts}
-          value={draftFilters.AGENT_ID}
-          onValueChange={(v) => setDraftFilters((f) => ({ ...f, AGENT_ID: v }))}
-          placeholder="All Agents"
+          items={workerOpts}
+          value={draftFilters.WORKER_ID}
+          onValueChange={(v) => setDraftFilters((f) => ({ ...f, WORKER_ID: v }))}
+          placeholder="All Workers"
           size="md"
           className="w-[180px]"
-          showAvatar
-          avatarInTrigger
         />
       )}
 

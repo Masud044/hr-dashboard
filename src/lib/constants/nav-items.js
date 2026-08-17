@@ -12,7 +12,7 @@ import {
   IconFileInfo,
    IconHeadset,
 } from "@tabler/icons-react";
-import { ClipboardList, FileText, LayoutDashboard } from "lucide-react";
+import { ClipboardList, FileText, LayoutDashboard, ListTodo } from "lucide-react";
 
 export const NAV_ITEMS = [
   {
@@ -124,17 +124,18 @@ export const NAV_ITEMS = [
       requiredPermission: "TICKET_VIEW_SELF",
     },
     {
-      to: "/dashboard/tickets/agent-dashboard",
-      label: "Agent Dashboard",
-      Icon: IconHeadset,
-      requiredPermission: "TICKET_AGENT_DASHBOARD_VIEW",
-    },
-    {
       to: "/dashboard/tickets/canned-responses",
       label: "Canned Responses",
       Icon: IconHeadset,
       requiredPermission: "CANNED_RESPONSE_VIEW",
     },
+
+    {
+  to: "/dashboard/todo",
+  label: "Todo",
+  Icon: ListTodo,
+  requiredPermission: "TODO_VIEW",
+},
   ],
 },
   {

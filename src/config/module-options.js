@@ -30,4 +30,8 @@ export const MODULE_OPTIONS = [
   { value: "Ticket", label: "Ticket" },
   { value: "Ticket Agent Dashboard", label: "Ticket Agent Dashboard" },
   { value: "Canned Response", label: "Canned Response" },
+
+  // test todo
+   { value: "Todo", label: "Todo" },
+
 ];

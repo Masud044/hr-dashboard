@@ -86,10 +86,13 @@ import StatementUploadFour from "./features/setting/pages/statement-upload-four"
 import TicketListPage from "./features/ticketing/ticket-list-page";
 import MyTicketsPage from "./features/ticketing/my-tickets-page";
 import CreateTicketPage from "./features/ticketing/create-ticket-page";
-import AgentDashboardPage from "./features/ticketing/agent-dashboard-page";
 import CannedResponsesPage from "./features/ticketing/canned-responses-page";
 import CannedResponseFormPage from "./features/ticketing/canned-response-form-page";
 import TicketDetailPage from "./features/ticketing/ticket-detail-page";
+
+// test todo
+import { TodoBoard } from "./features/todo/todo-board";
+import { TodoFormPage } from "./features/todo/todo-form-page";
 
 // ── Dashboard Index — role-based landing redirect ──────────────────────────
 
@@ -621,26 +624,20 @@ const App = () => {
                 }
               />
               <Route
-  path="tickets/:id"
-  element={
-    <ProtectedRoute anyPermission={["TICKET_VIEW_ALL", "TICKET_VIEW_SELF"]}>
-      <TicketDetailPage />
-    </ProtectedRoute>
-  }
-/>
+                path="tickets/:id"
+                element={
+                  <ProtectedRoute
+                    anyPermission={["TICKET_VIEW_ALL", "TICKET_VIEW_SELF"]}
+                  >
+                    <TicketDetailPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="tickets/create"
                 element={
                   <ProtectedRoute anyPermission="TICKET_CREATE">
                     <CreateTicketPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="tickets/agent-dashboard"
-                element={
-                  <ProtectedRoute anyPermission="TICKET_AGENT_DASHBOARD_VIEW">
-                    <AgentDashboardPage />
                   </ProtectedRoute>
                 }
               />
@@ -657,6 +654,32 @@ const App = () => {
                 element={
                   <ProtectedRoute anyPermission="CANNED_RESPONSE_CREATE">
                     <CannedResponseFormPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* test todo */}
+              <Route
+                path="todo"
+                element={
+                  <ProtectedRoute anyPermission="TODO_VIEW">
+                    <TodoBoard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="todo/create"
+                element={
+                  <ProtectedRoute anyPermission="TODO_VIEW">
+                    <TodoFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="todo/:todoId/edit"
+                element={
+                  <ProtectedRoute anyPermission="TODO_VIEW">
+                    <TodoFormPage />
                   </ProtectedRoute>
                 }
               />
