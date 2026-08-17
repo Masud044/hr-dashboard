@@ -15,20 +15,20 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SectionContainer } from "@/components/SectionContainer";
 import EntityCombobox from "@/components/shared/entity-combobox";
-import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useHasPermission } from "@/hooks/use-permission";
 import { useUsers } from "@/features/user-management/queries";
 
 import { useTicket, useLookups, useUpdateStatus } from "./queries";
 import StatusBadge from "./components/StatusBadge";
 import PriorityBadge from "./components/PriorityBadge";
-import AssignAgentDropdown from "./components/AssignAgentDropdown";
+import TicketTypeBadge from "./components/TicketTypeBadge";
+import AssignWorkerDropdown from "./components/AssignWorkerDropdown";
 import AttachmentList from "./components/AttachmentList";
 import AttachmentUploader from "./components/AttachmentUploader";
 import CommentThread from "./components/CommentThread";
 import TicketHistoryTimeline from "./components/TicketHistoryTimeline";
-import CSATRating from "./components/CSATRating";
-import { fmtDateTime, isOverdue } from "./lib/ticket-utils";
+import { fmtDateTime, fmtCurrency, isOverdue } from "./lib/ticket-utils";
+import { useWorkers } from "./lookup-queries";
 
 function Row({ label, value, valueNode }) {
   return (
@@ -55,19 +55,23 @@ export default function TicketDetailPage() {
   const { id } = useParams();
   const ticketId = id;
   const navigate = useNavigate();
-  const { user } = useAuthV2();
   const canEdit = useHasPermission("TICKET_EDIT");
   const canAssign = useHasPermission("TICKET_ASSIGN");
-  const isAgent = useHasPermission("TICKET_VIEW_ALL");
+  const canViewAll = useHasPermission("TICKET_VIEW_ALL");
 
   const { data, isLoading } = useTicket(ticketId);
   const { data: lookups } = useLookups();
   const { data: usersData } = useUsers({ limit: 500 });
+  const { data: workers = [] } = useWorkers();
+
   const updateStatus = useUpdateStatus();
 
-  const users = usersData?.data || [];
-  const userMap = useMemo(() => Object.fromEntries(users.map((u) => [u.ID, u.USERNAME])), [users]);
-  const agentOpts = useMemo(() => users.map((u) => ({ value: String(u.ID), label: u.USERNAME })), [users]);
+  // const users = usersData?.data || [];
+  const userMap = useMemo(
+  () => Object.fromEntries((usersData?.data || []).map((u) => [u.ID, u.USERNAME])),
+  [usersData]
+);
+  const workerMap = useMemo(() => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])), [workers]);
   const statusOpts = useMemo(
     () => (lookups?.statuses || []).map((s) => ({ value: s.STATUS_NAME, label: s.STATUS_NAME })),
     [lookups]
@@ -78,9 +82,8 @@ export default function TicketDetailPage() {
   const history = data?.history || [];
   const attachments = data?.attachments || [];
 
-  const isRequester = ticket && user?.id === ticket.REQUESTED_FOR;
-  const showCSAT = isRequester && ticket?.STATUS_NAME === "RESOLVED" && !ticket?.SATISFACTION_RATING;
   const overdue = ticket ? isOverdue(ticket) : false;
+  const showChangeAmount = ticket?.TICKET_TYPE === "VARIATION" && ticket?.CHANGE_AMOUNT != null;
 
   const handleStatusChange = (statusName) => {
     if (!statusName || statusName === ticket?.STATUS_NAME) return;
@@ -93,7 +96,7 @@ export default function TicketDetailPage() {
     );
   };
 
-  const backTo = isAgent ? "/dashboard/tickets" : "/dashboard/tickets/my-tickets";
+  const backTo = canViewAll ? "/dashboard/tickets" : "/dashboard/tickets/my-tickets";
 
   return (
     <SectionContainer variant="dashboard">
@@ -146,6 +149,11 @@ export default function TicketDetailPage() {
           <SectionCard icon={Info} title="Ticket Info">
             <Row label="Subject" value={ticket.SUBJECT} />
             <Row label="Description" value={ticket.DESCRIPTION || "—"} />
+            <Row label="Type" valueNode={<TicketTypeBadge type={ticket.TICKET_TYPE} />} />
+            {showChangeAmount && <Row label="Change Amount" value={fmtCurrency(ticket.CHANGE_AMOUNT)} />}
+            <Row label="Project" value={ticket.PROJECT_NAME || "General"} />
+            <Row label="Contractor" value={ticket.CONTRACTOR_NAME || "—"} />
+            <Row label="Owner" value={ticket.OWNER_NAME || "—"} />
             <Row label="Category" value={ticket.CATEGORY_NAME} />
             <Row label="Priority" valueNode={<PriorityBadge priority={ticket.PRIORITY_NAME} />} />
             <Row
@@ -166,7 +174,7 @@ export default function TicketDetailPage() {
                 )
               }
             />
-            <Row label="Requested By" value={userMap[ticket.REQUESTED_FOR] || `ID: ${ticket.REQUESTED_FOR}`} />
+            <Row label="Created By" value={userMap[ticket.CREATED_BY] || `ID: ${ticket.CREATED_BY}`} />
             <Row
               label="Due Date"
               valueNode={
@@ -175,18 +183,15 @@ export default function TicketDetailPage() {
                 </span>
               }
             />
-            <Row label="Channel" value={ticket.CHANNEL} />
           </SectionCard>
 
           {canAssign && (
             <SectionCard icon={ShieldCheck} title="Assignment">
               <div className="py-2">
-                <AssignAgentDropdown ticketId={ticketId} currentAgentId={ticket.AGENT_ID} agentOpts={agentOpts} />
+                <AssignWorkerDropdown ticketId={ticketId} currentWorkerId={ticket.ASSIGNED_WORKER_ID} />
               </div>
             </SectionCard>
           )}
-
-          {showCSAT && <CSATRating ticketId={ticketId} />}
 
           <SectionCard icon={Paperclip} title="Attachments">
             <div className="py-2 space-y-2">
@@ -197,13 +202,13 @@ export default function TicketDetailPage() {
 
           <SectionCard icon={MessagesSquare} title="Comments">
             <div className="py-2">
-              <CommentThread ticketId={ticketId} comments={comments} userMap={userMap} canManage={isAgent} />
+              <CommentThread ticketId={ticketId} comments={comments} userMap={userMap} canManage={canViewAll} />
             </div>
           </SectionCard>
 
           <SectionCard icon={HistoryIcon} title="History">
             <div className="py-2">
-              <TicketHistoryTimeline history={history} userMap={userMap} lookups={lookups} />
+              <TicketHistoryTimeline history={history} userMap={userMap} workerMap={workerMap} lookups={lookups} />
             </div>
           </SectionCard>
         </div>

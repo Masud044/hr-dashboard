@@ -4,18 +4,16 @@ import { cn } from "@/lib/utils";
 
 // Keyed on STATUS_NAME as returned by the backend (ticket_statuses.status_name)
 const STYLES = {
-  NEW: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   OPEN: "bg-primary/10 text-primary border-primary/20",
-  PENDING_USER: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  RESOLVED: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  IN_REVIEW: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  ACKNOWLEDGED: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   CLOSED: "bg-muted text-muted-foreground border-border",
 };
 
 const LABELS = {
-  NEW: "New",
   OPEN: "Open",
-  PENDING_USER: "Pending You",
-  RESOLVED: "Resolved",
+  IN_REVIEW: "In Review",
+  ACKNOWLEDGED: "Acknowledged",
   CLOSED: "Closed",
 };
 

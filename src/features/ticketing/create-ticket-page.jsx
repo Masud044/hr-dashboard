@@ -36,37 +36,97 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { SectionContainer } from "@/components/SectionContainer";
 import EntityCombobox from "@/components/shared/entity-combobox";
-import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
-import { useHasPermission } from "@/hooks/use-permission";
-import { useUsers } from "@/features/user-management/queries";
+import DateInput from "@/components/shared/DateInput";
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 
 import { useLookups, useCreateTicket } from "./queries";
+import {
+  useProjects,
+  useContractors,
+  useOwnerInfoList,
+  useOwnerInfoByProjectId,
+} from "./lookup-queries";
 
-const CHANNEL_OPTIONS = ["WEB", "EMAIL", "PHONE", "CHAT", "API"];
+const TICKET_TYPE_OPTIONS = [
+  { value: "CHANGE_REQUEST", label: "Change Request" },
+  { value: "VARIATION", label: "Variation" },
+  { value: "SPECIAL_NOTE", label: "Special Note" },
+];
 
-const formSchema = z.object({
-  SUBJECT: z.string().min(1, "Subject is required").max(200, "Subject cannot exceed 200 characters"),
-  CATEGORY_ID: z.string().min(1, "Category is required"),
-  PRIORITY_ID: z.string().min(1, "Priority is required"),
-  DESCRIPTION: z.string().max(4000, "Description too long").optional(),
-  CHANNEL: z.string().default("WEB"),
-  REQUESTED_FOR: z.string().optional(),
-});
+const formSchema = z
+  .object({
+    SUBJECT: z.string().min(1, "Subject is required").max(200, "Subject cannot exceed 200 characters"),
+    TICKET_TYPE: z.string().min(1, "Ticket type is required"),
+    PROJECT_ID: z.string().optional(),
+    CONTRACTOR_ID: z.string().optional(),
+    OWNER_ID: z.string().optional(),
+    CATEGORY_ID: z.string().optional(),
+    PRIORITY_ID: z.string().min(1, "Priority is required"),
+    DESCRIPTION: z.string().max(4000, "Description too long").optional(),
+    DUE_DATE: z.string().optional(),
+    CHANGE_AMOUNT: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.TICKET_TYPE === "VARIATION") {
+      if (!val.CHANGE_AMOUNT || Number(val.CHANGE_AMOUNT) <= 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["CHANGE_AMOUNT"],
+          message: "Change amount is required for variations",
+        });
+      }
+    }
+  });
 
 export default function CreateTicketPage() {
   const navigate = useNavigate();
-  const { user } = useAuthV2();
-  const canAssignOthers = useHasPermission("TICKET_VIEW_ALL");
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   const { data: lookups, isLoading: isLoadingLookups } = useLookups();
-  const { data: usersData } = useUsers({ limit: 500 });
+  const { data: projects = [] } = useProjects();
+  const { data: contractors = [] } = useContractors();
+  const { data: ownerInfoList = [] } = useOwnerInfoList();
   const createTicket = useCreateTicket();
 
-  const users = usersData?.data || [];
-  const userOpts = useMemo(() => users.map((u) => ({ value: String(u.ID), label: u.USERNAME })), [users]);
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      SUBJECT: "",
+      TICKET_TYPE: "",
+      PROJECT_ID: "",
+      CONTRACTOR_ID: "",
+      OWNER_ID: "",
+      CATEGORY_ID: "",
+      PRIORITY_ID: "",
+      DESCRIPTION: "",
+      DUE_DATE: "",
+      CHANGE_AMOUNT: "",
+    },
+  });
 
+  const projectId = form.watch("PROJECT_ID");
+  const ticketType = form.watch("TICKET_TYPE");
+  const isVariation = ticketType === "VARIATION";
+  const hasProject = !!projectId;
+
+  const { data: projectOwners = [] } = useOwnerInfoByProjectId(projectId);
+
+  // Project selected → owners derived from the project, falling back to the
+  // full list if none come back; no project selected → full list.
+  const ownerPool = hasProject && projectOwners.length > 0 ? projectOwners : ownerInfoList;
+
+  const projectOpts = useMemo(
+    () => projects.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
+    [projects]
+  );
+  const contractorOpts = useMemo(
+    () => contractors.map((c) => ({ value: String(c.CONTRATOR_ID), label: c.CONTRATOR_NAME })),
+    [contractors]
+  );
+  const ownerOpts = useMemo(
+    () => ownerPool.map((o) => ({ value: String(o.ID), label: o.O_NAME })),
+    [ownerPool]
+  );
   const categoryOpts = useMemo(
     () => (lookups?.categories || []).map((c) => ({ value: String(c.CATEGORY_ID), label: c.CATEGORY_NAME })),
     [lookups]
@@ -76,27 +136,19 @@ export default function CreateTicketPage() {
     [lookups]
   );
 
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      SUBJECT: "",
-      CATEGORY_ID: "",
-      PRIORITY_ID: "",
-      DESCRIPTION: "",
-      CHANNEL: "WEB",
-      REQUESTED_FOR: "",
-    },
-  });
-
   const onSubmit = async (data) => {
     try {
       const res = await createTicket.mutateAsync({
         SUBJECT: data.SUBJECT,
-        CATEGORY_ID: parseInt(data.CATEGORY_ID),
-        PRIORITY_ID: parseInt(data.PRIORITY_ID),
+        TICKET_TYPE: data.TICKET_TYPE,
+        PROJECT_ID: data.PROJECT_ID ? parseInt(data.PROJECT_ID, 10) : null,
+        CONTRACTOR_ID: data.CONTRACTOR_ID ? parseInt(data.CONTRACTOR_ID, 10) : null,
+        OWNER_ID: data.OWNER_ID ? parseInt(data.OWNER_ID, 10) : null,
+        CATEGORY_ID: data.CATEGORY_ID ? parseInt(data.CATEGORY_ID, 10) : null,
+        PRIORITY_ID: parseInt(data.PRIORITY_ID, 10),
         DESCRIPTION: data.DESCRIPTION || null,
-        CHANNEL: data.CHANNEL,
-        REQUESTED_FOR: canAssignOthers && data.REQUESTED_FOR ? parseInt(data.REQUESTED_FOR) : undefined,
+        DUE_DATE: data.DUE_DATE || null,
+        CHANGE_AMOUNT: isVariation && data.CHANGE_AMOUNT ? Number(data.CHANGE_AMOUNT) : null,
       });
 
       toast.success(`Ticket ${res.data?.ticket_number || ""} created.`);
@@ -182,23 +234,26 @@ export default function CreateTicketPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="CATEGORY_ID"
+                  name="TICKET_TYPE"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Category <span className="text-destructive">*</span>
+                        Ticket Type <span className="text-destructive">*</span>
                       </FormLabel>
-                      <FormControl>
-                        <EntityCombobox
-                          items={categoryOpts}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={isLoadingLookups ? "Loading..." : "Select a category"}
-                          disabled={isLoadingLookups}
-                          size="md"
-                          className="w-full"
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {TICKET_TYPE_OPTIONS.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>
+                              {t.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -229,6 +284,117 @@ export default function CreateTicketPage() {
                 />
               </div>
 
+              {isVariation && (
+                <FormField
+                  control={form.control}
+                  name="CHANGE_AMOUNT"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Change Amount <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="PROJECT_ID"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project</FormLabel>
+                      <FormControl>
+                        <EntityCombobox
+                          items={projectOpts}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select a project"
+                          size="md"
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="CONTRACTOR_ID"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contractor</FormLabel>
+                      <FormControl>
+                        <EntityCombobox
+                          items={contractorOpts}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select a contractor"
+                          size="md"
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="OWNER_ID"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Owner</FormLabel>
+                    <FormControl>
+                      <EntityCombobox
+                        items={ownerOpts}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select an owner"
+                        size="md"
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="CATEGORY_ID"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <EntityCombobox
+                        items={categoryOpts}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={isLoadingLookups ? "Loading..." : "Select a category"}
+                        disabled={isLoadingLookups}
+                        size="md"
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="DESCRIPTION"
@@ -250,53 +416,17 @@ export default function CreateTicketPage() {
 
               <FormField
                 control={form.control}
-                name="CHANNEL"
+                name="DUE_DATE"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Channel</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CHANNEL_OPTIONS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Due Date</FormLabel>
+                    <FormControl>
+                      <DateInput value={field.value} onChange={field.onChange} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              {canAssignOthers && (
-                <FormField
-                  control={form.control}
-                  name="REQUESTED_FOR"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Requested For</FormLabel>
-                      <FormControl>
-                        <EntityCombobox
-                          items={userOpts}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder={`Defaults to you (${user?.username})`}
-                          size="md"
-                          className="w-full"
-                          showAvatar
-                          avatarInTrigger
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={handleCancel} disabled={createTicket.isPending}>

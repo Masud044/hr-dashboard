@@ -15,14 +15,16 @@ import {
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import StatusBadge from "./StatusBadge";
 import PriorityBadge from "./PriorityBadge";
+import TicketTypeBadge from "./TicketTypeBadge";
 import { fmtDate, fmtDateTime, isOverdue } from "../lib/ticket-utils";
 
 /**
  * props:
  *  - data, isLoading
  *  - pagination, setPagination, total
- *  - userMap: { [id]: name } for requester/agent display
- *  - showAgentColumn (hide on "My Tickets")
+ *  - userMap: { [id]: name } for created-by display
+ *  - workerMap: { [id]: name } for assigned worker display
+ *  - showWorkerColumn (hide on "My Tickets")
  *  - tableKey (persisted page size)
  */
 export default function TicketTable({
@@ -32,7 +34,8 @@ export default function TicketTable({
   setPagination,
   total = 0,
   userMap = {},
-  showAgentColumn = true,
+  workerMap = {},
+  showWorkerColumn = true,
   tableKey = "tickets",
 }) {
   const navigate = useNavigate();
@@ -59,12 +62,38 @@ export default function TicketTable({
         ),
       },
       {
-        id: "requester",
-        header: "Requested By",
+        accessorKey: "TICKET_TYPE",
+        header: "Type",
+        cell: ({ row }) => <TicketTypeBadge type={row.original.TICKET_TYPE} />,
+      },
+      {
+        id: "createdBy",
+        header: "Created By",
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">
-            {userMap[row.original.REQUESTED_FOR] || `ID: ${row.original.REQUESTED_FOR}`}
+            {userMap[row.original.CREATED_BY] || `ID: ${row.original.CREATED_BY}`}
           </div>
+        ),
+      },
+      {
+        accessorKey: "PROJECT_NAME",
+        header: "Project",
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">{row.original.PROJECT_NAME || "General"}</div>
+        ),
+      },
+      {
+        accessorKey: "CONTRACTOR_NAME",
+        header: "Contractor",
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">{row.original.CONTRACTOR_NAME || "—"}</div>
+        ),
+      },
+      {
+        accessorKey: "OWNER_NAME",
+        header: "Owner",
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">{row.original.OWNER_NAME || "—"}</div>
         ),
       },
       {
@@ -86,13 +115,15 @@ export default function TicketTable({
       },
     ];
 
-    if (showAgentColumn) {
+    if (showWorkerColumn) {
       base.push({
-        id: "agent",
-        header: "Agent",
+        id: "worker",
+        header: "Worker",
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">
-            {row.original.AGENT_ID ? (userMap[row.original.AGENT_ID] || `ID: ${row.original.AGENT_ID}`) : "Unassigned"}
+            {row.original.ASSIGNED_WORKER_ID
+              ? workerMap[row.original.ASSIGNED_WORKER_ID] || `ID: ${row.original.ASSIGNED_WORKER_ID}`
+              : "Unassigned"}
           </div>
         ),
       });
@@ -137,7 +168,7 @@ export default function TicketTable({
     );
 
     return base;
-  }, [showAgentColumn, userMap, goToTicket]);
+  }, [showWorkerColumn, userMap, workerMap, goToTicket]);
 
   const table = useReactTable({
     data,

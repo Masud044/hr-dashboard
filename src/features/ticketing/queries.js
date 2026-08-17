@@ -81,7 +81,7 @@ export const useCreateCannedResponse = () => {
 // ── Tickets: list / detail ───────────────────────────────────────────────────
 
 /**
- * filters: { STATUS_ID, PRIORITY_ID, CATEGORY_ID, AGENT_ID, REQUESTED_FOR, OPEN_ONLY }
+ * filters: { STATUS_ID, PRIORITY_ID, CATEGORY_ID, TICKET_TYPE, WORKER_ID, OPEN_ONLY }
  * pagination: { pageIndex, pageSize } — TanStack Table state
  * Matches the ["worker-attendance", filters, pagination] queryKey pattern.
  */
@@ -121,13 +121,13 @@ export const useCreateTicket = () => {
   });
 };
 
-export const useAssignAgent = () => {
+export const useAssignWorker = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketId, agentId }) =>
-      fetcher(`${URLS.root}/${ticketId}/assign`, {
+    mutationFn: ({ ticketId, workerId }) =>
+      fetcher(`${URLS.root}/${ticketId}/worker`, {
         method: "PUT",
-        body: JSON.stringify({ AGENT_ID: agentId }),
+        body: JSON.stringify({ WORKER_ID: workerId }),
       }),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
@@ -147,7 +147,6 @@ export const useUpdateStatus = () => {
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
       qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
-      qc.invalidateQueries({ queryKey: ["ticketing", "dashboard"] });
     },
   });
 };
@@ -202,42 +201,3 @@ export const useInvalidateTicketAfterAttachment = () => {
   const qc = useQueryClient();
   return (ticketId) => qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
 };
-
-// ── CSAT ─────────────────────────────────────────────────────────────────────
-
-export const useRateTicket = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ ticketId, rating, comment }) =>
-      fetcher(`${URLS.root}/${ticketId}/rating`, {
-        method: "POST",
-        body: JSON.stringify({ RATING: rating, COMMENT: comment }),
-      }),
-    onSuccess: (_, { ticketId }) => {
-      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
-      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
-    },
-  });
-};
-
-// ── Dashboard views ──────────────────────────────────────────────────────────
-
-export const useOpenTicketsView = () =>
-  useQuery({
-    queryKey: ["ticketing", "dashboard", "open"],
-    queryFn: async () => {
-      const json = await fetcher(`${URLS.root}/dashboard/open`);
-      return json.data;
-    },
-    ...queryDefaults,
-  });
-
-export const useAgentWorkloadView = () =>
-  useQuery({
-    queryKey: ["ticketing", "dashboard", "agent-workload"],
-    queryFn: async () => {
-      const json = await fetcher(`${URLS.root}/dashboard/agent-workload`);
-      return json.data;
-    },
-    ...queryDefaults,
-  });
