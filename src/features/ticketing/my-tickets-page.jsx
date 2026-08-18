@@ -120,7 +120,7 @@ export default function MyTicketsPage() {
             statusOpts={statusOpts}
             priorityOpts={priorityOpts}
             categoryOpts={categoryOpts}
-            showWorkerFilter={false}
+            // showWorkerFilter={false}
           />
         </div>
 
@@ -132,7 +132,7 @@ export default function MyTicketsPage() {
           total={data?.total || 0}
           userMap={userMap}
           workerMap={workerMap}
-          showWorkerColumn={false}
+          // showWorkerColumn={false}
           tableKey="tickets-my"
         />
       </div>
