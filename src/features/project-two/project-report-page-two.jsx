@@ -1072,7 +1072,7 @@ export function ProjectReportPageTwo() {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-b border-border">
                       <div className="flex items-center gap-2">
-                        <Users size={16} className="text-primary" />
+                        <Users size={16}  />
                         <h3 className="text-sm font-semibold text-foreground">
                           Worker Hours & Costing
                         </h3>
@@ -1109,6 +1109,9 @@ export function ProjectReportPageTwo() {
                             <th className="px-4 py-2.5 text-left font-semibold">
                               Basis
                             </th>
+                            <th className="px-4 py-2.5 text-left font-semibold">
+                              Remarks
+                            </th>
                             <th className="px-4 py-2.5 text-right font-semibold">
                               Hours
                             </th>
@@ -1131,7 +1134,11 @@ export function ProjectReportPageTwo() {
                             >
                               <td className="px-4 py-2.5 ">
                                 {/* {w.WORKER_NAME} */}
-                                <WrappedName name={w.WORKER_NAME}  showAvatar maxLines={1} />
+                                <WrappedName
+                                  name={w.WORKER_NAME}
+                                  showAvatar
+                                  maxLines={1}
+                                />
                               </td>
                               <td className="px-4 py-2.5 whitespace-nowrap text-xs">
                                 {fmtDate(w.ATTENDANCE_DATE)}
@@ -1140,6 +1147,19 @@ export function ProjectReportPageTwo() {
                                 <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
                                   {w.CALC_BASIS}
                                 </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-foreground text-xs">
+                                {/* <WrappedName
+                                  name={w.REMARKS}
+                                  
+                                  maxLines={2}
+                                  maxChars={100}
+                                /> */}
+                                {w.REMARKS || (
+                                  <span className="text-muted-foreground italic">
+                                    —
+                                  </span>
+                                )}
                               </td>
                               <td className="px-4 py-2.5 text-right text-xs">
                                 {fmtHours(w.HOURS_WORKED)}
