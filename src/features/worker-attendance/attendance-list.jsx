@@ -1,8 +1,17 @@
-// src/features/worker-attendance/attendance-list.jsx
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Pencil, Trash2, PlusIcon, Search, Eye } from "lucide-react";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
+import {
+  Pencil,
+  Trash2,
+  PlusIcon,
+  Search,
+  Eye,
+  ArrowUp,
+  ArrowDown,
+  ChevronsUpDown,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import {
   flexRender,
@@ -12,13 +21,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -48,26 +50,104 @@ import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
+function SortableHeader({ label, columnId, sortBy, sortOrder, onSort }) {
+  const isActive = sortBy === columnId;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(columnId)}
+      className="flex items-center gap-1 font-bold hover:text-primary"
+    >
+      {label}
+      {isActive ? (
+        sortOrder === "ASC" ? (
+          <ArrowUp size={14} />
+        ) : (
+          <ArrowDown size={14} />
+        )
+      ) : (
+        <ChevronsUpDown size={14} className="opacity-40" />
+      )}
+    </button>
+  );
+}
+
 export function AttendanceList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const canCreate = useHasPermission("ATTENDANCE_CREATE");
-const canEdit = useHasPermission("ATTENDANCE_EDIT");
-const canDelete = useHasPermission("ATTENDANCE_DELETE");
+  const canEdit = useHasPermission("ATTENDANCE_EDIT");
+  const canDelete = useHasPermission("ATTENDANCE_DELETE");
 
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-  // const [filters, setFilters] = useState({ WORKER_ID: "", PROJECT_ID: "", FROM_DATE: "", TO_DATE: "" });
-  const emptyFilters = {
-    WORKER_ID: "",
-    WORKER_NAME: "",
-    PROJECT_ID: "",
-    FROM_DATE: "",
-    TO_DATE: "",
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit, setLimit] = useQueryState(
+    "limit",
+    parseAsInteger.withDefault(10),
+  );
+  const [sortBy, setSortBy] = useQueryState(
+    "sortBy",
+    parseAsString.withDefault("ATTENDANCE_DATE"),
+  );
+  const [sortOrder, setSortOrder] = useQueryState(
+    "sortOrder",
+    parseAsString.withDefault("DESC"),
+  );
+
+  // ── Filters — URL-driven via nuqs ───────────────────────
+  const [workerId, setWorkerId] = useQueryState(
+    "workerId",
+    parseAsString.withDefault(""),
+  );
+  const [workerName, setWorkerName] = useQueryState(
+    "workerName",
+    parseAsString.withDefault(""),
+  );
+  const [projectId, setProjectId] = useQueryState(
+    "projectId",
+    parseAsString.withDefault(""),
+  );
+  const [fromDate, setFromDate] = useQueryState(
+    "fromDate",
+    parseAsString.withDefault(""),
+  );
+  const [toDate, setToDate] = useQueryState(
+    "toDate",
+    parseAsString.withDefault(""),
+  );
+
+  const pagination = useMemo(
+    () => ({ pageIndex: page - 1, pageSize: limit }),
+    [page, limit],
+  );
+
+  const onPaginationChange = (updaterOrValue) => {
+    const next =
+      typeof updaterOrValue === "function"
+        ? updaterOrValue(pagination)
+        : updaterOrValue;
+    setPage(next.pageIndex + 1);
+    setLimit(next.pageSize);
   };
 
-  const [draftFilters, setDraftFilters] = useState(emptyFilters);
-  const [filters, setFilters] = useState(emptyFilters);
+  const handleSort = (columnId) => {
+    if (sortBy === columnId) {
+      setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
+    } else {
+      setSortBy(columnId);
+      setSortOrder("DESC");
+    }
+    setPage(1);
+  };
+
+  // ── Draft filters — local form state, seeded from URL on first render ──
+  const [draftFilters, setDraftFilters] = useState({
+    WORKER_ID: workerId,
+    WORKER_NAME: workerName,
+    PROJECT_ID: projectId,
+    FROM_DATE: fromDate,
+    TO_DATE: toDate,
+  });
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedAttendanceId, setSelectedAttendanceId] = useState(null);
@@ -76,7 +156,6 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  // Fetch workers and projects for mapping and filters
   const { data: workers = [] } = useQuery({
     queryKey: ["workers"],
     queryFn: async () => {
@@ -101,35 +180,44 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
     [workers],
   );
 
-
-
   const workerMap = useMemo(
     () => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])),
     [workers],
   );
 
   const projectOpts = useMemo(
-  () => projects.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
-  [projects],
-);
+    () => projects.map((p) => ({ value: String(p.P_ID), label: p.P_NAME })),
+    [projects],
+  );
   const projectMap = useMemo(
     () => Object.fromEntries(projects.map((p) => [p.P_ID, p.P_NAME])),
     [projects],
   );
 
-  // Fetch attendance data with server-side pagination and filtering
   const { data: apiData, isLoading } = useQuery({
-    queryKey: ["worker-attendance", filters, pagination],
+    queryKey: [
+      "worker-attendance",
+      workerId,
+      workerName,
+      projectId,
+      fromDate,
+      toDate,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.WORKER_ID) params.append("WORKER_ID", filters.WORKER_ID);
-      if (filters.WORKER_NAME)
-        params.append("WORKER_NAME", filters.WORKER_NAME); // ADD THIS LINE
-      if (filters.PROJECT_ID) params.append("PROJECT_ID", filters.PROJECT_ID);
-      if (filters.FROM_DATE) params.append("FROM_DATE", filters.FROM_DATE);
-      if (filters.TO_DATE) params.append("TO_DATE", filters.TO_DATE);
-      params.append("page", pagination.pageIndex + 1);
-      params.append("limit", pagination.pageSize);
+      if (workerId) params.append("WORKER_ID", workerId);
+      if (workerName) params.append("WORKER_NAME", workerName);
+      if (projectId) params.append("PROJECT_ID", projectId);
+      if (fromDate) params.append("FROM_DATE", fromDate);
+      if (toDate) params.append("TO_DATE", toDate);
+      params.append("page", page);
+      params.append("limit", limit);
+      params.append("sortBy", sortBy);
+      params.append("sortOrder", sortOrder);
 
       const res = await axios.get(
         `${url}/api/worker-attendance?${params.toString()}`,
@@ -150,23 +238,6 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
         err?.response?.data?.message || "Failed to delete attendance.",
       ),
   });
-
-  // Reset pagination to first page when filters change
-  // useEffect(() => {
-  //   setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  // }, [filters]);
-
-  //   const handleCreate = () => {
-  //     setSelectedAttendanceId(null);
-  //     setInitialData(null);
-  //     setSheetOpen(true);
-  //   };
-
-  //   const handleEdit = (row) => {
-  //     setSelectedAttendanceId(row.ID || row.ATTENDANCE_ID);
-  //     setInitialData(row);
-  //     setSheetOpen(true);
-  //   };
 
   const handleCreate = () => {
     navigate("/dashboard/worker-attendance/create");
@@ -204,20 +275,43 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
       toast.error("To Date cannot be earlier than From Date.");
       return;
     }
-    setFilters(draftFilters);
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setWorkerId(draftFilters.WORKER_ID || null);
+    setWorkerName(draftFilters.WORKER_NAME || null);
+    setProjectId(draftFilters.PROJECT_ID || null);
+    setFromDate(draftFilters.FROM_DATE || null);
+    setToDate(draftFilters.TO_DATE || null);
+    setPage(1);
   };
 
   const handleClear = () => {
-    setDraftFilters(emptyFilters);
-    setFilters(emptyFilters);
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    const empty = {
+      WORKER_ID: "",
+      WORKER_NAME: "",
+      PROJECT_ID: "",
+      FROM_DATE: "",
+      TO_DATE: "",
+    };
+    setDraftFilters(empty);
+    setWorkerId(null);
+    setWorkerName(null);
+    setProjectId(null);
+    setFromDate(null);
+    setToDate(null);
+    setPage(1);
   };
 
   const columns = [
     {
       accessorKey: "ATTENDANCE_DATE",
-      header: "Date",
+      header: () => (
+        <SortableHeader
+          label="Date"
+          columnId="ATTENDANCE_DATE"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+        />
+      ),
       cell: ({ row }) => (
         <div className="text-sm">
           {formatDateWithDay(row.getValue("ATTENDANCE_DATE"))}
@@ -244,17 +338,23 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
         </div>
       ),
     },
-
-    
     {
-  id: "worked",
-  header: "Hours Worked",
-  cell: ({ row }) => (
-    <div className="text-sm font-medium text-primary">
-      {formatHoursMinutes(row.original.HOURS_WORKED)}
-    </div>
-  ),
-},
+      id: "worked",
+      header: () => (
+        <SortableHeader
+          label="Hours Worked"
+          columnId="HOURS_WORKED"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+        />
+      ),
+      cell: ({ row }) => (
+        <div className="text-sm font-medium text-primary">
+          {formatHoursMinutes(row.original.HOURS_WORKED)}
+        </div>
+      ),
+    },
     {
       accessorKey: "REMARKS",
       header: "Remarks",
@@ -274,42 +374,40 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
           Actions
         </div>
       ),
-          cell: ({ row }) => {
-      const item = row.original;
-      const itemId = item.ID || item.ATTENDANCE_ID;
-      return (
-        <div className="flex items-center gap-1.5 justify-center">
-          <button
-            onClick={() => handleView(itemId)}
-            title="View"
-            className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
-          >
-            <Eye size={15} />
-          </button>
-          {
-            canEdit &&  <button
-            onClick={() => handleEdit(item)}
-            title="Edit"
-            className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
-          >
-            <Pencil size={15} />
-          </button>
-          }
-          {
-            canDelete && <button
-            onClick={() => handleDeleteClick(itemId)}
-            title="Delete"
-            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
-            disabled={deleteMutation.isPending}
-          >
-            <Trash2 size={15} />
-          </button>
-          }
-         
-          
-        </div>
-      );
-    },
+      cell: ({ row }) => {
+        const item = row.original;
+        const itemId = item.ID || item.ATTENDANCE_ID;
+        return (
+          <div className="flex items-center gap-1.5 justify-center">
+            <button
+              onClick={() => handleView(itemId)}
+              title="View"
+              className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
+            >
+              <Eye size={15} />
+            </button>
+            {canEdit && (
+              <button
+                onClick={() => handleEdit(item)}
+                title="Edit"
+                className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
+              >
+                <Pencil size={15} />
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => handleDeleteClick(itemId)}
+                title="Delete"
+                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -319,7 +417,7 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
     manualPagination: true,
     pageCount: Math.ceil((apiData?.total || 0) / pagination.pageSize),
     state: { pagination },
-    onPaginationChange: setPagination,
+    onPaginationChange,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -328,27 +426,6 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
       <div className="mt-6 px-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5">
           <div className="flex flex-wrap items-center gap-3  flex-1">
-            {/* <Select
-              value={draftFilters.WORKER_ID}
-              onValueChange={(v) =>
-                setDraftFilters((f) => ({
-                  ...f,
-                  WORKER_ID: v === "all" ? "" : v,
-                }))
-              }
-            >
-              <SelectTrigger className="w-[180px] h-10 rounded-md border-input-border focus:shadow-focus">
-                <SelectValue placeholder="All Workers" />
-              </SelectTrigger>
-              <SelectContent className="rounded-md">
-                <SelectItem value="all">All Workers</SelectItem>
-                {workers.map((w) => (
-                  <SelectItem key={w.WORKER_ID} value={String(w.WORKER_ID)}>
-                    {w.WORKER_NAME}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select> */}
             <EntityCombobox
               items={workerOpts}
               value={draftFilters.WORKER_ID}
@@ -359,59 +436,20 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
               size="md"
               className="w-[180px]"
               showAvatar
-              avatarInTrigger 
-              // getImageUrl={(item) =>
-              //   `${import.meta.env.VITE_API_BASE_URL}/api/emp-images/person/${item.value}`
-              // }
+              avatarInTrigger
             />
-
-            {/* <Select
-              value={draftFilters.PROJECT_ID}
-              onValueChange={(v) =>
-                setDraftFilters((f) => ({
-                  ...f,
-                  PROJECT_ID: v === "all" ? "" : v,
-                }))
-              }
-            >
-              <SelectTrigger className="w-[180px] h-10 rounded-md border-input-border focus:shadow-focus">
-                <SelectValue placeholder="All Projects" />
-              </SelectTrigger>
-              <SelectContent className="rounded-md">
-                <SelectItem value="all">All Projects</SelectItem>
-                {projects.map((p) => (
-                  <SelectItem key={p.P_ID} value={String(p.P_ID)}>
-                    {p.P_NAME}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select> */}
 
             <EntityCombobox
-  items={projectOpts}
-  value={draftFilters.PROJECT_ID}
-  onValueChange={(v) => setDraftFilters((f) => ({ ...f, PROJECT_ID: v }))}
-  placeholder="All Projects"
-  size="md"
-  className="w-60"
-/>
-
-            {/* <Input
-              type="date"
-              value={draftFilters.FROM_DATE}
-              onChange={(e) =>
-                setDraftFilters((f) => ({ ...f, FROM_DATE: e.target.value }))
+              items={projectOpts}
+              value={draftFilters.PROJECT_ID}
+              onValueChange={(v) =>
+                setDraftFilters((f) => ({ ...f, PROJECT_ID: v }))
               }
-              className="w-[160px] h-10"
+              placeholder="All Projects"
+              size="md"
+              className="w-60"
             />
-            <Input
-              type="date"
-              value={draftFilters.TO_DATE}
-              onChange={(e) =>
-                setDraftFilters((f) => ({ ...f, TO_DATE: e.target.value }))
-              }
-              className="w-[160px] h-10"
-            /> */}
+
             <DateInput
               value={draftFilters.FROM_DATE}
               onChange={(v) => setDraftFilters((f) => ({ ...f, FROM_DATE: v }))}
@@ -455,16 +493,15 @@ const canDelete = useHasPermission("ATTENDANCE_DELETE");
               </Button>
             )}
           </div>
-          {
-            canCreate && <Button
-            onClick={handleCreate}
-            className="h-10 rounded-full gap-2 font-bold text-primary-dark bg-gradient-to-b from-accent-light via-accent to-accent-dark shadow-accent-glow hover:brightness-105 transition-transform active:scale-95"
-          >
-            <PlusIcon size={16} />
-            Add Attendance
-          </Button>
-          }
-          
+          {canCreate && (
+            <Button
+              onClick={handleCreate}
+              className="h-10 rounded-full gap-2 font-bold text-primary-dark bg-gradient-to-b from-accent-light via-accent to-accent-dark shadow-accent-glow hover:brightness-105 transition-transform active:scale-95"
+            >
+              <PlusIcon size={16} />
+              Add Attendance
+            </Button>
+          )}
         </div>
 
         <div className="rounded-lg border border-border overflow-hidden bg-card shadow-card">
