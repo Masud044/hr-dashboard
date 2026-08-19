@@ -21,6 +21,7 @@ import {
   LandmarkIcon,
   MoveDownIcon,
   MoveUpIcon,
+  Pencil,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -38,6 +39,13 @@ import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import InvoiceCell from "@/features/setting/pages/statement-upload-three/invoice/InvoiceCell";
 import InvoiceSheet from "@/features/setting/pages/statement-upload-three/invoice/InvoiceSheet";
 import WrappedName from "@/components/shared/WrappedName";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -102,6 +110,12 @@ function SortableHeader({ column, children, align = "left" }) {
 export function ProjectReportPageTwo() {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
+
+  const canEdit = useHasPermission("PROJECT_STATEMENT_EDIT");
+  const handleEditNonBanking = (txnId) =>
+    navigate(
+      `/dashboard/projects/${projectId}/report/non-banking/${txnId}/edit`,
+    );
 
   const [activeTab, setActiveTab] = useState("byContractor"); // "transactions" | "byContractor"
   const [sorting, setSorting] = useState([{ id: "TXN_DATE", desc: true }]);
@@ -569,8 +583,34 @@ export function ProjectReportPageTwo() {
           </div>
         ),
       },
+      {
+        id: "action",
+        header: () => null,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const r = row.original;
+          if (r.SOURCE_TYPE !== "NON_BANKING" || !canEdit) return null;
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  disabled={!canEdit}
+                  onClick={() => handleEditNonBanking(r.TXN_ID)}
+                  aria-label="Edit"
+                  className="h-7 w-7 rounded-full"
+                >
+                  <Pencil size={13} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          );
+        },
+      },
     ],
-    [],
+    [canEdit],
   );
 
   const table = useReactTable({
@@ -992,6 +1032,7 @@ export function ProjectReportPageTwo() {
                               <th className="px-4 py-2.5 text-left font-semibold">
                                 Invoice
                               </th>
+                              <th className="px-4 py-2.5"></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1035,6 +1076,25 @@ export function ProjectReportPageTwo() {
                                     readOnly
                                   />
                                 </td>
+                                <td className="px-4 py-2.5">
+                                  {r.SOURCE_TYPE === "NON_BANKING" && canEdit && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          disabled={!canEdit}
+                                          onClick={() => handleEditNonBanking(r.TXN_ID)}
+                                          aria-label="Edit"
+                                          className="h-7 w-7 rounded-full"
+                                        >
+                                          <Pencil size={13} />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Edit</TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -1072,7 +1132,7 @@ export function ProjectReportPageTwo() {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-b border-border">
                       <div className="flex items-center gap-2">
-                        <Users size={16}  />
+                        <Users size={16} />
                         <h3 className="text-sm font-semibold text-foreground">
                           Worker Hours & Costing
                         </h3>

@@ -89,6 +89,7 @@ import CreateTicketPage from "./features/ticketing/create-ticket-page";
 import CannedResponsesPage from "./features/ticketing/canned-responses-page";
 import CannedResponseFormPage from "./features/ticketing/canned-response-form-page";
 import TicketDetailPage from "./features/ticketing/ticket-detail-page";
+import { EditNonBankingTransactionPage } from "./features/project-two/edit-non-banking-transaction-page";
 
 // test todo
 import { TodoBoard } from "./features/todo/todo-board";
@@ -158,6 +159,12 @@ const App = () => {
               <Route
                 path="/dashboard/projects/:id/report-old"
                 element={<ProjectReportPage />}
+              />
+              <Route
+                path="/dashboard/projects/:id/report/non-banking/:txnId/edit"
+                element={ <ProtectedRoute anyPermission="PROJECT_STATEMENT_EDIT">
+      <EditNonBankingTransactionPage />
+    </ProtectedRoute>}
               />
             </Route>
 

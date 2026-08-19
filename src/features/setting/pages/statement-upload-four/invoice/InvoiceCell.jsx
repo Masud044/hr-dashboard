@@ -8,6 +8,7 @@ import { useInvoiceSheetStore } from "../useInvoiceSheetStore";
 
 export default function InvoiceCell({ parentType, parentId, row, readOnly = false }) {
   const openSheet = useInvoiceSheetStore((s) => s.openSheet);
+  console.log("row", row)
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices", parentType, parentId],
@@ -18,6 +19,8 @@ export default function InvoiceCell({ parentType, parentId, row, readOnly = fals
     staleTime: 30 * 1000,
   });
 
+  console.log("invoices--", invoices)
+
   const visibleInvoices = invoices.slice(0, 2);
   const extraCount = invoices.length - visibleInvoices.length;
 
@@ -27,15 +30,17 @@ export default function InvoiceCell({ parentType, parentId, row, readOnly = fals
     return <span className="text-xs text-gray-400">Loading...</span>;
   }
 
-  if (invoices.length === 0) {
+  if (invoices.length === 0 || invoices[0]?.files.length === 0) {
     if (readOnly) {
       return <span className="text-xs text-gray-400">No invoice</span>;
     }
+   
     return (
       <button
         onClick={handleClick}
         className="text-left w-full hover:bg-gray-50 rounded px-1 py-0.5 transition-colors"
       >
+        
         <span className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600">
           <Paperclip size={12} /> Add invoice
         </span>
@@ -48,6 +53,7 @@ export default function InvoiceCell({ parentType, parentId, row, readOnly = fals
       onClick={handleClick}
       className="text-left w-full hover:bg-gray-50 rounded px-1 py-0.5 transition-colors"
     >
+      
       <div className="space-y-0.5">
         {visibleInvoices.map((inv) => (
           <div key={inv.INVOICE_ID} className="text-xs text-blue-700 font-medium truncate max-w-[160px]">
