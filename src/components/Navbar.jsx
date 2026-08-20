@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import UserDropDown from "./UserDropDown";
-
+import NotificationBell from "@/features/notifications/components/NotificationBell";
 export default function Navbar({ showSidebarTrigger = true }) {
   return (
     <header className="w-full flex items-center justify-between bg-card/80 backdrop-blur-md border-b border-border px-4 h-14 sticky top-0 z-10">
@@ -14,6 +14,7 @@ export default function Navbar({ showSidebarTrigger = true }) {
       )}
 
       <div className="flex items-center gap-3">
+         <NotificationBell />
         <UserDropDown />
       </div>
     </header>

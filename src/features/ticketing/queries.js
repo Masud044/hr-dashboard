@@ -109,6 +109,8 @@ export const useTicket = (ticketId) =>
       return json.data; // { ticket, comments, history, attachments }
     },
     enabled: !!ticketId,
+    refetchInterval: 15000,               // poll every 8s while open
+    refetchIntervalInBackground: false,  // pause when tab not focused
     ...queryDefaults,
   });
 
