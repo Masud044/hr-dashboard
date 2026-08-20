@@ -91,6 +91,8 @@ import CannedResponseFormPage from "./features/ticketing/canned-response-form-pa
 import TicketDetailPage from "./features/ticketing/ticket-detail-page";
 import { EditNonBankingTransactionPage } from "./features/project-two/edit-non-banking-transaction-page";
 
+import NotificationsPage from "./features/notifications/notifications-page";
+
 // test todo
 import { TodoBoard } from "./features/todo/todo-board";
 import { TodoFormPage } from "./features/todo/todo-form-page";
@@ -661,6 +663,16 @@ const App = () => {
                 element={
                   <ProtectedRoute anyPermission="CANNED_RESPONSE_CREATE">
                     <CannedResponseFormPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* notifications — no permission gate, every authenticated user */}
+              <Route
+                path="notifications"
+                element={
+                  <ProtectedRoute>
+                    <NotificationsPage />
                   </ProtectedRoute>
                 }
               />
