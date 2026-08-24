@@ -197,6 +197,17 @@ const FilterBar = React.memo(function FilterBar({
             className="h-8 text-xs"
           />
         </div>
+        <div>
+  <label className="text-[10px] text-muted-foreground block mb-1">
+    Remarks
+  </label>
+  <Input
+    placeholder="Search remarks"
+    value={draft.remarks}
+    onChange={(e) => update("remarks", e.target.value)}
+    className="h-8 text-xs"
+  />
+</div>
         {showCategory && (
           <div>
             <label className="text-[10px] text-muted-foreground block mb-1">
