@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ArrowLeft, Info, ShieldCheck, Paperclip, MessagesSquare, History as HistoryIcon } from "lucide-react";
+import { ArrowLeft, Info, ShieldCheck, Paperclip, MessagesSquare, History as HistoryIcon, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +13,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { cn } from "@/lib/utils";
 import { SectionContainer } from "@/components/SectionContainer";
 import EntityCombobox from "@/components/shared/entity-combobox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useHasPermission } from "@/hooks/use-permission";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useUsers } from "@/features/user-management/queries";
 
 import { useTicket, useLookups, useUpdateStatus } from "./queries";
@@ -32,21 +35,34 @@ import { useWorkers } from "./lookup-queries";
 
 function Row({ label, value, valueNode }) {
   return (
-    <div className="flex justify-between items-center py-2.5 text-sm border-b border-border last:border-b-0">
-      <span className="text-muted-foreground">{label}</span>
-      {valueNode ? valueNode : <span className="font-medium text-right ml-4 text-foreground">{value ?? "—"}</span>}
+    <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm border-b border-border last:border-b-0">
+      <span className="text-[13px] text-muted-foreground shrink-0">{label}</span>
+      {valueNode ? (
+        valueNode
+      ) : (
+        <span className="font-medium text-right text-foreground break-words">{value ?? "—"}</span>
+      )}
     </div>
   );
 }
 
-function SectionCard({ icon: Icon, title, children }) {
+function RowStacked({ label, children }) {
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border">
+    <div className="px-4 py-3 text-sm border-b border-border last:border-b-0">
+      <span className="block text-[13px] text-muted-foreground mb-1">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function SectionCard({ icon: Icon, title, className, children }) {
+  return (
+    <div className={cn("rounded-md border border-border bg-card overflow-hidden", className)}>
+      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border">
         <Icon size={13} className="text-primary" />
-        <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{title}</h4>
+        <h4 className="text-overline text-muted-foreground">{title}</h4>
       </div>
-      <div className="px-4 py-1">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }
@@ -58,6 +74,7 @@ export default function TicketDetailPage() {
   const canEdit = useHasPermission("TICKET_EDIT");
   const canAssign = useHasPermission("TICKET_ASSIGN");
   const canViewAll = useHasPermission("TICKET_VIEW_ALL");
+  const { user } = useAuthV2();
 
   const { data, isLoading } = useTicket(ticketId);
   const { data: lookups } = useLookups();
@@ -100,35 +117,45 @@ export default function TicketDetailPage() {
 
   return (
     <SectionContainer variant="dashboard">
-      <div className="bg-card rounded-md shadow-sm p-4 mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(backTo)} className="shrink-0">
+      <div className="mb-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={backTo}>Tickets</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{ticket?.TICKET_NUMBER || "Detail"}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <div className="flex items-center gap-2 mt-3">
+          <Button variant="ghost" size="icon-sm" onClick={() => navigate(backTo)} className="shrink-0 -ml-2 text-muted-foreground">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="space-y-0.5">
-            <h1 className="text-lg md:text-2xl font-semibold tracking-tight">
-              {ticket?.TICKET_NUMBER || "Ticket"}
-            </h1>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/dashboard">Dashboard</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to={backTo}>Tickets</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{ticket?.TICKET_NUMBER || "Detail"}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+          <h1 className="text-lg md:text-xl font-semibold tracking-tight">
+            {ticket?.TICKET_NUMBER || "Ticket"}
+          </h1>
+          {ticket && <StatusBadge status={ticket.STATUS_NAME} />}
+          {canEdit && ticket && !["CLOSED", "CANCELLED"].includes(ticket.STATUS_NAME) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/dashboard/tickets/${ticketId}/edit`)}
+              className="ml-auto shrink-0 text-muted-foreground"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          )}
         </div>
       </div>
 
@@ -145,72 +172,103 @@ export default function TicketDetailPage() {
       )}
 
       {!isLoading && ticket && (
-        <div className="max-w-2xl mx-auto space-y-4">
-          <SectionCard icon={Info} title="Ticket Info">
-            <Row label="Subject" value={ticket.SUBJECT} />
-            <Row label="Description" value={ticket.DESCRIPTION || "—"} />
-            <Row label="Type" valueNode={<TicketTypeBadge type={ticket.TICKET_TYPE} />} />
-            {showChangeAmount && <Row label="Change Amount" value={fmtCurrency(ticket.CHANGE_AMOUNT)} />}
-            <Row label="Project" value={ticket.PROJECT_NAME || "General"} />
-            <Row label="Contractor" value={ticket.CONTRACTOR_NAME || "—"} />
-            <Row label="Owner" value={ticket.OWNER_NAME || "—"} />
-            <Row label="Category" value={ticket.CATEGORY_NAME} />
-            <Row label="Priority" valueNode={<PriorityBadge priority={ticket.PRIORITY_NAME} />} />
-            <Row
-              label="Status"
-              valueNode={
-                canEdit ? (
-                  <EntityCombobox
-                    items={statusOpts}
-                    value={ticket.STATUS_NAME}
-                    onValueChange={handleStatusChange}
-                    placeholder="Status"
-                    size="sm"
-                    className="w-[160px]"
-                    disabled={updateStatus.isPending}
+        <div className="p-4 sm:p-5 border  rounded-md">
+          <Tabs defaultValue="comments" >
+            <TabsList>
+              <TabsTrigger value="comments" >
+                <MessagesSquare />
+                Comments
+              </TabsTrigger>
+              <TabsTrigger value="overview" >
+                <Info />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="attachments" >
+                <Paperclip />
+                Attachments
+              </TabsTrigger>
+              <TabsTrigger value="history" className="rounded-none">
+                <HistoryIcon />
+                History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="comments" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <CommentThread ticketId={ticketId} comments={comments} userMap={userMap} canManage={canViewAll} currentUserId={user?.id} ticketCategoryId={ticket.CATEGORY_ID} />
+            </TabsContent>
+
+            <TabsContent value="overview" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
+                <SectionCard icon={Info} title="Ticket Info" className="lg:col-span-3">
+                  <Row label="Subject" value={ticket.SUBJECT} />
+                  <RowStacked label="Description">
+                    <p className="text-[13px] text-foreground whitespace-pre-wrap break-words">
+                      {ticket.DESCRIPTION || "—"}
+                    </p>
+                  </RowStacked>
+                  <Row label="Type" valueNode={<TicketTypeBadge type={ticket.TICKET_TYPE} />} />
+                  {showChangeAmount && <Row label="Change Amount" value={fmtCurrency(ticket.CHANGE_AMOUNT)} />}
+                  <Row label="Project" value={ticket.PROJECT_NAME || "General"} />
+                  <Row label="Contractor" value={ticket.CONTRACTOR_NAME || "—"} />
+                  <Row label="Owner" value={ticket.OWNER_NAME || "—"} />
+                  <Row label="Category" value={ticket.CATEGORY_NAME} />
+                  <Row label="Priority" valueNode={<PriorityBadge priority={ticket.PRIORITY_NAME} />} />
+                  <Row
+                    label="Status"
+                    valueNode={
+                      canEdit ? (
+                        <EntityCombobox
+                          items={statusOpts}
+                          value={ticket.STATUS_NAME}
+                          onValueChange={handleStatusChange}
+                          placeholder="Status"
+                          size="sm"
+                          className="w-[160px]"
+                          disabled={updateStatus.isPending}
+                        />
+                      ) : (
+                        <StatusBadge status={ticket.STATUS_NAME} />
+                      )
+                    }
                   />
-                ) : (
-                  <StatusBadge status={ticket.STATUS_NAME} />
-                )
-              }
-            />
-            <Row label="Created By" value={userMap[ticket.CREATED_BY] || `ID: ${ticket.CREATED_BY}`} />
-            <Row
-              label="Due Date"
-              valueNode={
-                <span className={`font-medium text-right ml-4 ${overdue ? "text-red-600" : "text-foreground"}`}>
-                  {fmtDateTime(ticket.DUE_DATE)}
-                </span>
-              }
-            />
-          </SectionCard>
+                  <Row label="Created By" value={userMap[ticket.CREATED_BY] || `ID: ${ticket.CREATED_BY}`} />
+                  <Row
+                    label="Due Date"
+                    valueNode={
+                      <span className={`font-medium text-right ${overdue ? "text-red-600" : "text-foreground"}`}>
+                        {fmtDateTime(ticket.DUE_DATE)}
+                      </span>
+                    }
+                  />
+                </SectionCard>
 
-          {canAssign && (
-            <SectionCard icon={ShieldCheck} title="Assignment">
-              <div className="py-2">
-                <AssignWorkerDropdown ticketId={ticketId} currentWorkerId={ticket.ASSIGNED_WORKER_ID} />
+                {canAssign && (
+                  <SectionCard icon={ShieldCheck} title="Assignment" className="lg:col-span-2">
+                    <div className="px-4 py-4">
+                      <AssignWorkerDropdown ticketId={ticketId} currentWorkerId={ticket.ASSIGNED_WORKER_ID} />
+                    </div>
+                  </SectionCard>
+                )}
               </div>
-            </SectionCard>
-          )}
+            </TabsContent>
 
-          <SectionCard icon={Paperclip} title="Attachments">
-            <div className="py-2 space-y-2">
-              <AttachmentList attachments={attachments} />
-              <AttachmentUploader ticketId={ticketId} />
-            </div>
-          </SectionCard>
+            <TabsContent value="attachments" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <SectionCard icon={Paperclip} title="Attachments">
+                <div className="p-4 space-y-4">
+                  <AttachmentList attachments={attachments} />
+                  <AttachmentUploader ticketId={ticketId} />
+                </div>
+              </SectionCard>
+            </TabsContent>
 
-          <SectionCard icon={MessagesSquare} title="Comments">
-            <div className="py-2">
-              <CommentThread ticketId={ticketId} comments={comments} userMap={userMap} canManage={canViewAll} />
-            </div>
-          </SectionCard>
-
-          <SectionCard icon={HistoryIcon} title="History">
-            <div className="py-2">
-              <TicketHistoryTimeline history={history} userMap={userMap} workerMap={workerMap} lookups={lookups} />
-            </div>
-          </SectionCard>
+            <TabsContent value="history" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <SectionCard icon={HistoryIcon} title="History">
+                <div className="px-4 py-4">
+                  <TicketHistoryTimeline history={history} userMap={userMap} workerMap={workerMap} lookups={lookups} />
+                </div>
+              </SectionCard>
+            </TabsContent>
+          </Tabs>
         </div>
       )}
     </SectionContainer>

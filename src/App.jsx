@@ -88,7 +88,9 @@ import MyTicketsPage from "./features/ticketing/my-tickets-page";
 import CreateTicketPage from "./features/ticketing/create-ticket-page";
 import CannedResponsesPage from "./features/ticketing/canned-responses-page";
 import CannedResponseFormPage from "./features/ticketing/canned-response-form-page";
+import CannedResponseEditPage from "./features/ticketing/canned-response-edit-page";
 import TicketDetailPage from "./features/ticketing/ticket-detail-page";
+import EditTicketPage from "./features/ticketing/edit-ticket-page";
 import { EditNonBankingTransactionPage } from "./features/project-two/edit-non-banking-transaction-page";
 
 import NotificationsPage from "./features/notifications/notifications-page";
@@ -651,6 +653,14 @@ const App = () => {
                 }
               />
               <Route
+  path="tickets/:id/edit"
+  element={
+    <ProtectedRoute anyPermission="TICKET_EDIT">
+      <EditTicketPage />
+    </ProtectedRoute>
+  }
+/>
+              <Route
                 path="tickets/canned-responses"
                 element={
                   <ProtectedRoute anyPermission="CANNED_RESPONSE_VIEW">
@@ -666,6 +676,15 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+
+              <Route
+  path="tickets/canned-responses/:id/edit"
+  element={
+    <ProtectedRoute anyPermission="CANNED_RESPONSE_EDIT">
+      <CannedResponseEditPage />
+    </ProtectedRoute>
+  }
+/>
 
               {/* notifications — no permission gate, every authenticated user */}
               <Route

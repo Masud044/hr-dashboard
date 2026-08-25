@@ -16,15 +16,14 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { useUsers } from "@/features/user-management/queries";
 
 import { useLookups, useTickets } from "./queries";
-import { useWorkers } from "./lookup-queries";
 import TicketTable from "./components/TicketTable";
 import TicketFilters from "./components/TicketFilters";
 import TicketDetailSheet from "./ticket-detail-sheet";
 
 const emptyFilters = {
+  SEARCH: "",
   STATUS_ID: "",
   PRIORITY_ID: "",
-  CATEGORY_ID: "",
   TICKET_TYPE: "",
 };
 
@@ -37,13 +36,8 @@ export default function MyTicketsPage() {
 
   const { data: lookups } = useLookups();
   const { data: usersData } = useUsers({ limit: 500 });
-  const { data: workers = [] } = useWorkers();
   const users = usersData?.data || [];
   const userMap = useMemo(() => Object.fromEntries(users.map((u) => [u.ID, u.USERNAME])), [users]);
-  const workerMap = useMemo(
-    () => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])),
-    [workers]
-  );
 
   const statusOpts = useMemo(
     () => (lookups?.statuses || []).map((s) => ({ value: String(s.STATUS_ID), label: s.STATUS_NAME })),
@@ -51,10 +45,6 @@ export default function MyTicketsPage() {
   );
   const priorityOpts = useMemo(
     () => (lookups?.priorities || []).map((p) => ({ value: String(p.PRIORITY_ID), label: p.PRIORITY_NAME })),
-    [lookups]
-  );
-  const categoryOpts = useMemo(
-    () => (lookups?.categories || []).map((c) => ({ value: String(c.CATEGORY_ID), label: c.CATEGORY_NAME })),
     [lookups]
   );
 
@@ -119,8 +109,6 @@ export default function MyTicketsPage() {
             onClear={handleClear}
             statusOpts={statusOpts}
             priorityOpts={priorityOpts}
-            categoryOpts={categoryOpts}
-            // showWorkerFilter={false}
           />
         </div>
 
@@ -131,7 +119,6 @@ export default function MyTicketsPage() {
           setPagination={setPagination}
           total={data?.total || 0}
           userMap={userMap}
-          workerMap={workerMap}
           // showWorkerColumn={false}
           tableKey="tickets-my"
         />

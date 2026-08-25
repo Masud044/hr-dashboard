@@ -13,19 +13,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
+import WrappedName from "@/components/shared/WrappedName";
+import { cn } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
 import PriorityBadge from "./PriorityBadge";
 import TicketTypeBadge from "./TicketTypeBadge";
-import { fmtDate, fmtDateTime, isOverdue } from "../lib/ticket-utils";
+import { fmtDateTime, isOverdue } from "../lib/ticket-utils";
 
 /**
  * props:
  *  - data, isLoading
  *  - pagination, setPagination, total
- *  - userMap: { [id]: name } for created-by display
- *  - workerMap: { [id]: name } for assigned worker display
- *  - showWorkerColumn (hide on "My Tickets")
  *  - tableKey (persisted page size)
+ *
+ * Note: userMap / workerMap / showWorkerColumn are accepted by callers but no
+ * longer rendered here — created-by/contractor/owner/category/created/worker
+ * details live on the ticket detail page.
  */
 export default function TicketTable({
   data = [],
@@ -33,9 +36,6 @@ export default function TicketTable({
   pagination,
   setPagination,
   total = 0,
-  userMap = {},
-  workerMap = {},
-  showWorkerColumn = true,
   tableKey = "tickets",
 }) {
   const navigate = useNavigate();
@@ -56,52 +56,30 @@ export default function TicketTable({
         accessorKey: "SUBJECT",
         header: "Subject",
         cell: ({ row }) => (
-          <div className="text-sm font-medium text-foreground max-w-[240px] truncate" title={row.original.SUBJECT}>
-            {row.original.SUBJECT}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "TICKET_TYPE",
-        header: "Type",
-        cell: ({ row }) => <TicketTypeBadge type={row.original.TICKET_TYPE} />,
-      },
-      {
-        id: "createdBy",
-        header: "Created By",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {userMap[row.original.CREATED_BY] || `ID: ${row.original.CREATED_BY}`}
-          </div>
+          <WrappedName
+            name={row.original.SUBJECT}
+            size="sm"
+           maxLines={1}
+            maxChars={40}
+          />
         ),
       },
       {
         accessorKey: "PROJECT_NAME",
         header: "Project",
         cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.original.PROJECT_NAME || "General"}</div>
+          <WrappedName
+            name={row.original.PROJECT_NAME || "General"}
+            size="sm"
+            maxLines={2}
+            maxChars={80}
+          />
         ),
       },
       {
-        accessorKey: "CONTRACTOR_NAME",
-        header: "Contractor",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.original.CONTRACTOR_NAME || "—"}</div>
-        ),
-      },
-      {
-        accessorKey: "OWNER_NAME",
-        header: "Owner",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.original.OWNER_NAME || "—"}</div>
-        ),
-      },
-      {
-        accessorKey: "CATEGORY_NAME",
-        header: "Category",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{row.original.CATEGORY_NAME || "—"}</div>
-        ),
+        accessorKey: "TICKET_TYPE",
+        header: "Type",
+        cell: ({ row }) => <TicketTypeBadge type={row.original.TICKET_TYPE} />,
       },
       {
         accessorKey: "PRIORITY_NAME",
@@ -112,30 +90,6 @@ export default function TicketTable({
         accessorKey: "STATUS_NAME",
         header: "Status",
         cell: ({ row }) => <StatusBadge status={row.original.STATUS_NAME} />,
-      },
-    ];
-
-    if (showWorkerColumn) {
-      base.push({
-        id: "worker",
-        header: "Worker",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {row.original.ASSIGNED_WORKER_ID
-              ? workerMap[row.original.ASSIGNED_WORKER_ID] || `ID: ${row.original.ASSIGNED_WORKER_ID}`
-              : "Unassigned"}
-          </div>
-        ),
-      });
-    }
-
-    base.push(
-      {
-        accessorKey: "CREATED_AT",
-        header: "Created",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">{fmtDate(row.original.CREATED_AT)}</div>
-        ),
       },
       {
         accessorKey: "DUE_DATE",
@@ -152,11 +106,14 @@ export default function TicketTable({
       },
       {
         id: "actions",
-        header: () => <div className="text-center">Actions</div>,
+        header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <button
-              onClick={() => goToTicket(row.original.TICKET_ID)}
+              onClick={(e) => {
+                e.stopPropagation();
+                goToTicket(row.original.TICKET_ID);
+              }}
               title="View"
               className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
             >
@@ -164,11 +121,11 @@ export default function TicketTable({
             </button>
           </div>
         ),
-      }
-    );
+      },
+    ];
 
     return base;
-  }, [showWorkerColumn, userMap, workerMap, goToTicket]);
+  }, [goToTicket]);
 
   const table = useReactTable({
     data,
@@ -188,7 +145,14 @@ export default function TicketTable({
             {table.getHeaderGroups().map((group) => (
               <TableRow key={group.id} className="border-b border-dashed border-border bg-secondary/60 hover:bg-secondary/60">
                 {group.headers.map((header) => (
-                  <TableHead key={header.id} className="px-4 py-3 font-bold text-foreground">
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      "px-4 py-3 font-bold text-foreground",
+                      header.column.id === "actions" &&
+                        "sticky right-0 z-20 bg-secondary text-center border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]"
+                    )}
+                  >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -206,16 +170,33 @@ export default function TicketTable({
             {!isLoading && table.getRowModel().rows?.length
               ? table.getRowModel().rows.map((row) => {
                   const overdue = isOverdue(row.original);
+                  // DESIGN.md striping: odd rows Surface (bg-card), even rows Background
+                  // (#FAFAFA). "!" beats the shared TableBody's nth-child(even) tint so
+                  // striping is owned entirely by this component.
+                  const stripeBg = row.index % 2 === 1 ? "bg-background!" : "bg-card!";
                   return (
                     <TableRow
                       key={row.id}
                       onClick={() => goToTicket(row.original.TICKET_ID)}
-                      className={`border-b border-border hover:bg-secondary/50 transition-colors cursor-pointer ${
-                        row.index % 2 === 1 ? "bg-muted/60" : ""
-                      } ${overdue ? "bg-red-500/5" : ""}`}
+                      className={cn(
+                        "group border-b border-border transition-colors cursor-pointer",
+                        stripeBg,
+                        overdue && "bg-red-500/5!",
+                        "hover:bg-muted!"
+                      )}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="px-4 py-3 align-middle">
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "px-4 py-3 align-middle",
+                            cell.column.id === "actions" &&
+                              cn(
+                                "sticky right-0 z-10 border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)] group-hover:bg-muted!",
+                                stripeBg
+                              )
+                          )}
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
