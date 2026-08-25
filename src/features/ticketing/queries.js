@@ -78,6 +78,29 @@ export const useCreateCannedResponse = () => {
   });
 };
 
+export const useUpdateCannedResponse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ responseId, data }) =>
+      fetcher(`${URLS.root}/canned-responses/${responseId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ticketing", "canned-responses"] }),
+  });
+};
+
+export const useDeleteCannedResponse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (responseId) =>
+      fetcher(`${URLS.root}/canned-responses/${responseId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ticketing", "canned-responses"] }),
+  });
+};
+
 // ── Tickets: list / detail ───────────────────────────────────────────────────
 
 /**
@@ -123,6 +146,21 @@ export const useCreateTicket = () => {
   });
 };
 
+export const useUpdateTicket = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, ...data }) =>
+      fetcher(`${URLS.root}/${ticketId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
 export const useAssignWorker = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -162,6 +200,35 @@ export const useAddComment = () => {
       fetcher(`${URLS.root}/${ticketId}/comments`, {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
+export const useUpdateComment = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, COMMENT_TEXT }) =>
+      fetcher(`${URLS.root}/comments/${commentId}`, {
+        method: "PUT",
+        body: JSON.stringify({ COMMENT_TEXT }),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
+export const useDeleteComment = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId }) =>
+      fetcher(`${URLS.root}/comments/${commentId}`, {
+        method: "DELETE",
       }),
     onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });

@@ -388,10 +388,10 @@
   }
 
   /* Links */
-  a {
+  /* a {
     color: var(--primary);
     text-decoration: none;
-  }
+  } */
 
   a:hover {
     color: #4F46E5;

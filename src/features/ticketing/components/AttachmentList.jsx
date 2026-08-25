@@ -38,45 +38,58 @@ export default function AttachmentList({ attachments = [] }) {
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {attachments.map((f) => {
         const isImage = f.FILE_TYPE?.startsWith("image/");
         const Icon = isImage ? FileImage : FileText;
         const fileUrl = attachmentFileUrl(f.ATTACHMENT_ID);
 
         return (
-          <div key={f.ATTACHMENT_ID} className="flex items-center gap-2.5 bg-secondary rounded-md px-2.5 py-1.5">
-            <div className="shrink-0 w-7 h-7 rounded-md border border-border bg-card flex items-center justify-center overflow-hidden">
+          <div
+            key={f.ATTACHMENT_ID}
+            className="group rounded-lg border border-border bg-card overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block h-24 bg-secondary/60 border-b border-border overflow-hidden"
+              title={f.FILE_NAME}
+            >
               {isImage ? (
-                <img src={fileUrl} alt={f.FILE_NAME} className="w-full h-full object-cover" />
+                <img src={fileUrl} alt={f.FILE_NAME} loading="lazy" className="w-full h-full object-cover" />
               ) : (
-                <Icon size={14} className="text-muted-foreground" />
+                <span className="w-full h-full flex items-center justify-center">
+                  <Icon size={22} className="text-muted-foreground" />
+                </span>
               )}
-            </div>
-            <div className="flex-1 min-w-0">
+            </a>
+            <div className="p-3">
               <a
                 href={fileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-primary hover:text-[#4F46E5] truncate block"
                 title={f.FILE_NAME}
+                className="block text-[13px] font-medium text-foreground hover:text-primary truncate"
               >
                 {f.FILE_NAME}
               </a>
-              <div className="text-[11px] text-muted-foreground">{fmtBytes(f.FILE_SIZE_KB)}</div>
+              <div className="flex items-center justify-between mt-1.5">
+                <span className="text-caption text-muted-foreground">{fmtBytes(f.FILE_SIZE_KB)}</span>
+                <button
+                  onClick={() => handleDownload(fileUrl, f.ATTACHMENT_ID, f.FILE_NAME)}
+                  disabled={downloadingId === f.ATTACHMENT_ID}
+                  title="Download"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors disabled:opacity-40"
+                >
+                  {downloadingId === f.ATTACHMENT_ID ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Download size={14} />
+                  )}
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => handleDownload(fileUrl, f.ATTACHMENT_ID, f.FILE_NAME)}
-              disabled={downloadingId === f.ATTACHMENT_ID}
-              className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-40"
-              title="Download"
-            >
-              {downloadingId === f.ATTACHMENT_ID ? (
-                <Loader2 size={12} className="animate-spin" />
-              ) : (
-                <Download size={12} />
-              )}
-            </button>
           </div>
         );
       })}

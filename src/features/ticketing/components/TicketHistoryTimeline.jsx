@@ -1,5 +1,5 @@
 // src/features/ticketing/components/TicketHistoryTimeline.jsx
-import { History } from "lucide-react";
+import { History, ArrowRight } from "lucide-react";
 import { fmtDateTime } from "../lib/ticket-utils";
 
 const ACTOR_LABEL = { USER: "User", AGENT: "Agent", SYSTEM: "System" };
@@ -27,9 +27,8 @@ export default function TicketHistoryTimeline({ history = [], userMap = {},worke
   };
 
   return (
-    <div className="space-y-3">
-      {history.map((h) => {
-        console.log("h", h)
+    <div>
+      {history.map((h, idx) => {
         const actorName =
           h.CHANGED_BY === "SYSTEM"
             ? "System"
@@ -37,26 +36,38 @@ export default function TicketHistoryTimeline({ history = [], userMap = {},worke
 
         const oldVal = resolveValue(h.FIELD_CHANGED, h.OLD_VALUE);
         const newVal = resolveValue(h.FIELD_CHANGED, h.NEW_VALUE);
-        // const fieldLabel = h.FIELD_CHANGED === "AGENT" ? "assigned agent" : h.FIELD_CHANGED?.toLowerCase();
         const fieldLabel = h.FIELD_CHANGED === "TRADE_CONTACT" ? "assigned worker" : h.FIELD_CHANGED?.toLowerCase();
 
         return (
-          <div key={h.HISTORY_ID} className="flex gap-2.5">
-            <div className="shrink-0 w-6 h-6 rounded-full bg-secondary flex items-center justify-center mt-0.5">
+          <div key={h.HISTORY_ID} className="relative flex gap-3 pb-5 last:pb-0">
+            {idx < history.length - 1 && (
+              <span aria-hidden className="absolute left-[11px] top-7 bottom-0 w-px bg-border" />
+            )}
+            <span className="relative z-10 shrink-0 size-6 rounded-full bg-secondary border border-border flex items-center justify-center">
               <History size={11} className="text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0 text-xs">
-              <p className="text-foreground">
-                <span className="font-semibold">{actorName}</span>{" "}
-                changed <span className="font-medium">{fieldLabel}</span>{" "}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                <p className="text-[13px] leading-snug text-foreground">
+                  <span className="font-semibold">{actorName}</span>
+                  <span className="text-muted-foreground"> changed </span>
+                  <span className="font-medium">{fieldLabel}</span>
+                </p>
+                <span className="text-caption text-muted-foreground shrink-0">{fmtDateTime(h.CHANGED_AT)}</span>
+              </div>
+              <div className="mt-1.5 flex items-center gap-1.5 flex-wrap text-caption">
                 {oldVal && (
                   <>
-                    from <span className="text-muted-foreground">{oldVal}</span>{" "}
+                    <span className="rounded-xs border border-border bg-secondary text-muted-foreground px-1.5 py-0.5 line-through">
+                      {oldVal}
+                    </span>
+                    <ArrowRight size={11} className="text-muted-foreground shrink-0" />
                   </>
                 )}
-                to <span className="font-medium">{newVal ?? "—"}</span>
-              </p>
-              <span className="text-[11px] text-muted-foreground">{fmtDateTime(h.CHANGED_AT)}</span>
+                <span className="rounded-xs border border-border bg-card text-foreground font-medium px-1.5 py-0.5">
+                  {newVal ?? "—"}
+                </span>
+              </div>
             </div>
           </div>
         );
