@@ -2,7 +2,15 @@
 import { useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ArrowLeft, Info, ShieldCheck, Paperclip, MessagesSquare, History as HistoryIcon, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  Info,
+  ShieldCheck,
+  Paperclip,
+  MessagesSquare,
+  History as HistoryIcon,
+  Pencil,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,15 +40,20 @@ import CommentThread from "./components/CommentThread";
 import TicketHistoryTimeline from "./components/TicketHistoryTimeline";
 import { fmtDateTime, fmtCurrency, isOverdue } from "./lib/ticket-utils";
 import { useWorkers } from "./lookup-queries";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 function Row({ label, value, valueNode }) {
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm border-b border-border last:border-b-0">
-      <span className="text-[13px] text-muted-foreground shrink-0">{label}</span>
+      <span className="text-[13px] text-muted-foreground shrink-0">
+        {label}
+      </span>
       {valueNode ? (
         valueNode
       ) : (
-        <span className="font-medium text-right text-foreground break-words">{value ?? "—"}</span>
+        <span className="font-medium text-right text-foreground break-words">
+          {value ?? "—"}
+        </span>
       )}
     </div>
   );
@@ -49,7 +62,9 @@ function Row({ label, value, valueNode }) {
 function RowStacked({ label, children }) {
   return (
     <div className="px-4 py-3 text-sm border-b border-border last:border-b-0">
-      <span className="block text-[13px] text-muted-foreground mb-1">{label}</span>
+      <span className="block text-[13px] text-muted-foreground mb-1">
+        {label}
+      </span>
       {children}
     </div>
   );
@@ -57,7 +72,12 @@ function RowStacked({ label, children }) {
 
 function SectionCard({ icon: Icon, title, className, children }) {
   return (
-    <div className={cn("rounded-md border border-border bg-card overflow-hidden", className)}>
+    <div
+      className={cn(
+        "rounded-md border border-border bg-card overflow-hidden",
+        className,
+      )}
+    >
       <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border">
         <Icon size={13} className="text-primary" />
         <h4 className="text-overline text-muted-foreground">{title}</h4>
@@ -85,13 +105,23 @@ export default function TicketDetailPage() {
 
   // const users = usersData?.data || [];
   const userMap = useMemo(
-  () => Object.fromEntries((usersData?.data || []).map((u) => [u.ID, u.USERNAME])),
-  [usersData]
-);
-  const workerMap = useMemo(() => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])), [workers]);
+    () =>
+      Object.fromEntries(
+        (usersData?.data || []).map((u) => [u.ID, u.USERNAME]),
+      ),
+    [usersData],
+  );
+  const workerMap = useMemo(
+    () => Object.fromEntries(workers.map((w) => [w.WORKER_ID, w.WORKER_NAME])),
+    [workers],
+  );
   const statusOpts = useMemo(
-    () => (lookups?.statuses || []).map((s) => ({ value: s.STATUS_NAME, label: s.STATUS_NAME })),
-    [lookups]
+    () =>
+      (lookups?.statuses || []).map((s) => ({
+        value: s.STATUS_NAME,
+        label: s.STATUS_NAME,
+      })),
+    [lookups],
   );
 
   const ticket = data?.ticket;
@@ -100,7 +130,8 @@ export default function TicketDetailPage() {
   const attachments = data?.attachments || [];
 
   const overdue = ticket ? isOverdue(ticket) : false;
-  const showChangeAmount = ticket?.TICKET_TYPE === "VARIATION" && ticket?.CHANGE_AMOUNT != null;
+  const showChangeAmount =
+    ticket?.TICKET_TYPE === "VARIATION" && ticket?.CHANGE_AMOUNT != null;
 
   const handleStatusChange = (statusName) => {
     if (!statusName || statusName === ticket?.STATUS_NAME) return;
@@ -108,12 +139,15 @@ export default function TicketDetailPage() {
       { ticketId, statusName },
       {
         onSuccess: () => toast.success("Status updated."),
-        onError: (err) => toast.error(err?.message || "Failed to update status."),
-      }
+        onError: (err) =>
+          toast.error(err?.message || "Failed to update status."),
+      },
     );
   };
 
-  const backTo = canViewAll ? "/dashboard/tickets" : "/dashboard/tickets/my-tickets";
+  const backTo = canViewAll
+    ? "/dashboard/tickets"
+    : "/dashboard/tickets/my-tickets";
 
   return (
     <SectionContainer variant="dashboard">
@@ -133,29 +167,38 @@ export default function TicketDetailPage() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{ticket?.TICKET_NUMBER || "Detail"}</BreadcrumbPage>
+              <BreadcrumbPage>
+                {ticket?.TICKET_NUMBER || "Detail"}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
         <div className="flex items-center gap-2 mt-3">
-          <Button variant="ghost" size="icon-sm" onClick={() => navigate(backTo)} className="shrink-0 -ml-2 text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => navigate(backTo)}
+            className="shrink-0 -ml-2 text-muted-foreground"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-lg md:text-xl font-semibold tracking-tight">
             {ticket?.TICKET_NUMBER || "Ticket"}
           </h1>
           {ticket && <StatusBadge status={ticket.STATUS_NAME} />}
-          {canEdit && ticket && !["CLOSED", "CANCELLED"].includes(ticket.STATUS_NAME) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/dashboard/tickets/${ticketId}/edit`)}
-              className="ml-auto shrink-0 text-muted-foreground"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
-          )}
+          {canEdit &&
+            ticket &&
+            !["CLOSED", "CANCELLED"].includes(ticket.STATUS_NAME) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/dashboard/tickets/${ticketId}/edit`)}
+                className="ml-auto shrink-0 text-muted-foreground"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
         </div>
       </div>
 
@@ -173,46 +216,89 @@ export default function TicketDetailPage() {
 
       {!isLoading && ticket && (
         <div className="p-4 sm:p-5 border  rounded-md">
-          <Tabs defaultValue="comments" >
-            <TabsList>
-              <TabsTrigger value="comments" >
+          <Tabs defaultValue="comments">
+            <ScrollArea className="w-full whitespace-nowrap">
+            <TabsList
+              className="max-w-full overflow-x-auto"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <TabsTrigger value="comments" className="shrink-0 flex-none">
                 <MessagesSquare />
                 Comments
               </TabsTrigger>
-              <TabsTrigger value="overview" >
+              <TabsTrigger value="overview" className="shrink-0 flex-none">
                 <Info />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="attachments" >
+              <TabsTrigger value="attachments" className="shrink-0 flex-none">
                 <Paperclip />
                 Attachments
               </TabsTrigger>
-              <TabsTrigger value="history" className="rounded-none">
+              <TabsTrigger value="history" className="shrink-0 flex-none">
                 <HistoryIcon />
                 History
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="comments" forceMount className="mt-4 data-[state=inactive]:hidden">
-              <CommentThread ticketId={ticketId} comments={comments} userMap={userMap} canManage={canViewAll} currentUserId={user?.id} ticketCategoryId={ticket.CATEGORY_ID} />
+            <ScrollBar orientation="horizontal" />
+</ScrollArea>
+            <TabsContent
+              value="comments"
+              forceMount
+              className="mt-4 data-[state=inactive]:hidden"
+            >
+              <CommentThread
+                ticketId={ticketId}
+                comments={comments}
+                userMap={userMap}
+                canManage={canViewAll}
+                currentUserId={user?.id}
+                ticketCategoryId={ticket.CATEGORY_ID}
+              />
             </TabsContent>
 
-            <TabsContent value="overview" forceMount className="mt-4 data-[state=inactive]:hidden">
+            <TabsContent
+              value="overview"
+              forceMount
+              className="mt-4 data-[state=inactive]:hidden"
+            >
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
-                <SectionCard icon={Info} title="Ticket Info" className="lg:col-span-3">
+                <SectionCard
+                  icon={Info}
+                  title="Ticket Info"
+                  className="lg:col-span-3"
+                >
                   <Row label="Subject" value={ticket.SUBJECT} />
                   <RowStacked label="Description">
                     <p className="text-[13px] text-foreground whitespace-pre-wrap break-words">
                       {ticket.DESCRIPTION || "—"}
                     </p>
                   </RowStacked>
-                  <Row label="Type" valueNode={<TicketTypeBadge type={ticket.TICKET_TYPE} />} />
-                  {showChangeAmount && <Row label="Change Amount" value={fmtCurrency(ticket.CHANGE_AMOUNT)} />}
-                  <Row label="Project" value={ticket.PROJECT_NAME || "General"} />
-                  <Row label="Contractor" value={ticket.CONTRACTOR_NAME || "—"} />
+                  <Row
+                    label="Type"
+                    valueNode={<TicketTypeBadge type={ticket.TICKET_TYPE} />}
+                  />
+                  {showChangeAmount && (
+                    <Row
+                      label="Change Amount"
+                      value={fmtCurrency(ticket.CHANGE_AMOUNT)}
+                    />
+                  )}
+                  <Row
+                    label="Project"
+                    value={ticket.PROJECT_NAME || "General"}
+                  />
+                  <Row
+                    label="Contractor"
+                    value={ticket.CONTRACTOR_NAME || "—"}
+                  />
                   <Row label="Owner" value={ticket.OWNER_NAME || "—"} />
                   <Row label="Category" value={ticket.CATEGORY_NAME} />
-                  <Row label="Priority" valueNode={<PriorityBadge priority={ticket.PRIORITY_NAME} />} />
+                  <Row
+                    label="Priority"
+                    valueNode={
+                      <PriorityBadge priority={ticket.PRIORITY_NAME} />
+                    }
+                  />
                   <Row
                     label="Status"
                     valueNode={
@@ -231,11 +317,18 @@ export default function TicketDetailPage() {
                       )
                     }
                   />
-                  <Row label="Created By" value={userMap[ticket.CREATED_BY] || `ID: ${ticket.CREATED_BY}`} />
+                  <Row
+                    label="Created By"
+                    value={
+                      userMap[ticket.CREATED_BY] || `ID: ${ticket.CREATED_BY}`
+                    }
+                  />
                   <Row
                     label="Due Date"
                     valueNode={
-                      <span className={`font-medium text-right ${overdue ? "text-red-600" : "text-foreground"}`}>
+                      <span
+                        className={`font-medium text-right ${overdue ? "text-red-600" : "text-foreground"}`}
+                      >
                         {fmtDateTime(ticket.DUE_DATE)}
                       </span>
                     }
@@ -243,16 +336,27 @@ export default function TicketDetailPage() {
                 </SectionCard>
 
                 {canAssign && (
-                  <SectionCard icon={ShieldCheck} title="Assignment" className="lg:col-span-2">
+                  <SectionCard
+                    icon={ShieldCheck}
+                    title="Assignment"
+                    className="lg:col-span-2"
+                  >
                     <div className="px-4 py-4">
-                      <AssignWorkerDropdown ticketId={ticketId} currentWorkerId={ticket.ASSIGNED_WORKER_ID} />
+                      <AssignWorkerDropdown
+                        ticketId={ticketId}
+                        currentWorkerId={ticket.ASSIGNED_WORKER_ID}
+                      />
                     </div>
                   </SectionCard>
                 )}
               </div>
             </TabsContent>
 
-            <TabsContent value="attachments" forceMount className="mt-4 data-[state=inactive]:hidden">
+            <TabsContent
+              value="attachments"
+              forceMount
+              className="mt-4 data-[state=inactive]:hidden"
+            >
               <SectionCard icon={Paperclip} title="Attachments">
                 <div className="p-4 space-y-4">
                   <AttachmentList attachments={attachments} />
@@ -261,10 +365,19 @@ export default function TicketDetailPage() {
               </SectionCard>
             </TabsContent>
 
-            <TabsContent value="history" forceMount className="mt-4 data-[state=inactive]:hidden">
+            <TabsContent
+              value="history"
+              forceMount
+              className="mt-4 data-[state=inactive]:hidden"
+            >
               <SectionCard icon={HistoryIcon} title="History">
                 <div className="px-4 py-4">
-                  <TicketHistoryTimeline history={history} userMap={userMap} workerMap={workerMap} lookups={lookups} />
+                  <TicketHistoryTimeline
+                    history={history}
+                    userMap={userMap}
+                    workerMap={workerMap}
+                    lookups={lookups}
+                  />
                 </div>
               </SectionCard>
             </TabsContent>

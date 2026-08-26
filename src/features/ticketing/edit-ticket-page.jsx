@@ -120,53 +120,48 @@ export default function EditTicketPage() {
 
   return (
     <SectionContainer variant="dashboard">
-      <div className="bg-card rounded-md shadow-sm p-4 mb-4">
-        <div className="space-y-0.5">
-          <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Edit Ticket</h1>
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard/tickets">Tickets</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to={`/dashboard/tickets/${ticketId}`}>
-                    {ticket?.TICKET_NUMBER || "Ticket"}
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Edit</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </div>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard">Dashboard</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard/tickets">Tickets</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to={`/dashboard/tickets/${ticketId}`}>
+                {ticket?.TICKET_NUMBER || "Ticket"}
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Edit</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {isLoading && (
-        <div className="bg-card rounded-md shadow-sm p-8 text-center text-sm text-muted-foreground">
+        <div className="bg-card border border-border rounded-md p-8 text-center text-sm text-muted-foreground">
           Loading ticket...
         </div>
       )}
 
       {!isLoading && !ticket && (
-        <div className="bg-card rounded-md shadow-sm p-8 text-center text-sm text-muted-foreground">
+        <div className="bg-card border border-border rounded-md p-8 text-center text-sm text-muted-foreground">
           Ticket not found.
         </div>
       )}
 
       {!isLoading && ticket && isLocked && (
-        <div className="bg-card rounded-md shadow-sm p-8 text-center">
+        <div className="bg-card border border-border rounded-md p-8 text-center">
           <p className="text-sm text-muted-foreground mb-4">
             This ticket cannot be edited because it is {ticket.STATUS_NAME}.
           </p>
@@ -177,20 +172,20 @@ export default function EditTicketPage() {
       )}
 
       {!isLoading && ticket && !isLocked && (
-        <div className="bg-card rounded-md shadow-sm p-4">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Pencil className="h-5 w-5 text-primary" />
+        <div className="bg-card border border-border rounded-md p-4">
+          <div className="max-w-3xl mx-auto p-5 border border-border rounded-md">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-11 w-11 rounded-md border border-border flex items-center justify-center shrink-0">
+                <Pencil className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Edit Ticket</h2>
+                <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Edit Ticket</h1>
                 <p className="text-sm text-muted-foreground">Update the details of {ticket.TICKET_NUMBER}.</p>
               </div>
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="SUBJECT"
@@ -207,7 +202,7 @@ export default function EditTicketPage() {
                   )}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
                   <FormField
                     control={form.control}
                     name="PRIORITY_ID"

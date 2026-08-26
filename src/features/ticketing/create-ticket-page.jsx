@@ -176,45 +176,40 @@ export default function CreateTicketPage() {
 
   return (
     <SectionContainer variant="dashboard">
-      <div className="bg-card rounded-md shadow-sm p-4 mb-4">
-        <div className="space-y-0.5">
-          <h1 className="text-lg md:text-2xl font-semibold tracking-tight">New Ticket</h1>
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard/tickets">Tickets</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>New Ticket</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </div>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard">Dashboard</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard/tickets">Tickets</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>New Ticket</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      <div className="bg-card rounded-md shadow-sm p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <LifeBuoy className="h-5 w-5 text-primary" />
+      <div className="bg-card border border-border rounded-md p-4">
+        <div className="max-w-3xl mx-auto p-5 border border-border rounded-md">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="h-11 w-11 rounded-md border border-border flex items-center justify-center shrink-0">
+              <LifeBuoy className="h-5 w-5 " />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">New Ticket</h2>
+              <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Ticket</h1>
               <p className="text-sm text-muted-foreground">Describe your issue and we'll route it to the right team.</p>
             </div>
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="SUBJECT"
@@ -231,7 +226,7 @@ export default function CreateTicketPage() {
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
                 <FormField
                   control={form.control}
                   name="TICKET_TYPE"
@@ -242,7 +237,7 @@ export default function CreateTicketPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select a type" />
                           </SelectTrigger>
                         </FormControl>
@@ -308,7 +303,7 @@ export default function CreateTicketPage() {
                 />
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
                 <FormField
                   control={form.control}
                   name="PROJECT_ID"

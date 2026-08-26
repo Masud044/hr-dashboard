@@ -139,7 +139,7 @@ export default function TicketTable({
 
   return (
     <>
-      <div className="rounded-lg border border-border overflow-hidden bg-card shadow-card">
+      <div className="rounded-md border border-border overflow-hidden bg-card shadow-card">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((group) => (
