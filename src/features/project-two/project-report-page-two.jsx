@@ -49,7 +49,7 @@ import { useHasPermission } from "@/hooks/use-permission";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
-const CONTRACTOR_ROWS_PREVIEW = 5;
+// const CONTRACTOR_ROWS_PREVIEW = 5;
 
 const fmtDate = (val) => {
   if (!val) return "—";
@@ -75,8 +75,9 @@ const initials = (name) => (name || "?").trim().charAt(0).toUpperCase();
 function SourceBadge({ row }) {
   const isNonBanking = row.SOURCE_TYPE === "NON_BANKING";
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span
+    <div className="flex flex-col items-start">
+      <div className="flex flex-col items-center gap-0.5">
+        <span
         className={`w-fit whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full ${
           isNonBanking
             ? "bg-accent text-accent-foreground"
@@ -90,6 +91,7 @@ function SourceBadge({ row }) {
           Customer Paid
         </span>
       )}
+      </div>
     </div>
   );
 }
@@ -119,7 +121,7 @@ export function ProjectReportPageTwo() {
 
   const [activeTab, setActiveTab] = useState("byContractor"); // "transactions" | "byContractor"
   const [sorting, setSorting] = useState([{ id: "TXN_DATE", desc: true }]);
-  const [expandedContractors, setExpandedContractors] = useState({});
+  // const [expandedContractors, setExpandedContractors] = useState({});
   const workerSectionRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -258,9 +260,9 @@ export function ProjectReportPageTwo() {
     });
   }, [rows]);
 
-  const toggleContractorExpanded = (key) => {
-    setExpandedContractors((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  // const toggleContractorExpanded = (key) => {
+  //   setExpandedContractors((prev) => ({ ...prev, [key]: !prev[key] }));
+  // };
 
   // ── CSV export helpers ──────────────────────────────────────────────
   const buildSummaryCsvRows = () => [
@@ -628,7 +630,7 @@ export function ProjectReportPageTwo() {
 
   return (
     <SectionContainer variant="dashboard">
-      <div className="bg-card border border-border rounded-lg p-4 md:p-6 shadow-sm">
+      <div className="bg-card border border-border rounded-md p-4 md:p-6 shadow-sm">
         {/* ── Page Header ───────────────────────────────────────────── */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -790,7 +792,7 @@ export function ProjectReportPageTwo() {
 
         {/* ── Tab Bar ──────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div className="inline-flex items-center gap-1 bg-secondary rounded-lg p-1">
+          <div className="inline-flex items-center gap-1 bg-secondary rounded-md p-1">
             <button
               onClick={() => setActiveTab("byContractor")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm font-medium transition-all ${
@@ -845,7 +847,7 @@ export function ProjectReportPageTwo() {
 
         {/* ── Transactions Tab (TanStack Table) ───────────────────── */}
         {activeTab === "transactions" && (
-          <div className="border border-border rounded-lg overflow-hidden">
+          <div className="border border-border rounded-md overflow-hidden">
             <div className="overflow-x-auto">
               <Table className="min-w-[1200px] ">
                 <TableHeader>
@@ -935,23 +937,25 @@ export function ProjectReportPageTwo() {
                 Loading...
               </div>
             ) : groupedByContractor.length === 0 && workerLogs.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground border border-border rounded-lg">
+              <div className="text-center py-12 text-muted-foreground border border-border rounded-md">
                 No approved transactions for this project.
               </div>
             ) : (
               <>
                 {groupedByContractor.map((group) => {
+                  // const key = group.contractorId ?? "none";
+                  // const isExpanded = !!expandedContractors[key];
+                  // const visibleRows = isExpanded
+                  //   ? group.rows
+                  //   : group.rows.slice(0, CONTRACTOR_ROWS_PREVIEW);
+                  // const hasMore = group.rows.length > CONTRACTOR_ROWS_PREVIEW;
                   const key = group.contractorId ?? "none";
-                  const isExpanded = !!expandedContractors[key];
-                  const visibleRows = isExpanded
-                    ? group.rows
-                    : group.rows.slice(0, CONTRACTOR_ROWS_PREVIEW);
-                  const hasMore = group.rows.length > CONTRACTOR_ROWS_PREVIEW;
+const visibleRows = group.rows;
 
                   return (
                     <div
                       key={key}
-                      className="border border-border rounded-lg overflow-hidden"
+                      className="border border-border rounded-md overflow-hidden"
                     >
                       {/* Contractor header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-b border-border">
@@ -1101,7 +1105,7 @@ export function ProjectReportPageTwo() {
                         </table>
                       </div>
 
-                      {hasMore && (
+                      {/* {hasMore && (
                         <div className="border-t border-border px-4 py-2.5 bg-muted/10">
                           <button
                             onClick={() => toggleContractorExpanded(key)}
@@ -1119,7 +1123,7 @@ export function ProjectReportPageTwo() {
                             )}
                           </button>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   );
                 })}
@@ -1128,7 +1132,7 @@ export function ProjectReportPageTwo() {
                 {workerLogs.length > 0 && (
                   <div
                     ref={workerSectionRef}
-                    className="scroll-mt-16 border border-border rounded-lg overflow-hidden"
+                    className="scroll-mt-16 border border-border rounded-md overflow-hidden"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-b border-border">
                       <div className="flex items-center gap-2">
