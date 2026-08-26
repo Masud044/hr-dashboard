@@ -56,6 +56,16 @@ export const useLookups = () =>
     ...queryDefaults,
   });
 
+export const useTicketSummary = () =>
+  useQuery({
+    queryKey: ["ticketing", "summary"],
+    queryFn: async () => {
+      const json = await fetcher(`${URLS.root}/summary`);
+      return json.data; // { open, active, overdue, urgent }
+    },
+    ...queryDefaults,
+  });
+
 export const useCannedResponses = () =>
   useQuery({
     queryKey: ["ticketing", "canned-responses"],

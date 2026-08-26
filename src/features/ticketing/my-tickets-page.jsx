@@ -18,6 +18,7 @@ import { useUsers } from "@/features/user-management/queries";
 import { useLookups, useTickets } from "./queries";
 import TicketTable from "./components/TicketTable";
 import TicketFilters from "./components/TicketFilters";
+import StatsSummary from "./components/StatsSummary";
 import TicketDetailSheet from "./ticket-detail-sheet";
 
 const emptyFilters = {
@@ -99,6 +100,8 @@ export default function MyTicketsPage() {
           </div>
         </div>
       </div>
+
+      <StatsSummary className="mb-4" />
 
       <div className="bg-card rounded-md shadow-sm p-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5">
