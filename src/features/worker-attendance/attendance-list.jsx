@@ -1,3 +1,4 @@
+// src\features\worker-attendance\attendance-list.jsx
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -11,7 +12,11 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronsUpDown,
+  CheckCircle2,
+  Undo2,
+  Loader2,
 } from "lucide-react";
+
 import { toast } from "react-toastify";
 import {
   flexRender,
@@ -20,6 +25,11 @@ import {
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -45,8 +55,12 @@ import { useNavigate } from "react-router-dom";
 
 import DateInput from "@/components/shared/DateInput";
 import EntityCombobox from "@/components/shared/entity-combobox";
-import { formatDateWithDay, formatHoursMinutes } from "@/lib/utils";
+import { formatDateWithDay, formatHoursMinutes, cn } from "@/lib/utils";
 import { useHasPermission } from "@/hooks/use-permission";
+import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -77,7 +91,7 @@ export function AttendanceList() {
   const navigate = useNavigate();
 
   const canCreate = useHasPermission("ATTENDANCE_CREATE");
-  const canEdit = useHasPermission("ATTENDANCE_EDIT");
+  // const canEdit = useHasPermission("ATTENDANCE_EDIT");
   const canDelete = useHasPermission("ATTENDANCE_DELETE");
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -115,6 +129,15 @@ export function AttendanceList() {
     "toDate",
     parseAsString.withDefault(""),
   );
+
+  const [status, setStatus] = useQueryState(
+    "status",
+    parseAsString.withDefault("PENDING"),
+  );
+  const [rowSelection, setRowSelection] = useState({});
+  const canApprove = useHasPermission("ATTENDANCE_APPROVE");
+  console.log(canApprove);
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   const pagination = useMemo(
     () => ({ pageIndex: page - 1, pageSize: limit }),
@@ -206,6 +229,7 @@ export function AttendanceList() {
       limit,
       sortBy,
       sortOrder,
+      status,
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -214,6 +238,7 @@ export function AttendanceList() {
       if (projectId) params.append("PROJECT_ID", projectId);
       if (fromDate) params.append("FROM_DATE", fromDate);
       if (toDate) params.append("TO_DATE", toDate);
+      if (status) params.append("APPROVAL_STATUS", status);
       params.append("page", page);
       params.append("limit", limit);
       params.append("sortBy", sortBy);
@@ -225,6 +250,45 @@ export function AttendanceList() {
       return res.data;
     },
   });
+
+  const approveMutation = useMutation({
+    mutationFn: async (ids) =>
+      axios.post(`${url}/api/worker-attendance/approve`, {
+        attendanceIds: ids,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["worker-attendance"]);
+      toast.success("Attendance approved!");
+      setRowSelection({});
+    },
+    onError: (err) =>
+      toast.error(err?.response?.data?.message || "Failed to approve."),
+  });
+
+  const disapproveMutation = useMutation({
+    mutationFn: async (id) =>
+      axios.post(`${url}/api/worker-attendance/${id}/disapprove`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["worker-attendance"]);
+      toast.success("Reverted to pending.");
+    },
+    onError: (err) =>
+      toast.error(err?.response?.data?.message || "Failed to revert."),
+  });
+
+  const selectedIds = Object.keys(rowSelection);
+
+  const handleApproveSelected = async () => {
+    if (selectedIds.length === 0) return;
+    const confirmed = await showConfirmation({
+      title: "Approve attendance?",
+      description: `Are you sure you want to approve ${selectedIds.length} selected attendance record(s)?`,
+      confirmText: "Approve",
+      cancelText: "Cancel",
+      variant: "default",
+    });
+    if (confirmed) approveMutation.mutate(selectedIds);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id) =>
@@ -243,10 +307,10 @@ export function AttendanceList() {
     navigate("/dashboard/worker-attendance/create");
   };
 
-  const handleEdit = (row) => {
-    const id = row.ID || row.ATTENDANCE_ID;
-    navigate(`/dashboard/worker-attendance/${id}/edit`);
-  };
+  // const handleEdit = (row) => {
+  //   const id = row.ID || row.ATTENDANCE_ID;
+  //   navigate(`/dashboard/worker-attendance/${id}/edit`);
+  // };
   const handleView = (id) => {
     navigate(`/dashboard/worker-attendance/${id}`);
   };
@@ -301,6 +365,31 @@ export function AttendanceList() {
   };
 
   const columns = [
+    {
+      id: "select",
+      header: ({ table }) =>
+        status === "PENDING" ? (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+            aria-label="Select all"
+            className="border border-gray-400"
+          />
+        ) : null,
+      cell: ({ row }) =>
+        status === "PENDING" ? (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(v) => row.toggleSelected(!!v)}
+            aria-label="Select row"
+            className="border border-gray-500"
+          />
+        ) : null,
+      enableSorting: false,
+    },
     {
       accessorKey: "ATTENDANCE_DATE",
       header: () => (
@@ -367,6 +456,25 @@ export function AttendanceList() {
         </div>
       ),
     },
+
+    {
+      accessorKey: "APPROVAL_STATUS",
+      header: "Status",
+      cell: ({ row }) => {
+        const s = row.getValue("APPROVAL_STATUS");
+        return (
+          <span
+            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              s === "APPROVED"
+                ? "bg-[#10B981]/10 text-[#10B981]"
+                : "bg-amber-500/10 text-amber-600"
+            }`}
+          >
+            {s === "APPROVED" ? "Approved" : "Pending"}
+          </span>
+        );
+      },
+    },
     {
       id: "actions",
       header: () => (
@@ -377,33 +485,134 @@ export function AttendanceList() {
       cell: ({ row }) => {
         const item = row.original;
         const itemId = item.ID || item.ATTENDANCE_ID;
+
+        const isDeletingThis =
+          deleteMutation.isPending && deleteMutation.variables === itemId;
+        const isApprovingThis =
+          approveMutation.isPending &&
+          Array.isArray(approveMutation.variables) &&
+          approveMutation.variables.includes(itemId);
+        const isDisapprovingThis =
+          disapproveMutation.isPending &&
+          disapproveMutation.variables === itemId;
+        const anyPendingForRow =
+          isDeletingThis || isApprovingThis || isDisapprovingThis;
+
         return (
           <div className="flex items-center gap-1.5 justify-center">
-            <button
-              onClick={() => handleView(itemId)}
-              title="View"
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
-            >
-              <Eye size={15} />
-            </button>
-            {canEdit && (
-              <button
-                onClick={() => handleEdit(item)}
-                title="Edit"
-                className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-md transition-all duration-150"
-              >
-                <Pencil size={15} />
-              </button>
-            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  onClick={() => handleView(itemId)}
+                  disabled={anyPendingForRow}
+                  aria-label="View"
+                  className="h-7 w-7 rounded-full bg-accent-foreground/90 dark:bg-accent-foreground/60 hover:bg-accent-foreground/70 dark:hover:bg-accent-foreground disabled:opacity-40"
+                >
+                  <Eye size={13} className="text-white" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>View</TooltipContent>
+            </Tooltip>
+
+            {/* {canEdit && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={() => handleEdit(item)}
+                    disabled={anyPendingForRow}
+                    aria-label="Edit"
+                    className="h-7 w-7 rounded-full bg-primary hover:bg-primary/90 disabled:opacity-40"
+                  >
+                    <Pencil size={13} className="text-white" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit</TooltipContent>
+              </Tooltip>
+            )} */}
+
             {canDelete && (
-              <button
-                onClick={() => handleDeleteClick(itemId)}
-                title="Delete"
-                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all duration-150"
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 size={15} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={() => handleDeleteClick(itemId)}
+                    disabled={anyPendingForRow}
+                    aria-label="Delete"
+                    className="h-7 w-7 rounded-full bg-destructive dark:bg-destructive/70 hover:bg-destructive/80 dark:hover:bg-destructive/90 disabled:opacity-40"
+                  >
+                    {isDeletingThis ? (
+                      <Loader2 size={13} className="animate-spin text-white" />
+                    ) : (
+                      <Trash2 size={13} className="text-white" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete</TooltipContent>
+              </Tooltip>
+            )}
+
+            {canApprove && item.APPROVAL_STATUS !== "APPROVED" && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={async () => {
+                      const confirmed = await showConfirmation({
+                        title: "Approve attendance?",
+                        description:
+                          "Are you sure you want to approve this attendance record?",
+                        confirmText: "Approve",
+                        cancelText: "Cancel",
+                        variant: "default",
+                      });
+                      if (confirmed) approveMutation.mutate([itemId]);
+                    }}
+                    disabled={anyPendingForRow}
+                    aria-label="Approve"
+                    className="h-7 w-7 rounded-full bg-green-600 dark:bg-green-800/90 hover:bg-green-500 dark:hover:bg-green-600 disabled:opacity-40"
+                  >
+                    {isApprovingThis ? (
+                      <Loader2 size={13} className="animate-spin text-white" />
+                    ) : (
+                      <CheckCircle2 size={13} className="text-white" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Approve</TooltipContent>
+              </Tooltip>
+            )}
+
+            {canApprove && item.APPROVAL_STATUS === "APPROVED" && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={async () => {
+                      const confirmed = await showConfirmation({
+                        title: "Revert to pending?",
+                        description:
+                          "Are you sure you want to revert this attendance record back to pending?",
+                        confirmText: "Revert",
+                        cancelText: "Cancel",
+                        variant: "default",
+                      });
+                      if (confirmed) disapproveMutation.mutate(itemId);
+                    }}
+                    disabled={anyPendingForRow}
+                    aria-label="Revert to Pending"
+                    className="h-7 w-7 rounded-full bg-amber-500 hover:bg-amber-400 dark:bg-amber-700 dark:hover:bg-amber-600 disabled:opacity-40"
+                  >
+                    {isDisapprovingThis ? (
+                      <Loader2 size={13} className="animate-spin text-white" />
+                    ) : (
+                      <Undo2 size={13} className="text-white" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Revert to Pending</TooltipContent>
+              </Tooltip>
             )}
           </div>
         );
@@ -416,205 +625,253 @@ export function AttendanceList() {
     columns,
     manualPagination: true,
     pageCount: Math.ceil((apiData?.total || 0) / pagination.pageSize),
-    state: { pagination },
+    state: { pagination, rowSelection },
     onPaginationChange,
+    onRowSelectionChange: setRowSelection,
+    getRowId: (row) => String(row.ATTENDANCE_ID),
     getCoreRowModel: getCoreRowModel(),
+    enableRowSelection: true,
   });
 
   return (
     <>
-      <div className="mt-6 px-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-5">
-          <div className="flex flex-wrap items-center gap-3  flex-1">
-            <EntityCombobox
-              items={workerOpts}
-              value={draftFilters.WORKER_ID}
-              onValueChange={(v) =>
-                setDraftFilters((f) => ({ ...f, WORKER_ID: v }))
-              }
-              placeholder="All Workers"
-              size="md"
-              className="w-[180px]"
-              showAvatar
-              avatarInTrigger
-            />
-
-            <EntityCombobox
-              items={projectOpts}
-              value={draftFilters.PROJECT_ID}
-              onValueChange={(v) =>
-                setDraftFilters((f) => ({ ...f, PROJECT_ID: v }))
-              }
-              placeholder="All Projects"
-              size="md"
-              className="w-60"
-            />
-
-            <DateInput
-              value={draftFilters.FROM_DATE}
-              onChange={(v) => setDraftFilters((f) => ({ ...f, FROM_DATE: v }))}
-            />
-            <DateInput
-              value={draftFilters.TO_DATE}
-              onChange={(v) => setDraftFilters((f) => ({ ...f, TO_DATE: v }))}
-            />
-
-            <div className="relative w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search by worker"
-                value={draftFilters.WORKER_NAME}
-                onChange={(e) =>
-                  setDraftFilters((f) => ({
-                    ...f,
-                    WORKER_NAME: e.target.value,
-                  }))
-                }
-                className="w-full h-10 pl-9 rounded-md border-input-border focus-visible:shadow-focus"
-              />
-            </div>
-
-            <Button
-              onClick={handleSearch}
-              disabled={!hasActiveDraftFilter || isDateRangeInvalid}
-              className="h-10 rounded-full bg-primary text-primary-foreground shadow-teal-glow hover:bg-primary/90 disabled:shadow-none font-semibold transition-transform active:scale-95"
+      <SectionContainer variant="dashboard">
+        
+        <div className="">
+          <div className="flex justify-between mb-4 bg-card  rounded-md  p-4">
+            <Tabs
+              value={status}
+              onValueChange={(v) => {
+                setStatus(v);
+                setPage(1);
+                setRowSelection({});
+              }}
             >
-              Search
-            </Button>
-
-            {hasActiveDraftFilter && (
-              <Button
-                variant="outline"
-                onClick={handleClear}
-                className="h-10 rounded-full border-primary text-primary hover:bg-secondary font-semibold transition-transform active:scale-95"
-              >
-                Clear
+              <TabsList>
+                <TabsTrigger value="PENDING">Pending</TabsTrigger>
+                <TabsTrigger value="APPROVED">Approved</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {canCreate && (
+              <Button onClick={handleCreate}>
+                <PlusIcon size={16} />
+                Add Attendance
               </Button>
             )}
           </div>
-          {canCreate && (
-            <Button
-              onClick={handleCreate}
-              className="h-10 rounded-full gap-2 font-bold text-primary-dark bg-gradient-to-b from-accent-light via-accent to-accent-dark shadow-accent-glow hover:brightness-105 transition-transform active:scale-95"
-            >
-              <PlusIcon size={16} />
-              Add Attendance
-            </Button>
-          )}
-        </div>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-card mb-3 rounded-md  p-4">
+            <div className="flex flex-wrap items-center gap-3  flex-1">
+              <EntityCombobox
+                items={workerOpts}
+                value={draftFilters.WORKER_ID}
+                onValueChange={(v) =>
+                  setDraftFilters((f) => ({ ...f, WORKER_ID: v }))
+                }
+                placeholder="All Workers"
+                size="md"
+                className="w-[180px]"
+                showAvatar
+                avatarInTrigger
+              />
 
-        <div className="rounded-lg border border-border overflow-hidden bg-card shadow-card">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((group) => (
-                <TableRow
-                  key={group.id}
-                  className="border-b border-dashed border-border bg-secondary/60 hover:bg-secondary/60"
-                >
-                  {group.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className="px-4 py-3 font-bold text-foreground"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="text-center h-24 text-sm text-muted-foreground"
-                  >
-                    Loading...
-                  </TableCell>
-                </TableRow>
+              <EntityCombobox
+                items={projectOpts}
+                value={draftFilters.PROJECT_ID}
+                onValueChange={(v) =>
+                  setDraftFilters((f) => ({ ...f, PROJECT_ID: v }))
+                }
+                placeholder="All Projects"
+                size="md"
+                className="w-60"
+              />
+
+              <DateInput
+                value={draftFilters.FROM_DATE}
+                onChange={(v) =>
+                  setDraftFilters((f) => ({ ...f, FROM_DATE: v }))
+                }
+              />
+              <DateInput
+                value={draftFilters.TO_DATE}
+                onChange={(v) => setDraftFilters((f) => ({ ...f, TO_DATE: v }))}
+              />
+
+              <div className="relative w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search by worker"
+                  value={draftFilters.WORKER_NAME}
+                  onChange={(e) =>
+                    setDraftFilters((f) => ({
+                      ...f,
+                      WORKER_NAME: e.target.value,
+                    }))
+                  }
+                  className="w-full h-10 pl-9 rounded-md border-input-border focus-visible:shadow-focus"
+                />
+              </div>
+              {hasActiveDraftFilter && (
+                <Button variant="outline" onClick={handleClear}>
+                  Clear
+                </Button>
               )}
-              {!isLoading && table.getRowModel().rows?.length
-                ? table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className={`border-b border-border hover:bg-secondary/50 transition-colors ${row.index % 2 === 1 ? "bg-muted/60" : ""}`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className="px-4 py-3 align-middle"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                : !isLoading && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="text-center h-24 text-sm text-muted-foreground"
+               {hasActiveDraftFilter && (
+                <Button onClick={handleSearch}>Search</Button>
+              )}
+
+              
+            </div>
+
+            {canApprove && selectedIds.length > 0 && (
+              <Button
+                onClick={handleApproveSelected}
+                disabled={approveMutation.isPending}
+                className="h-10 rounded-full gap-2 font-semibold bg-[#10B981] text-white hover:bg-[#0ea975]"
+              >
+                <CheckCircle2 size={16} />
+                Approve ({selectedIds.length})
+              </Button>
+            )}
+          </div>
+
+         <div className="rounded-md bg-card  p-4">
+           <div className="rounded-md border border-border overflow-hidden  shadow-card  ">
+            <Table >
+              <TableHeader>
+                {table.getHeaderGroups().map((group) => (
+                  <TableRow
+                    key={group.id}
+                    className="border-b border-dashed border-border bg-secondary/60 hover:bg-secondary/60"
+                  >
+                    {group.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className={cn(
+                          "px-4 py-3 font-bold text-foreground",
+                          header.column.id === "actions" &&
+                            "sticky right-0 z-20 bg-secondary text-center border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]",
+                        )}
                       >
-                        No records found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-            </TableBody>
-          </Table>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {isLoading && (
+                  <TableRow >
+                    <TableCell
+                      colSpan={columns.length}
+                      className="text-center h-24 text-sm text-muted-foreground"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && table.getRowModel().rows?.length
+                  ? table.getRowModel().rows.map((row) => {
+                      const stripeBg = row.index % 2 === 1 ? "bg-muted/60" : "";
+                      return (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && "selected"}
+                          className={cn(
+                            "border-b border-border  hover:bg-secondary/50 transition-colors",
+                            stripeBg,
+                          )}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell
+                              key={cell.id}
+                              className={cn(
+                                "px-4 py-3 align-middle",
+                                cell.column.id === "actions" &&
+                                  cn(
+                                    "sticky right-0 z-10 border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)] bg-card",
+                                    stripeBg,
+                                  ),
+                              )}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      );
+                    })
+                  : !isLoading && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={columns.length}
+                          className="text-center h-24 text-sm text-muted-foreground"
+                        >
+                          No records found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+              </TableBody>
+            </Table>
+          </div>
+         </div>
+
+          <div className="">
+            <DataTablePaginationTwo
+              table={table}
+              tableKey="worker-attendance"
+            />
+          </div>
         </div>
 
-        <div className="border-t border-border">
-          <DataTablePaginationTwo table={table} tableKey="worker-attendance" />
-        </div>
-      </div>
+        <AttendanceFormSheet
+          isOpen={sheetOpen}
+          onClose={() => {
+            setSheetOpen(false);
+            setSelectedAttendanceId(null);
+            setInitialData(null);
+          }}
+          attendanceId={selectedAttendanceId}
+          initialData={initialData}
+        />
 
-      <AttendanceFormSheet
-        isOpen={sheetOpen}
-        onClose={() => {
-          setSheetOpen(false);
-          setSelectedAttendanceId(null);
-          setInitialData(null);
-        }}
-        attendanceId={selectedAttendanceId}
-        initialData={initialData}
-      />
+        <ConfirmationDialog />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-card border-border rounded-xl shadow-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">
-              Delete Attendance?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this attendance record. This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeleteTargetId(null)}
-              className="rounded-full"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="rounded-full bg-destructive text-destructive-foreground shadow-coral-glow hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="bg-card border-border rounded-xl shadow-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground">
+                Delete Attendance?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this attendance record. This action
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => setDeleteTargetId(null)}
+                className="rounded-full"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="rounded-full bg-destructive text-destructive-foreground shadow-coral-glow hover:bg-destructive/90"
+                onClick={handleDeleteConfirm}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </SectionContainer>
     </>
   );
 }
