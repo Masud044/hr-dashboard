@@ -1,14 +1,18 @@
 // src\features\worker-attendance\attendance-details.jsx
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import axios from "axios";
+import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
+  CheckCircle2,
   Clock,
   FileText,
   Loader2,
   Pencil,
+  Undo2,
   User,
 } from "lucide-react";
 
@@ -17,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateWithDay, formatHoursMinutes } from "@/lib/utils";
 import { useHasPermission } from "@/hooks/use-permission";
+import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -28,17 +33,15 @@ function getWorkedDisplay(record) {
   return { value: formatHoursMinutes(record.HOURS_WORKED), unit: "" };
 }
 
+
+
 function formatDateTime(value) {
   if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // value is "YYYY-MM-DD HH24:MI:SS" in UTC — mark it as UTC explicitly
+  const isoUtc = value.replace(" ", "T") + "Z";
+  const d = parseISO(isoUtc);
+  if (isNaN(d.getTime())) return value;
+  return format(d, "MMM d, yyyy, h:mm a");
 }
 
 function Field({ label, children, className = "" }) {
@@ -60,6 +63,9 @@ export function AttendanceDetails() {
   const navigate = useNavigate();
 
   const canEdit = useHasPermission("ATTENDANCE_EDIT");
+  const canApprove = useHasPermission("ATTENDANCE_APPROVE");
+  const queryClient = useQueryClient();
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   const {
     data: attendance,
@@ -101,6 +107,32 @@ export function AttendanceDetails() {
     () => Object.fromEntries(projects.map((p) => [p.P_ID, p.P_NAME])),
     [projects],
   );
+
+  const approveMutation = useMutation({
+    mutationFn: async () =>
+      axios.post(`${url}/api/worker-attendance/approve`, {
+        attendanceIds: [attendanceId],
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["worker-attendance", attendanceId]);
+      queryClient.invalidateQueries(["worker-attendance"]);
+      toast.success("Attendance approved!");
+    },
+    onError: (err) =>
+      toast.error(err?.response?.data?.message || "Failed to approve."),
+  });
+
+  const disapproveMutation = useMutation({
+    mutationFn: async () =>
+      axios.post(`${url}/api/worker-attendance/${attendanceId}/disapprove`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["worker-attendance", attendanceId]);
+      queryClient.invalidateQueries(["worker-attendance"]);
+      toast.success("Reverted to pending.");
+    },
+    onError: (err) =>
+      toast.error(err?.response?.data?.message || "Failed to revert."),
+  });
 
   // ── Loading state ───────────────────────────
   if (isLoading) {
@@ -166,9 +198,22 @@ export function AttendanceDetails() {
         {/* ── Page header ─────────────────────── */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Attendance Details
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground">
+                Attendance Details
+              </h1>
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  attendance.APPROVAL_STATUS === "APPROVED"
+                    ? "bg-[#10B981]/10 text-[#10B981]"
+                    : "bg-amber-500/10 text-amber-600"
+                }`}
+              >
+                {attendance.APPROVAL_STATUS === "APPROVED"
+                  ? "Approved"
+                  : "Pending"}
+              </span>
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">
               Record from {formatDateWithDay(attendance.ATTENDANCE_DATE)}
             </p>
@@ -183,6 +228,48 @@ export function AttendanceDetails() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
+
+            {canApprove && attendance.APPROVAL_STATUS !== "APPROVED" && (
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const confirmed = await showConfirmation({
+                    title: "Approve attendance?",
+                    description: "Are you sure you want to approve this attendance record?",
+                    confirmText: "Approve",
+                    cancelText: "Cancel",
+                    variant: "default",
+                  });
+                  if (confirmed) approveMutation.mutate();
+                }}
+                disabled={approveMutation.isPending}
+                className="gap-2 bg-[#10B981] hover:bg-[#0ea975] text-white"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Approve
+              </Button>
+            )}
+            {canApprove && attendance.APPROVAL_STATUS === "APPROVED" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  const confirmed = await showConfirmation({
+                    title: "Revert to pending?",
+                    description: "Are you sure you want to revert this attendance record back to pending?",
+                    confirmText: "Revert",
+                    cancelText: "Cancel",
+                    variant: "default",
+                  });
+                  if (confirmed) disapproveMutation.mutate();
+                }}
+                disabled={disapproveMutation.isPending}
+                className="gap-2 text-amber-600 border-amber-600 hover:bg-amber-50"
+              >
+                <Undo2 className="h-4 w-4" />
+                Revert to Pending
+              </Button>
+            )}
 
             {
               canEdit && <Button
@@ -277,9 +364,21 @@ export function AttendanceDetails() {
                 {formatDateTime(attendance.UPDATED_DATE)}
               </span>
             </Field>
+            <Field label="Approved By">
+              <span className="text-xs font-medium text-foreground">
+                {attendance.APPROVED_BY || "—"}
+              </span>
+            </Field>
+            <Field label="Approved Date">
+              <span className="text-xs font-medium text-foreground">
+                {formatDateTime(attendance.APPROVED_DATE)}
+              </span>
+            </Field>
           </div>
         </Card>
       </div>
+
+      <ConfirmationDialog />
     </div>
   );
 }
