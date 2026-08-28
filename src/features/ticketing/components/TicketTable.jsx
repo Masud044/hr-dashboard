@@ -71,7 +71,7 @@ export default function TicketTable({
           <WrappedName
             name={row.original.PROJECT_NAME || "General"}
             size="sm"
-            maxLines={2}
+            maxLines={1}
             maxChars={80}
           />
         ),
@@ -177,7 +177,7 @@ export default function TicketTable({
                   return (
                     <TableRow
                       key={row.id}
-                      onClick={() => goToTicket(row.original.TICKET_ID)}
+                      // onClick={() => goToTicket(row.original.TICKET_ID)}
                       className={cn(
                         "group border-b border-border transition-colors cursor-pointer",
                         stripeBg,

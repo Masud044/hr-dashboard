@@ -252,6 +252,7 @@ export default function TicketDetailPage() {
                 userMap={userMap}
                 canManage={canViewAll}
                 currentUserId={user?.id}
+                currentUserName={user?.username}
                 ticketCategoryId={ticket.CATEGORY_ID}
               />
             </TabsContent>

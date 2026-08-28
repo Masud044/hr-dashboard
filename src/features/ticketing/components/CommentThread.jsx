@@ -1,5 +1,5 @@
 // src/features/ticketing/components/CommentThread.jsx
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   Lock,
@@ -54,6 +54,7 @@ function Avatar({ name }) {
  *  - ticketId, comments, userMap (id -> username)
  *  - canManage: shows "Internal Note" toggle + canned response picker
  *  - currentUserId: enables inline edit/delete on the author's own comments
+ *  - currentUserName: author name shown for pending (optimistic) comments
  *  - ticketCategoryId: prioritizes canned responses matching the ticket's category
  */
 export default function CommentThread({
@@ -62,6 +63,7 @@ export default function CommentThread({
   userMap = {},
   canManage = false,
   currentUserId,
+  currentUserName,
   ticketCategoryId,
 }) {
   const [text, setText] = useState("");
@@ -69,6 +71,7 @@ export default function CommentThread({
   const [cannedId, setCannedId] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedText, setEditedText] = useState("");
+  const scrollContainerRef = useRef(null);
 
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
   const addComment = useAddComment();
@@ -77,7 +80,9 @@ export default function CommentThread({
   const { data: cannedResponses = [] } = useCannedResponses();
 
   const isOwner = (c) =>
-    currentUserId != null && String(c.AUTHOR_ID) === String(currentUserId);
+    !c._optimistic &&
+    currentUserId != null &&
+    String(c.AUTHOR_ID) === String(currentUserId);
 
   const startEdit = (c) => {
     setEditingCommentId(c.COMMENT_ID);
@@ -155,6 +160,7 @@ export default function CommentThread({
           AUTHOR_TYPE: canManage ? "AGENT" : "USER",
           IS_INTERNAL: isInternal ? "Y" : "N",
           CANNED_RESPONSE_ID: cannedId || null,
+          AUTHOR_ID: currentUserId,
         },
       },
       {
@@ -162,6 +168,10 @@ export default function CommentThread({
           setText("");
           setIsInternal(false);
           setCannedId("");
+          requestAnimationFrame(() => {
+            const el = scrollContainerRef.current;
+            if (el) el.scrollTop = el.scrollHeight;
+          });
         },
         onError: (err) => toast.error(err?.message || "Failed to add comment."),
       },
@@ -171,15 +181,19 @@ export default function CommentThread({
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-card p-4 md:p-5">
-        <div className="space-y-5 max-h-[420px] overflow-y-auto pr-1">
+        <div
+          ref={scrollContainerRef}
+          className="space-y-5 max-h-[420px] overflow-y-auto pr-1"
+        >
           {comments.length === 0 && (
             <p className="text-xs text-muted-foreground">No comments yet.</p>
           )}
           {comments.map((c) => {
             const internal = c.IS_INTERNAL === "Y";
-            const authorName =
-              userMap[c.AUTHOR_ID] ||
-              `${c.AUTHOR_TYPE}${c.AUTHOR_ID ? ` #${c.AUTHOR_ID}` : ""}`;
+            const authorName = c._optimistic
+              ? currentUserName
+              : userMap[c.AUTHOR_ID] ||
+                `${c.AUTHOR_TYPE}${c.AUTHOR_ID ? ` #${c.AUTHOR_ID}` : ""}`;
             return (
               <div key={c.COMMENT_ID} className="flex gap-3">
                 <Avatar name={authorName} />
@@ -188,9 +202,15 @@ export default function CommentThread({
                     <span className="text-sm font-semibold text-foreground">
                       {authorName}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {fmtDateTime(c.CREATED_AT)}
-                    </span>
+                    {c._optimistic ? (
+                      <span className="text-xs text-muted-foreground">
+                        Sending...
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {fmtDateTime(c.CREATED_AT)}
+                      </span>
+                    )}
                     {c.UPDATED_AT && (
                       <span className="text-[10px] text-muted-foreground">
                         (edited)
@@ -270,7 +290,7 @@ export default function CommentThread({
                         internal
                           ? "bg-warning/5 border-warning/20"
                           : "bg-accent border-primary/10"
-                      }`}
+                      } ${c._optimistic ? "opacity-70" : ""}`}
                     >
                       {c.COMMENT_TEXT}
                     </div>
