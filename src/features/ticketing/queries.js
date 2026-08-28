@@ -206,12 +206,48 @@ export const useUpdateStatus = () => {
 export const useAddComment = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketId, data }) =>
-      fetcher(`${URLS.root}/${ticketId}/comments`, {
+    mutationFn: ({ ticketId, data }) => {
+      // AUTHOR_ID is provided for optimistic attribution only — the server
+      // derives the real author from the auth token, so strip it from the
+      // request body to avoid any risk of overriding server behavior.
+      const { AUTHOR_ID, ...body } = data;
+      return fetcher(`${URLS.root}/${ticketId}/comments`, {
         method: "POST",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: (_, { ticketId }) => {
+        body: JSON.stringify(body),
+      });
+    },
+    onMutate: async ({ ticketId, data }) => {
+      const key = ["ticketing", "ticket", ticketId];
+      await qc.cancelQueries({ queryKey: key });
+      const previousData = qc.getQueryData(key);
+      qc.setQueryData(key, (old) => ({
+        ...(old || {}),
+        comments: [
+          ...(old?.comments || []),
+          {
+            COMMENT_ID: `temp-${Date.now()}`,
+            COMMENT_TEXT: data.COMMENT_TEXT,
+            AUTHOR_TYPE: data.AUTHOR_TYPE,
+            IS_INTERNAL: data.IS_INTERNAL,
+            CANNED_RESPONSE_ID: data.CANNED_RESPONSE_ID,
+            AUTHOR_ID: data.AUTHOR_ID,
+            CREATED_AT: new Date().toISOString(),
+            UPDATED_AT: null,
+            _optimistic: true,
+          },
+        ],
+      }));
+      return { previousData };
+    },
+    onError: (_err, { ticketId }, context) => {
+      if (context?.previousData) {
+        qc.setQueryData(
+          ["ticketing", "ticket", ticketId],
+          context.previousData,
+        );
+      }
+    },
+    onSettled: (_data, _err, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
       qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
     },
@@ -226,7 +262,33 @@ export const useUpdateComment = () => {
         method: "PUT",
         body: JSON.stringify({ COMMENT_TEXT }),
       }),
-    onSuccess: (_, { ticketId }) => {
+    onMutate: async ({ commentId, ticketId, COMMENT_TEXT }) => {
+      const key = ["ticketing", "ticket", ticketId];
+      await qc.cancelQueries({ queryKey: key });
+      const previousData = qc.getQueryData(key);
+      qc.setQueryData(key, (old) => ({
+        ...(old || {}),
+        comments: (old?.comments || []).map((c) =>
+          String(c.COMMENT_ID) === String(commentId)
+            ? {
+                ...c,
+                COMMENT_TEXT,
+                UPDATED_AT: new Date().toISOString(),
+              }
+            : c,
+        ),
+      }));
+      return { previousData };
+    },
+    onError: (_err, { ticketId }, context) => {
+      if (context?.previousData) {
+        qc.setQueryData(
+          ["ticketing", "ticket", ticketId],
+          context.previousData,
+        );
+      }
+    },
+    onSettled: (_data, _err, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
       qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
     },
@@ -240,7 +302,27 @@ export const useDeleteComment = () => {
       fetcher(`${URLS.root}/comments/${commentId}`, {
         method: "DELETE",
       }),
-    onSuccess: (_, { ticketId }) => {
+    onMutate: async ({ commentId, ticketId }) => {
+      const key = ["ticketing", "ticket", ticketId];
+      await qc.cancelQueries({ queryKey: key });
+      const previousData = qc.getQueryData(key);
+      qc.setQueryData(key, (old) => ({
+        ...(old || {}),
+        comments: (old?.comments || []).filter(
+          (c) => String(c.COMMENT_ID) !== String(commentId),
+        ),
+      }));
+      return { previousData };
+    },
+    onError: (_err, { ticketId }, context) => {
+      if (context?.previousData) {
+        qc.setQueryData(
+          ["ticketing", "ticket", ticketId],
+          context.previousData,
+        );
+      }
+    },
+    onSettled: (_data, _err, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
       qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
     },
