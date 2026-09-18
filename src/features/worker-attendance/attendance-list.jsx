@@ -238,7 +238,7 @@ export function AttendanceList() {
       if (projectId) params.append("PROJECT_ID", projectId);
       if (fromDate) params.append("FROM_DATE", fromDate);
       if (toDate) params.append("TO_DATE", toDate);
-      if (status) params.append("APPROVAL_STATUS", status);
+      if (status && status !== "ALL") params.append("APPROVAL_STATUS", status);
       params.append("page", page);
       params.append("limit", limit);
       params.append("sortBy", sortBy);
@@ -367,27 +367,84 @@ export function AttendanceList() {
   const columns = [
     {
       id: "select",
-      header: ({ table }) =>
-        status === "PENDING" ? (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-            aria-label="Select all"
-            className="border border-gray-400"
-          />
-        ) : null,
-      cell: ({ row }) =>
-        status === "PENDING" ? (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(v) => row.toggleSelected(!!v)}
-            aria-label="Select row"
-            className="border border-gray-500"
-          />
-        ) : null,
+      header: ({ table }) => {
+        if (status === "PENDING") {
+          return (
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+              aria-label="Select all"
+              className="border border-gray-400"
+            />
+          );
+        }
+        if (status === "ALL") {
+          const pendingRows = table
+            .getRowModel()
+            .rows.filter(
+              (r) => r.original?.APPROVAL_STATUS !== "APPROVED",
+            );
+          const allPendingSelected =
+            pendingRows.length > 0 &&
+            pendingRows.every((r) => r.getIsSelected());
+          const somePendingSelected = pendingRows.some((r) =>
+            r.getIsSelected(),
+          );
+          return (
+            <Checkbox
+              checked={
+                allPendingSelected ||
+                (somePendingSelected && "indeterminate")
+              }
+              onCheckedChange={(v) =>
+                pendingRows.forEach((r) => r.toggleSelected(!!v))
+              }
+              aria-label="Select all"
+              className="border border-gray-400"
+              disabled={pendingRows.length === 0}
+            />
+          );
+        }
+        return null;
+      },
+      cell: ({ row }) => {
+        if (status === "PENDING") {
+          return (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(v) => row.toggleSelected(!!v)}
+              aria-label="Select row"
+              className="border border-gray-500"
+            />
+          );
+        }
+        if (status === "ALL") {
+          const isApprovedRow =
+            row.original?.APPROVAL_STATUS === "APPROVED";
+          if (isApprovedRow) {
+            return (
+              <Checkbox
+                checked={false}
+                disabled
+                aria-label="Select row"
+                className="border border-gray-500"
+              />
+            );
+          }
+          return (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(v) => row.toggleSelected(!!v)}
+              aria-label="Select row"
+              className="border border-gray-500"
+            />
+          );
+        }
+        return null;
+      },
       enableSorting: false,
     },
     {
@@ -538,7 +595,11 @@ export function AttendanceList() {
                   <Button
                     size="icon"
                     onClick={() => handleDeleteClick(itemId)}
-                    disabled={anyPendingForRow}
+                    disabled={
+                      anyPendingForRow ||
+                      (status === "ALL" &&
+                        item.APPROVAL_STATUS === "APPROVED")
+                    }
                     aria-label="Delete"
                     className="h-7 w-7 rounded-full bg-destructive dark:bg-destructive/70 hover:bg-destructive/80 dark:hover:bg-destructive/90 disabled:opacity-40"
                   >
@@ -630,7 +691,8 @@ export function AttendanceList() {
     onRowSelectionChange: setRowSelection,
     getRowId: (row) => String(row.ATTENDANCE_ID),
     getCoreRowModel: getCoreRowModel(),
-    enableRowSelection: true,
+    enableRowSelection: (row) =>
+      status !== "ALL" ? true : row.original?.APPROVAL_STATUS !== "APPROVED",
   });
 
   return (
@@ -648,6 +710,7 @@ export function AttendanceList() {
               }}
             >
               <TabsList>
+                <TabsTrigger value="ALL">All</TabsTrigger>
                 <TabsTrigger value="PENDING">Pending</TabsTrigger>
                 <TabsTrigger value="APPROVED">Approved</TabsTrigger>
               </TabsList>
@@ -777,14 +840,24 @@ export function AttendanceList() {
                 )}
                 {!isLoading && table.getRowModel().rows?.length
                   ? table.getRowModel().rows.map((row) => {
-                      const stripeBg = row.index % 2 === 1 ? "bg-muted/60" : "";
+                      const isApprovedRow =
+                        status === "ALL" &&
+                        row.original?.APPROVAL_STATUS === "APPROVED";
+                      const stripeBg = isApprovedRow
+                        ? "!bg-green-50 dark:!bg-green-950/20"
+                        : row.index % 2 === 1
+                          ? "bg-muted/60"
+                          : "";
+                      const rowBg = row.getIsSelected()
+                        ? "!bg-green-100 dark:!bg-green-900/30"
+                        : stripeBg;
                       return (
                         <TableRow
                           key={row.id}
                           data-state={row.getIsSelected() && "selected"}
                           className={cn(
                             "border-b border-border  hover:bg-secondary/50 transition-colors",
-                            stripeBg,
+                            rowBg,
                           )}
                         >
                           {row.getVisibleCells().map((cell) => (
@@ -795,7 +868,7 @@ export function AttendanceList() {
                                 cell.column.id === "actions" &&
                                   cn(
                                     "sticky right-0 z-10 border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)] bg-card",
-                                    stripeBg,
+                                    rowBg,
                                   ),
                               )}
                             >

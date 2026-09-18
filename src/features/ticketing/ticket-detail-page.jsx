@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { SectionContainer } from "@/components/SectionContainer";
 import EntityCombobox from "@/components/shared/entity-combobox";
+import WrappedName from "@/components/shared/WrappedName";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useHasPermission } from "@/hooks/use-permission";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
@@ -128,6 +129,7 @@ export default function TicketDetailPage() {
   const comments = data?.comments || [];
   const history = data?.history || [];
   const attachments = data?.attachments || [];
+  const assignedWorkers = data?.workers ?? [];
 
   const overdue = ticket ? isOverdue(ticket) : false;
   const showChangeAmount =
@@ -346,7 +348,48 @@ export default function TicketDetailPage() {
                       <AssignWorkerDropdown
                         ticketId={ticketId}
                         currentWorkerId={ticket.ASSIGNED_WORKER_ID}
+                        workers={data?.workers ?? []}
                       />
+                    </div>
+                  </SectionCard>
+                )}
+
+                {!canAssign && (
+                  <SectionCard
+                    icon={ShieldCheck}
+                    title="Assigned Workers"
+                    className="lg:col-span-2"
+                  >
+                    <div className="px-4 py-4">
+                      {ticket.ASSIGNED_WORKER_ID || assignedWorkers.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {ticket.ASSIGNED_WORKER_ID && (
+                            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs">
+                              <WrappedName
+                                name={workerMap[ticket.ASSIGNED_WORKER_ID] ?? `#${ticket.ASSIGNED_WORKER_ID}`}
+                                size="sm"
+                                showAvatar
+                                maxLines={1}
+                              />
+                            </span>
+                          )}
+                          {assignedWorkers.map((a) => (
+                            <span
+                              key={a.ASSIGNMENT_ID ?? a.WORKER_ID}
+                              className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs"
+                            >
+                              <WrappedName
+                                name={workerMap[a.WORKER_ID] ?? `#${a.WORKER_ID}`}
+                                size="sm"
+                                showAvatar
+                                maxLines={1}
+                              />
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Unassigned</p>
+                      )}
                     </div>
                   </SectionCard>
                 )}
@@ -360,7 +403,7 @@ export default function TicketDetailPage() {
             >
               <SectionCard icon={Paperclip} title="Attachments">
                 <div className="p-4 space-y-4">
-                  <AttachmentList attachments={attachments} />
+                  <AttachmentList attachments={attachments} ticketId={ticketId} currentUserId={user?.id} canEdit={canEdit} />
                   <AttachmentUploader ticketId={ticketId} />
                 </div>
               </SectionCard>

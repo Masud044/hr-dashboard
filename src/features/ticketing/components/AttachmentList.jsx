@@ -1,8 +1,10 @@
 // src/features/ticketing/components/AttachmentList.jsx
 import { useState } from "react";
 import axios from "axios";
-import { Download, Loader2, FileText, FileImage } from "lucide-react";
-import { attachmentFileUrl } from "../queries";
+import { toast } from "react-toastify";
+import { Download, Loader2, FileText, FileImage, Trash2 } from "lucide-react";
+import { attachmentFileUrl, useDeleteAttachment } from "../queries";
+import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 
 function fmtBytes(kb) {
   if (kb == null) return "";
@@ -10,8 +12,15 @@ function fmtBytes(kb) {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
-export default function AttachmentList({ attachments = [] }) {
+export default function AttachmentList({ attachments = [], ticketId, currentUserId, canEdit = false }) {
   const [downloadingId, setDownloadingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
+  const deleteAttachment = useDeleteAttachment();
+
+  const canDelete = (f) =>
+    canEdit ||
+    (currentUserId != null && String(f.UPLOADED_BY) === String(currentUserId));
 
   const handleDownload = async (fileUrl, id, fileName) => {
     if (downloadingId) return;
@@ -33,11 +42,37 @@ export default function AttachmentList({ attachments = [] }) {
     }
   };
 
+  const handleDelete = async (f) => {
+    const confirmed = await showConfirmation({
+      title: "Delete attachment?",
+      description: `This will permanently delete "${f.FILE_NAME}". This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    setDeletingId(f.ATTACHMENT_ID);
+    try {
+      await deleteAttachment.mutateAsync({ attachmentId: f.ATTACHMENT_ID, ticketId });
+      toast.success("Attachment deleted.");
+    } catch (error) {
+      toast.error(error?.message || "Failed to delete attachment.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (!attachments.length) {
-    return <p className="text-xs text-muted-foreground">No attachments yet.</p>;
+    return (
+      <>
+        <p className="text-xs text-muted-foreground">No attachments yet.</p>
+        <ConfirmationDialog />
+      </>
+    );
   }
 
   return (
+    <>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {attachments.map((f) => {
         const isImage = f.FILE_TYPE?.startsWith("image/");
@@ -76,23 +111,42 @@ export default function AttachmentList({ attachments = [] }) {
               </a>
               <div className="flex items-center justify-between mt-1.5">
                 <span className="text-caption text-muted-foreground">{fmtBytes(f.FILE_SIZE_KB)}</span>
-                <button
-                  onClick={() => handleDownload(fileUrl, f.ATTACHMENT_ID, f.FILE_NAME)}
-                  disabled={downloadingId === f.ATTACHMENT_ID}
-                  title="Download"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors disabled:opacity-40"
-                >
-                  {downloadingId === f.ATTACHMENT_ID ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Download size={14} />
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleDownload(fileUrl, f.ATTACHMENT_ID, f.FILE_NAME)}
+                    disabled={downloadingId === f.ATTACHMENT_ID || deletingId === f.ATTACHMENT_ID}
+                    title="Download"
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors disabled:opacity-40"
+                  >
+                    {downloadingId === f.ATTACHMENT_ID ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Download size={14} />
+                    )}
+                  </button>
+                  {canDelete(f) && (
+                    <button
+                      onClick={() => handleDelete(f)}
+                      disabled={deletingId === f.ATTACHMENT_ID}
+                      title="Delete"
+                      aria-label={`Delete ${f.FILE_NAME}`}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-accent transition-colors disabled:opacity-40"
+                    >
+                      {deletingId === f.ATTACHMENT_ID ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </button>
                   )}
-                </button>
+                </div>
               </div>
             </div>
           </div>
         );
       })}
     </div>
+    <ConfirmationDialog />
+    </>
   );
 }

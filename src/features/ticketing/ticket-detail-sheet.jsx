@@ -5,7 +5,9 @@ import { Info, ShieldCheck, Paperclip, MessagesSquare, History as HistoryIcon } 
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import EntityCombobox from "@/components/shared/entity-combobox";
+import WrappedName from "@/components/shared/WrappedName";
 import { useHasPermission } from "@/hooks/use-permission";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useUsers } from "@/features/user-management/queries";
 
 import { useTicketSheetStore } from "./useTicketSheetStore";
@@ -52,6 +54,7 @@ export default function TicketDetailSheet() {
   const { data: lookups } = useLookups();
   const { data: usersData } = useUsers({ limit: 500 });
   const { data: workers = [] } = useWorkers();
+  const { user } = useAuthV2();
   const updateStatus = useUpdateStatus();
 
   const users = usersData?.data || [];
@@ -69,6 +72,7 @@ export default function TicketDetailSheet() {
   const comments = data?.comments || [];
   const history = data?.history || [];
   const attachments = data?.attachments || [];
+  const assignedWorkers = data?.workers ?? [];
 
   const overdue = ticket ? isOverdue(ticket) : false;
   const showChangeAmount = ticket?.TICKET_TYPE === "VARIATION" && ticket?.CHANGE_AMOUNT != null;
@@ -146,14 +150,51 @@ export default function TicketDetailSheet() {
                   <AssignWorkerDropdown
                     ticketId={ticketId}
                     currentWorkerId={ticket.ASSIGNED_WORKER_ID}
+                    workers={data?.workers ?? []}
                   />
+                </div>
+              </SectionCard>
+            )}
+
+            {!canAssign && (
+              <SectionCard icon={ShieldCheck} title="Assigned Workers">
+                <div className="py-2">
+                  {ticket.ASSIGNED_WORKER_ID || assignedWorkers.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {ticket.ASSIGNED_WORKER_ID && (
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs">
+                          <WrappedName
+                            name={workerMap[ticket.ASSIGNED_WORKER_ID] ?? `#${ticket.ASSIGNED_WORKER_ID}`}
+                            size="sm"
+                            showAvatar
+                            maxLines={1}
+                          />
+                        </span>
+                      )}
+                      {assignedWorkers.map((a) => (
+                        <span
+                          key={a.ASSIGNMENT_ID ?? a.WORKER_ID}
+                          className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs"
+                        >
+                          <WrappedName
+                            name={workerMap[a.WORKER_ID] ?? `#${a.WORKER_ID}`}
+                            size="sm"
+                            showAvatar
+                            maxLines={1}
+                          />
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Unassigned</p>
+                  )}
                 </div>
               </SectionCard>
             )}
 
             <SectionCard icon={Paperclip} title="Attachments">
               <div className="py-2 space-y-2">
-                <AttachmentList attachments={attachments} />
+                <AttachmentList attachments={attachments} ticketId={ticketId} currentUserId={user?.id} canEdit={canEdit} />
                 {!readOnly && <AttachmentUploader ticketId={ticketId} />}
               </div>
             </SectionCard>

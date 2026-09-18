@@ -186,6 +186,35 @@ export const useAssignWorker = () => {
   });
 };
 
+export const useAddWorker = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, workerId }) =>
+      fetcher(`${URLS.root}/${ticketId}/workers`, {
+        method: "POST",
+        body: JSON.stringify({ WORKER_ID: workerId }),
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
+export const useRemoveWorker = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, workerId }) =>
+      fetcher(`${URLS.root}/${ticketId}/workers/${workerId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: (_, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
+
 export const useUpdateStatus = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -330,6 +359,40 @@ export const useDeleteComment = () => {
 };
 
 // ── Attachments ──────────────────────────────────────────────────────────────
+
+export const useDeleteAttachment = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ attachmentId }) =>
+      fetcher(`${URLS.root}/attachments/${attachmentId}`, {
+        method: "DELETE",
+      }),
+    onMutate: async ({ attachmentId, ticketId }) => {
+      const key = ["ticketing", "ticket", ticketId];
+      await qc.cancelQueries({ queryKey: key });
+      const previousData = qc.getQueryData(key);
+      qc.setQueryData(key, (old) => ({
+        ...(old || {}),
+        attachments: (old?.attachments || []).filter(
+          (a) => String(a.ATTACHMENT_ID) !== String(attachmentId),
+        ),
+      }));
+      return { previousData };
+    },
+    onError: (_err, { ticketId }, context) => {
+      if (context?.previousData) {
+        qc.setQueryData(
+          ["ticketing", "ticket", ticketId],
+          context.previousData,
+        );
+      }
+    },
+    onSettled: (_data, _err, { ticketId }) => {
+      qc.invalidateQueries({ queryKey: ["ticketing", "ticket", ticketId] });
+      qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] });
+    },
+  });
+};
 
 /**
  * Raw axios call (not the JSON fetcher) since this is multipart with upload
