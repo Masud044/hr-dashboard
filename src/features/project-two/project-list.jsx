@@ -13,8 +13,7 @@ import { useHasPermission } from "@/hooks/use-permission";
 
 import axios from "axios";
 import {
-  Pencil,
-  Trash2,
+  Eye,
   ArrowUpDown,
   ChevronUp,
   ChevronDown,
@@ -44,22 +43,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { EditProjectSheet } from "./edit-project-sheet";
 import { CreateProjectSheet } from "./create-project-sheet";
 import { ProcessSheet } from "./create-process-page";
 import { useNavigate } from "react-router-dom";
-import { ProjectReportSheet } from "./project-report-sheet";
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -190,10 +178,6 @@ export function NewProjectTable() {
   const [createSheetOpen, setCreateSheetOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState(null);
-  const [reportSheetOpen, setReportSheetOpen] = useState(false);
-  const [reportProject, setReportProject] = useState(null); // { id, name }
 
   // ── ProcessSheet state ───────────────────────────────────────────────────
   const [processSheetOpen, setProcessSheetOpen] = useState(false);
@@ -201,7 +185,6 @@ export function NewProjectTable() {
 
   const canCreate = useHasPermission("PROJECT_CREATE");
   const canEdit = useHasPermission("PROJECT_EDIT");
-  const canDelete = useHasPermission("PROJECT_DELETE");
   const canViewReport = useHasPermission("PROJECT_REPORT_VIEW");
 
   // ── queries ──────────────────────────────────────────────────────────────
@@ -226,17 +209,6 @@ export function NewProjectTable() {
   );
 
   const apiData = data || [];
-
-  // ── delete ───────────────────────────────────────────────────────────────
-  const deleteMutation = useMutation({
-    mutationFn: async (id) => axios.delete(`${url}/api/project/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["projects"]);
-      toast.success("Project deleted successfully!");
-    },
-    onError: (err) =>
-      toast.error(err?.response?.data?.message || "Failed to delete project."),
-  });
 
   const showMoveToast = (newPosition) => {
     if (!newPosition) return;
@@ -322,23 +294,12 @@ export function NewProjectTable() {
     reorderMutation.mutate({ id, newPosition: parsed });
   };
 
-  const handleEdit = (projectId) => {
-    navigate(`/dashboard/projects/${projectId}/edit`);
-  };
-
-  const handleDeleteClick = (projectId) => {
-    setDeleteTargetId(projectId);
-    setDeleteDialogOpen(true);
+  const handleViewDetails = (projectId) => {
+    navigate(`/dashboard/projects/${projectId}`);
   };
 
   const handleOpenReport = (item) => {
     navigate(`/dashboard/projects/${item.P_ID}/report`);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deleteTargetId) deleteMutation.mutate(deleteTargetId);
-    setDeleteDialogOpen(false);
-    setDeleteTargetId(null);
   };
 
   // ── process sheet open ───────────────────────────────────────────────────
@@ -691,16 +652,13 @@ export function NewProjectTable() {
   const item = row.original;
   return (
     <div className="flex items-center gap-1 justify-center">
-      {canEdit && (
-        <button
-          onClick={() => handleEdit(item.P_ID)}
-          title="Edit Project"
-          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
-        >
-          <Pencil size={15} />
-        </button>
-      )}
-
+      <button
+        onClick={() => handleViewDetails(item.P_ID)}
+        title="View Project"
+        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
+      >
+        <Eye size={15} />
+      </button>
       {canEdit && (
         <button
           onClick={() => handleCreateProcess(item.P_ID)}
@@ -718,17 +676,6 @@ export function NewProjectTable() {
           className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
         >
           <FileText size={15} />
-        </button>
-      )}
-
-      {canDelete && (
-        <button
-          onClick={() => handleDeleteClick(item.P_ID)}
-          title="Delete Project"
-          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
-          disabled={deleteMutation.isPending}
-        >
-          <Trash2 size={15} />
         </button>
       )}
     </div>
@@ -932,45 +879,6 @@ export function NewProjectTable() {
         }}
         projectId={selectedProjectId}
       />
-
-      <ProjectReportSheet
-        isOpen={reportSheetOpen}
-        onClose={() => {
-          setReportSheetOpen(false);
-          setReportProject(null);
-        }}
-        projectId={reportProject?.id}
-        projectName={reportProject?.name}
-      />
-
-      {/* ── Delete Dialog ─────────────────────────────────────────────── */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-card border-border rounded-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">
-              Delete Project?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
-              This will permanently delete the project and all associated data.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeleteTargetId(null)}
-              className="border-border"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
