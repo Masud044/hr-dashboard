@@ -47,6 +47,7 @@ import StatementUpload from "./features/setting/pages/statement-upload";
 import ProjectPage from "./features/project-two/project-page";
 import { CreateProjectPage } from "./features/project-two/create-project-page";
 import { EditProjectPage } from "./features/project-two/edit-project-page";
+import { ProjectDetailPage } from "./features/project-two/project-detail-page";
 import { CreateContractorPage } from "./features/setting/pages/CreateContractorPage";
 import { EditContractorPage } from "./features/setting/pages/EditContractorPage";
 import { ProjectReportPage } from "./features/project-two/project-report-page";
@@ -552,6 +553,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+  path="projects/:id"
+  element={
+    <ProtectedRoute anyPermission="PROJECT_VIEW">
+      <ProjectDetailPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="projects/:id/edit"
                 element={

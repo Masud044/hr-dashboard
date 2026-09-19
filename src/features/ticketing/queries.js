@@ -230,6 +230,15 @@ export const useUpdateStatus = () => {
   });
 };
 
+export const useDeleteTicket = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ticketId) =>
+      fetcher(`${URLS.root}/${ticketId}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ticketing", "tickets"] }),
+  });
+};
+
 // ── Comments ─────────────────────────────────────────────────────────────────
 
 export const useAddComment = () => {

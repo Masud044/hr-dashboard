@@ -10,6 +10,7 @@ import {
   MessagesSquare,
   History as HistoryIcon,
   Pencil,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,10 +28,11 @@ import EntityCombobox from "@/components/shared/entity-combobox";
 import WrappedName from "@/components/shared/WrappedName";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useHasPermission } from "@/hooks/use-permission";
+import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useUsers } from "@/features/user-management/queries";
 
-import { useTicket, useLookups, useUpdateStatus } from "./queries";
+import { useTicket, useLookups, useUpdateStatus, useDeleteTicket } from "./queries";
 import StatusBadge from "./components/StatusBadge";
 import PriorityBadge from "./components/PriorityBadge";
 import TicketTypeBadge from "./components/TicketTypeBadge";
@@ -95,6 +97,7 @@ export default function TicketDetailPage() {
   const canEdit = useHasPermission("TICKET_EDIT");
   const canAssign = useHasPermission("TICKET_ASSIGN");
   const canViewAll = useHasPermission("TICKET_VIEW_ALL");
+  const canDelete = useHasPermission("TICKET_DELETE");
   const { user } = useAuthV2();
 
   const { data, isLoading } = useTicket(ticketId);
@@ -103,6 +106,8 @@ export default function TicketDetailPage() {
   const { data: workers = [] } = useWorkers();
 
   const updateStatus = useUpdateStatus();
+  const deleteTicket = useDeleteTicket();
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   // const users = usersData?.data || [];
   const userMap = useMemo(
@@ -151,6 +156,24 @@ export default function TicketDetailPage() {
     ? "/dashboard/tickets"
     : "/dashboard/tickets/my-tickets";
 
+  const handleDeleteTicket = async () => {
+    const confirmed = await showConfirmation({
+      title: "Delete ticket?",
+      description: `This will permanently delete ${ticket.TICKET_NUMBER} and cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    try {
+      await deleteTicket.mutateAsync(ticketId);
+      toast.success("Ticket deleted.");
+      navigate(backTo);
+    } catch (err) {
+      toast.error(err?.message || "Failed to delete ticket.");
+    }
+  };
+
   return (
     <SectionContainer variant="dashboard">
       <div className="mb-4">
@@ -179,7 +202,7 @@ export default function TicketDetailPage() {
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => navigate(backTo)}
+            onClick={() => navigate(-1)}
             className="shrink-0 -ml-2 text-muted-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -201,6 +224,21 @@ export default function TicketDetailPage() {
                 Edit
               </Button>
             )}
+          {canDelete && ticket && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDeleteTicket}
+              disabled={deleteTicket.isPending}
+              className={cn(
+                "shrink-0 text-muted-foreground hover:text-destructive",
+                !(canEdit && !["CLOSED", "CANCELLED"].includes(ticket.STATUS_NAME)) && "ml-auto",
+              )}
+            >
+              <Trash2 className="h-4 w-4" />
+              {deleteTicket.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -428,6 +466,7 @@ export default function TicketDetailPage() {
           </Tabs>
         </div>
       )}
+      <ConfirmationDialog />
     </SectionContainer>
   );
 }
