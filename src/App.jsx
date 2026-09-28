@@ -60,6 +60,8 @@ import { InvoiceEditPage } from "./features/invoice/invoice-edit-page";
 
 import { WorkerList } from "./features/worker/worker-list";
 import { WorkerFormPage } from "./features/worker/worker-form-page";
+import { WorkerDetailsPage } from "./features/worker/worker-details-page";
+
 import { AttendanceList } from "./features/worker-attendance/attendance-list";
 import { AttendanceFormPage } from "./features/worker-attendance/attendance-form-page";
 import { AttendanceReport } from "./features/worker-attendance/attendance-report";
@@ -72,6 +74,8 @@ import UpdateModulePage from "./features/users/module/update-module-page";
 import AddPermissionPage from "./features/users/permission/add-permission-page";
 import UpdatePermissionPage from "./features/users/permission/update-permission-page";
 import { NAV_ITEMS } from "@/lib/constants/nav-items";
+import { OwnerInfoDetailsPage } from "./features/setting/owner-info/owner-info-details-page";
+
 
 import {
   ALL_ROLES,
@@ -413,6 +417,15 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+                            <Route
+                path="worker/:workerId"
+                element={
+                  <ProtectedRoute anyPermission="WORKER_VIEW">
+                    <WorkerDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="worker-attendance"
                 element={
@@ -493,6 +506,15 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+                            <Route
+                path="owner-info/:id"
+                element={
+                  <ProtectedRoute anyPermission="OWNER_INFO_VIEW">
+                    <OwnerInfoDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="owner-info/:id/edit"
                 element={

@@ -13,19 +13,24 @@ import { useNavigate } from "react-router-dom";
 import { useHasPermission } from "@/hooks/use-permission";
 import axios from "axios";
 import { 
-  Pencil, 
   Trash2, 
   ArrowUpDown, 
   PlusIcon, 
   Search, 
   ChevronDown, 
   DollarSign, 
-  History 
+  History,
+  Eye,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -53,8 +58,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
+import WrappedName from "@/components/shared/WrappedName";
+import { cn } from "@/lib/utils";
 import { WorkerRateDialog } from "./worker-rate-dialog";
 import { WorkerRateHistoryDialog } from "./worker-rate-history-dialog";
+import { SectionContainer } from "@/components/SectionContainer";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -97,8 +105,8 @@ const canDelete = useHasPermission("WORKER_DELETE");
     onError: (err) => toast.error(err?.response?.data?.message || "Failed to delete worker."),
   });
 
-  const handleEdit = (workerId) => {
-    navigate(`/dashboard/worker/${workerId}/edit`);
+  const handleView = (workerId) => {
+    navigate(`/dashboard/worker/${workerId}`);
   };
 
   const handleCreate = () => {
@@ -158,7 +166,11 @@ const canDelete = useHasPermission("WORKER_DELETE");
           Name <ArrowUpDown className="h-3 w-3" />
         </button>
       ),
-      cell: ({ row }) => <div className="font-medium text-sm">{row.getValue("WORKER_NAME") || "—"}</div>,
+      cell: ({ row }) => (
+        <div className="pl-2">
+          <WrappedName name={row.getValue("WORKER_NAME")} size="md" showAvatar maxLines={1} />
+        </div>
+      ),
     },
     {
       accessorKey: "PHONE",
@@ -166,11 +178,11 @@ const canDelete = useHasPermission("WORKER_DELETE");
       cell: ({ row }) => <div className="text-sm">{row.getValue("PHONE") || "—"}</div>,
     },
     {
-      accessorKey: "ADDRESS",
-      header: "Address",
+      accessorKey: "EMAIL",
+      header: "Email",
       cell: ({ row }) => (
-        <div className="text-sm max-w-[200px] truncate" title={row.getValue("ADDRESS")}>
-          {row.getValue("ADDRESS") || "—"}
+        <div className="text-sm max-w-[200px] truncate" title={row.getValue("EMAIL")}>
+          {row.getValue("EMAIL") || "—"}
         </div>
       ),
     },
@@ -195,15 +207,6 @@ const canDelete = useHasPermission("WORKER_DELETE");
       },
     },
     {
-      accessorKey: "REMARKS",
-      header: "Remarks",
-      cell: ({ row }) => (
-        <div className="text-sm max-w-[150px] truncate" title={row.getValue("REMARKS")}>
-          {row.getValue("REMARKS") || "—"}
-        </div>
-      ),
-    },
-    {
       id: "actions",
       enableHiding: false,
       header: () => (
@@ -214,46 +217,63 @@ const canDelete = useHasPermission("WORKER_DELETE");
      cell: ({ row }) => {
   const item = row.original;
   return (
-    <div className="flex items-center gap-1 justify-center">
+    <div className="flex items-center gap-1.5 justify-center">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            onClick={() => handleView(item.WORKER_ID)}
+            aria-label="View"
+            className="h-7 w-7 rounded-full bg-accent-foreground/90 dark:bg-accent-foreground/60 hover:bg-accent-foreground/70 dark:hover:bg-accent-foreground disabled:opacity-40"
+          >
+            <Eye size={13} className="text-white" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>View</TooltipContent>
+      </Tooltip>
       {canEdit && (
-        <button
-          onClick={() => handleSetRate(item.WORKER_ID)}
-          title="Set Rate"
-          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
-        >
-          <DollarSign size={15} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              onClick={() => handleSetRate(item.WORKER_ID)}
+              aria-label="Set Rate"
+              className="h-7 w-7 rounded-full bg-green-600 dark:bg-green-800/90 hover:bg-green-500 dark:hover:bg-green-600 disabled:opacity-40"
+            >
+              <DollarSign size={13} className="text-white" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Set Rate</TooltipContent>
+        </Tooltip>
       )}
-
-     
-        <button
-          onClick={() => handleViewHistory(item.WORKER_ID)}
-          title="Rate History"
-          className="p-2 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all"
-        >
-          <History size={15} />
-        </button>
-     
-
-      {canEdit && (
-        <button
-          onClick={() => handleEdit(item.WORKER_ID)}
-          title="Edit Worker"
-          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md transition-all"
-        >
-          <Pencil size={15} />
-        </button>
-      )}
-
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            onClick={() => handleViewHistory(item.WORKER_ID)}
+            aria-label="Rate History"
+            className="h-7 w-7 rounded-full bg-blue-600 dark:bg-blue-800/90 hover:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-40"
+          >
+            <History size={13} className="text-white" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Rate History</TooltipContent>
+      </Tooltip>
       {canDelete && (
-        <button
-          onClick={() => handleDeleteClick(item.WORKER_ID)}
-          title="Delete Worker"
-          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-all"
-          disabled={deleteMutation.isPending}
-        >
-          <Trash2 size={15} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              onClick={() => handleDeleteClick(item.WORKER_ID)}
+              aria-label="Delete"
+              disabled={deleteMutation.isPending}
+              className="h-7 w-7 rounded-full bg-destructive dark:bg-destructive/70 hover:bg-destructive/80 dark:hover:bg-destructive/90 disabled:opacity-40"
+            >
+              <Trash2 size={13} className="text-white" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete</TooltipContent>
+        </Tooltip>
       )}
     </div>
   );
@@ -277,7 +297,7 @@ const canDelete = useHasPermission("WORKER_DELETE");
 
   return (
     <>
-      <div className="mt-6">
+      <SectionContainer variant="dashboard">
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="relative flex-1 max-w-md">
@@ -339,7 +359,14 @@ const canDelete = useHasPermission("WORKER_DELETE");
               {table.getHeaderGroups().map((group) => (
                 <TableRow key={group.id} className="border-b border-border bg-muted/20">
                   {group.headers.map((header) => (
-                    <TableHead key={header.id} className="px-4 py-3 font-medium">
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        "px-4 py-3 font-medium",
+                        header.column.id === "actions" &&
+                          "sticky right-0 z-20 bg-card text-center border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]",
+                      )}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -359,19 +386,38 @@ const canDelete = useHasPermission("WORKER_DELETE");
               )}
               {!isLoading &&
                 table.getRowModel().rows.length > 0 &&
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="border-b border-border hover:bg-muted/30 transition-colors"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="px-4 py-3 align-middle">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
+                table.getRowModel().rows.map((row) => {
+                  const isAltStripe = row.index % 2 === 1;
+                  const rowStripeBg = isAltStripe ? "bg-background" : "bg-card";
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={cn(
+                        "group border-b border-border transition-colors",
+                        isAltStripe ? "!bg-background" : "!bg-card",
+                        "hover:!bg-muted data-[state=selected]:!bg-muted",
+                      )}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "px-4 py-3 align-middle",
+                            cell.column.id === "actions" &&
+                              cn(
+                                "sticky right-0 z-10 border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]",
+                                "group-hover:!bg-muted group-data-[state=selected]:bg-muted",
+                                rowStripeBg,
+                              ),
+                          )}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })}
               {!isLoading && table.getRowModel().rows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-muted-foreground">
@@ -386,7 +432,7 @@ const canDelete = useHasPermission("WORKER_DELETE");
         <div className="border-t border-border">
           <DataTablePaginationTwo table={table} tableKey="workers" />
         </div>
-      </div>
+      </SectionContainer>
 
       <WorkerRateDialog
         isOpen={rateDialogOpen}

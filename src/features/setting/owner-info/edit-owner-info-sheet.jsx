@@ -128,22 +128,22 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent className="!w-screen !h-screen !max-w-none overflow-y-auto flex flex-col gap-0 p-0 rounded-none z-103">
-        <SheetHeader>
+        <SheetHeader className="border-b border-border">
           <SheetTitle>Edit Owner</SheetTitle>
-          <hr className="mt-3" />
         </SheetHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-64 text-sm text-muted-foreground">
             <p>Loading...</p>
           </div>
         ) : (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
+              className="py-4"
               // className="space-y-4 mt-6 px-3"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4">
                  {/* Owner Name */}
               <FormField
                 control={form.control}
@@ -174,7 +174,7 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
               />
               </div>
              
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 mt-4">
             {/* Project */}
               <FormField
                 control={form.control}
@@ -237,7 +237,7 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
            </div>
               
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-3">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 mt-4">
                
                 {/* Phone */}
                 <FormField
@@ -287,13 +287,17 @@ export function EditOwnerInfoSheet({ isOpen, onClose, ownerId }) {
 
             
 
-              <SheetFooter className="flex flex-row items-center justify-between">
+              <SheetFooter className="flex flex-row items-center justify-between gap-3 px-4 mt-6">
                 <SheetClose asChild>
                   <Button type="button" variant="outline" onClick={handleClose}>
                     Cancel
                   </Button>
                 </SheetClose>
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={mutation.isPending}
+                  className="btn-lift"
+                >
                   {mutation.isPending ? "Updating..." : "Update Owner"}
                 </Button>
               </SheetFooter>
