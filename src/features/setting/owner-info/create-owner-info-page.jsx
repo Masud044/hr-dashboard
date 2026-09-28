@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import EntityCombobox from "@/components/shared/entity-combobox";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useMemo } from "react";
 
 const ownerSchema = z.object({
@@ -38,8 +39,6 @@ const ownerSchema = z.object({
   email:     z.string().email("Invalid email").optional().or(z.literal("")).default(""),
   phone:     z.string().optional().default(""),
   projectId: z.coerce.number().min(1, "Project is required"),
-  createdBy: z.coerce.number().default(500),
-  updatedBy: z.coerce.number().default(500),
 });
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -47,6 +46,7 @@ const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 export function CreateOwnerInfoPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuthV2();
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projectsDropdown"],
@@ -72,8 +72,6 @@ export function CreateOwnerInfoPage() {
       email: "",
       phone: "",
       projectId: "",
-      createdBy: 500,
-      updatedBy: 500,
     },
   });
 
@@ -91,7 +89,12 @@ export function CreateOwnerInfoPage() {
     },
   });
 
-  const onSubmit = (data) => mutation.mutate(data);
+  const onSubmit = (data) =>
+    mutation.mutate({
+      ...data,
+      createdBy: user?.id ?? null,
+      updatedBy: user?.id ?? null,
+    });
   const handleCancel = () => navigate("/dashboard/owner-info");
 
   return (
@@ -101,7 +104,7 @@ export function CreateOwnerInfoPage() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-foreground">Add New Owner</h1>
+          <h1>Add New Owner</h1>
           <p className="text-sm text-muted-foreground">Create a new owner record</p>
         </div>
       </div>
@@ -238,7 +241,11 @@ export function CreateOwnerInfoPage() {
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={mutation.isPending}
+                  className="btn-lift"
+                >
                   {mutation.isPending ? "Saving..." : "Submit"}
                 </Button>
               </div>

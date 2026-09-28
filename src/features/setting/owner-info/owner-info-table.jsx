@@ -12,16 +12,22 @@ import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  Pencil,
   Trash2,
   ArrowUpDown,
   ChevronDown,
   PlusIcon,
+  Search,
+  Eye,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useHasPermission } from "@/hooks/use-permission";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -39,6 +45,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import WrappedName from "@/components/shared/WrappedName";
+import { cn } from "@/lib/utils";
 import { CreateOwnerInfoSheet } from "./create-owner-info-sheet";
 import { EditOwnerInfoSheet } from "./edit-owner-info-sheet";
 
@@ -48,7 +56,6 @@ export function OwnerInfoTable() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const canCreate = useHasPermission("OWNER_INFO_CREATE");
-  const canEdit = useHasPermission("OWNER_INFO_EDIT");
   const canDelete = useHasPermission("OWNER_INFO_DELETE");
 
   const { data, isLoading } = useQuery({
@@ -73,8 +80,9 @@ export function OwnerInfoTable() {
   //   setSelectedId(id);
   //   setEditSheetOpen(true);
   // };
-  const handleEdit = (id) => {
-    navigate(`/dashboard/owner-info/${id}/edit`);
+
+  const handleView = (id) => {
+    navigate(`/dashboard/owner-info/${id}`);
   };
 
   const deleteMutation = useMutation({
@@ -125,12 +133,17 @@ export function OwnerInfoTable() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 h-8 px-2 text-overline text-muted-foreground hover:text-foreground"
         >
           OWNER NAME
-          <ArrowUpDown />
+          <ArrowUpDown className="h-3.5 w-3.5" />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("O_NAME")}</div>,
+      cell: ({ row }) => (
+        <div className="pl-2">
+          <WrappedName name={row.getValue("O_NAME")} size="md" showAvatar maxLines={1} />
+        </div>
+      ),
     },
     {
       accessorKey: "PROJECT_NAME",
@@ -138,13 +151,14 @@ export function OwnerInfoTable() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 h-8 px-2 text-overline text-muted-foreground hover:text-foreground"
         >
           PROJECT
-          <ArrowUpDown />
+          <ArrowUpDown className="h-3.5 w-3.5" />
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="ml-3">{row.getValue("PROJECT_NAME") || "-"}</div>
+        <div className="pl-2 text-sm">{row.getValue("PROJECT_NAME") || "-"}</div>
       ),
     },
     {
@@ -153,12 +167,13 @@ export function OwnerInfoTable() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 h-8 px-2 text-overline text-muted-foreground hover:text-foreground"
         >
           EMAIL
-          <ArrowUpDown />
+          <ArrowUpDown className="h-3.5 w-3.5" />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("EMAIL")}</div>,
+      cell: ({ row }) => <div className="pl-2 text-sm">{row.getValue("EMAIL")}</div>,
     },
     {
       accessorKey: "PHONE",
@@ -166,61 +181,54 @@ export function OwnerInfoTable() {
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-3 h-8 px-2 text-overline text-muted-foreground hover:text-foreground"
         >
           PHONE
-          <ArrowUpDown />
+          <ArrowUpDown className="h-3.5 w-3.5" />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("PHONE")}</div>,
-    },
-    {
-      accessorKey: "ADDRESS",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          ADDRESS
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("ADDRESS")}</div>,
-    },
-    {
-      accessorKey: "STATE",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          STATE
-          <ArrowUpDown />
-        </Button>
-      ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("STATE")}</div>,
+      cell: ({ row }) => <div className="pl-2 text-sm">{row.getValue("PHONE")}</div>,
     },
     {
       id: "actions",
       enableHiding: false,
-      header: () => <div className="text-center">Actions</div>,
+      header: () => (
+        <div className="text-overline text-muted-foreground text-center">
+          Actions
+        </div>
+      ),
      cell: ({ row }) => {
   const item = row.original;
   return (
-    <div className="flex items-center gap-3 justify-center">
-      {canEdit && (
-        <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(item.ID)}>
-          <Pencil size={18} />
-        </Button>
-      )}
+    <div className="flex items-center gap-1.5 justify-center">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            onClick={() => handleView(item.ID)}
+            aria-label="View"
+            className="h-7 w-7 rounded-full bg-accent-foreground/90 dark:bg-accent-foreground/60 hover:bg-accent-foreground/70 dark:hover:bg-accent-foreground disabled:opacity-40"
+          >
+            <Eye size={13} className="text-white" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>View</TooltipContent>
+      </Tooltip>
       {canDelete && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => handleDelete(item.ID)}
-          disabled={deleteMutation.isPending}
-        >
-          <Trash2 size={18} />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              onClick={() => handleDelete(item.ID)}
+              disabled={deleteMutation.isPending}
+              aria-label="Delete"
+              className="h-7 w-7 rounded-full bg-destructive dark:bg-destructive/70 hover:bg-destructive/80 dark:hover:bg-destructive/90 disabled:opacity-40"
+            >
+              <Trash2 size={13} className="text-white" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete</TooltipContent>
+        </Tooltip>
       )}
     </div>
   );
@@ -244,21 +252,24 @@ export function OwnerInfoTable() {
 
   return (
     <>
-      <div className="mt-4 shadow-2xl rounded-lg bg-white">
-        <div className="flex items-center py-4 px-4">
-          <Input
-            placeholder="Filter owners..."
-            value={table.getColumn("O_NAME")?.getFilterValue() ?? ""}
-            onChange={(e) =>
-              table.getColumn("O_NAME")?.setFilterValue(e.target.value)
-            }
-            className="max-w-sm"
-          />
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1 sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Filter owners..."
+              value={table.getColumn("O_NAME")?.getFilterValue() ?? ""}
+              onChange={(e) =>
+                table.getColumn("O_NAME")?.setFilterValue(e.target.value)
+              }
+              className="max-w-sm pl-9"
+            />
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown />
+              <Button variant="outline" className="ml-auto gap-2 rounded-md">
+                Columns <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -278,13 +289,16 @@ export function OwnerInfoTable() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex justify-end ml-2">
+          <div className="flex justify-end">
             {/* <Button onClick={() => setCreateSheetOpen(true)}>
               <PlusIcon size={16} className="mr-2" />
               Add New Owner
             </Button> */}
             {canCreate && (
-  <Button onClick={() => navigate("/dashboard/owner-info/create")}>
+  <Button
+    onClick={() => navigate("/dashboard/owner-info/create")}
+    className="btn-lift rounded-md"
+  >
     <PlusIcon size={16} className="mr-2" />
     Add New Owner
   </Button>
@@ -292,13 +306,22 @@ export function OwnerInfoTable() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-md border">
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((group) => (
-                <TableRow key={group.id}>
+                <TableRow
+                  key={group.id}
+                  className="border-b border-border bg-card hover:bg-card"
+                >
                   {group.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        header.column.id === "actions" &&
+                          "sticky right-0 z-20 border-l border-border bg-card text-center shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]",
+                      )}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -312,10 +335,10 @@ export function OwnerInfoTable() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
+                <TableRow className="border-b border-border hover:bg-transparent">
                   <TableCell
                     colSpan={columns.length}
-                    className="text-center h-24"
+                    className="h-24 text-center text-sm text-muted-foreground"
                   >
                     Loading...
                   </TableCell>
@@ -323,28 +346,47 @@ export function OwnerInfoTable() {
               ) : null}
 
               {!isLoading && table.getRowModel().rows.length
-                ? table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
+                ? table.getRowModel().rows.map((row, index) => {
+                    const isAltStripe = index % 2 === 1;
+                    const stripeCellBg = isAltStripe ? "bg-background" : "bg-card";
+                    return (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className={cn(
+                          "group border-b border-border transition-colors",
+                          isAltStripe ? "!bg-background" : "!bg-card",
+                          "hover:!bg-muted data-[state=selected]:!bg-muted",
+                        )}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              cell.column.id === "actions" &&
+                                cn(
+                                  "sticky right-0 z-10 border-l border-border shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.08)]",
+                                  "group-hover:!bg-muted group-data-[state=selected]:bg-muted",
+                                  stripeCellBg,
+                                ),
+                            )}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })
                 : null}
 
               {!isLoading && table.getRowModel().rows.length === 0 ? (
-                <TableRow>
+                <TableRow className="hover:bg-transparent">
                   <TableCell
                     colSpan={columns.length}
-                    className="text-center h-24"
+                    className="h-24 text-center text-sm text-muted-foreground"
                   >
                     No results.
                   </TableCell>

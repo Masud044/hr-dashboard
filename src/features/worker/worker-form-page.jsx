@@ -26,12 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const workerSchema = z.object({
   WORKER_NAME: z.string().min(1, "Worker name is required"),
   PHONE: z.string().optional().or(z.literal("")),
+  EMAIL: z.string().email("Invalid email").optional().or(z.literal("")),
   ADDRESS: z.string().optional().or(z.literal("")),
   STATUS: z.coerce.number().min(0).max(1),
   REMARKS: z.string().optional().or(z.literal("")),
@@ -40,6 +43,7 @@ const workerSchema = z.object({
 const defaultValues = {
   WORKER_NAME: "",
   PHONE: "",
+  EMAIL: "",
   ADDRESS: "",
   STATUS: 1,
   REMARKS: "",
@@ -50,6 +54,7 @@ export function WorkerFormPage() {
   const { workerId } = useParams();
   const queryClient = useQueryClient();
   const isEdit = !!workerId;
+  const { user } = useAuthV2();
 
   const form = useForm({
     resolver: zodResolver(workerSchema),
@@ -70,6 +75,7 @@ export function WorkerFormPage() {
       form.reset({
         WORKER_NAME: workerData.WORKER_NAME ?? "",
         PHONE: workerData.PHONE ?? "",
+        EMAIL: workerData.EMAIL ?? "",
         ADDRESS: workerData.ADDRESS ?? "",
         STATUS: workerData.STATUS ?? 1,
         REMARKS: workerData.REMARKS ?? "",
@@ -96,7 +102,14 @@ export function WorkerFormPage() {
     },
   });
 
-  const onSubmit = (data) => mutation.mutate(data);
+  const onSubmit = (data) =>
+    mutation.mutate({
+      ...data,
+      // The worker API expects UPPERCASE keys.
+      ...(isEdit
+        ? { UPDATED_BY: user?.id ?? null }
+        : { CREATED_BY: user?.id ?? null, UPDATED_BY: user?.id ?? null }),
+    });
 
   const handleClose = () => {
     form.reset(defaultValues);
@@ -104,114 +117,141 @@ export function WorkerFormPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[500px] py-8 px-4">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold">
-          {isEdit ? "Edit Worker" : "Add New Worker"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isEdit ? "Update the worker's details below." : "Fill in the details to add a new worker."}
-        </p>
+    <div className="min-h-screen bg-background">
+      <div className="border-b border-border bg-card px-6 py-4 flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={handleClose}>
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <div>
+          <h1>{isEdit ? "Edit Worker" : "Add New Worker"}</h1>
+          <p className="text-sm text-muted-foreground">
+            {isEdit ? "Update the worker's details below." : "Fill in the details to add a new worker."}
+          </p>
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-32">
-          <p className="text-muted-foreground text-sm">Loading...</p>
-        </div>
-      ) : (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="WORKER_NAME"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Worker Name <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter worker name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <div className="max-w-4xl mx-auto p-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64 text-muted-foreground">
+            Loading...
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-xl p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="WORKER_NAME"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Worker Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter worker name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="PHONE"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="STATUS"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select modal={false} onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">Active</SelectItem>
+                            <SelectItem value="0">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <FormField
-                control={form.control}
-                name="STATUS"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select modal={false} onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">Active</SelectItem>
-                        <SelectItem value="0">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="PHONE"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter phone number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="ADDRESS"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Enter address" {...field} className="resize-none" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="EMAIL"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter email address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <FormField
-              control={form.control}
-              name="REMARKS"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Any additional remarks" {...field} className="resize-none" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="ADDRESS"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Enter address" {...field} className="resize-none" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Saving..." : isEdit ? "Update Worker" : "Save Worker"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      )}
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="REMARKS"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Remarks</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Any additional remarks" {...field} className="resize-none" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-between gap-3 mt-6 pt-6 border-t border-border">
+                  <Button type="button" variant="outline" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={mutation.isPending} className="btn-lift">
+                    {mutation.isPending ? "Saving..." : isEdit ? "Update Worker" : "Save Worker"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

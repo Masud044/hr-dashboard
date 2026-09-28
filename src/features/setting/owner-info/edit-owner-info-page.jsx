@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import EntityCombobox from "@/components/shared/entity-combobox";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 
 const ownerSchema = z.object({
   oName:     z.string().min(1, "Owner name is required"),
@@ -38,7 +39,6 @@ const ownerSchema = z.object({
   email:     z.string().email("Invalid email").min(1, "Email is required"),
   phone:     z.string().min(1, "Phone is required"),
   projectId: z.coerce.number().min(1, "Project is required"),
-  updatedBy: z.coerce.number().default(500),
 });
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -47,6 +47,7 @@ export function EditOwnerInfoPage() {
   const navigate = useNavigate();
   const { id: ownerId } = useParams();
   const queryClient = useQueryClient();
+  const { user } = useAuthV2();
 
   const { data: projects = [], isLoading: projectsLoading } = useQuery({
   queryKey: ["projectsDropdown"],
@@ -72,7 +73,6 @@ const projectOpts = useMemo(
       email: "",
       phone: "",
       projectId: "",
-      updatedBy: 500,
     },
   });
 
@@ -99,7 +99,6 @@ const isLoading = ownerLoading || projectsLoading;
         phone:     data.PHONE      || "",
         // projectId: data.PROJECT_ID || "",
         projectId: data.PROJECT_ID ? Number(data.PROJECT_ID) : "",
-        updatedBy: 500,
       });
     }
   }, [data, form]);
@@ -119,7 +118,11 @@ const isLoading = ownerLoading || projectsLoading;
     },
   });
 
-  const onSubmit = (data) => mutation.mutate(data);
+  const onSubmit = (data) =>
+    mutation.mutate({
+      ...data,
+      updatedBy: user?.id ?? null,
+    });
   const handleCancel = () => navigate("/dashboard/owner-info");
 
   return (
@@ -129,7 +132,7 @@ const isLoading = ownerLoading || projectsLoading;
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-foreground">Edit Owner</h1>
+          <h1>Edit Owner</h1>
           <p className="text-sm text-muted-foreground">Update owner record</p>
         </div>
       </div>
@@ -272,7 +275,11 @@ const isLoading = ownerLoading || projectsLoading;
                   <Button type="button" variant="outline" onClick={handleCancel}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={mutation.isPending}>
+                  <Button
+                    type="submit"
+                    disabled={mutation.isPending}
+                    className="btn-lift"
+                  >
                     {mutation.isPending ? "Updating..." : "Update Owner"}
                   </Button>
                 </div>

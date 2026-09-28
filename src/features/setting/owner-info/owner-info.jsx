@@ -5,8 +5,8 @@ import { OwnerInfoTable } from "./owner-info-table";
 
 const OwnerInfo = () => {
   return (
-    <SectionContainer>
-      <div>
+    <SectionContainer variant="dashboard">
+      <div className="">
         <OwnerInfoTable/>
       </div>
     </SectionContainer>
