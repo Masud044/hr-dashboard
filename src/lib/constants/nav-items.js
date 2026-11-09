@@ -1,18 +1,29 @@
-
-
-
-
+// src/lib/constants/nav-items.js
 import {
-  IconBuildingSkyscraper,
   IconDashboard,
   IconSettings,
-  IconUserHexagon,
   IconUsers,
+  IconHeadset,
+  IconLayoutDashboard,
+  IconCalendarStats,
+  IconBriefcase,
+  IconReceipt,
+  IconHelmet,
+  IconCalendar,
+  IconCategory,
+  IconUsersGroup,
   IconBuilding,
-  IconFileInfo,
-   IconHeadset,
+  IconUserHexagon,
+  IconClipboardCheck,
+  IconFileAnalytics,
+  IconTicket,
+  IconUserCheck,
+  IconMessageDots,
+  IconChecklist,
+  IconPuzzle,
+  IconShieldCheck,
+  IconKey,
 } from "@tabler/icons-react";
-import { ClipboardList, FileText, LayoutDashboard, ListTodo } from "lucide-react";
 
 export const NAV_ITEMS = [
   {
@@ -22,13 +33,13 @@ export const NAV_ITEMS = [
       {
         to: "/dashboard",
         label: "Overview",
-        Icon: LayoutDashboard,
+        Icon: IconLayoutDashboard,
         requiredPermission: ["DASHBOARD_VIEW_ALL", "DASHBOARD_VIEW_SELF"],
       },
       {
         to: "/dashboard/dashboard-schedule",
         label: "Schedule Dashboard",
-        Icon: LayoutDashboard,
+        Icon: IconCalendarStats,
         requiredPermission: "SCHEDULE_DASHBOARD_VIEW",
       },
     ],
@@ -40,37 +51,37 @@ export const NAV_ITEMS = [
       {
         to: "/dashboard/projects",
         label: "Project",
-        Icon: IconUserHexagon,
+        Icon: IconBriefcase,
         requiredPermission: "PROJECT_VIEW",
       },
       {
         to: "/dashboard/statement",
         label: "Project Statement",
-        Icon: IconUserHexagon,
+        Icon: IconReceipt,
         requiredPermission: "PROJECT_STATEMENT_VIEW",
       },
       {
         to: "/dashboard/contractor",
         label: "Contractor",
-        Icon: IconUserHexagon,
+        Icon: IconHelmet,
         requiredPermission: "CONTRACTOR_VIEW",
       },
       {
         to: "/dashboard/calendar",
         label: "Calender",
-        Icon: IconUserHexagon,
+        Icon: IconCalendar,
         requiredPermission: "CALENDAR_VIEW",
       },
       {
         to: "/dashboard/project-type",
         label: "Project Type",
-        Icon: IconUserHexagon,
+        Icon: IconCategory,
         requiredPermission: "PROJECT_TYPE_VIEW",
       },
       {
         to: "/dashboard/contractor-type",
         label: "Contractor Type",
-        Icon: IconUserHexagon,
+        Icon: IconUsersGroup,
         requiredPermission: "CONTRACTOR_TYPE_VIEW",
       },
       {
@@ -88,56 +99,54 @@ export const NAV_ITEMS = [
       {
         to: "/dashboard/worker-attendance",
         label: "Attendance",
-        Icon: ClipboardList,
+        Icon: IconClipboardCheck,
         requiredPermission: "ATTENDANCE_VIEW",
       },
       {
         to: "/dashboard/attendance-report",
         label: "Attendance Report",
-        Icon: FileText,
+        Icon: IconFileAnalytics,
         requiredPermission: "ATTENDANCE_REPORT_VIEW",
       },
       // {
       //   to: "/dashboard/invoices",
       //   label: "Invoice",
-      //   Icon: IconUserHexagon,
+      //   Icon: IconReceipt,
       //   requiredPermission: "INVOICE_VIEW",
       // },
     ],
   },
-
- {
-  label: "Support",
-  ItemIcon: IconHeadset,
-  links: [
-    {
-      to: "/dashboard/tickets",
-      label: "All Tickets",
-      Icon: IconHeadset,
-      requiredPermission: "TICKET_VIEW_ALL",
-      exact: true,
-    },
-    {
-      to: "/dashboard/tickets/my-tickets",
-      label: "My Tickets",
-      Icon: IconHeadset,
-      requiredPermission: "TICKET_VIEW_SELF",
-    },
-    {
-      to: "/dashboard/tickets/canned-responses",
-      label: "Canned Responses",
-      Icon: IconHeadset,
-      requiredPermission: "CANNED_RESPONSE_VIEW",
-    },
-
-    {
-  to: "/dashboard/todo",
-  label: "Todo",
-  Icon: ListTodo,
-  requiredPermission: "TODO_VIEW",
-},
-  ],
-},
+  {
+    label: "Support",
+    ItemIcon: IconHeadset,
+    links: [
+      {
+        to: "/dashboard/tickets",
+        label: "All Tickets",
+        Icon: IconTicket,
+        requiredPermission: "TICKET_VIEW_ALL",
+        exact: true,
+      },
+      {
+        to: "/dashboard/tickets/my-tickets",
+        label: "My Tickets",
+        Icon: IconUserCheck,
+        requiredPermission: "TICKET_VIEW_SELF",
+      },
+      {
+        to: "/dashboard/tickets/canned-responses",
+        label: "Canned Responses",
+        Icon: IconMessageDots,
+        requiredPermission: "CANNED_RESPONSE_VIEW",
+      },
+      {
+        to: "/dashboard/todo",
+        label: "Todo",
+        Icon: IconChecklist,
+        requiredPermission: "TODO_VIEW",
+      },
+    ],
+  },
   {
     label: "User Management",
     ItemIcon: IconUsers,
@@ -145,25 +154,25 @@ export const NAV_ITEMS = [
       {
         to: "/dashboard/user-management",
         label: "User Management",
-        Icon: ClipboardList,
+        Icon: IconUsers,
         requiredPermission: "USER_MANAGEMENT_VIEW",
       },
       {
         to: "/dashboard/module",
         label: "Module",
-        Icon: ClipboardList,
+        Icon: IconPuzzle,
         requiredPermission: "MODULE_VIEW",
       },
       {
         to: "/dashboard/role",
         label: "Role",
-        Icon: FileText,
+        Icon: IconShieldCheck,
         requiredPermission: "ROLE_VIEW",
       },
       {
         to: "/dashboard/permission",
         label: "Permission",
-        Icon: FileText,
+        Icon: IconKey,
         requiredPermission: "PERMISSION_VIEW",
       },
     ],

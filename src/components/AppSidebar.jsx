@@ -68,12 +68,16 @@ export default function AppSidebar() {
       <SidebarContent className="px-2 py-4 gap-4">
         {NAV_ITEMS.map((group) => {
           const visibleLinks = group.links.filter((linkItem) =>
-            hasAnyRequiredPermission(linkItem.requiredPermission)
+            hasAnyRequiredPermission(linkItem.requiredPermission),
           );
           if (visibleLinks.length === 0) return null;
 
           return (
-            <Collapsible key={group.label} defaultOpen className="group/collapsible">
+            <Collapsible
+              key={group.label}
+              defaultOpen
+              className="group/collapsible"
+            >
               <SidebarGroup className="px-0">
                 {!isCollapsed && (
                   <CollapsibleTrigger asChild>
@@ -92,14 +96,14 @@ export default function AppSidebar() {
                   </CollapsibleTrigger>
                 )}
                 <CollapsibleContent>
-                  <SidebarGroupContent className="mt-1">
+                  <SidebarGroupContent className="mt-1 pl-3 group-data-[collapsible=icon]:pl-0">
                     <SidebarMenu className="gap-1">
                       {visibleLinks.map((linkItem, linkIdx) => {
-                       const isActive =
-  linkItem.to === "/dashboard" || linkItem.exact
-    ? location.pathname === linkItem.to
-    : location.pathname === linkItem.to ||
-      location.pathname.startsWith(linkItem.to + "/");
+                        const isActive =
+                          linkItem.to === "/dashboard" || linkItem.exact
+                            ? location.pathname === linkItem.to
+                            : location.pathname === linkItem.to ||
+                              location.pathname.startsWith(linkItem.to + "/");
 
                         return (
                           <SidebarMenuItem key={linkIdx}>
@@ -109,8 +113,8 @@ export default function AppSidebar() {
                               tooltip={isCollapsed ? linkItem.label : undefined}
                               className="
                                 h-auto rounded-md px-3 py-2
-                                text-[13px] font-medium
-                                text-muted-foreground
+                                text-[14px] font-medium
+                                text-foreground
                                 transition-all duration-200
                                 hover:bg-accent hover:text-primary
                                 data-[active=true]:bg-primary
@@ -127,11 +131,11 @@ export default function AppSidebar() {
                                   <span
                                     className={
                                       isActive
-                                        ? "flex items-center justify-center w-6 h-6 rounded-full bg-white/20 shrink-0"
-                                        : "flex items-center justify-center w-6 h-6 shrink-0"
+                                        ? "flex items-center justify-center w-[26px] h-[26px] rounded-full bg-white/20 shrink-0"
+                                        : "flex items-center justify-center w-[26px] h-[26px] rounded-md bg-accent text-primary shrink-0 transition-colors group-hover/menu-button:bg-card"
                                     }
                                   >
-                                    <linkItem.Icon className="w-[16px] h-[16px]" />
+                                    <linkItem.Icon className="w-[18px] h-[18px]" />
                                   </span>
                                 )}
                                 <span>{linkItem.label}</span>
@@ -174,13 +178,22 @@ export default function AppSidebar() {
                 side="top"
                 className="w-40 rounded-lg border-border shadow-lg"
               >
-                <DropdownMenuItem onClick={() => setTheme("light")} className="focus:bg-accent focus:text-primary">
+                <DropdownMenuItem
+                  onClick={() => setTheme("light")}
+                  className="focus:bg-accent focus:text-primary"
+                >
                   Light
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")} className="focus:bg-accent focus:text-primary">
+                <DropdownMenuItem
+                  onClick={() => setTheme("dark")}
+                  className="focus:bg-accent focus:text-primary"
+                >
                   Dark
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")} className="focus:bg-accent focus:text-primary">
+                <DropdownMenuItem
+                  onClick={() => setTheme("system")}
+                  className="focus:bg-accent focus:text-primary"
+                >
                   System
                 </DropdownMenuItem>
               </DropdownMenuContent>
