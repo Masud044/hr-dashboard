@@ -131,8 +131,8 @@ export default function AppSidebar() {
                                   <span
                                     className={
                                       isActive
-                                        ? "flex items-center justify-center w-[26px] h-[26px] rounded-full bg-white/20 shrink-0"
-                                        : "flex items-center justify-center w-[26px] h-[26px] rounded-md bg-accent text-primary shrink-0 transition-colors group-hover/menu-button:bg-card"
+                                        ? "flex items-center justify-center w-6 h-6 rounded-full bg-white/20 shrink-0"
+                                        : "flex items-center justify-center w-6 h-6 rounded-md bg-accent text-primary shrink-0 transition-colors group-hover/menu-button:bg-card"
                                     }
                                   >
                                     <linkItem.Icon className="w-[18px] h-[18px]" />

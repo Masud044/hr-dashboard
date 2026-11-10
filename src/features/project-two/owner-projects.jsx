@@ -49,7 +49,7 @@ function formatDateRange(start, end) {
   return `${s || "—"} - ${e || "TBD"}`;
 }
 
-function ProjectCard({ project, onViewReport, canViewReport }) {
+function ProjectCard({ project, onViewReport, onViewDetails, canViewReport }) {
   const dateRange = formatDateRange(
     project.P_ENTATIVE_START_DATE,
     project.P_TENTATIVE_END_DATE,
@@ -93,7 +93,10 @@ function ProjectCard({ project, onViewReport, canViewReport }) {
         </div>
       </div>
 
-      <div className="px-5 pb-5">
+      <div className="px-5 pb-5 flex flex-col gap-2">
+        <Button onClick={() => onViewDetails(project.P_ID)} className="w-full">
+          View Details
+        </Button>
         {canViewReport && <Button
           variant="outline"
           onClick={() => onViewReport(project.P_ID)}
@@ -164,6 +167,10 @@ export default function OwnerProjects() {
     navigate(`/dashboard/projects/${projectId}/report`);
   };
 
+  const handleViewDetails = (projectId) => {
+    navigate(`/dashboard/projects/${projectId}`);
+  };
+
   return (
     <SectionContainer>
       <div className="max-w-[1280px] mx-auto">
@@ -202,6 +209,7 @@ export default function OwnerProjects() {
                 key={project.P_ID}
                 project={project}
                 onViewReport={handleViewReport}
+                onViewDetails={handleViewDetails}
                 canViewReport={canViewReport}
               />
             ))}
