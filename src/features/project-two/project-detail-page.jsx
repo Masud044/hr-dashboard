@@ -34,6 +34,7 @@ import StatusBadge from "@/features/ticketing/components/StatusBadge";
 import PriorityBadge from "@/features/ticketing/components/PriorityBadge";
 import TicketTypeBadge from "@/features/ticketing/components/TicketTypeBadge";
 import { fmtDateTime, isOverdue } from "@/features/ticketing/lib/ticket-utils";
+import { SelectionsSection } from "@/features/selection/selections-section";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -506,6 +507,7 @@ export function ProjectDetailPage() {
           </div>
         </div>
       )}
+      <SelectionsSection projectId={projectId} />
       <ConfirmationDialog />
     </SectionContainer>
   );
