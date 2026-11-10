@@ -9,6 +9,7 @@ const EMPTY_ARRAY = [];
 export const selectionKeys = {
   forms: (projectId) => ["selection", "forms", projectId],
   form: (formId) => ["selection", "form", formId],
+  templates: () => ["selection", "templates"],
 };
 
 export const selectionFileUrl = (fileId) =>
@@ -29,6 +30,19 @@ export function useSelectionForms(projectId) {
   });
 }
 
+export function useSelectionTemplates({ enabled = true } = {}) {
+  return useQuery({
+    queryKey: selectionKeys.templates(),
+    queryFn: async () => {
+      const res = await axios.get(`${url}/api/selection`, {
+        params: { templates: "Y" },
+      });
+      return res.data?.data || EMPTY_ARRAY;
+    },
+    enabled,
+  });
+}
+
 export function useSelectionForm(formId) {
   return useQuery({
     queryKey: selectionKeys.form(formId),
@@ -44,7 +58,7 @@ export function useSelectionForm(formId) {
 // Every mutation receives { formId, projectId, ... } so it can invalidate both
 // the single form and the project's form list.
 
-function useSelectionMutation(mutationFn) {
+function useSelectionMutation(mutationFn, { invalidateTemplates = false } = {}) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,6 +73,9 @@ function useSelectionMutation(mutationFn) {
         queryClient.invalidateQueries({
           queryKey: selectionKeys.forms(variables.projectId),
         });
+      }
+      if (invalidateTemplates) {
+        queryClient.invalidateQueries({ queryKey: selectionKeys.templates() });
       }
     },
   });
@@ -157,6 +174,64 @@ export function useUploadSelectionFile() {
         })
       ).data?.data;
     },
+  );
+}
+
+export function useCopyForm() {
+  return useSelectionMutation(
+    async ({ formId, payload }) =>
+      (await axios.post(`${url}/api/selection/${formId}/copy`, payload)).data
+        ?.data,
+    { invalidateTemplates: true },
+  );
+}
+
+export function useCopyArea() {
+  return useSelectionMutation(
+    async ({ areaId, payload }) =>
+      (await axios.post(`${url}/api/selection/areas/${areaId}/copy`, payload))
+        .data?.data,
+  );
+}
+
+export function usePublishForm() {
+  return useSelectionMutation(
+    async ({ formId, userId }) =>
+      (
+        await axios.post(`${url}/api/selection/${formId}/publish`, {
+          UPDATED_BY: userId ?? 0,
+        })
+      ).data?.data,
+  );
+}
+
+export function useReopenForm() {
+  return useSelectionMutation(
+    async ({ formId, userId }) =>
+      (
+        await axios.post(`${url}/api/selection/${formId}/reopen`, {
+          UPDATED_BY: userId ?? 0,
+        })
+      ).data?.data,
+  );
+}
+
+export function useConfirmItem() {
+  return useSelectionMutation(
+    async ({ itemId, payload }) =>
+      (await axios.put(`${url}/api/selection/items/${itemId}/confirm`, payload))
+        .data?.data,
+  );
+}
+
+export function useConfirmAll() {
+  return useSelectionMutation(
+    async ({ formId, userId }) =>
+      (
+        await axios.post(`${url}/api/selection/${formId}/confirm-all`, {
+          UPDATED_BY: userId ?? 0,
+        })
+      ).data?.data,
   );
 }
 

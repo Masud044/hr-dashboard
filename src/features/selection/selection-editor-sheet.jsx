@@ -3,11 +3,16 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
+  ChevronUp,
+  Copy,
   FileText,
   Layers,
   Loader2,
   Lock,
   Plus,
+  RotateCcw,
+  Send,
   Trash2,
   Upload,
   X,
@@ -39,11 +44,14 @@ import { useHasPermission } from "@/hooks/use-permission";
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 import {
   selectionFileUrl,
+  useCopyArea,
   useCreateSelectionArea,
   useCreateSelectionItem,
   useDeleteSelectionArea,
   useDeleteSelectionFile,
   useDeleteSelectionItem,
+  usePublishForm,
+  useReopenForm,
   useSelectionForm,
   useUpdateSelectionArea,
   useUpdateSelectionForm,
@@ -84,6 +92,8 @@ const toObject = (value) =>
 const toArray = (value) => (Array.isArray(value) ? value : EMPTY_ARRAY);
 
 const serialize = (value) => JSON.stringify(value ?? {});
+
+const CUSTOMER_OPEN_STATUSES = ["PUBLISHED", "CONFIRMED"];
 
 const isCheckedValue = (value) =>
   value === true ||
@@ -184,7 +194,15 @@ function FieldRow({ field, disabled, onChange, onRemove }) {
 
 // ── Item card ─────────────────────────────────────────────────────────────────
 
-function ItemCard({ item, fields, formId, projectId, locked, userId }) {
+function ItemCard({
+  item,
+  fields,
+  formId,
+  projectId,
+  locked,
+  userId,
+  formStatus,
+}) {
   const updateItem = useUpdateSelectionItem();
   const deleteItem = useDeleteSelectionItem();
   const uploadFile = useUploadSelectionFile();
@@ -195,6 +213,8 @@ function ItemCard({ item, fields, formId, projectId, locked, userId }) {
   const disabled = locked || updateItem.isPending;
 
   const files = toArray(item.FILES);
+  const showCustomerState = CUSTOMER_OPEN_STATUSES.includes(formStatus);
+  const isConfirmed = String(item.CUSTOMER_CONFIRMED ?? "").toUpperCase() === "Y";
 
   useEffect(() => {
     const next = toObject(item.VALUES_JSON);
@@ -435,7 +455,9 @@ function ItemCard({ item, fields, formId, projectId, locked, userId }) {
         <p className="text-xs text-muted-foreground">
           Add a field to start filling this item.
         </p>
-      ) : (
+      ) : null}
+
+      {fields.length > 0 && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {fields.map((field) => (
             <div
@@ -453,6 +475,30 @@ function ItemCard({ item, fields, formId, projectId, locked, userId }) {
           ))}
         </div>
       )}
+
+      {showCustomerState && (
+        <div className="mt-3 border-t border-border pt-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Customer
+            </span>
+            <Badge
+              variant="secondary"
+              className={`border-0 ${isConfirmed ? STATUS_STYLES.CONFIRMED : STATUS_STYLES.DRAFT}`}
+            >
+              {isConfirmed ? "Confirmed" : "Not confirmed"}
+            </Badge>
+          </div>
+          <div className="mt-1">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Customer note
+            </span>
+            <p className="whitespace-pre-wrap break-words text-xs text-foreground">
+              {item.CUSTOMER_NOTE || "—"}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -468,8 +514,10 @@ function AreaCard({
   projectId,
   locked,
   userId,
+  formStatus,
   onMove,
   onDelete,
+  onDuplicate,
   onCreateArea,
   children,
 }) {
@@ -480,6 +528,7 @@ function AreaCard({
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [addingChild, setAddingChild] = useState(false);
   const [childName, setChildName] = useState("");
+  const [showFields, setShowFields] = useState(false);
 
   const fields = toArray(area.FIELDS_JSON);
   const items = toArray(area.ITEMS);
@@ -621,6 +670,17 @@ function AreaCard({
               Sub-area
             </Button>
           )}
+          {!locked && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={updateArea.isPending}
+              onClick={() => onDuplicate(area)}
+              title="Duplicate area"
+            >
+              <Copy size={14} />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon-sm"
@@ -670,54 +730,68 @@ function AreaCard({
 
       {/* Fields */}
       <div className="mt-4 rounded-md border border-border/70 p-3">
-        <div className="mb-2 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Fields
           </h4>
-          <span className="text-[11px] text-muted-foreground">
-            {fields.length}
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          {fields.length === 0 && (
-            <p className="text-xs text-muted-foreground">No fields yet.</p>
-          )}
-          {fields.map((field) => (
-            <FieldRow
-              key={field.key}
-              field={field}
-              disabled={disabled}
-              onChange={(patch) => updateField(field.key, patch)}
-              onRemove={() => removeField(field.key)}
-            />
-          ))}
-        </div>
-
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Input
-            value={newFieldLabel}
-            onChange={(e) => setNewFieldLabel(e.target.value)}
-            placeholder="New field label"
-            disabled={disabled}
-            className="h-8 max-w-xs text-xs"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addField();
-              }
-            }}
-          />
           <Button
+            type="button"
+            variant="ghost"
             size="sm"
-            variant="outline"
-            onClick={addField}
-            disabled={disabled}
+            className="ml-auto h-7 gap-1 px-2 text-xs text-muted-foreground"
+            onClick={() => setShowFields((open) => !open)}
+            aria-expanded={showFields}
           >
-            <Plus size={13} />
-            Add field
+            Manage fields ({fields.length})
+            {showFields ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </Button>
         </div>
+
+        {showFields && (
+          <>
+            <div className="mt-2 space-y-2">
+              {fields.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No fields yet.
+                </p>
+              )}
+              {fields.map((field) => (
+                <FieldRow
+                  key={field.key}
+                  field={field}
+                  disabled={disabled}
+                  onChange={(patch) => updateField(field.key, patch)}
+                  onRemove={() => removeField(field.key)}
+                />
+              ))}
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Input
+                value={newFieldLabel}
+                onChange={(e) => setNewFieldLabel(e.target.value)}
+                placeholder="New field label"
+                disabled={disabled}
+                className="h-8 max-w-xs text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addField();
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={addField}
+                disabled={disabled}
+              >
+                <Plus size={13} />
+                Add field
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Items */}
@@ -757,6 +831,7 @@ function AreaCard({
                 projectId={projectId}
                 locked={locked}
                 userId={userId}
+                formStatus={formStatus}
               />
             ))
           )}
@@ -786,6 +861,9 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
   const createArea = useCreateSelectionArea();
   const updateArea = useUpdateSelectionArea();
   const deleteArea = useDeleteSelectionArea();
+  const copyArea = useCopyArea();
+  const publishForm = usePublishForm();
+  const reopenForm = useReopenForm();
 
   const [title, setTitle] = useState("");
   const [level, setLevel] = useState("");
@@ -910,6 +988,74 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
     }
   };
 
+  const handleDuplicateArea = async (area) => {
+    if (!form) return;
+
+    try {
+      await copyArea.mutateAsync({
+        formId: form.ID,
+        projectId,
+        areaId: area.ID,
+        payload: { COPY_FILES: "Y", UPDATED_BY: userId ?? 0 },
+      });
+      toast.success("Area duplicated.");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to duplicate area.");
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!form) return;
+
+    const confirmed = await showConfirmation({
+      title: "Publish Selection?",
+      description: `Publish "${form.TITLE}"? The form becomes read-only and is shared with the customer for confirmation.`,
+      confirmText: "Publish",
+      cancelText: "Cancel",
+    });
+    if (!confirmed) return;
+
+    try {
+      await publishForm.mutateAsync({
+        formId: form.ID,
+        projectId,
+        userId,
+      });
+      toast.success("Selection published.");
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || "Failed to publish selection.",
+      );
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!form) return;
+
+    const confirmed = await showConfirmation({
+      title: "Reopen Selection?",
+      description:
+        "Reopening returns this form to draft and clears all customer confirmations and notes. This cannot be undone.",
+      confirmText: "Reopen",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      await reopenForm.mutateAsync({
+        formId: form.ID,
+        projectId,
+        userId,
+      });
+      toast.success("Selection reopened.");
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || "Failed to reopen selection.",
+      );
+    }
+  };
+
   const addRootArea = async () => {
     const next = newAreaName.trim();
     if (!next) {
@@ -931,8 +1077,10 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
       projectId={projectId}
       locked={locked}
       userId={userId}
+      formStatus={form?.STATUS}
       onMove={handleMoveArea}
       onDelete={handleDeleteArea}
+      onDuplicate={handleDuplicateArea}
       onCreateArea={handleCreateArea}
     >
       {!isChild &&
@@ -955,7 +1103,7 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
           if (!nextOpen) onClose();
         }}
       >
-        <SheetContent className="!h-screen !w-screen !max-w-none flex flex-col gap-0 overflow-y-auto rounded-none p-0 z-[104]">
+        <SheetContent className="!w-full sm:!w-[760px] !max-w-[95vw] !h-screen flex flex-col gap-0 overflow-y-auto p-0 z-[104]">
           <SheetHeader className="border-b px-6 pb-4 pt-6">
             <SheetTitle className="sr-only">
               {form?.TITLE || "Selection Form"}
@@ -974,7 +1122,7 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
                   onBlur={() => saveHeader("TITLE", title)}
                   placeholder="Form title"
                   disabled={locked}
-                  className="h-9 max-w-md text-base font-semibold"
+                  className="h-9 min-w-0 flex-1 text-base font-semibold"
                 />
                 <Input
                   value={level}
@@ -985,6 +1133,44 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
                   className="h-9 w-36 text-xs"
                 />
                 <SelectionStatusBadge status={form?.STATUS} />
+
+                {form?.STATUS === "DRAFT" && (
+                  <Button
+                    size="sm"
+                    className="ml-auto"
+                    onClick={handlePublish}
+                    disabled={publishForm.isPending || areas.length === 0}
+                    title={
+                      areas.length === 0
+                        ? "Add at least one area before publishing."
+                        : "Publish this selection to the customer"
+                    }
+                  >
+                    {publishForm.isPending ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Send size={14} />
+                    )}
+                    Publish
+                  </Button>
+                )}
+
+                {CUSTOMER_OPEN_STATUSES.includes(form?.STATUS) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto"
+                    onClick={handleReopen}
+                    disabled={reopenForm.isPending}
+                  >
+                    {reopenForm.isPending ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <RotateCcw size={14} />
+                    )}
+                    Reopen
+                  </Button>
+                )}
               </div>
             )}
 
@@ -994,74 +1180,76 @@ export function SelectionEditorSheet({ open, formId, projectId, onClose }) {
           </SheetHeader>
 
           <div className="flex-1 px-6 py-6">
-            {locked && form && (
-              <div className="mb-5 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                <Lock size={14} />
-                Form is locked
-              </div>
-            )}
+            <div className="mx-auto w-full max-w-[700px]">
+              {locked && form && (
+                <div className="mb-5 flex items-center gap-2 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
+                  <Lock size={14} />
+                  Form is locked
+                </div>
+              )}
 
-            {isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-28 w-full rounded-lg" />
-                <Skeleton className="h-28 w-full rounded-lg" />
-                <Skeleton className="h-28 w-full rounded-lg" />
-              </div>
-            ) : isError ? (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">
-                {error?.response?.data?.message ||
-                  "Failed to load selection form."}
-              </div>
-            ) : (
-              <>
-                {!locked && (
-                  <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-border bg-card p-3">
-                    <Input
-                      value={newAreaName}
-                      onChange={(e) => setNewAreaName(e.target.value)}
-                      placeholder="New area name"
-                      className="h-8 max-w-xs text-xs"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addRootArea();
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={addRootArea}
-                      disabled={createArea.isPending || !newAreaName.trim()}
-                    >
-                      {createArea.isPending ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Plus size={14} />
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                </div>
+              ) : isError ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">
+                  {error?.response?.data?.message ||
+                    "Failed to load selection form."}
+                </div>
+              ) : (
+                <>
+                  {!locked && (
+                    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-border bg-card p-3">
+                      <Input
+                        value={newAreaName}
+                        onChange={(e) => setNewAreaName(e.target.value)}
+                        placeholder="New area name"
+                        className="h-8 max-w-xs text-xs"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addRootArea();
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={addRootArea}
+                        disabled={createArea.isPending || !newAreaName.trim()}
+                      >
+                        {createArea.isPending ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Plus size={14} />
+                        )}
+                        Add area
+                      </Button>
+                    </div>
+                  )}
+
+                  {areas.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
+                      <Layers
+                        size={20}
+                        className="mx-auto text-muted-foreground"
+                      />
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        No areas yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {areas.map((area, index) =>
+                        renderAreaCard(area, areas, index, false),
                       )}
-                      Add area
-                    </Button>
-                  </div>
-                )}
-
-                {areas.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
-                    <Layers
-                      size={20}
-                      className="mx-auto text-muted-foreground"
-                    />
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      No areas yet.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {areas.map((area, index) =>
-                      renderAreaCard(area, areas, index, false),
-                    )}
-                  </div>
-                )}
-              </>
-            )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </SheetContent>
       </Sheet>

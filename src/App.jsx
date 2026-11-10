@@ -578,7 +578,7 @@ const App = () => {
               <Route
   path="projects/:id"
   element={
-    <ProtectedRoute anyPermission="PROJECT_VIEW">
+    <ProtectedRoute anyPermission={["PROJECT_VIEW", "PROJECT_VIEW_SELF"]}>
       <ProjectDetailPage />
     </ProtectedRoute>
   }

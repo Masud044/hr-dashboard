@@ -1,6 +1,6 @@
 // src\features\project-two\project-detail-page.jsx
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -29,6 +29,7 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { cn } from "@/lib/utils";
 import { useHasPermission } from "@/hooks/use-permission";
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useTickets } from "@/features/ticketing/queries";
 import StatusBadge from "@/features/ticketing/components/StatusBadge";
 import PriorityBadge from "@/features/ticketing/components/PriorityBadge";
@@ -165,6 +166,20 @@ export function ProjectDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuthV2();
+  const isOwner = user?.userType === "OWNER";
+
+  const availableTabs = isOwner
+    ? ["selections", "overview"]
+    : ["selections", "tickets", "documents", "overview"];
+  const requestedTab = searchParams.get("tab");
+  const activeTab = availableTabs.includes(requestedTab)
+    ? requestedTab
+    : "selections";
+  const handleTabChange = (tab) =>
+    setSearchParams({ tab }, { replace: true });
+
   const canEdit = useHasPermission("PROJECT_EDIT");
   const canDelete = useHasPermission("PROJECT_DELETE");
   const canViewReport = useHasPermission("PROJECT_REPORT_VIEW");
@@ -278,6 +293,17 @@ export function ProjectDetailPage() {
       pageIndex: Math.min(Math.max(0, pageIndex), pageCount - 1),
     }));
 
+  const tabs = [
+    { id: "selections", label: "Selections" },
+    ...(isOwner
+      ? []
+      : [
+          { id: "tickets", label: "Tickets", badge: ticketsTotal },
+          { id: "documents", label: "Documents", badge: uploadedDocs.length },
+        ]),
+    { id: "overview", label: "Overview" },
+  ];
+
   return (
     <SectionContainer variant="dashboard">
       {/* Page Header */}
@@ -338,176 +364,230 @@ export function ProjectDetailPage() {
         <div className="w-full h-px bg-border mt-6" />
       </div>
 
-      {/* ══ Basic Information + Location ═══════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
-        <InfoCard icon={Info} title="Basic Information" className="lg:col-span-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <ReadField
-              label="Project Code"
-              value={existingProject.P_CODE || "—"}
-            />
-            <ReadField label="Project Type" value={projectTypeName} />
-            <ReadField
-              label="Insurance No"
-              value={existingProject.INSURANCE_NO || "—"}
-            />
-            <ReadField
-              label="Margin %"
-              value={
-                existingProject.MARGIN_PERCENT == null
-                  ? "—"
-                  : `${existingProject.MARGIN_PERCENT}%`
-              }
-            />
-            <ReadField
-              label="Start Date"
-              value={existingProject.P_ENTATIVE_START_DATE || "—"}
-            />
-            <ReadField
-              label="End Date"
-              value={existingProject.P_TENTATIVE_END_DATE || "—"}
-            />
-          </div>
-        </InfoCard>
-
-        <InfoCard icon={MapPin} title="Location" className="lg:col-span-2">
-          <div className="grid grid-cols-1 gap-3">
-            <ReadField
-              label="Project Address"
-              value={existingProject.P_ADDRESS || "—"}
-            />
-            <ReadField label="Suburb" value={existingProject.SUBWRB || "—"} />
-            <ReadField label="State" value={existingProject.STATE || "—"} />
-            <ReadField
-              label="Postcode"
-              value={existingProject.POSTCODE || "—"}
-            />
-          </div>
-        </InfoCard>
-      </div>
-
-      {/* ══ Description + Contractor Types ═════════════════════════════ */}
-      <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-        <InfoCard icon={FileText} title="Description">
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
-            {existingProject.DESCRIPTION || "—"}
-          </p>
-        </InfoCard>
-
-        <InfoCard icon={Layers} title="Contractor Types">
-          {contractorTypeNames.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {contractorTypeNames.map((name, idx) => (
-                <Badge key={idx} variant="secondary" className="border-0 rounded-full">
-                  {name}
-                </Badge>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">—</p>
-          )}
-        </InfoCard>
-      </div>
-
-      {/* ══ Documents ══════════════════════════════════════════════════ */}
-      <InfoCard icon={Paperclip} title="Documents" className="mt-5">
-        {uploadedDocs.length > 0 ? (
-          <ul className="space-y-2">
-            {uploadedDocs.map((doc) => (
-              <li
-                key={doc.ID}
-                className="flex items-center justify-between p-3 rounded-md border
-                  bg-success/5 border-success/20"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <CheckCircle2 size={14} className="text-success shrink-0" />
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {doc.FILE_NAME}
-                  </span>
-                  {doc.FILE_SIZE && (
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      {fmtBytes(doc.FILE_SIZE)}
-                    </span>
-                  )}
-                </div>
-                <a
-                  href={`${url}/api/project/doc/${doc.ID}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ml-3 text-primary hover:text-primary/80 shrink-0 p-1 rounded hover:bg-primary/5 transition-colors"
+      {/* ── Tab Bar ──────────────────────────────────────────────── */}
+      <div className="overflow-x-auto">
+        <div className="inline-flex items-center gap-1 bg-secondary rounded-md p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm font-medium whitespace-nowrap transition-all ${
+                activeTab === tab.id
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+              {tab.badge != null && (
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === tab.id
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
                 >
-                  <ExternalLink size={14} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">No documents uploaded.</p>
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6">
+        {activeTab === "selections" && (
+          <SelectionsSection projectId={projectId} />
         )}
-      </InfoCard>
 
-      {/* ══ Related Tickets ════════════════════════════════════════════ */}
-      <SectionDivider label="Related Tickets" />
+        {activeTab === "tickets" && (
+          <>
+            {ticketsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <TicketSkeleton key={i} />
+                ))}
+              </div>
+            ) : tickets.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {tickets.map((ticket) => (
+                  <TicketCard
+                    key={ticket.TICKET_ID}
+                    ticket={ticket}
+                    onOpen={(ticketId) =>
+                      navigate(`/dashboard/tickets/${ticketId}`)
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
+                <TicketIcon size={20} className="mx-auto text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No tickets linked to this project.
+                </p>
+              </div>
+            )}
 
-      {ticketsLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <TicketSkeleton key={i} />
-          ))}
-        </div>
-      ) : tickets.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tickets.map((ticket) => (
-            <TicketCard
-              key={ticket.TICKET_ID}
-              ticket={ticket}
-              onOpen={(ticketId) =>
-                navigate(`/dashboard/tickets/${ticketId}`)
-              }
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
-          <TicketIcon size={20} className="mx-auto text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">
-            No tickets linked to this project.
-          </p>
-        </div>
-      )}
+            {!ticketsLoading && ticketsTotal > 0 && (
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Showing {tickets.length} of {ticketsTotal} ticket
+                  {ticketsTotal === 1 ? "" : "s"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.pageIndex === 0}
+                    onClick={() => goToPage(pagination.pageIndex - 1)}
+                  >
+                    <ChevronLeft size={14} />
+                    Previous
+                  </Button>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    Page {currentPage} of {pageCount}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage >= pageCount}
+                    onClick={() => goToPage(pagination.pageIndex + 1)}
+                  >
+                    Next
+                    <ChevronRight size={14} />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
-      {!ticketsLoading && ticketsTotal > 0 && (
-        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            Showing {tickets.length} of {ticketsTotal} ticket
-            {ticketsTotal === 1 ? "" : "s"}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagination.pageIndex === 0}
-              onClick={() => goToPage(pagination.pageIndex - 1)}
-            >
-              <ChevronLeft size={14} />
-              Previous
-            </Button>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              Page {currentPage} of {pageCount}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= pageCount}
-              onClick={() => goToPage(pagination.pageIndex + 1)}
-            >
-              Next
-              <ChevronRight size={14} />
-            </Button>
-          </div>
-        </div>
-      )}
-      <SelectionsSection projectId={projectId} />
+        {activeTab === "documents" && (
+          <InfoCard icon={Paperclip} title="Documents">
+            {uploadedDocs.length > 0 ? (
+              <ul className="space-y-2">
+                {uploadedDocs.map((doc) => (
+                  <li
+                    key={doc.ID}
+                    className="flex items-center justify-between p-3 rounded-md border
+                      bg-success/5 border-success/20"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CheckCircle2 size={14} className="text-success shrink-0" />
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {doc.FILE_NAME}
+                      </span>
+                      {doc.FILE_SIZE && (
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {fmtBytes(doc.FILE_SIZE)}
+                        </span>
+                      )}
+                    </div>
+                    <a
+                      href={`${url}/api/project/doc/${doc.ID}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-3 text-primary hover:text-primary/80 shrink-0 p-1 rounded hover:bg-primary/5 transition-colors"
+                    >
+                      <ExternalLink size={14} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No documents uploaded.
+              </p>
+            )}
+          </InfoCard>
+        )}
+
+        {activeTab === "overview" && (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
+              <InfoCard
+                icon={Info}
+                title="Basic Information"
+                className="lg:col-span-3"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <ReadField
+                    label="Project Code"
+                    value={existingProject.P_CODE || "—"}
+                  />
+                  <ReadField label="Project Type" value={projectTypeName} />
+                  <ReadField
+                    label="Insurance No"
+                    value={existingProject.INSURANCE_NO || "—"}
+                  />
+                  <ReadField
+                    label="Margin %"
+                    value={
+                      existingProject.MARGIN_PERCENT == null
+                        ? "—"
+                        : `${existingProject.MARGIN_PERCENT}%`
+                    }
+                  />
+                  <ReadField
+                    label="Start Date"
+                    value={existingProject.P_ENTATIVE_START_DATE || "—"}
+                  />
+                  <ReadField
+                    label="End Date"
+                    value={existingProject.P_ENTATIVE_END_DATE || "—"}
+                  />
+                </div>
+              </InfoCard>
+
+              <InfoCard
+                icon={MapPin}
+                title="Location"
+                className="lg:col-span-2"
+              >
+                <div className="grid grid-cols-1 gap-3">
+                  <ReadField
+                    label="Project Address"
+                    value={existingProject.P_ADDRESS || "—"}
+                  />
+                  <ReadField label="Suburb" value={existingProject.SUBWRB || "—"} />
+                  <ReadField label="State" value={existingProject.STATE || "—"} />
+                  <ReadField
+                    label="Postcode"
+                    value={existingProject.POSTCODE || "—"}
+                  />
+                </div>
+              </InfoCard>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+              <InfoCard icon={FileText} title="Description">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                  {existingProject.DESCRIPTION || "—"}
+                </p>
+              </InfoCard>
+
+              <InfoCard icon={Layers} title="Contractor Types">
+                {contractorTypeNames.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {contractorTypeNames.map((name, idx) => (
+                      <Badge
+                        key={idx}
+                        variant="secondary"
+                        className="border-0 rounded-full"
+                      >
+                        {name}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">—</p>
+                )}
+              </InfoCard>
+            </div>
+          </>
+        )}
+      </div>
+
       <ConfirmationDialog />
     </SectionContainer>
   );
