@@ -1,7 +1,10 @@
 // src/features/selection/selections-section.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
+  CheckCircle2,
+  CircleDashed,
   Copy,
   LayoutTemplate,
   ListChecks,
@@ -32,11 +35,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
 import { useHasPermission } from "@/hooks/use-permission";
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 import { fmtDateTime } from "@/features/ticketing/lib/ticket-utils";
-import { SelectionEditorSheet } from "./selection-editor-sheet";
 import { SelectionsCustomerSection } from "./selection-customer-view";
 import {
   useCopyForm,
@@ -46,8 +49,11 @@ import {
   useSelectionForms,
   useSelectionTemplates,
 } from "./selection-api";
+import { useSelectionHighlightStore } from "./useSelectionHighlightStore";
 
 const EMPTY_ARRAY = [];
+
+const FORM_SCOPE = "selection-forms";
 
 const STATUS_STYLES = {
   DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
@@ -55,6 +61,19 @@ const STATUS_STYLES = {
   CONFIRMED:
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
 };
+
+const STATUS_ICONS = {
+  DRAFT: CircleDashed,
+  PUBLISHED: Send,
+  CONFIRMED: CheckCircle2,
+};
+
+// Shared card looks for the highlighted / idle list card.
+const CARD_IDLE =
+  "cursor-pointer border-border hover:-translate-y-0.5 hover:border-primary/50 hover:bg-accent/60 hover:shadow-lg";
+// Selected uses the selected / selected-border tokens, never the warning color.
+const CARD_SELECTED =
+  "border-selected-border bg-selected text-foreground shadow-md ring-2 ring-selected-border/40 [&_.text-muted-foreground]:text-foreground/80";
 
 // Mirrors the server's copy suggestion so the Level field arrives pre-filled.
 const nextLevelSuggestion = (value) => {
@@ -67,11 +86,13 @@ const nextLevelSuggestion = (value) => {
 
 function SelectionStatusBadge({ status }) {
   const key = status || "DRAFT";
+  const Icon = STATUS_ICONS[key] || STATUS_ICONS.DRAFT;
   return (
     <Badge
       variant="secondary"
-      className={`border-0 ${STATUS_STYLES[key] || STATUS_STYLES.DRAFT}`}
+      className={`gap-1 border-0 text-xs font-semibold ${STATUS_STYLES[key] || STATUS_STYLES.DRAFT}`}
     >
+      <Icon size={13} aria-hidden="true" />
       {key}
     </Badge>
   );
@@ -151,7 +172,7 @@ function AddSelectionDialog({
               Start from
             </label>
             <Select value={source} onValueChange={setSource}>
-              <SelectTrigger className="h-9 w-full text-sm">
+              <SelectTrigger className="h-10 w-full text-[15px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -168,7 +189,7 @@ function AddSelectionDialog({
               </label>
               <Select value={templateId} onValueChange={setTemplateId}>
                 <SelectTrigger
-                  className="h-9 w-full text-sm"
+                  className="h-10 w-full text-[15px]"
                   disabled={templatesLoading || templates.length === 0}
                 >
                   <SelectValue
@@ -190,7 +211,7 @@ function AddSelectionDialog({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Areas, fields and items are copied from the template.
               </p>
             </div>
@@ -204,7 +225,7 @@ function AddSelectionDialog({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Kitchen Selection"
-                  className="h-9 text-sm"
+                  className="h-10 text-[15px]"
                   autoFocus
                 />
               </div>
@@ -216,7 +237,7 @@ function AddSelectionDialog({
                   value={level}
                   onChange={(e) => setLevel(e.target.value)}
                   placeholder="e.g. L1"
-                  className="h-9 text-sm"
+                  className="h-10 text-[15px]"
                 />
               </div>
             </>
@@ -228,10 +249,11 @@ function AddSelectionDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isCreating}
+              className="h-10 px-3 text-sm"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isCreating}>
+            <Button type="submit" disabled={isCreating} className="h-10 px-3 text-sm">
               {isCreating ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
@@ -307,7 +329,7 @@ function CopySelectionDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title"
-              className="h-9 text-sm"
+              className="h-10 text-[15px]"
               autoFocus
             />
           </div>
@@ -322,10 +344,10 @@ function CopySelectionDialog({
                   value={level}
                   onChange={(e) => setLevel(e.target.value)}
                   placeholder="e.g. L2"
-                  className="h-9 text-sm"
+                  className="h-10 text-[15px]"
                 />
               </div>
-              <label className="flex items-center gap-2 text-sm text-foreground">
+              <label className="flex items-center gap-2 text-[15px] text-foreground">
                 <Checkbox
                   checked={copyImages}
                   onCheckedChange={(checked) => setCopyImages(!!checked)}
@@ -341,10 +363,11 @@ function CopySelectionDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
+              className="h-10 px-3 text-sm"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="h-10 px-3 text-sm">
               {isPending ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
@@ -374,33 +397,47 @@ function SelectionCard({
   deleting,
   publishing,
 }) {
+  const selected =
+    useSelectionHighlightStore((state) => state.selected[FORM_SCOPE]) ===
+    form.ID;
+  const select = useSelectionHighlightStore((state) => state.select);
+
   const areaCount =
     form.AREA_COUNT ??
     (Array.isArray(form.AREAS) ? form.AREAS.length : null);
   const hasNoAreas = areaCount === 0;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="flex items-start justify-between gap-3">
+    <div
+      onClick={() => select(FORM_SCOPE, form.ID)}
+      className={cn(
+        "rounded-lg border bg-card p-4 text-[15px] transition-all duration-200 focus-within:ring-2 focus-within:ring-ring/50",
+        selected ? CARD_SELECTED : CARD_IDLE,
+      )}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Selection #{form.ID}
           </p>
           <h4
-            className="mt-1 line-clamp-2 min-h-10 break-words text-sm font-medium leading-snug text-foreground"
+            className="mt-1 line-clamp-2 min-h-10 break-words text-[15px] font-semibold leading-snug text-foreground"
             title={form.TITLE}
           >
             {form.TITLE || "Untitled selection"}
           </h4>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {form.LEVEL_NO && (
-              <Badge variant="outline" className="text-[11px]">
+              <Badge
+                variant="outline"
+                className="border-primary/40 bg-accent text-xs font-semibold text-accent-foreground"
+              >
                 {form.LEVEL_NO}
               </Badge>
             )}
             <SelectionStatusBadge status={form.STATUS} />
             {areaCount != null && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 {areaCount} area{areaCount === 1 ? "" : "s"}
               </span>
             )}
@@ -408,11 +445,12 @@ function SelectionCard({
         </div>
 
         {canEdit && (
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <div className="flex items-center gap-1">
+          <div className="flex min-w-0 shrink-0 flex-col items-end gap-1">
+            <div className="flex flex-wrap items-center justify-end gap-1">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-10 px-3 text-sm"
                 onClick={() => onOpen(form.ID)}
               >
                 Open
@@ -421,6 +459,7 @@ function SelectionCard({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-10 px-3 text-sm"
                   onClick={() => onPublish(form)}
                   disabled={hasNoAreas || publishing}
                   title={
@@ -438,11 +477,11 @@ function SelectionCard({
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center justify-end gap-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground"
+                className="h-10 px-2 text-sm text-muted-foreground hover:text-foreground"
                 onClick={() => onCopy(form)}
               >
                 <Copy size={13} />
@@ -451,7 +490,7 @@ function SelectionCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground"
+                className="h-10 px-2 text-sm text-muted-foreground hover:text-foreground"
                 onClick={() => onSaveAsTemplate(form)}
                 title="Save as template"
               >
@@ -462,7 +501,7 @@ function SelectionCard({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  className="text-muted-foreground hover:text-destructive"
+                  className="h-10 w-10 text-muted-foreground hover:text-destructive"
                   onClick={() => onDelete(form)}
                   disabled={deleting}
                   title="Delete selection"
@@ -475,8 +514,8 @@ function SelectionCard({
         )}
       </div>
 
-      <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
-        <CalendarDays size={12} />
+      <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-[13px] text-muted-foreground">
+        <CalendarDays size={13} aria-hidden="true" />
         Updated {fmtDateTime(form.UPDATED_DATE)}
       </div>
     </div>
@@ -484,6 +523,7 @@ function SelectionCard({
 }
 
 export function SelectionsSection({ projectId }) {
+  const navigate = useNavigate();
   const { user } = useAuthV2();
   const canEdit = useHasPermission("PROJECT_EDIT");
   const isOwner = user?.userType === "OWNER";
@@ -509,7 +549,6 @@ export function SelectionsSection({ projectId }) {
   const publishMutation = usePublishForm();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [openFormId, setOpenFormId] = useState(null);
   const [copyDialog, setCopyDialog] = useState(null); // { mode, form }
   const [publishingId, setPublishingId] = useState(null);
 
@@ -554,7 +593,9 @@ export function SelectionsSection({ projectId }) {
       });
       toast.success("Selection added from template.");
       setCreateOpen(false);
-      if (created?.id) setOpenFormId(created.id);
+      if (created?.id) {
+        navigate(`/dashboard/projects/${projectId}/selections/${created.id}`);
+      }
     } catch (err) {
       toast.error(
         err?.response?.data?.message || "Failed to create selection.",
@@ -581,7 +622,9 @@ export function SelectionsSection({ projectId }) {
       });
       toast.success("Selection copied.");
       setCopyDialog(null);
-      if (created?.id) setOpenFormId(created.id);
+      if (created?.id) {
+        navigate(`/dashboard/projects/${projectId}/selections/${created.id}`);
+      }
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to copy selection.");
     }
@@ -663,24 +706,26 @@ export function SelectionsSection({ projectId }) {
   return (
     <>
       <div className="mb-5 mt-8 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <ListChecks size={15} className="text-primary" />
-          <h2 className="text-overline font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-primary">
+            <ListChecks size={16} aria-hidden="true" />
+          </span>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
             Selections
           </h2>
           {!isLoading && forms.length > 0 && (
-            <Badge variant="secondary" className="border-0">
+            <Badge variant="secondary" className="border-0 text-xs font-semibold">
               {forms.length}
             </Badge>
           )}
         </div>
         {canEdit && (
           <Button
-            variant="outline"
             size="sm"
+            className="h-10 px-3 text-sm"
             onClick={() => setCreateOpen(true)}
           >
-            <Plus size={14} />
+            <Plus size={15} />
             Add Selection
           </Button>
         )}
@@ -700,7 +745,7 @@ export function SelectionsSection({ projectId }) {
           <Button
             variant="outline"
             size="sm"
-            className="mt-3"
+            className="mt-3 h-10 px-3 text-sm"
             onClick={() => refetch()}
             disabled={isFetching}
           >
@@ -714,7 +759,9 @@ export function SelectionsSection({ projectId }) {
               key={form.ID}
               form={form}
               canEdit={canEdit}
-              onOpen={setOpenFormId}
+              onOpen={(formId) =>
+                navigate(`/dashboard/projects/${projectId}/selections/${formId}`)
+              }
               onCopy={(target) => setCopyDialog({ mode: "copy", form: target })}
               onSaveAsTemplate={(target) =>
                 setCopyDialog({ mode: "template", form: target })
@@ -736,7 +783,7 @@ export function SelectionsSection({ projectId }) {
             <Button
               variant="outline"
               size="sm"
-              className="mt-3"
+              className="mt-3 h-10 px-3 text-sm"
               onClick={() => setCreateOpen(true)}
             >
               <Plus size={14} />
@@ -766,13 +813,6 @@ export function SelectionsSection({ projectId }) {
         onCopy={handleCopy}
         onSaveAsTemplate={handleSaveAsTemplate}
         isPending={copyMutation.isPending}
-      />
-
-      <SelectionEditorSheet
-        open={!!openFormId}
-        formId={openFormId}
-        projectId={projectId}
-        onClose={() => setOpenFormId(null)}
       />
 
       <ConfirmationDialog />

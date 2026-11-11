@@ -7,8 +7,8 @@ const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 const EMPTY_ARRAY = [];
 
 export const selectionKeys = {
-  forms: (projectId) => ["selection", "forms", projectId],
-  form: (formId) => ["selection", "form", formId],
+  forms: (projectId) => ["selection", "forms", Number(projectId)],
+  form: (formId) => ["selection", "form", Number(formId)],
   templates: () => ["selection", "templates"],
 };
 
