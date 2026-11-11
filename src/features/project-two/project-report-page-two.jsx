@@ -11,6 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
+  Check,
   Download,
   Loader2,
   FileText,
@@ -21,6 +22,7 @@ import {
   LandmarkIcon,
   MoveDownIcon,
   MoveUpIcon,
+  List,
   Pencil,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -39,6 +41,12 @@ import { DataTablePaginationTwo } from "@/components/DataTablePaginationTwo";
 import InvoiceCell from "@/features/setting/pages/statement-upload-three/invoice/InvoiceCell";
 import InvoiceSheet from "@/features/setting/pages/statement-upload-three/invoice/InvoiceSheet";
 import WrappedName from "@/components/shared/WrappedName";
+import { getAvatarColor, getInitials } from "@/lib/avatar-utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import {
   Tooltip,
@@ -46,6 +54,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useHasPermission } from "@/hooks/use-permission";
+import { useRowSelectionStore } from "@/hooks/use-row-selection-store";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -124,6 +133,9 @@ export function ProjectReportPageTwo() {
   // const [expandedContractors, setExpandedContractors] = useState({});
   const workerSectionRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const [jumpSearch, setJumpSearch] = useState("");
+  const [activeJumpKey, setActiveJumpKey] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -143,6 +155,42 @@ export function ProjectReportPageTwo() {
       block: "start",
     });
   };
+
+  // ── Row selection (one row at a time across the page) ───────────────
+  const SELECTION_SCOPE = "project-report";
+  const selectedRowKey = useRowSelectionStore(
+    (s) => s.selected[SELECTION_SCOPE] ?? null,
+  );
+  const toggleRow = useRowSelectionStore((s) => s.toggle);
+
+  // Clicks inside interactive children (Edit, Invoice, ...) must not select.
+  const isInteractiveTarget = (e) =>
+    !!e.target.closest?.(
+      "button, a, input, textarea, select, [role='button']",
+    );
+
+  const handleRowClick = (rowKey) => (e) => {
+    if (isInteractiveTarget(e)) return;
+    toggleRow(SELECTION_SCOPE, rowKey);
+  };
+
+  const handleRowKeyDown = (rowKey) => (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (isInteractiveTarget(e)) return;
+    e.preventDefault();
+    toggleRow(SELECTION_SCOPE, rowKey);
+  };
+
+  // Shared row classes for the contractor and worker tables.
+  const rowStateClass = (isSelected, idx) =>
+    `cursor-pointer border-b border-border last:border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+      isSelected
+        ? "bg-selected hover:bg-selected"
+        : `hover:bg-accent ${idx % 2 === 1 ? "bg-muted/60" : "bg-transparent"}`
+    }`;
+
+  const firstCellClass = (isSelected) =>
+    `border-l-4 ${isSelected ? "border-selected-border" : "border-transparent"}`;
 
   const { data: report, isLoading } = useQuery({
     queryKey: ["projectReport", projectId],
@@ -259,6 +307,14 @@ export function ProjectReportPageTwo() {
       };
     });
   }, [rows]);
+
+  const jumpContractors = useMemo(() => {
+    const q = jumpSearch.trim().toLowerCase();
+    if (!q) return groupedByContractor;
+    return groupedByContractor.filter((group) =>
+      group.contractorName.trim().toLowerCase().includes(q),
+    );
+  }, [groupedByContractor, jumpSearch]);
 
   // const toggleContractorExpanded = (key) => {
   //   setExpandedContractors((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -443,7 +499,7 @@ export function ProjectReportPageTwo() {
           </span>
         ),
         cell: ({ getValue }) => (
-          <span className="text-xs text-foreground">
+          <span className="text-sm text-foreground">
             {getValue() || (
               <span className="text-muted-foreground italic">—</span>
             )}
@@ -459,7 +515,7 @@ export function ProjectReportPageTwo() {
           new Date(a.original.TXN_DATE || 0) -
           new Date(b.original.TXN_DATE || 0),
         cell: ({ getValue }) => (
-          <span className="whitespace-nowrap font-medium text-foreground text-xs">
+          <span className="whitespace-nowrap font-medium text-foreground text-sm">
             {fmtDate(getValue())}
           </span>
         ),
@@ -476,7 +532,7 @@ export function ProjectReportPageTwo() {
         cell: ({ getValue }) => {
           const v = getValue();
           return (
-            <div className="text-right font-semibold text-[#10B981] whitespace-nowrap text-xs">
+            <div className="text-right font-semibold text-[#10B981] whitespace-nowrap text-sm">
               {v != null ? fmtAmount(v) : "—"}
             </div>
           );
@@ -494,7 +550,7 @@ export function ProjectReportPageTwo() {
         cell: ({ getValue }) => {
           const v = getValue();
           return (
-            <div className="text-right font-semibold text-destructive whitespace-nowrap text-xs">
+            <div className="text-right font-semibold text-destructive whitespace-nowrap text-sm">
               {v != null ? fmtAmount(v) : "—"}
             </div>
           );
@@ -510,7 +566,7 @@ export function ProjectReportPageTwo() {
         cell: ({ getValue }) => (
           <div
             title={getValue() || ""}
-            className="max-w-[220px] text-foreground text-xs truncate"
+            className="max-w-[220px] text-foreground text-sm truncate"
           >
             {getValue()}
           </div>
@@ -546,7 +602,7 @@ export function ProjectReportPageTwo() {
           </span>
         ),
         cell: ({ getValue }) => (
-          <span className="text-foreground text-xs">
+          <span className="text-foreground text-sm">
             {getValue() || (
               <span className="text-muted-foreground italic">—</span>
             )}
@@ -562,7 +618,7 @@ export function ProjectReportPageTwo() {
           new Date(a.original.APPROVED_DATE || 0) -
           new Date(b.original.APPROVED_DATE || 0),
         cell: ({ getValue }) => (
-          <span className="whitespace-nowrap text-muted-foreground text-xs">
+          <span className="whitespace-nowrap text-muted-foreground text-sm">
             {fmtDate(getValue())}
           </span>
         ),
@@ -893,17 +949,30 @@ export function ProjectReportPageTwo() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    table.getRowModel().rows.map((row, idx) => (
+                    table.getRowModel().rows.map((row, idx) => {
+                      const rowKey = `t-${row.original.TXN_ID}`;
+                      const isSelected = selectedRowKey === rowKey;
+                      return (
                       <TableRow
                         key={row.id}
-                        className={`border-b border-border last:border-0 hover:bg-[#F3F3F5] dark:hover:bg-muted/40 transition-colors ${
-                          idx % 2 === 1 ? "bg-background" : "bg-card"
+                        tabIndex={0}
+                        aria-selected={isSelected}
+                        onClick={handleRowClick(rowKey)}
+                        onKeyDown={handleRowKeyDown(rowKey)}
+                        className={`cursor-pointer border-b border-border last:border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+                          isSelected
+                            ? "bg-selected hover:bg-selected"
+                            : `hover:bg-accent ${
+                                idx % 2 === 1 ? "bg-muted/60" : "bg-card"
+                              }`
                         }`}
                       >
-                        {row.getVisibleCells().map((cell) => (
+                        {row.getVisibleCells().map((cell, cellIndex) => (
                           <TableCell
                             key={cell.id}
-                            className="px-4 py-2.5 align-middle"
+                            className={`px-4 py-2.5 align-middle ${
+                              cellIndex === 0 ? firstCellClass(isSelected) : ""
+                            }`}
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -912,7 +981,8 @@ export function ProjectReportPageTwo() {
                           </TableCell>
                         ))}
                       </TableRow>
-                    ))
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
@@ -955,10 +1025,17 @@ const visibleRows = group.rows;
                   return (
                     <div
                       key={key}
-                      className="border border-border rounded-md overflow-hidden"
+                      id={`contractor-${key}`}
+                      className={`scroll-mt-16 border border-border rounded-md overflow-hidden transition-shadow ${
+                        activeJumpKey === key ? "ring-2 ring-selected-border" : ""
+                      }`}
                     >
                       {/* Contractor header */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-b border-border">
+                      <div
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-border transition-colors ${
+                          activeJumpKey === key ? "bg-selected" : "bg-muted/40"
+                        }`}
+                      >
                         {/* <div className="flex items-center gap-2.5 min-w-0">
                           <span className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground text-sm font-semibold shrink-0">
                             {initials(group.contractorName)}
@@ -1040,21 +1117,32 @@ const visibleRows = group.rows;
                             </tr>
                           </thead>
                           <tbody>
-                            {visibleRows.map((r) => (
+                            {visibleRows.map((r, idx) => {
+                              const rowKey = `c-${r.TXN_ID}`;
+                              const isSelected = selectedRowKey === rowKey;
+                              return (
                               <tr
                                 key={r.TXN_ID}
-                                className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                                tabIndex={0}
+                                aria-selected={isSelected}
+                                onClick={handleRowClick(rowKey)}
+                                onKeyDown={handleRowKeyDown(rowKey)}
+                                className={rowStateClass(isSelected, idx)}
                               >
-                                <td className="px-4 py-2.5 whitespace-nowrap font-medium text-foreground text-xs">
+                                <td
+                                  className={`px-4 py-2.5 whitespace-nowrap font-medium text-foreground text-sm ${firstCellClass(
+                                    isSelected,
+                                  )}`}
+                                >
                                   {fmtDate(r.TXN_DATE)}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-semibold text-[#10B981] whitespace-nowrap text-xs">
+                                <td className="px-4 py-2.5 text-right font-semibold text-[#10B981] whitespace-nowrap text-sm">
                                   {r.DEBIT != null ? fmtAmount(r.DEBIT) : "—"}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-semibold text-destructive whitespace-nowrap text-xs">
+                                <td className="px-4 py-2.5 text-right font-semibold text-destructive whitespace-nowrap text-sm">
                                   {r.CREDIT != null ? fmtAmount(r.CREDIT) : "—"}
                                 </td>
-                                <td className="px-4 py-2.5 max-w-[220px] text-foreground text-xs break-words">
+                                <td className="px-4 py-2.5 max-w-[220px] text-foreground text-sm break-words">
                                   {r.DESCRIPTION}
                                 </td>
                                 {/* <td className="px-4 py-2.5 max-w-[220px]">
@@ -1063,14 +1151,14 @@ const visibleRows = group.rows;
                                 <td className="px-4 py-2.5">
                                   <SourceBadge row={r} />
                                 </td>
-                                <td className="px-4 py-2.5 text-foreground text-xs">
+                                <td className="px-4 py-2.5 text-foreground text-sm">
                                   {r.REMARKS || (
                                     <span className="text-muted-foreground italic">
                                       —
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground text-xs">
+                                <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground text-sm">
                                   {fmtDate(r.APPROVED_DATE)}
                                 </td>
                                 <td className="px-4 py-2.5 min-w-[160px]">
@@ -1100,7 +1188,8 @@ const visibleRows = group.rows;
                                   )}
                                 </td>
                               </tr>
-                            ))}
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -1132,9 +1221,17 @@ const visibleRows = group.rows;
                 {workerLogs.length > 0 && (
                   <div
                     ref={workerSectionRef}
-                    className="scroll-mt-16 border border-border rounded-md overflow-hidden"
+                    className={`scroll-mt-16 border border-border rounded-md overflow-hidden transition-shadow ${
+                      activeJumpKey === "worker"
+                        ? "ring-2 ring-selected-border"
+                        : ""
+                    }`}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-muted/40 border-b border-border">
+                    <div
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-border transition-colors ${
+                        activeJumpKey === "worker" ? "bg-selected" : "bg-muted/40"
+                      }`}
+                    >
                       <div className="flex items-center gap-2">
                         <Users size={16} />
                         <h3 className="text-sm font-semibold text-foreground">
@@ -1191,12 +1288,23 @@ const visibleRows = group.rows;
                           </tr>
                         </thead>
                         <tbody>
-                          {workerLogs.map((w) => (
+                          {workerLogs.map((w, idx) => {
+                            const rowKey = `w-${w.ATTENDANCE_ID}`;
+                            const isSelected = selectedRowKey === rowKey;
+                            return (
                             <tr
                               key={w.ATTENDANCE_ID}
-                              className="border-b border-border last:border-0 hover:bg-muted/30"
+                              tabIndex={0}
+                              aria-selected={isSelected}
+                              onClick={handleRowClick(rowKey)}
+                              onKeyDown={handleRowKeyDown(rowKey)}
+                              className={rowStateClass(isSelected, idx)}
                             >
-                              <td className="px-4 py-2.5 ">
+                              <td
+                                className={`px-4 py-2.5 ${firstCellClass(
+                                  isSelected,
+                                )}`}
+                              >
                                 {/* {w.WORKER_NAME} */}
                                 <WrappedName
                                   name={w.WORKER_NAME}
@@ -1204,7 +1312,7 @@ const visibleRows = group.rows;
                                   maxLines={1}
                                 />
                               </td>
-                              <td className="px-4 py-2.5 whitespace-nowrap text-xs">
+                              <td className="px-4 py-2.5 whitespace-nowrap text-sm">
                                 {fmtDate(w.ATTENDANCE_DATE)}
                               </td>
                               <td className="px-4 py-2.5">
@@ -1212,7 +1320,7 @@ const visibleRows = group.rows;
                                   {w.CALC_BASIS}
                                 </span>
                               </td>
-                              <td className="px-4 py-2.5 text-foreground text-xs">
+                              <td className="px-4 py-2.5 text-foreground text-sm">
                                 {/* <WrappedName
                                   name={w.REMARKS}
                                   
@@ -1225,20 +1333,20 @@ const visibleRows = group.rows;
                                   </span>
                                 )}
                               </td>
-                              <td className="px-4 py-2.5 text-right text-xs">
+                              <td className="px-4 py-2.5 text-right text-sm">
                                 {fmtHours(w.HOURS_WORKED)}
                               </td>
-                              <td className="px-4 py-2.5 text-right text-xs">
+                              <td className="px-4 py-2.5 text-right text-sm">
                                 {w.DAYS_WORKED ?? "—"}
                               </td>
-                              <td className="px-4 py-2.5 text-right text-xs">
+                              <td className="px-4 py-2.5 text-right text-sm">
                                 {fmtAmount(
                                   w.CALC_BASIS === "HOUR"
                                     ? w.RATE_PER_HOUR
                                     : w.RATE_PER_DAY,
                                 )}
                               </td>
-                              <td className="px-4 py-2.5 text-right text-xs font-semibold">
+                              <td className="px-4 py-2.5 text-right text-sm font-semibold">
                                 {w.AMOUNT != null ? (
                                   fmtAmount(w.AMOUNT)
                                 ) : (
@@ -1248,7 +1356,8 @@ const visibleRows = group.rows;
                                 )}
                               </td>
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -1260,6 +1369,130 @@ const visibleRows = group.rows;
         )}
       </div>
       <InvoiceSheet />
+      {activeTab === "byContractor" && groupedByContractor.length > 1 && (
+        <Popover
+          open={jumpOpen}
+          onOpenChange={(open) => {
+            setJumpOpen(open);
+            if (!open) setJumpSearch("");
+          }}
+        >
+          <PopoverTrigger asChild>
+            <Button
+              aria-label="Jump to contractor"
+              className="fixed bottom-16 right-6 z-[60] h-9 rounded-full shadow-lg px-3 gap-1.5"
+            >
+              <List size={16} />
+              <span className="hidden sm:inline text-xs">Contractors</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="end"
+            sideOffset={8}
+            className="w-72 p-2"
+          >
+            {groupedByContractor.length > 8 && (
+              <input
+                type="text"
+                value={jumpSearch}
+                onChange={(e) => setJumpSearch(e.target.value)}
+                placeholder="Search contractor..."
+                className="mb-2 h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            )}
+            <div className="max-h-96 overflow-y-auto flex flex-col">
+              {jumpContractors.map((group) => {
+                const key = group.contractorId ?? "none";
+                const name = group.contractorName.trim();
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    title={name}
+                    aria-current={activeJumpKey === key ? "true" : undefined}
+                    onClick={() => {
+                      setActiveJumpKey(key);
+                      document
+                        .getElementById(`contractor-${key}`)
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      setJumpOpen(false);
+                    }}
+                    className={`flex items-center gap-2 rounded-sm border-l-4 px-2 py-2.5 text-sm text-left text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      activeJumpKey === key
+                        ? "bg-selected border-selected-border"
+                        : "border-transparent"
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+                      style={{ backgroundColor: getAvatarColor(name) }}
+                    >
+                      {getInitials(name)}
+                    </span>
+                    <span
+                      className={`flex-1 truncate ${
+                        activeJumpKey === key ? "font-semibold" : ""
+                      }`}
+                    >
+                      {name}
+                    </span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {group.rows.length}
+                    </span>
+                    {activeJumpKey === key && (
+                      <Check size={16} className="shrink-0 text-primary" />
+                    )}
+                  </button>
+                );
+              })}
+              {workerLogs.length > 0 && (
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="mt-1 border-t border-border"
+                  />
+                  <button
+                    type="button"
+                    aria-current={
+                      activeJumpKey === "worker" ? "true" : undefined
+                    }
+                    onClick={() => {
+                      setActiveJumpKey("worker");
+                      workerSectionRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                      setJumpOpen(false);
+                    }}
+                    className={`flex items-center gap-2 rounded-sm border-l-4 px-2 py-2.5 text-sm text-left text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      activeJumpKey === "worker"
+                        ? "bg-selected border-selected-border"
+                        : "border-transparent"
+                    }`}
+                  >
+                    <Users
+                      size={16}
+                      className="shrink-0 text-muted-foreground"
+                    />
+                    <span
+                      className={`flex-1 truncate ${
+                        activeJumpKey === "worker" ? "font-semibold" : ""
+                      }`}
+                    >
+                      Worker Hours
+                    </span>
+                    {activeJumpKey === "worker" && (
+                      <Check size={16} className="shrink-0 text-primary" />
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
       {showScrollTop && (
         <Button
           onClick={scrollToTop}

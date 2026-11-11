@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useHasPermission } from "@/hooks/use-permission";
+import { usePersistedColumnVisibility } from "@/hooks/use-persisted-column-visibility";
 
 import axios from "axios";
 import {
@@ -25,6 +26,7 @@ import {
 import { toast } from "react-toastify";
 
 import { Badge } from "@/components/ui/badge";
+import WrappedName from "@/components/shared/WrappedName";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -164,16 +166,7 @@ export function NewProjectTable() {
   const navigate = useNavigate();
   const [sorting, setSorting] = useState([{ id: "SORT_ORDER", desc: false }]);
   const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({
-    LOT: false,
-    DP: false,
-    INSURANCE_NO: false,
-    P_ENTATIVE_START_DATE: false,
-    P_TENTATIVE_END_DATE: false,
-    P_CODE: false,
-    DESCRIPTION: false,
-    SORT_ORDER: false,
-  });
+  const [columnVisibility, setColumnVisibility] = usePersistedColumnVisibility("projects", { LOT: false, DP: false, INSURANCE_NO: false, P_ENTATIVE_START_DATE: false, P_TENTATIVE_END_DATE: false, P_CODE: false, DESCRIPTION: false, SORT_ORDER: false });
   const [rowSelection, setRowSelection] = useState({});
   const [createSheetOpen, setCreateSheetOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
@@ -345,9 +338,7 @@ export function NewProjectTable() {
         </button>
       ),
       cell: ({ row }) => (
-        <div className="font-medium text-foreground text-sm">
-          {row.getValue("P_NAME") || "—"}
-        </div>
+        <WrappedName name={row.getValue("P_NAME")} size="md" maxLines={1} maxChars={30} />
       ),
     },
     {
