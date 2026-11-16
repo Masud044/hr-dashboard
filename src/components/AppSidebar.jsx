@@ -112,13 +112,13 @@ export default function AppSidebar() {
                               isActive={isActive}
                               tooltip={isCollapsed ? linkItem.label : undefined}
                               className="
-                                h-auto rounded-md px-3 py-2
-                                text-[14px] font-medium
+                                h-auto rounded-md border  border-accent-foreground/15   px-3.5 py-1.5
+                                text-[14px] font-medium shadow-2xs
                                 text-foreground
                                 transition-all duration-200
                                 hover:bg-accent hover:text-primary
-                                data-[active=true]:bg-primary
-                                data-[active=true]:text-primary-foreground
+                                data-[active=true]:bg-accent
+                                data-[active=true]:text-accent-foreground
                                 data-[active=true]:font-semibold
                               "
                             >
@@ -131,8 +131,8 @@ export default function AppSidebar() {
                                   <span
                                     className={
                                       isActive
-                                        ? "flex items-center justify-center w-6 h-6 rounded-full bg-white/20 shrink-0"
-                                        : "flex items-center justify-center w-6 h-6 rounded-md bg-accent text-primary shrink-0 transition-colors group-hover/menu-button:bg-card"
+                                        ? "flex items-center justify-center  shrink-0"
+                                        : "flex items-center justify-center   shrink-0 transition-colors group-hover/menu-button:bg-card"
                                     }
                                   >
                                     <linkItem.Icon className="w-[18px] h-[18px]" />

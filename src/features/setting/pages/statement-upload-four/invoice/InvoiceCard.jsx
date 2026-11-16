@@ -28,6 +28,7 @@ export default function InvoiceCard({
   deletingInvoiceId,
   deletingFileId,
   readOnly = false,
+  onPreviewFile,
 }) {
   const inputRef = useRef(null);
   const isAddingHere = addFileState?.invoiceId === invoice.INVOICE_ID;
@@ -118,15 +119,14 @@ const handlePick = (e) => {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <a
-                  href={fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-primary hover:text-[#4F46E5] truncate block"
+                <button
+                  type="button"
+                  onClick={() => onPreviewFile?.(f)}
+                  className="text-xs text-primary hover:text-[#4F46E5] truncate block w-full text-left"
                   title={f.FILE_NAME}
                 >
                   {f.FILE_NAME}
-                </a>
+                </button>
                 <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                   <span>{fmtBytes(f.FILE_SIZE)}</span>
                   <span>·</span>
