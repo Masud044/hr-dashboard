@@ -218,8 +218,8 @@
   --invert-foreground: var(--color-zinc-50);
 
 /* in :root */
---selected: #FFFBEB;
---selected-border: #FCD34D;
+--selected: #FEF08A;
+--selected-border: #FACC15;
 }
 
 /* ============================================================

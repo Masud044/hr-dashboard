@@ -85,7 +85,7 @@ export default function AppSidebar() {
                       className="
                         text-overline font-semibold tracking-wider text-muted-foreground
                         px-3 pb-2 mx-1 cursor-pointer
-                        border-b border-dashed border-border
+                        
                         hover:text-primary transition-colors
                         flex items-center justify-between
                       "

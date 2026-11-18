@@ -1,6 +1,13 @@
 // src/features/setting/pages/statement-upload-four/FilterBar.jsx
-import React, { useState, useEffect, useMemo } from "react";
-import { Filter, Search, X } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import {
+  FileText,
+  Filter,
+  Search,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,10 +18,24 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import DateInput from "@/components/shared/DateInput";
-import Combobox from "./Combobox";
 import EntityCombobox from "@/components/shared/entity-combobox";
 import { EMPTY_FILTERS } from "./constants";
 import { toSortedOpts } from "@/lib/utils";
+
+// Filters that live inside the collapsible "More Filters" panel.
+const SECONDARY_KEYS = [
+  "dateFrom",
+  "dateTo",
+  "status",
+  "category",
+  "amount",
+  "amountMin",
+  "amountMax",
+  "description",
+  "remarks",
+];
+
+const labelCls = "text-[10px] text-muted-foreground block mb-1";
 
 const FilterBar = React.memo(function FilterBar({
   initialFilters,
@@ -26,6 +47,10 @@ const FilterBar = React.memo(function FilterBar({
   showCategory,
 }) {
   const [draft, setDraft] = useState(initialFilters);
+  const [showMore, setShowMore] = useState(() =>
+    SECONDARY_KEYS.some((k) => Boolean(initialFilters?.[k])),
+  );
+  const invoiceRef = useRef(null);
 
   // keep local draft in sync when parent resets filters externally (e.g. Clear)
   useEffect(() => {
@@ -35,9 +60,9 @@ const FilterBar = React.memo(function FilterBar({
   const update = (key, value) => setDraft((p) => ({ ...p, [key]: value }));
 
   const hasActive = useMemo(() => Object.values(draft).some((v) => v), [draft]);
-  const hasPendingChanges = useMemo(
-    () => JSON.stringify(draft) !== JSON.stringify(initialFilters),
-    [draft, initialFilters],
+  const secondaryCount = useMemo(
+    () => SECONDARY_KEYS.filter((k) => draft[k]).length,
+    [draft],
   );
 
   const projectOpts = useMemo(
@@ -53,209 +78,226 @@ const FilterBar = React.memo(function FilterBar({
   const handleSearch = () => onApply(draft);
   const handleClear = () => {
     setDraft(EMPTY_FILTERS);
+    setShowMore(false);
     onClear();
   };
+  const enterToSearch = (e) => e.key === "Enter" && handleSearch();
 
   return (
-    <div className=" bg-card border border-border rounded-md px-4 py-3.5 mb-4">
-      <div className="flex items-center gap-1.5 mb-3">
-        <Filter size={13} className="text-muted-foreground" />
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-          Filters
-        </span>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-      {/* <div className="flex flex-wrap gap-2.5"> */}
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Date From
-          </label>
-          <DateInput
-            value={draft.dateFrom}
-            onChange={(v) => update("dateFrom", v)}
+    <div className="bg-card border border-border rounded-md px-4 py-3.5 mb-4">
+      {/* ── Tier 1: primary bar ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Prominent invoice search */}
+        <div className="relative flex-1 min-w-[220px]">
+          <FileText
+            size={14}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
-        </div>
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Date To
-          </label>
-          <DateInput
-            value={draft.dateTo}
-            onChange={(v) => update("dateTo", v)}
-          />
-        </div>
-        {showStatus && (
-          <div>
-            <label className="text-[10px] text-muted-foreground block mb-1">
-              Status
-            </label>
-            <Select
-              value={draft.status || "ALL"}
-              onValueChange={(v) => update("status", v === "ALL" ? "" : v)}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="All" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Project
-          </label>
-          <EntityCombobox
-            items={projectOpts}
-            value={draft.pId}
-            onValueChange={(v) => update("pId", v)}
-            placeholder="All projects"
-            className="w-full"
-            
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Contractor
-          </label>
-          <EntityCombobox
-            items={contractorOpts}
-            value={draft.contractorId}
-            onValueChange={(v) => update("contractorId", v)}
-            placeholder="All contractors"
-            // showAvatar
-            // avatarInTrigger
-            
-            // getImageUrl={(item) =>
-            //   `${import.meta.env.VITE_API_BASE_URL}/api/emp-images/contractor/${item.value}`
-            // }
-            className="w-full"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Invoice No
-          </label>
           <Input
-            placeholder="Invoice no."
+            ref={invoiceRef}
+            placeholder="Search Invoice No..."
             value={draft.invoiceNo}
             onChange={(e) => update("invoiceNo", e.target.value)}
-            className="h-8 text-xs"
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="h-8 text-xs pl-8 pr-8 bg-background/60 focus-visible:border-primary focus-visible:ring-primary/30"
           />
-        </div>
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Amount Min
-          </label>
-          <Input
-            type="number"
-            step="1"
-            placeholder="Min"
-            value={draft.amountMin}
-            onChange={(e) => update("amountMin", e.target.value)}
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Amount Max
-          </label>
-          <Input
-            type="number"
-            step="1"
-            placeholder="Max"
-            value={draft.amountMax}
-            onChange={(e) => update("amountMax", e.target.value)}
-            className="h-8 text-xs"
-          />
-        </div>
-        {/* NEW: exact amount search, matches both + and - */}
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Amount
-          </label>
-          <Input
-            type="number"
-            step="1"
-            placeholder="e.g. 300"
-            value={draft.amount}
-            onChange={(e) => update("amount", e.target.value)}
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1">
-            Description
-          </label>
-          <Input
-            placeholder="Search description"
-            value={draft.description}
-            onChange={(e) => update("description", e.target.value)}
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-  <label className="text-[10px] text-muted-foreground block mb-1">
-    Remarks
-  </label>
-  <Input
-    placeholder="Search remarks"
-    value={draft.remarks}
-    onChange={(e) => update("remarks", e.target.value)}
-    className="h-8 text-xs"
-  />
-</div>
-        {showCategory && (
-          <div>
-            <label className="text-[10px] text-muted-foreground block mb-1">
-              Category
-            </label>
-            <Select
-              value={draft.category || "ALL"}
-              onValueChange={(v) => update("category", v === "ALL" ? "" : v)}
+          {draft.invoiceNo && (
+            <button
+              type="button"
+              aria-label="Clear invoice number"
+              onClick={() => {
+                update("invoiceNo", "");
+                invoiceRef.current?.focus();
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="All categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All categories</SelectItem>
-                <SelectItem value="address">Address</SelectItem>
-                <SelectItem value="place">Place</SelectItem>
-                <SelectItem value="product">Product</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        <div>
-          <label className="text-[10px] text-muted-foreground block mb-1 invisible">
-            Actions
-          </label>
-          <div className="flex gap-2">
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
+        <EntityCombobox
+          items={projectOpts}
+          value={draft.pId}
+          onValueChange={(v) => update("pId", v)}
+          placeholder="All projects"
+          className="w-full sm:w-40"
+        />
+
+        <EntityCombobox
+          items={contractorOpts}
+          value={draft.contractorId}
+          onValueChange={(v) => update("contractorId", v)}
+          placeholder="All contractors"
+          className="w-full sm:w-44"
+        />
+
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setShowMore((v) => !v)}
+          aria-expanded={showMore}
+          className={`h-8 gap-1.5 rounded-md text-xs ${
+            showMore ? "bg-accent text-accent-foreground" : ""
+          }`}
+        >
+          <Filter size={13} />
+          More Filters
+          {secondaryCount > 0 && (
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary">
+              +{secondaryCount}
+            </span>
+          )}
+          {showMore ? (
+            <ChevronUp size={13} className="text-muted-foreground" />
+          ) : (
+            <ChevronDown size={13} className="text-muted-foreground" />
+          )}
+        </Button>
+
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={handleSearch}
+            className="h-8 rounded-md bg-primary text-xs text-primary-foreground hover:bg-[#4F46E5] btn-lift"
+          >
+            <Search size={12} className="mr-1" /> Search
+          </Button>
+          {hasActive && (
             <Button
               size="sm"
-              onClick={handleSearch}
-              disabled={!hasPendingChanges}
-              className="h-8 flex-1 rounded-md bg-primary hover:bg-[#4F46E5] text-primary-foreground text-xs disabled:opacity-40 btn-lift"
+              variant="outline"
+              onClick={handleClear}
+              className="h-8 rounded-md px-2.5 text-xs"
             >
-              <Search size={12} className="mr-1" /> Search
+              Reset <X size={12} />
             </Button>
-            {hasActive && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleClear}
-                className="h-8 px-2.5 rounded-md text-xs"
-              >
-                Reset <X size={12} />
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
+
+      {/* ── Tier 2: collapsible secondary filters ── */}
+      {showMore && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5 pt-3 border-t border-border mt-3">
+          <div onKeyDown={enterToSearch}>
+            <label className={labelCls}>Date From</label>
+            <DateInput
+              value={draft.dateFrom}
+              onChange={(v) => update("dateFrom", v)}
+            />
+          </div>
+
+          <div onKeyDown={enterToSearch}>
+            <label className={labelCls}>Date To</label>
+            <DateInput
+              value={draft.dateTo}
+              onChange={(v) => update("dateTo", v)}
+            />
+          </div>
+
+          {showStatus && (
+            <div>
+              <label className={labelCls}>Status</label>
+              <Select
+                value={draft.status || "ALL"}
+                onValueChange={(v) => update("status", v === "ALL" ? "" : v)}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {showCategory && (
+            <div>
+              <label className={labelCls}>Category</label>
+              <Select
+                value={draft.category || "ALL"}
+                onValueChange={(v) => update("category", v === "ALL" ? "" : v)}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All categories</SelectItem>
+                  <SelectItem value="address">Address</SelectItem>
+                  <SelectItem value="place">Place</SelectItem>
+                  <SelectItem value="product">Product</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div>
+            <label className={labelCls}>Amount</label>
+            <Input
+              type="number"
+              step="1"
+              placeholder="e.g. 300"
+              value={draft.amount}
+              onChange={(e) => update("amount", e.target.value)}
+              onKeyDown={enterToSearch}
+              className="h-8 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Amount Min</label>
+            <Input
+              type="number"
+              step="1"
+              placeholder="Min"
+              value={draft.amountMin}
+              onChange={(e) => update("amountMin", e.target.value)}
+              onKeyDown={enterToSearch}
+              className="h-8 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Amount Max</label>
+            <Input
+              type="number"
+              step="1"
+              placeholder="Max"
+              value={draft.amountMax}
+              onChange={(e) => update("amountMax", e.target.value)}
+              onKeyDown={enterToSearch}
+              className="h-8 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Description</label>
+            <Input
+              placeholder="Search description"
+              value={draft.description}
+              onChange={(e) => update("description", e.target.value)}
+              onKeyDown={enterToSearch}
+              className="h-8 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className={labelCls}>Remarks</label>
+            <Input
+              placeholder="Search remarks"
+              value={draft.remarks}
+              onChange={(e) => update("remarks", e.target.value)}
+              onKeyDown={enterToSearch}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 });
