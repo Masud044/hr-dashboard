@@ -55,7 +55,7 @@ When redesigning an existing table:
 - One flexible column absorbs the slack.
 
 **Rows**
-- One 1px hairline between rows. No zebra stripes (only on very wide rows).
+- One 1px hairline between rows. No zebra stripes on any table, including loading skeleton rows. Every row uses the same background (`bg-card`).
 - Hover highlights the current row (`bg-accent`). A highlighted row (see Row highlight) always wins over hover.
 - One line per row. Never wrap. Put secondary text inline in muted color, or in a tooltip.
 
@@ -83,6 +83,7 @@ Only for columns the user approved as sortable (see Ask before building). Not us
 - **Reset sort** returns to the table's declared default sort (e.g. date descending). If the table declares no default sort, it clears the sort. It is disabled when the table is already on the default.
 - **Hide column** calls `column.toggleVisibility(false)`. Show it only if the table has a columns dropdown. Never show it on columns that can't be hidden (checkbox, actions).
 - Server-side sorting: the menu writes to the same sort state the table already uses (for example the URL via nuqs), and returns to page 1. Do not invent a second sort state.
+- New server-side table with no sort state yet: keep sort in the URL with nuqs as `sortBy` and `sortOrder`, send both to the API, and offer sort only on columns the API supports (ask the user which ones).
 - Columns that aren't sortable stay plain text, with no button and no menu.
 - `aria-sort` stays on the `<th>`.
 
@@ -200,7 +201,8 @@ Key the state by table ID so tables on the same page don't clear each other.
 Use this type only when the client wants rows ordered by hand (for example the Contractor and Project tables). It replaces column sorting.
 - The table is always sorted by `SORT_ORDER` ascending (1, 2, 3, ...).
 - No column sorting at all: every header, including Sort Order, is plain text with no sort button or menu.
-- The Order column (up/down arrows plus a position input) is the only way to reorder. It is always enabled, since the sort never changes. Disable it only while a move is pending or when the user lacks edit permission.
+- The Order column (up/down arrows plus a position input) is the only way to reorder. The sort never changes, so it stays usable. Disable its controls only while a move is pending or when the user lacks edit permission.
+- The up arrow on the first row and the down arrow on the last row stay disabled, because there is nowhere to move. First and last mean the whole list, not the current page.
 - Pin the Order and actions columns on the right.
 - The Sort Order column is display-only. It may be hidden by default.
 - Row highlight, always-visible actions, persistence, and the phone layout all apply as written.
@@ -250,7 +252,7 @@ Do not shrink the table. Restructure into rows.
 - [ ] Columns classified and ranked, none deleted
 - [ ] Alignment and number formatting match data type
 - [ ] Column widths set (fixed vs flexible)
-- [ ] Hairlines, hover, no stripes
+- [ ] Hairlines, hover, no stripes anywhere (including skeleton rows)
 - [ ] Row height fixed at 48px, or density dropdown (40/48/56) only if requested
 - [ ] Identity (left) and actions (right) pinned, header pinned with bounded height
 - [ ] Actions always visible, not hover-revealed
@@ -259,8 +261,8 @@ Do not shrink the table. Restructure into rows.
 - [ ] Highlight has `aria-selected` and a left edge marker, not color alone
 - [ ] Row click never opens details; a View button in the actions column does; action buttons stop propagation
 - [ ] Sortable columns only where approved; header menu has Ascending, Descending, Reset sort, Hide column
-- [ ] Reset sort returns to the declared default sort; server-side sort uses the existing state
-- [ ] Manual-order tables: sorted by `SORT_ORDER`, plain headers, Order column always enabled
+- [ ] Reset sort returns to the declared default sort; server-side sort uses the existing state (or URL `sortBy`/`sortOrder` for a new table)
+- [ ] Manual-order tables: sorted by `SORT_ORDER`, plain headers, Order controls usable, first row's up and last row's down disabled
 - [ ] Columns dropdown (if used): persisted with `usePersistedColumnVisibility`, has Reset columns
 - [ ] Density dropdown (if used): persisted with `usePersistedDensity`, invalid value falls back to 48px
 - [ ] Row highlight, selection, sort, page, and filters are not saved to localStorage

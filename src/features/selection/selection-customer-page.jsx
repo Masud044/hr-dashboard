@@ -28,6 +28,8 @@ import {
   useSelectionForm,
 } from "./selection-api";
 import { useSelectionHighlightStore } from "./useSelectionHighlightStore";
+import { SelectionNoteHistory } from "./selection-note-history";
+import { SelectionProjectLabel } from "./selection-project-label";
 
 const EMPTY_ARRAY = [];
 
@@ -233,6 +235,8 @@ function CustomerItem({ item, fields, formId, projectId, readOnly }) {
       )}
 
       <div className="mt-3 space-y-2 border-t border-border pt-3">
+        <SelectionNoteHistory history={item.NOTE_HISTORY} />
+
         <label className="flex min-h-10 items-center gap-2 text-[15px] font-medium text-foreground">
           <Checkbox
             checked={confirmed}
@@ -372,6 +376,8 @@ export function SelectionCustomerPage() {
     <SectionContainer variant="dashboard">
       <div className="mx-auto w-full max-w-3xl">
         <div className="rounded-lg border border-border bg-card p-4">
+          <SelectionProjectLabel projectId={projectId} />
+
           {isLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-8 w-64" />

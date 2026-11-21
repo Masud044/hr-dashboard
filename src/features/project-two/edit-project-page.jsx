@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Save, Upload, X, CheckCircle2, Clock, ExternalLink,
+  ArrowLeft, Save, Upload, X, CheckCircle2, Clock, ExternalLink,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
@@ -312,7 +312,7 @@ export function EditProjectPage() {
       setNewMandatoryFiles([]);
       setRemovedOwnerIds([]);
       toast.success("Project updated successfully!");
-      navigate("/dashboard/projects");
+      navigate(-1);
     },
     onError: () => toast.error("Failed to update project."),
   });
@@ -335,9 +335,21 @@ export function EditProjectPage() {
       <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="font-display text-2xl font-bold text-foreground tracking-[-0.03em]">
-            Edit Project
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => navigate(-1)}
+              className="shrink-0 -ml-2 text-muted-foreground"
+              title="Back"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="font-display text-2xl font-bold text-foreground tracking-[-0.03em]">
+              Edit Project
+            </h1>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Update the project details below
           </p>

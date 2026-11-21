@@ -58,6 +58,8 @@ import {
   useUploadSelectionFile,
 } from "./selection-api";
 import { useSelectionHighlightStore } from "./useSelectionHighlightStore";
+import { SelectionNoteHistory } from "./selection-note-history";
+import { SelectionProjectLabel } from "./selection-project-label";
 
 const EMPTY_ARRAY = [];
 
@@ -230,6 +232,7 @@ function ItemCard({
     item.ID;
   const select = useSelectionHighlightStore((state) => state.select);
 
+  const [showDetails, setShowDetails] = useState(false);
   const [values, setValues] = useState(() => toObject(item.VALUES_JSON));
   const savedRef = useRef(serialize(toObject(item.VALUES_JSON)));
   const disabled = locked || updateItem.isPending;
@@ -237,6 +240,17 @@ function ItemCard({
   const files = toArray(item.FILES);
   const showCustomerState = CUSTOMER_OPEN_STATUSES.includes(formStatus);
   const isConfirmed = String(item.CUSTOMER_CONFIRMED ?? "").toUpperCase() === "Y";
+
+  const previewField =
+    showCustomerState &&
+    fields.find((field) => {
+      if (field.type !== "text" && field.type !== "textarea") return false;
+      const value = values[field.key];
+      return (
+        value !== null && value !== undefined && String(value).trim() !== ""
+      );
+    });
+  const previewValue = previewField ? values[previewField.key] : null;
 
   useEffect(() => {
     const next = toObject(item.VALUES_JSON);
@@ -482,13 +496,37 @@ function ItemCard({
         )}
       </div>
 
+      {showCustomerState && !showDetails && (
+        previewValue ? (
+          <p className="text-[15px] font-medium text-foreground line-clamp-2 break-words">
+            {String(previewValue)}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">No details filled.</p>
+        )
+      )}
+
+      {showCustomerState && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-10 gap-1 px-2 text-sm text-muted-foreground"
+          onClick={() => setShowDetails((open) => !open)}
+          aria-expanded={showDetails}
+        >
+          {showDetails ? "Hide details" : "Show details"}
+          {showDetails ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </Button>
+      )}
+
       {fields.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Add a field to start filling this item.
         </p>
       ) : null}
 
-      {fields.length > 0 && (
+      {fields.length > 0 && (!showCustomerState || showDetails) && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {fields.map((field) => (
             <div
@@ -506,6 +544,10 @@ function ItemCard({
           ))}
         </div>
       )}
+
+      <div className="mt-3">
+        <SelectionNoteHistory history={item.NOTE_HISTORY} />
+      </div>
 
       {showCustomerState && (
         <div className="mt-3 border-t border-border pt-2">
@@ -1103,7 +1145,7 @@ export function SelectionEditorPage() {
     const confirmed = await showConfirmation({
       title: "Reopen Selection?",
       description:
-        "Reopening returns this form to draft and clears all customer confirmations and notes. This cannot be undone.",
+        "Reopening returns this form to draft and clears all customer confirmations. Customer notes are kept as read-only history.",
       confirmText: "Reopen",
       cancelText: "Cancel",
       variant: "destructive",
@@ -1167,6 +1209,8 @@ export function SelectionEditorPage() {
     <SectionContainer variant="dashboard">
       <div className="mx-auto w-full max-w-4xl">
         <div className="rounded-lg border border-border bg-card p-4">
+          <SelectionProjectLabel projectId={projectId} />
+
           {isLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-8 w-64" />
