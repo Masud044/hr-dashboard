@@ -10,9 +10,11 @@ export function useStatementMutations() {
   const invalidateStaging = () => {
     queryClient.invalidateQueries({ queryKey: ["statementStagingAll"], refetchType: "active" });
     queryClient.invalidateQueries({ queryKey: ["statementStagingStats"], refetchType: "active" });
+    queryClient.invalidateQueries({ queryKey: ["statementAll"], refetchType: "active" });
   };
   const invalidateMain = () => {
     queryClient.invalidateQueries({ queryKey: ["statementMain"], refetchType: "active" });
+    queryClient.invalidateQueries({ queryKey: ["statementAll"], refetchType: "active" });
   };
 
   const updateRowMutation = useMutation({
