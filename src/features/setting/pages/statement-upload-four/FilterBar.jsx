@@ -31,8 +31,9 @@ const SECONDARY_KEYS = [
   "amount",
   "amountMin",
   "amountMax",
-  "description",
+  "invoiceNo",
   "remarks",
+  "sourceType",
 ];
 
 const labelCls = "text-[10px] text-muted-foreground block mb-1";
@@ -50,7 +51,7 @@ const FilterBar = React.memo(function FilterBar({
   const [showMore, setShowMore] = useState(() =>
     SECONDARY_KEYS.some((k) => Boolean(initialFilters?.[k])),
   );
-  const invoiceRef = useRef(null);
+  const descriptionRef = useRef(null);
 
   // keep local draft in sync when parent resets filters externally (e.g. Clear)
   useEffect(() => {
@@ -87,27 +88,27 @@ const FilterBar = React.memo(function FilterBar({
     <div className="bg-card border border-border rounded-md px-4 py-3.5 mb-4">
       {/* ── Tier 1: primary bar ── */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Prominent invoice search */}
+        {/* Prominent description search */}
         <div className="relative flex-1 min-w-[220px]">
           <FileText
             size={14}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <Input
-            ref={invoiceRef}
-            placeholder="Search Invoice No..."
-            value={draft.invoiceNo}
-            onChange={(e) => update("invoiceNo", e.target.value)}
+            ref={descriptionRef}
+            placeholder="Search description..."
+            value={draft.description}
+            onChange={(e) => update("description", e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="h-8 text-xs pl-8 pr-8 bg-background/60 focus-visible:border-primary focus-visible:ring-primary/30"
           />
-          {draft.invoiceNo && (
+          {draft.description && (
             <button
               type="button"
-              aria-label="Clear invoice number"
+              aria-label="Clear description"
               onClick={() => {
-                update("invoiceNo", "");
-                invoiceRef.current?.focus();
+                update("description", "");
+                descriptionRef.current?.focus();
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -203,7 +204,7 @@ const FilterBar = React.memo(function FilterBar({
                 value={draft.status || "ALL"}
                 onValueChange={(v) => update("status", v === "ALL" ? "" : v)}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-8 w-full text-xs">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,6 +236,23 @@ const FilterBar = React.memo(function FilterBar({
               </Select>
             </div>
           )}
+
+          <div>
+            <label className={labelCls}>Source</label>
+            <Select
+              value={draft.sourceType || "ALL"}
+              onValueChange={(v) => update("sourceType", v === "ALL" ? "" : v)}
+            >
+              <SelectTrigger className="h-8 w-full text-xs">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All</SelectItem>
+                <SelectItem value="BANKING">Banking</SelectItem>
+                <SelectItem value="NON_BANKING">Non-banking</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div>
             <label className={labelCls}>Amount</label>
@@ -276,11 +294,11 @@ const FilterBar = React.memo(function FilterBar({
           </div>
 
           <div>
-            <label className={labelCls}>Description</label>
+            <label className={labelCls}>Invoice No</label>
             <Input
-              placeholder="Search description"
-              value={draft.description}
-              onChange={(e) => update("description", e.target.value)}
+              placeholder="Search invoice no"
+              value={draft.invoiceNo}
+              onChange={(e) => update("invoiceNo", e.target.value)}
               onKeyDown={enterToSearch}
               className="h-8 text-xs"
             />

@@ -26,7 +26,12 @@ export const EMPTY_NB = {
 export const EMPTY_FILTERS = {
   dateFrom: "", dateTo: "", status: "", pId: "", contractorId: "",
   invoiceNo: "", amountMin: "", amountMax: "", amount: "", description: "", remarks: "",category: "",
+  sourceType: "",
 };
+
+// Stable id for the merged staging/main list (staging rows have no TXN_ID).
+export const rowKey = (r) =>
+  r.ROW_TYPE === "MAIN" ? `MAIN-${r.TXN_ID}` : `STAGING-${r.STAGING_ID}`;
 
 export const PAGE_SIZE = 50;
 

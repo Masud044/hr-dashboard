@@ -63,7 +63,7 @@ function Chip({ children }) {
 export default function DetailsSheet({ row, onClose }) {
   if (!row) return null;
   // console.log("row", row)
-  const isMain = row.TXN_ID !== undefined;
+  const isMain = row.TXN_ID != null;
   const isNegative = Number(row.AMOUNT) < 0;
 
   return (
